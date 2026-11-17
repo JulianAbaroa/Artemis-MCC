@@ -297,10 +297,11 @@ namespace
             label, s.N, s.Mean, s.P50, s.P99, s.Max);
     }
 
-    // Sight (design 1.4, F4.B): the constants of the proposal. A player is a candidate to see another when it is within the range and the
-    // other falls inside the cone around its aim.
-    constexpr float k_SightRange{ 150.0f };
-    constexpr float k_SightHalfAngleDegrees{ 45.0f };
+    // Sight (design 1.4, F4.B): a player is a candidate to see another when it is within the range and the other falls inside the cone around
+    // its aim. The range and the half angle are the ones the Views use (Data/Views/Sight.xml).
+    using Views::Raycast::Type::Sight::k_SightHalfAngle;
+    using Views::Raycast::Type::Sight::k_SightRange;
+
     constexpr float k_DegreesToRadians{ 0.017453292519943295f };
 
     // Same result of an aim ray: the same hit or miss, the same kind and object, and the distance within this many world units.
@@ -376,7 +377,7 @@ namespace
     auto RunSight(const Raycaster& raycaster, const RaycastScene& scene, const std::vector<SightPoint>& points, const PlayerExclusions& exclusions,
         SightCounts& counts, std::vector<RaycastHit>* hits) -> void
     {
-        const float cosHalf{ std::cos(k_SightHalfAngleDegrees * k_DegreesToRadians) };
+        const float cosHalf{ std::cos(k_SightHalfAngle * k_DegreesToRadians) };
         counts.Alive = points.size();
         counts.Pairs = points.size() * (points.size() - 1) / 2;
         for (std::size_t first{ 0 }; first < points.size(); ++first)
@@ -900,6 +901,14 @@ namespace
             return std::format("M6 rule of the design (2.4): mean TOTAL per decision {:.3f} ms against {:.1f} ms: {}.", mean, limit, mean <= limit ? "wire RS.2" : "RK.2 first");
         }
 
+        // return: The rule of the design (2.4) applied to the mean of the real ViewsService::Update of 16 agents (the limit D322 puts on the TOTAL).
+        auto RealVerdictLine(std::string_view name) const -> std::string
+        {
+            const double limit{ name == "alien8v8" ? 2.9 : 2.2 };
+            const double mean{ m_ViewsReal.Summary().Mean / k_NanosPerMicro };
+            return std::format("M6 REAL ViewsService::Update with 16 agents: mean {:.3f} ms against {:.1f} ms: {}.", mean, limit, mean <= limit ? "within the limit" : "OVER the limit");
+        }
+
         // return: The lines of the report, without the header.
         auto Lines() const -> std::vector<std::string>
         {
@@ -929,9 +938,15 @@ namespace
 
             lines.push_back("");
             for (const std::string& line : m_Decision.Lines()) lines.push_back(line);
-            lines.push_back(TimeLine("M6 REAL ViewsService::Update (16 agents)", m_ViewsReal));
-            lines.push_back(std::format("M6 REAL against the M6 TOTAL without sight (F4.3 adds it): {:.3f} ms against {:.3f} ms, {:+.1f}%.", m_ViewsReal.Summary().Mean / k_NanosPerMicro,
-                m_Decision.TotalWithoutSightMs(), 100.0 * (m_ViewsReal.Summary().Mean / k_NanosPerMicro / m_Decision.TotalWithoutSightMs() - 1.0)));
+            lines.push_back(TimeLine("M6 REAL ViewsService::Update (16 agents, HumanLike: rays, sight, Others, Flags)", m_ViewsReal));
+            lines.push_back(std::format("M6 REAL against the M6 TOTAL (sight included): {:.3f} ms against {:.3f} ms, {:+.1f}%. Without sight the M6 TOTAL is {:.3f} ms.",
+                m_ViewsReal.Summary().Mean / k_NanosPerMicro, m_Decision.TotalMeanMs(), 100.0 * (m_ViewsReal.Summary().Mean / k_NanosPerMicro / m_Decision.TotalMeanMs() - 1.0),
+                m_Decision.TotalWithoutSightMs()));
+            lines.push_back("M6 REAL sight (the pass of ViewsService::Update, F4.3): candidate pairs, rays and ms (HumanLike Update minus Full Update, which casts the same rays and fills the same rows but has no pass)");
+            lines.push_back(CountLine("M6 REAL sight: candidate pairs", m_RealCandidates));
+            lines.push_back(CountLine("M6 REAL sight: rays", m_RealSightRays));
+            lines.push_back(TimeLine("M6 REAL Update in Full mode (no sight pass)", m_ViewsRealFull));
+            lines.push_back(std::format("M6 REAL sight: {:.1f} us per decision (mean).", m_ViewsReal.Summary().Mean - m_ViewsRealFull.Summary().Mean));
             lines.push_back(std::format("M6 sight exactness against the reference scene (every object gathered without reuse, all in MOBILE): {} rays compared, {} differences.",
                 m_SightCompared, m_SightDifferences));
             for (const std::string& line : m_TickStream.Lines("M6 scene at one gather per tick")) lines.push_back(line);
@@ -966,7 +981,7 @@ namespace
         Series m_SceneNodesRay{}, m_SceneTrianglesRay{}, m_SceneObjectsSeries{}, m_FixedLeaves{}, m_MobileLeaves{};
         Series m_RestObjects{}, m_Filtered{}, m_Pending{};
         DecisionBench m_Decision{};
-        Series m_ViewsReal{};
+        Series m_ViewsReal{}, m_ViewsRealFull{}, m_RealCandidates{}, m_RealSightRays{};
         SceneStream m_TickStream{};
         EyeProbe m_Eye{};
         std::size_t m_SightCompared{};
@@ -1066,6 +1081,16 @@ namespace
             chain.m_Egocentric.m_ViewsService.Update(Views::View::Type::AgentSet::All());
             const auto end{ std::chrono::steady_clock::now() };
             m_ViewsReal.Add(std::chrono::duration<double, std::micro>(end - start).count());
+
+            // What the sight pass of that Update did, and the same Update without the pass: the difference is its cost.
+            const RaycastScene& scene{ chain.m_Egocentric.m_RaycastSceneStore.Scene() };
+            m_RealCandidates.Add(static_cast<double>(scene.SightCandidates));
+            m_RealSightRays.Add(static_cast<double>(scene.SightRays));
+
+            const auto fullStart{ std::chrono::steady_clock::now() };
+            chain.m_Egocentric.m_ViewsService.Update(Views::View::Type::AgentSet{ .Mask = 0xFFFFFFFFu, .Mode = Views::View::Type::ViewMode::Full });
+            const auto fullEnd{ std::chrono::steady_clock::now() };
+            m_ViewsRealFull.Add(std::chrono::duration<double, std::micro>(fullEnd - fullStart).count());
         }
 
         // M0: ViewsService::Update with only the local player as an agent.
@@ -1787,6 +1812,7 @@ namespace
 
         std::vector<std::string> lines{ bench.Lines() };
         lines.push_back(bench.VerdictLine(name));
+        lines.push_back(bench.RealVerdictLine(name));
         const auto now{ std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()) };
         std::vector<std::string> report{};
         report.push_back(std::format("Raycast bench: film {}, {} records, K = {} (M4 and M5 every K records), {:%Y-%m-%d %H:%M:%S} UTC, {}.",

@@ -42,11 +42,22 @@ export namespace Views::View::Type
     // Slots of the weapons of a Self: the primary and the secondary one.
     inline constexpr std::size_t k_ViewWeaponSlots{ 2 };
 
+    // How much of the world the agent sees (D321). Effective value, written in every View.
+    // note: Full sees every living player without cone or rays. HumanLike sees through the cone and the line of sight (D310).
+    enum class ViewMode : std::uint8_t
+    {
+        Full = 0,
+        HumanLike = 1,
+    };
+
     // Players that get a View, by player table index (the low 16 bits of the handle). It enters the pipeline as data (D307): the same
     // Snapshot with the same AgentSet gives the same Views.
     struct AgentSet
     {
         std::uint32_t Mask{ 0 };
+
+        // Mode of every View of the set (D321). The pipeline passes HumanLike until the bridge carries the choice (F4.8).
+        ViewMode Mode{ ViewMode::HumanLike };
 
         // return: The set with every player.
         static auto All() -> AgentSet
@@ -67,13 +78,6 @@ export namespace Views::View::Type
             const std::uint32_t index{ playerHandle & 0xFFFFu };
             if (index < 32) this->Mask |= (1u << index);
         }
-    };
-
-    // How much of the world the agent sees (D321). Effective value, written in every View.
-    enum class ViewMode : std::uint8_t
-    {
-        Full = 0,
-        HumanLike = 1,
     };
 
     // Relation of the agent to what it looks at or to another player, by the team of the player involved.

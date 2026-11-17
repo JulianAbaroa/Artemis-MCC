@@ -105,13 +105,15 @@ Per tag: `name`, `group` (fourcc), `kind` (ObjectKind), `mp` (multiplayer object
 
 Writes the module `Common.Semantic.Type` (primary in `Artemis/1_Shared/Common/Semantic/`, partitions under `Type/`): the enums (`:Enum`), one subtype enum per function (`:Subtype`) and the catalog labels with confidence `high`, `medium` or `low` (`:Catalog`, sorted, with `FindTagLabel`). It fails without writing anything when the catalog uses a function or subtype that `Semantic.xml` does not declare. Run it after editing `Semantic.xml` or labeling the catalog.
 
-## View rays
+## View rays and sight
 
 `Views/Rays.xml` is the pattern of the perception rays of a View (D311): one `<ray yaw pitch range>` per ray, in the frame of the aim of the agent (heading of the aim on the ground plane, world up, degrees, positive yaw to the left, positive pitch up, range in world units), at most 16. The rows are a cube (6 faces and 8 corners, range 20).
 
     python Tools/TagTranspiler/GenerateViews.py
 
-Writes the partition `Views.Raycast.Type:Pattern` (`Artemis/3_Domain/Views/Raycast/Type/RaycastPattern.ixx`). `--check` compares with the repo and writes nothing. It fails on more than 16 rows or a range that is not positive.
+`Views/Sight.xml` holds the constants of the sight of an agent (D310): one `<constant name value unit doc>` each, `k_SightHalfAngle` (degrees, the half angle of the cone around the aim) and `k_SightRange` (world units). The `doc` becomes the comment of the constant.
+
+Writes the partitions `Views.Raycast.Type:Pattern` (`Artemis/3_Domain/Views/Raycast/Type/RaycastPattern.ixx`) and `Views.Raycast.Type:Sight` (`RaycastSightConstant.ixx`, namespace `Views::Raycast::Type::Sight`). `--check` compares both with the repo and writes nothing. It fails on more than 16 rows, a range that is not positive, or a sight constant with a name that is not `k_Pascal`, repeated, without doc or not positive.
 
 ## Presets
 

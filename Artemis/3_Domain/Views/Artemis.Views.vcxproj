@@ -75,9 +75,13 @@
     <ClCompile Include="Raycast\System\RaycastEye.ixx" />
     <ClCompile Include="Raycast\System\RaycastScene.cpp" />
     <ClCompile Include="Raycast\System\RaycastScene.ixx" />
+    <ClCompile Include="Raycast\System\RaycastVision.cpp" />
+    <ClCompile Include="Raycast\System\RaycastVision.ixx" />
     <ClCompile Include="Raycast\Type\RaycastConstant.ixx" />
     <ClCompile Include="Raycast\Type\RaycastPattern.ixx" />
     <ClCompile Include="Raycast\Type\RaycastScenes.ixx" />
+    <ClCompile Include="Raycast\Type\RaycastSightConstant.ixx" />
+    <ClCompile Include="Raycast\Type\RaycastSightPass.ixx" />
     <ClCompile Include="Raycast\Type\Raycasts.ixx" />
     <ClCompile Include="View\State\ViewsStore.ixx" />
     <ClCompile Include="View\System\ViewsService.cpp" />

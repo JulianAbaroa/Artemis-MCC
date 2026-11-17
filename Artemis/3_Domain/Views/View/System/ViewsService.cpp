@@ -22,10 +22,12 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Common::Semantic::Type::Binding;
+    using Common::Semantic::Type::FlagState;
     using Common::Team::Type::Team;
     using Blam::MapModel::Definitions::Type::Bipd::Bipd;
     using Blam::Runtime::Object::Type::Alive::ObjectTable;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
+    using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ObjectiveDetails;
     using Perception::Details::Type::WeaponDetail;
     using Perception::Details::Type::WeaponDetails;
@@ -44,17 +46,25 @@ namespace
     using Views::Raycast::Type::RaycastScene;
     using Views::Raycast::Type::SceneReach;
     using Views::Raycast::Type::SelfExclusion;
+    using Views::Raycast::Type::SightCounters;
+    using Views::Raycast::Type::SightPlayer;
+    using Views::Raycast::Type::SightPlayers;
+    using Views::Raycast::Type::SightSeen;
     using Views::Raycast::Type::Pattern::PatternRay;
     using Views::Raycast::Type::Pattern::k_PatternRays;
     using Views::Raycast::Type::Constant::k_FallbackAimRange;
     using Views::Raycast::Type::Constant::k_MaxRayRange;
     using Views::Raycast::Type::Raycasts;
     using Views::View::Type::ViewAimHit;
+    using Views::View::Type::ViewChannel;
+    using Views::View::Type::ViewFlag;
+    using Views::View::Type::ViewOther;
     using Views::View::Type::ViewTable;
     using Views::View::Type::ViewRayHit;
     using Views::View::Type::ViewRelation;
     using Perception::Players::Type::Player;
     using Views::Raycast::System::BuildGraphExclusions;
+    using Views::Raycast::System::ComputeSight;
     using Views::Raycast::System::CastSceneRay;
     using Views::Raycast::System::CastSceneRayReach;
     using Views::Raycast::System::DerivedEye;
@@ -290,6 +300,127 @@ namespace
         const std::uint32_t vehicle{ biped.Binding == Binding::Seated ? biped.BoundTo : k_NoHandle };
         return std::ranges::any_of(locked, [&biped, vehicle](std::uint32_t target) { return target == biped.Handle || target == vehicle; });
     }
+
+    // return: The derived eye (D309) of the biped of a living player, empty without a body, an object or the definition of its biped.
+    auto EyeOf(const Player& player, const ObjectTable& objects, const DefinitionsStore& definitions) -> std::optional<Vec3>
+    {
+        if (!player.Body) return std::nullopt;
+
+        const auto object{ objects.find(player.BipedHandle) };
+        if (object == objects.end()) return std::nullopt;
+
+        const Bipd* definition{ definitions.m_Bipd.Get(object->second.TagName) };
+        if (!definition) return std::nullopt;
+
+        return DerivedEye(object->second, *definition, player.Body->CrouchFraction);
+    }
+
+    // return: How the team of the agent relates to the team of another player: None when either has no valid team.
+    auto RelationBetween(Team agent, Team other) -> ViewRelation
+    {
+        if (agent == Team::Neutral || other == Team::Neutral) return ViewRelation::None;
+        return agent == other ? ViewRelation::Ally : ViewRelation::Enemy;
+    }
+
+    // Fills what the agent knows of each row of Players (D308): the allies by the Hud, the living players it sees, and nothing else.
+    // note: A row without channel stays zero but for its Relation. The Radar bit and Elevation are left for F4.6.
+    auto FillOthers(View& view, const Players& players, const Entities& entities, const SightSeen& seen) -> void
+    {
+        const std::size_t self{ view.Head.PlayerRow };
+        const bool isFull{ view.Head.Mode == ViewMode::Full };
+        const std::size_t rows{ (std::min)(players.Rows.size(), k_MaxPlayers) };
+
+        for (std::size_t row{ 0 }; row < rows; ++row)
+        {
+            const Player& other{ players.Rows[row] };
+            ViewOther& out{ view.Others[row] };
+            if (row == self)
+            {
+                out.Relation = ViewRelation::Self;
+                continue;
+            }
+
+            out.Relation = RelationBetween(view.Head.Team, other.Team);
+            const bool isHud{ out.Relation == ViewRelation::Ally };
+            const bool isSeen{ other.IsAlive() && (isFull || seen[self][row]) };
+            if (!isHud && !isSeen) continue;
+
+            if (isHud) out.Channels |= static_cast<std::uint8_t>(ViewChannel::Hud);
+            if (isSeen) out.Channels |= static_cast<std::uint8_t>(ViewChannel::Seen);
+            out.IsAlive = other.IsAlive();
+            if (!other.IsAlive()) continue;
+
+            const Body& body{ *other.Body };
+            const Entity* biped{ entities.Find(other.BipedHandle) };
+            out.CarriesFlag = body.Loadout.Objective != k_NoHandle;
+            if (biped) out.Position = biped->WorldOrigin;
+            if (!isSeen) continue;
+
+            if (biped) out.Velocity = biped->LinearVelocity;
+            out.FacingYaw = std::atan2(body.Aim.Y, body.Aim.X);
+            out.Vitality = ValueOrNaN(biped ? biped->Vitality : std::nullopt);
+            out.Shield = ValueOrNaN(body.Shield);
+            out.IsCrouching = body.IsCrouching;
+            if (body.Loadout.EquippedWeapon == k_NoHandle) continue;
+
+            if (const Entity* weapon{ entities.Find(body.Loadout.EquippedWeapon) }) out.WeaponSubtype = weapon->Subtype;
+        }
+    }
+
+    // return: The flag of the team that owns the side (the lowest handle if several), or the one of a rival team (isOwn false). Null for a
+    // team without a side or a game without that flag.
+    auto FlagOfSide(const ObjectiveDetails& objectives, Team team, bool isOwn) -> const ObjectiveDetail*
+    {
+        if (team == Team::Neutral) return nullptr;
+
+        const ObjectiveDetail* best{ nullptr };
+        for (const auto& [handle, flag] : objectives.Flags)
+        {
+            const bool isMatch{ isOwn ? flag.OwnerTeam == team : (flag.OwnerTeam != team && flag.OwnerTeam != Team::Neutral) };
+            if (isMatch && (!best || handle < best->Handle)) best = &flag;
+        }
+        return best;
+    }
+
+    // Copies a flag, where it is (or where its carrier is), who carries it and where its stand is.
+    auto FillFlag(ViewFlag& out, const ObjectiveDetail& flag, const ObjectiveDetails& objectives, const Players& players,
+        const Entities& entities) -> void
+    {
+        out.State = flag.State;
+        out.CarrierRow = k_NoRow;
+        out.ResetTicks = flag.ResetTicks;
+        out.IsResetRunning = flag.IsResetRunning;
+        out.AlliesInZone = flag.AlliesInZone;
+
+        const Entity* carrier{ flag.State == FlagState::Carried ? entities.Find(flag.CarrierBiped) : nullptr };
+        if (const Entity* where{ carrier ? carrier : entities.Find(flag.Handle) }) out.Position = where->WorldOrigin;
+
+        if (flag.State == FlagState::Carried)
+        {
+            for (std::size_t row{ 0 }; row < (std::min)(players.Rows.size(), k_MaxPlayers); ++row)
+            {
+                const Player& player{ players.Rows[row] };
+                if (player.Handle == flag.CarrierPlayer || (flag.CarrierPlayer == k_NoHandle && player.BipedHandle == flag.CarrierBiped))
+                {
+                    out.CarrierRow = static_cast<std::uint8_t>(row);
+                    break;
+                }
+            }
+        }
+
+        const auto stand{ objectives.Stands.find(flag.HomeStand) };
+        if (stand != objectives.Stands.end()) out.StandPosition = stand->second.WorldOrigin;
+    }
+
+    // Fills the two flags of the View: [0] the one that the team of the agent plays in this round, [1] the rival one (D113, always).
+    auto FillFlags(View& view, const ObjectiveDetails& objectives, const Players& players, const Entities& entities) -> void
+    {
+        for (std::size_t index{ 0 }; index < view.Flags.size(); ++index)
+        {
+            const ObjectiveDetail* flag{ FlagOfSide(objectives, view.Head.Team, index == 0) };
+            if (flag) FillFlag(view.Flags[index], *flag, objectives, players, entities);
+        }
+    }
 }
 
 namespace Views::View::System
@@ -329,6 +460,18 @@ namespace Views::View::System
             PrepareScene(m_SceneStore.Scene(), m_SceneStore.Parts(), m_CollidableService, m_ObjectStore);
             exclusions = BuildGraphExclusions(*players, *entities, *graph);
         }
+
+        // The eye of every living player with a biped definition: the agents need theirs, and the sight pass the ones of all the players.
+        std::array<std::optional<Vec3>, k_MaxPlayers> eyes{};
+        if (objects)
+        {
+            for (std::size_t row{ 0 }; row < rows; ++row)
+            {
+                const Player& player{ players->Rows[row] };
+                if (canCast || agents.Contains(player.Handle)) eyes[row] = EyeOf(player, *objects, m_DefinitionsStore);
+            }
+        }
+
         for (std::size_t row{ 0 }; row < rows; ++row)
         {
             const Player& player{ players->Rows[row] };
@@ -339,7 +482,7 @@ namespace Views::View::System
             view.Head.PlayerRow = static_cast<std::uint8_t>(row);
             view.Head.LocalIndex = player.LocalIndex.value_or(k_NoRow);
             view.Head.BipedHandle = player.BipedHandle;
-            view.Head.Mode = ViewMode::HumanLike;
+            view.Head.Mode = agents.Mode;
             view.Head.IsComputed = true;
             view.Head.HasBody = player.IsAlive();
             view.Head.Team = player.Team;
@@ -394,15 +537,47 @@ namespace Views::View::System
             }
 
             if (!objects) continue;
-            const auto object{ objects->find(player.BipedHandle) };
-            if (object == objects->end()) continue;
 
-            const Bipd* definition{ m_DefinitionsStore.m_Bipd.Get(object->second.TagName) };
-            if (definition) self.Eye = DerivedEye(object->second, *definition, body.CrouchFraction);
+            const std::optional<Vec3>& eye{ eyes[row] };
+            if (eye) self.Eye = *eye;
 
             if (!canCast) continue;
             const RayContext context{ m_Raycaster, m_SceneStore.Scene(), exclusions, *entities, *objects, *players, m_DefinitionsStore, ranges };
-            CastViewRays(view, player, body.Aim, definition != nullptr, row, context);
+            CastViewRays(view, player, body.Aim, eye.has_value(), row, context);
+        }
+
+        // The sight pass: one for the whole Update, after the rays of every agent, over the scene they prepared (D310).
+        SightSeen seen{};
+        m_SceneStore.Scene().SightCandidates = 0;
+        m_SceneStore.Scene().SightRays = 0;
+        if (canCast)
+        {
+            SightPlayers sightPlayers{};
+            for (std::size_t row{ 0 }; row < rows; ++row)
+            {
+                const Player& player{ players->Rows[row] };
+                if (!eyes[row]) continue;
+
+                sightPlayers[row] = SightPlayer{ .HasHead = true, .Head = *eyes[row], .Aim = player.Body->Aim,
+                    .IsViewer = agents.Contains(player.Handle) && agents.Mode == ViewMode::HumanLike };
+            }
+
+            SightCounters counters{};
+            seen = ComputeSight(m_Raycaster, m_SceneStore.Scene(), exclusions, sightPlayers, counters);
+            m_SceneStore.Scene().SightCandidates = counters.Candidates;
+            m_SceneStore.Scene().SightRays = counters.Rays;
+        }
+
+        // What each agent knows of the other players and of the flags.
+        if (entities)
+        {
+            for (std::size_t row{ 0 }; row < rows; ++row)
+            {
+                if (!agents.Contains(players->Rows[row].Handle)) continue;
+
+                FillOthers(table[row], *players, *entities, seen);
+                if (objectives) FillFlags(table[row], *objectives, *players, *entities);
+            }
         }
 
         m_ViewsStore.Publish(std::move(table));

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Constants of the sight of an agent (D310, F4.3): who can see whom. Each <constant> has a name (k_Pascal), a numeric value and a doc that
+     becomes its comment. Tools/TagTranspiler/GenerateViews.py generates Views.Raycast.Type:Sight from it, next to the ray pattern. -->
+<sight>
+	<constant name="k_SightHalfAngle" value="45" unit="degrees" doc="Half angle of the cone of sight around the aim of a player, in degrees. A simple cone, with no zoom." />
+	<constant name="k_SightRange" value="150" unit="world units" doc="Farthest distance at which a player can see another, in world units." />
+</sight>

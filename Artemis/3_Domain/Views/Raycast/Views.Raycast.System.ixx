@@ -4,6 +4,7 @@ export import :Cast;
 export import :Exclusion;
 export import :Eye;
 export import :Scene;
+export import :Vision;
 
 import Common.Math.Type;
 import Blam.MapModel.World.System;

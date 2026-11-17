@@ -160,6 +160,10 @@ export namespace Views::Raycast::Type
         // How many times the scene was prepared (PrepareScene).
         std::size_t Prepares{ 0 };
 
+        // Candidate pairs and rays of the sight pass of the last Update (0 when it did not run).
+        std::size_t SightCandidates{ 0 };
+        std::size_t SightRays{ 0 };
+
         MeshBvhs Meshes{};
         SceneTree Fixed{};
         SceneTree Mobile{};

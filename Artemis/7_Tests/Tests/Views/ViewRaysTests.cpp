@@ -14,6 +14,7 @@ import Views.Raycast.Type;
 import Views.View.Type;
 import Views.View.System;
 import Tests.Support.Pipeline;
+import Tests.Support.ViewScene;
 import std;
 
 // The rays of each agent (F4.2): the aim hit and the perception rays of a View, cast through the one scene of the tick with the exclusion of
@@ -21,13 +22,10 @@ import std;
 
 namespace
 {
-    using Common::Math::Type::Triangle;
     using Common::Math::Type::Vec3;
     using Common::Semantic::Type::Function;
     using Common::Team::Type::Team;
     using Blam::MapModel::Definitions::Type::Bipd::Bipd;
-    using Blam::MapModel::Definitions::Type::Coll::Coll;
-    using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Perception::Entities::Type::Entities;
     using Perception::Entities::Type::Entity;
@@ -37,6 +35,9 @@ namespace
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Players;
     using Tests::Support::Pipeline::Chain;
+    using Tests::Support::ViewScene::MakeEntity;
+    using Tests::Support::ViewScene::MakeObject;
+    using Tests::Support::ViewScene::MakePlane;
     using Views::Raycast::Type::HitKind;
     using Views::View::System::FindObservedView;
     using Views::View::System::RaycastsOf;
@@ -57,50 +58,6 @@ namespace
     constexpr std::string_view k_SpartanTag{ "test\\spartan" };
     constexpr std::string_view k_EliteTag{ "test\\elite" };
     constexpr std::string_view k_RifleTag{ "test\\rifle" };
-
-    // A plane of 40 x 40 m that crosses one axis at the value (0 x, 1 y, 2 z) in the local space of the object.
-    auto MakePlane(std::string_view name, int axis, float value) -> Coll
-    {
-        const auto point{ [&](float a, float b) {
-            return axis == 0 ? Vec3{ value, a, b } : (axis == 1 ? Vec3{ a, value, b } : Vec3{ a, b, value });
-        } };
-
-        Coll coll{};
-        coll.TagName = std::string{ name };
-        CollMesh mesh{};
-        mesh.PermutationIndex = 0;
-        mesh.Triangles.push_back(Triangle{ point(-20.0f, -20.0f), point(20.0f, -20.0f), point(20.0f, 20.0f) });
-        mesh.Triangles.push_back(Triangle{ point(-20.0f, -20.0f), point(20.0f, 20.0f), point(-20.0f, 20.0f) });
-        mesh.LocalMin = point(-20.0f, -20.0f);
-        mesh.LocalMax = point(20.0f, 20.0f);
-        coll.Meshes.push_back(mesh);
-        coll.DefaultPermutationIndex = {};
-        coll.BoundsMin = { -20.0f, -20.0f, -20.0f };
-        coll.BoundsMax = { 20.0f, 20.0f, 20.0f };
-        return coll;
-    }
-
-    auto MakeObject(std::uint32_t handle, std::uint32_t datum, std::string_view tag, const Vec3& center) -> AliveObject
-    {
-        AliveObject object{};
-        object.Handle = handle;
-        object.DatumIndex = datum;
-        object.TagName = std::string{ tag };
-        object.BoundingCenter = center;
-        object.WorldOrigin = center;
-        object.Forward = { 1.0f, 0.0f, 0.0f };
-        object.Up = { 0.0f, 0.0f, 1.0f };
-        return object;
-    }
-
-    auto MakeEntity(std::uint32_t handle, Function function, Team team) -> Entity
-    {
-        Entity entity{};
-        entity.Handle = handle;
-        entity.Function = function;
-        entity.Team = team;
-        return entity;
-    }
 
     auto MakePlayer(std::uint32_t handle, std::uint32_t biped, Team team, const Vec3& aim, bool isAlive) -> Player
     {
