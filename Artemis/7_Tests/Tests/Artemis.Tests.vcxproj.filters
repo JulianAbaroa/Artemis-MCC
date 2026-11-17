@@ -123,6 +123,9 @@
     <ClCompile Include="Views\ViewExclusionTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="Views\ViewsSelfTests.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
     <ClCompile Include="Views\RaycastOracleTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>

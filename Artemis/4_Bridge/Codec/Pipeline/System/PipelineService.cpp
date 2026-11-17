@@ -5,7 +5,7 @@ import std;
 namespace Bridge::Codec::Pipeline::System
 {
     auto PipelineService::Run(const Snapshot& snapshot, std::uint64_t generation,
-        const std::function<void()>& endStage, const std::function<bool()>& canPublish) -> void
+        const std::function<void()>& endStage, const std::function<bool()>& canPublish, const AgentSet& agents) -> void
     {
         // return: Whether the tick may go on. False once canPublish says no: the engine began tearing down, so the next stage would only
         // write stores the Cleanup is emptying.
@@ -62,6 +62,8 @@ namespace Bridge::Codec::Pipeline::System
         m_Egocentric.m_AffordanceService.Update();
         if (!stage()) return;
         m_Egocentric.m_RaycastService.Update();
+        if (!stage()) return;
+        m_Egocentric.m_ViewsService.Update(agents);
         if (!stage()) return;
 
         m_TickService.Assemble(generation);

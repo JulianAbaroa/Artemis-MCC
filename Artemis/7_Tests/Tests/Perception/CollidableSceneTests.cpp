@@ -69,12 +69,12 @@ TEST_F(CollidableSceneTests, BuildSceneHasOneCollidablePerObject)
 
 TEST_F(CollidableSceneTests, ThePipelineDoesNotBuildTheScene)
 {
-    EXPECT_EQ(k_PipelineStageNames.size(), 24u);
+    EXPECT_EQ(k_PipelineStageNames.size(), 25u);
     EXPECT_FALSE(std::ranges::contains(k_PipelineStageNames, std::string_view{ "Collidable" }));
 
     std::size_t calls{ 0 };
     m_Export.m_PipelineService.Run(Snapshot{}, 1, [&calls] { ++calls; });
-    EXPECT_EQ(calls, 24u);
+    EXPECT_EQ(calls, k_PipelineStageNames.size());
 }
 
 TEST_F(CollidableSceneTests, UpdatePartsKeyFillsTheKeyOfARowAndTellsWhetherItChanged)

@@ -86,6 +86,7 @@ namespace Bridge::Codec::Tick::System
         tick.Self = m_SelfStore.Acquire();
         tick.Affordances = m_AffordanceStore.Acquire();
         tick.Raycasts = m_RaycastStore.Acquire();
+        tick.Views = m_ViewsStore.Acquire();
 
         // --- Layer 7: Export ---
         m_TickStore.Publish(std::move(tick));

@@ -262,7 +262,7 @@ TEST_F(PipelineTests, EndStageOncePerStage)
     std::size_t calls{ 0 };
     m_Export.m_PipelineService.Run(Snapshot{}, 1, [&calls] { ++calls; });
 
-    EXPECT_EQ(k_PipelineStageNames.size(), 24u);
+    EXPECT_EQ(k_PipelineStageNames.size(), 25u);
     EXPECT_EQ(calls, k_PipelineStageNames.size());
 }
 

@@ -46,6 +46,18 @@
     <Filter Include="Self\Type">
       <UniqueIdentifier>{24a6158c-fafd-5e60-92e8-741605e5143c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="View">
+      <UniqueIdentifier>{429cee67-e4a6-4310-b82e-551ddc9fe169}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="View\State">
+      <UniqueIdentifier>{40fe2d52-e402-4e3b-ab86-b15a53bce6e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="View\System">
+      <UniqueIdentifier>{f3fe49b5-2cfe-46b8-a0a9-de6ca366b488}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="View\Type">
+      <UniqueIdentifier>{540b61ec-894f-49cf-96cd-6a256c8041a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Affordance\State\AffordanceStore.ixx">
@@ -120,6 +132,18 @@
     </ClCompile>
     <ClCompile Include="Self\Type\Views.Self.Type.ixx">
       <Filter>Self\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="View\State\ViewsStore.ixx">
+      <Filter>View\State</Filter>
+    </ClCompile>
+    <ClCompile Include="View\System\ViewsService.cpp">
+      <Filter>View\System</Filter>
+    </ClCompile>
+    <ClCompile Include="View\System\ViewsService.ixx">
+      <Filter>View\System</Filter>
+    </ClCompile>
+    <ClCompile Include="View\Type\Views.View.Type.ixx">
+      <Filter>View\Type</Filter>
     </ClCompile>
     <ClCompile Include="Oracle\Views.Oracle.System.ixx">
       <Filter>Oracle</Filter>

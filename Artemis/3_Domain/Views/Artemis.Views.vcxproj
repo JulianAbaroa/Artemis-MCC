@@ -82,6 +82,10 @@
     <ClCompile Include="Self\System\SelfService.cpp" />
     <ClCompile Include="Self\System\SelfService.ixx" />
     <ClCompile Include="Self\Type\Views.Self.Type.ixx" />
+    <ClCompile Include="View\State\ViewsStore.ixx" />
+    <ClCompile Include="View\System\ViewsService.cpp" />
+    <ClCompile Include="View\System\ViewsService.ixx" />
+    <ClCompile Include="View\Type\Views.View.Type.ixx" />
     <ClCompile Include="Oracle\Views.Oracle.System.ixx" />
     <ClCompile Include="Oracle\Views.Oracle.Type.ixx" />
     <ClCompile Include="Oracle\System\OracleCompare.ixx" />

@@ -4,16 +4,17 @@ import Blam.Layout.Snapshot.Type;
 import Blam.Runtime.Layer;
 import Perception.Layer;
 import Views.Layer;
+import Views.View.Type;
 import Bridge.Codec.Tick.System;
 import std;
 
 export namespace Bridge::Codec::Pipeline::System
 {
     // Stages of Run in the order they run, one name per endStage call.
-    inline constexpr std::array<std::string_view, 24> k_PipelineStageNames{
+    inline constexpr std::array<std::string_view, 25> k_PipelineStageNames{
         "ObjectTable", "PlayerTable", "InteractionTable", "GameTable", "Classifier", "ObjectGraph",
         "VitalityDetails", "ZoneDetails", "TeleporterDetails", "LiftDetails", "BarrierDetails", "ExplosiveDetails", "ProjectileDetails", "WeaponDetails", "Entities", "Players",
-        "ObjectiveDetails", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Assemble" };
+        "ObjectiveDetails", "Aim", "Events", "Match", "Self", "Affordance", "Raycast", "Views", "Assemble" };
 
     // Runs the pure chain of one tick over a Snapshot: Tables, Environment (with Relations), Egocentric and the assembly of the Tick (D205).
     // note: The one place where the order of the tick lives. The AI thread and the tests call it.
@@ -22,6 +23,7 @@ export namespace Bridge::Codec::Pipeline::System
     private:
         using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
         using TickService = Bridge::Codec::Tick::System::TickService;
+        using AgentSet = Views::View::Type::AgentSet;
 
     public:
         PipelineService(Blam::Runtime::Layer& tables, Perception::Layer& environment,
@@ -38,8 +40,10 @@ export namespace Bridge::Codec::Pipeline::System
         // param canPublish: Asked after every stage. When it says false the run stops there: the later stages do not run, the Tick is not
         // assembled and the last one stays as it was (the engine started tearing down while the tick ran, F1 C.7). A stage already
         // running when the teardown starts still finishes. Empty to always go on.
+        // param agents: Players that get a View (D307). The default is every player, which the tests and the replay use.
         auto Run(const Snapshot& snapshot, std::uint64_t generation,
-            const std::function<void()>& endStage, const std::function<bool()>& canPublish = {}) -> void;
+            const std::function<void()>& endStage, const std::function<bool()>& canPublish = {},
+            const AgentSet& agents = AgentSet::All()) -> void;
 
         // Decodes the light snapshot of a tick that does not run the pipeline (sparse mode, Q101) and generates the flag events of that tick.
         // note: Touches only the light stores of Blam.Runtime and the memory of the events service. Nothing is published to the Tick, and the

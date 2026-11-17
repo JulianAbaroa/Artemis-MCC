@@ -10,6 +10,7 @@ import Blam.Layout.Snapshot.Type;
 import Blam.Runtime.Layer;
 import Perception.Layer;
 import Views.Layer;
+import Views.View.Type;
 import Bridge.Codec.Layer;
 import Bridge.Codec.Pipeline.Type;
 import Bridge.Codec.Pipeline.System;
@@ -31,6 +32,7 @@ export namespace Mod::Thread::System
         using steady_clock = std::chrono::steady_clock;
 
         using Snapshot = Blam::Layout::Snapshot::Type::Snapshot;
+        using AgentSet = Views::View::Type::AgentSet;
 
         using CapturedTick = Bridge::Codec::Pipeline::Type::CapturedTick;
         using ObservedTick = Bridge::Codec::Pipeline::Type::ObservedTick;
@@ -110,6 +112,12 @@ export namespace Mod::Thread::System
 
         // Opens or closes the queue: the game thread queues ticks only while it is open.
         auto SetConsuming(bool value) -> void;
+
+        // return: The players that get a View in this tick (D307). With a client that owns the instance, the players of its AgentMask and the
+        // local player 0. Without one, the local player 0.
+        // note: The local player is the one of the last published player table, so it is missing in the first tick after a load. Nobody
+        // reads the Viewer's followed player here (an observer, the AI thread imports no tool): it joins the set when the Viewer shows Views (VW.2).
+        auto BuildAgentSet() const -> AgentSet;
 
         // Runs the pipeline over the Snapshot of a queued tick.
         // return: False if the engine started tearing down before or while it ran (the pipeline did not complete, nothing is published).

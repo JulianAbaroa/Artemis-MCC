@@ -467,8 +467,8 @@ def test_the_order_of_the_tick_lives_in_the_pipeline_service():
     tests = Read("Artemis/7_Tests/Tests/Perception/PipelineTests.cpp")
     assert not PIPELINE_STEP.search(tests), PIPELINE_STEP.search(tests).group(0)
     assert "m_PipelineService.Run(" in tests
-    # Tables 4, Relations 2, Environment 14 and Egocentric 3. The Tick is assembled through TickService.
-    assert len(PIPELINE_STEP.findall(Read(PIPELINE_SERVICE + ".cpp"))) == 23
+    # Every service call of Run and RunLight (the count was 26 before F4.1 and the old 23 was stale), plus the Views of the agents (F4.1).
+    assert len(PIPELINE_STEP.findall(Read(PIPELINE_SERVICE + ".cpp"))) == 27
 
 
 def test_the_tdump_format_lives_in_bridge_codec_not_in_the_ui():

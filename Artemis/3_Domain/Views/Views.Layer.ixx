@@ -10,10 +10,12 @@ import Views.Affordance.State;
 import Views.Affordance.System;
 import Views.Raycast.State;
 import Views.Raycast.System;
+import Views.View.State;
+import Views.View.System;
 
 export namespace Views
 {
-    // Builds the view of each local player: its self, the affordances and the raycasts.
+    // Builds the view of each local player (its self, the affordances and the raycasts) and the Views of the agents.
     // note: Pure: the owner connects the lifecycle (D178).
     class Layer
     {
@@ -24,17 +26,20 @@ export namespace Views
         using AffordanceStore = Views::Affordance::State::AffordanceStore;
         using RaycastStore = Views::Raycast::State::RaycastStore;
         using RaycastSceneStore = Views::Raycast::State::RaycastSceneStore;
+        using ViewsStore = Views::View::State::ViewsStore;
 
         using SelfService = Views::Self::System::SelfService;
         using AffordanceService = Views::Affordance::System::AffordanceService;
         using RaycastService = Views::Raycast::System::RaycastService;
+        using ViewsService = Views::View::System::ViewsService;
 
     public:
         Layer(Log& log, Blam::MapModel::Layer& resolved, Blam::Runtime::Layer& tables,
             Perception::Layer& environment) :
             m_SelfService(log, tables.m_PlayerStore, m_SelfStore),
             m_AffordanceService(log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, m_SelfStore, environment.m_ClassifierStore, environment.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
-            m_RaycastService(log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore, m_RaycastSceneStore) {}
+            m_RaycastService(log, tables.m_PlayerStore, tables.m_ObjectStore, resolved.m_DefinitionsStore, resolved.m_Raycaster, m_SelfStore, environment.m_CollidableService, environment.m_EntitiesStore, environment.m_PlayersStore, m_RaycastStore, m_RaycastSceneStore),
+            m_ViewsService(log, tables.m_ObjectStore, resolved.m_DefinitionsStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_WeaponDetailsStore, environment.m_ObjectiveDetailsStore, m_ViewsStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;
@@ -45,18 +50,21 @@ export namespace Views
         AffordanceStore m_AffordanceStore{};
         RaycastStore m_RaycastStore{};
         RaycastSceneStore m_RaycastSceneStore{};
+        ViewsStore m_ViewsStore{};
 
         // --- System ---
         SelfService m_SelfService;
         AffordanceService m_AffordanceService;
         RaycastService m_RaycastService;
+        ViewsService m_ViewsService;
 
-        // Removes the self, affordances and raycasts.
+        // Removes the self, affordances, raycasts and Views.
         auto Cleanup() -> void
         {
             m_SelfService.Cleanup();
             m_AffordanceService.Cleanup();
             m_RaycastService.Cleanup();
+            m_ViewsService.Cleanup();
         }
     };
 }

@@ -3,7 +3,11 @@ import :AI;
 
 import Services.Telemetry.Type;
 import Services.Telemetry.System;
+import Contract.Bridge.Type;
+import Control.Lockstep.Type;
 import Engine.Base.Lifecycle.Type;
+import Blam.Runtime.Player.Type;
+import Views.Self.Type;
 import Bridge.Codec.Flat.Type;
 import std;
 
@@ -12,7 +16,10 @@ using namespace std::chrono_literals;
 namespace
 {
     using Engine::Base::Lifecycle::Type::Status;
+    using Contract::Bridge::Type::BridgeOwner;
+    using Control::Lockstep::Type::BridgeControlState;
     using Bridge::Codec::Flat::Type::FlatRequest;
+    using Views::Self::Type::k_SelfLocalIndex;
     using Services::Telemetry::System::OtherStageNs;
     using Services::Telemetry::Type::k_MaxStages;
 
@@ -211,10 +218,27 @@ namespace Mod::Thread::System
         // A teardown that began after the copy: the pipeline would only write stores the Cleanup is emptying.
         if (!this->IsCurrent()) return false;
 
-        m_Export.m_PipelineService.Run(*tick.Snapshot, tick.Generation, m_EndStage, m_CanPublish);
+        m_Export.m_PipelineService.Run(*tick.Snapshot, tick.Generation, m_EndStage, m_CanPublish, this->BuildAgentSet());
 
         // The pipeline stops between stages when the teardown starts: what it left is not a tick to publish.
         return this->IsCurrent();
+    }
+
+    auto AIThread::BuildAgentSet() const -> AgentSet
+    {
+        AgentSet agents{};
+
+        const BridgeControlState control{ m_Transport.m_BridgeStore.GetControl() };
+        if (control.IsClientConnected && control.Owner == BridgeOwner::Python) agents.Mask = control.AgentMask;
+
+        const auto players{ m_Tables.m_PlayerStore.Acquire() };
+        if (!players) return agents;
+
+        for (const auto& [handle, player] : *players)
+        {
+            if (player.LocalIndex == k_SelfLocalIndex) agents.Add(player.Handle);
+        }
+        return agents;
     }
 
     auto AIThread::ExecuteLightTick(const CapturedTick& tick) -> bool

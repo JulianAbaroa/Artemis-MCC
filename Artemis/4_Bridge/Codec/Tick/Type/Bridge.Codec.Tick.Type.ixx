@@ -15,6 +15,7 @@ import Perception.Match.Type;
 import Views.Affordance.Type;
 import Views.Self.Type;
 import Views.Raycast.Type;
+import Views.View.Type;
 import std;
 
 namespace
@@ -59,6 +60,7 @@ namespace
     using Views::Affordance::Type::Affordances;
     using Views::Self::Type::Self;
     using Views::Raycast::Type::Raycasts;
+    using Views::View::Type::ViewTable;
 }
 
 export namespace Bridge::Codec::Tick::Type
@@ -104,5 +106,7 @@ export namespace Bridge::Codec::Tick::Type
         std::shared_ptr<const Self> Self{};
         std::shared_ptr<const Affordances> Affordances{};
         std::shared_ptr<const Raycasts> Raycasts{};
+        // One View per row of Players, in the same order (F4, D307). Not in the bridge yet.
+        std::shared_ptr<const ViewTable> Views{};
     };
 }

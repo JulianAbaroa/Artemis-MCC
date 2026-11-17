@@ -41,5 +41,5 @@ Missing external data (a `.map`, a recording) or data of another version (size, 
 - After an MCC update that changes the layouts: record the film and `.sdump` again and approve them with `Tools/tickdump.py approve`.
 
 ## Tests
-It is the test. The Python side lives in `Tools/Tests` (`python Tools/test.py --python`): component boundaries
+It is the test. `ViewsSelfTests` runs the Views of the agents over made-up stores, `DISABLED_ViewsReplayTests` checks their Self on ctf_c and `DISABLED_ViewsBench` times `ViewsService::Update` (both by hand: `--disabled`). The Python side lives in `Tools/Tests` (`python Tools/test.py --python`): component boundaries
 (`test_components.py`), generators and the `.tdump` reader.
