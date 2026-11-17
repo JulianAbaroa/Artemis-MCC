@@ -1,8 +1,11 @@
 module DevTools.Viewer.Camera.System;
 
 import Common.Math.Type;
+import Common.Engine.Type;
 import Common.Math.System;
 import Blam.Runtime.Player.Type;
+import Views.View.Type;
+import Views.View.System;
 import DevTools.Viewer.Options.Type;
 import std;
 
@@ -20,6 +23,11 @@ namespace
     using Blam::Runtime::Player::Type::Alive::AlivePlayer;
     using Blam::Runtime::Player::Type::Alive::PlayerTable;
 
+    using Views::View::System::AimDirectionOf;
+    using Views::View::System::FindObservedView;
+    using Views::View::System::ViewPositionOf;
+
+    using Common::Engine::Type::k_NoHandle;
     using Common::Math::Type::k_WorldUp;
 
     constexpr float k_LookSpeed{ 0.0025f };
@@ -116,10 +124,12 @@ namespace DevTools::Viewer::Camera::System
         m_Yaw = 0.0f;
         m_Pitch = 0.0f;
 
-        if (tick && tick->Self)
+        // note: The primary local player: no handle asks for it.
+        const auto* view{ (tick && tick->Views) ? FindObservedView(*tick->Views, k_NoHandle) : nullptr };
+        if (view)
         {
-            eye = tick->Self->Position;
-            this->AimAlong(tick->Self->Forward);
+            eye = ViewPositionOf(*view);
+            this->AimAlong(AimDirectionOf(*view));
         }
 
         m_Eye = eye;
@@ -147,10 +157,11 @@ namespace DevTools::Viewer::Camera::System
 
     auto CameraService::FollowSelf(const std::shared_ptr<const Tick>& tick) -> void
     {
-        if (!tick || !tick->Self || !tick->Self->IsAlive) return;
+        const auto* view{ (tick && tick->Views) ? FindObservedView(*tick->Views, k_NoHandle) : nullptr };
+        if (!view || !view->Head.HasBody) return;
 
-        m_Eye = tick->Self->Position;
-        this->AimAlong(tick->Self->Forward);
+        m_Eye = ViewPositionOf(*view);
+        this->AimAlong(AimDirectionOf(*view));
     }
 
     auto CameraService::FindFollowTarget(const std::shared_ptr<const Tick>& tick,

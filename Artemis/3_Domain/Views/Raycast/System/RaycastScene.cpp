@@ -778,20 +778,10 @@ namespace Views::Raycast::System
 
     auto PrepareScene(RaycastScene& scene, ScenePartsCache& parts, CollidableService& collidableService, const ObjectTableStore& objectStore) -> void
     {
-        const auto table{ objectStore.Acquire() };
         SceneObjects objects{ GatherSceneObjects(parts, collidableService, objectStore, nullptr) };
         ArmFixedScene(scene, objects);
         ArmMobileScene(scene, objects);
 
         ++scene.Prepares;
-        scene.PreparedFor = table;
-    }
-
-    auto TakePreparedScene(RaycastScene& scene, const ObjectTableStore& objectStore) -> bool
-    {
-        const auto table{ objectStore.Acquire() };
-        const bool isPrepared{ table && !scene.PreparedFor.owner_before(table) && !table.owner_before(scene.PreparedFor) };
-        scene.PreparedFor.reset();
-        return isPrepared;
     }
 }

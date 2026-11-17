@@ -9,6 +9,7 @@ import Common.Math.Type;
 import Common.Time.System;
 import Blam.MapModel.World.Type;
 import Views.Oracle.System;
+import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Gui.Widget.System;
 
@@ -28,6 +29,10 @@ namespace
     using Views::Oracle::System::RecordLag;
     using Views::Oracle::System::ResolveRootObject;
     using Views::Oracle::Type::Constant::k_RandomRayRange;
+    using Views::Raycast::Type::Raycasts;
+    using Views::View::System::FindObservedView;
+    using Views::View::System::RaycastsOf;
+    using Views::View::System::ViewPositionOf;
     using Views::Oracle::Type::Stats::OracleStats;
     using DevTools::Gui::Widget::System::StatusGuiService;
     using DevTools::Workbench::Oracle::Type::k_MaxPendingBatches;
@@ -214,16 +219,19 @@ namespace DevTools::Workbench::Oracle::System
     auto OracleUIService::Submit(const ObservedTick& observed) -> void
     {
         const auto& tick{ *observed.Tick };
-        if (!tick.Self || !tick.Self->IsAlive)
+        const auto* view{ tick.Views ? FindObservedView(*tick.Views, m_ObservedStore.Get()) : nullptr };
+        if (!view || !view->Head.HasBody)
         {
-            this->LogOnce(Gate::NoLocalPlayer, "No alive local player in the tick, so no batch is handed over.");
+            this->LogOnce(Gate::NoLocalPlayer, "No alive watched player in the tick, so no batch is handed over.");
             return;
         }
 
+        const Raycasts raycasts{ RaycastsOf(*view) };
+
         std::uint32_t ignoreHandle{ k_NoHandle };
-        if (tick.ObjectTable && tick.Self->BipedHandle != k_NoHandle)
+        if (tick.ObjectTable && view->Head.BipedHandle != k_NoHandle)
         {
-            ignoreHandle = ResolveRootObject(*tick.ObjectTable, tick.Self->BipedHandle);
+            ignoreHandle = ResolveRootObject(*tick.ObjectTable, view->Head.BipedHandle);
         }
 
         const std::size_t limit{ static_cast<std::size_t>(m_OracleUIStore.GetRaysPerBatch()) };
@@ -231,28 +239,25 @@ namespace DevTools::Workbench::Oracle::System
         OracleBatch batch{ .Id = m_OracleStore.AllocateBatchId(), .SequenceAtSubmit = m_OracleStore.GetSequence() };
         PendingBatch pending{ .Id = batch.Id };
 
-        if (tick.Raycasts)
+        std::vector<RaycastHit> hits{ raycasts.AimHit };
+        hits.insert(hits.end(), raycasts.PerceptionHits.begin(), raycasts.PerceptionHits.end());
+
+        for (const RaycastHit& hit : hits)
         {
-            std::vector<RaycastHit> hits{ tick.Raycasts->AimHit };
-            hits.insert(hits.end(), tick.Raycasts->PerceptionHits.begin(), tick.Raycasts->PerceptionHits.end());
+            if (batch.Rays.size() >= limit) break;
+            if (hit.MaxDistance <= 0.0f) continue;
 
-            for (const RaycastHit& hit : hits)
-            {
-                if (batch.Rays.size() >= limit) break;
-                if (hit.MaxDistance <= 0.0f) continue;
+            const float length{ std::sqrt((hit.Direction.X * hit.Direction.X) + (hit.Direction.Y * hit.Direction.Y)
+                + (hit.Direction.Z * hit.Direction.Z)) };
+            if (length < k_MinDirectionLength) continue;
 
-                const float length{ std::sqrt((hit.Direction.X * hit.Direction.X) + (hit.Direction.Y * hit.Direction.Y)
-                    + (hit.Direction.Z * hit.Direction.Z)) };
-                if (length < k_MinDirectionLength) continue;
-
-                this->AddRay(batch, pending, RaySource::Tick, PendingRay{ .Origin = hit.Origin, .Direction = hit.Direction,
-                    .MaxDistance = hit.MaxDistance, .OursTick = hit }, ignoreHandle);
-            }
+            this->AddRay(batch, pending, RaySource::Tick, PendingRay{ .Origin = hit.Origin, .Direction = hit.Direction,
+                .MaxDistance = hit.MaxDistance, .OursTick = hit }, ignoreHandle);
         }
 
         while (batch.Rays.size() < limit)
         {
-            this->AddRay(batch, pending, RaySource::Random, PendingRay{ .Origin = tick.Self->Position,
+            this->AddRay(batch, pending, RaySource::Random, PendingRay{ .Origin = ViewPositionOf(*view),
                 .Direction = RandomDirection(m_OracleUIStore.GetRandom()), .MaxDistance = k_RandomRayRange }, ignoreHandle);
         }
 
@@ -263,7 +268,7 @@ namespace DevTools::Workbench::Oracle::System
         }
 
         this->LogOnce(Gate::FirstBatch, std::format("First batch handed over: {} rays ({} of the tick).", batch.Rays.size(),
-            tick.Raycasts ? tick.Raycasts->PerceptionHits.size() + 1 : 0));
+            raycasts.PerceptionHits.size() + 1));
 
         std::deque<PendingBatch>& waiting{ m_OracleUIStore.GetPending() };
         waiting.push_back(std::move(pending));

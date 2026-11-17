@@ -120,9 +120,6 @@
     <ClCompile Include="Views\ViewEyeTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>
-    <ClCompile Include="Views\ViewExclusionTests.cpp">
-      <Filter>Views</Filter>
-    </ClCompile>
     <ClCompile Include="Views\ViewRaysTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>

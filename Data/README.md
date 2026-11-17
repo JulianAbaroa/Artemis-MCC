@@ -107,7 +107,7 @@ Writes the module `Common.Semantic.Type` (primary in `Artemis/1_Shared/Common/Se
 
 ## View rays
 
-`Views/Rays.xml` is the pattern of the perception rays of a View (D311): one `<ray yaw pitch range>` per ray, in the frame of the agent (degrees, positive yaw to the left, positive pitch up, range in world units), at most 16. It starts as the cube of the old Self (6 faces and 8 corners, range 20).
+`Views/Rays.xml` is the pattern of the perception rays of a View (D311): one `<ray yaw pitch range>` per ray, in the frame of the aim of the agent (heading of the aim on the ground plane, world up, degrees, positive yaw to the left, positive pitch up, range in world units), at most 16. The rows are a cube (6 faces and 8 corners, range 20).
 
     python Tools/TagTranspiler/GenerateViews.py
 

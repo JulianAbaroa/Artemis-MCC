@@ -48,7 +48,9 @@ namespace
     using Views::Raycast::Type::Pattern::k_PatternRays;
     using Views::Raycast::Type::Constant::k_FallbackAimRange;
     using Views::Raycast::Type::Constant::k_MaxRayRange;
+    using Views::Raycast::Type::Raycasts;
     using Views::View::Type::ViewAimHit;
+    using Views::View::Type::ViewTable;
     using Views::View::Type::ViewRayHit;
     using Views::View::Type::ViewRelation;
     using Perception::Players::Type::Player;
@@ -68,6 +70,7 @@ namespace
 
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_PrimaryLocalUser;
 
     constexpr std::uint8_t k_NoRow{ 0xFF };
     constexpr double k_Pi{ 3.14159265358979323846 };
@@ -118,6 +121,14 @@ namespace
             static_cast<float>(forward.Z * a + left.Z * b + up.Z * c) };
     }
 
+    // return: The direction of a ray of the pattern in the frame of the aim (D311): forward is the heading on the ground plane, up the world up.
+    auto PatternDirectionAt(const PatternRay& ray, float heading) -> Vec3
+    {
+        const Vec3 forward{ std::cos(heading), std::sin(heading), 0.0f };
+        const Vec3 left{ -std::sin(heading), std::cos(heading), 0.0f };
+        return PatternDirection(ray, forward, left, Vec3{ 0.0f, 0.0f, 1.0f });
+    }
+
     // What the casts of every agent of an Update share.
     struct RayContext
     {
@@ -136,9 +147,13 @@ namespace
         out.PlayerRow = k_NoRow;
         out.ObjectHandle = k_NoHandle;
         out.RegionIndex = -1;
+        out.Material = -1;
+        out.MaxDistance = hit.MaxDistance;
         out.Distance = hit.Hit ? hit.Distance : hit.MaxDistance;
         out.Kind = hit.Kind;
         out.SurfaceFlags = hit.SurfaceFlags;
+        if (hit.Hit) out.Point = hit.Point;
+        if (hit.Hit) out.Material = hit.Material;
         if (!hit.Hit || hit.Kind != HitKind::Dynamic) return;
 
         out.ObjectHandle = hit.ObjectHandle;
@@ -161,9 +176,12 @@ namespace
     {
         out.Distance = hit.Hit ? hit.Distance : hit.MaxDistance;
         out.Kind = hit.Kind;
+        out.ObjectHandle = k_NoHandle;
+        out.Material = hit.Hit ? hit.Material : std::int16_t{ -1 };
         out.SurfaceFlags = hit.SurfaceFlags;
         if (!hit.Hit || hit.Kind != HitKind::Dynamic) return;
 
+        out.ObjectHandle = hit.ObjectHandle;
         const Entity* entity{ context.EntityRows.Find(hit.ObjectHandle) };
         if (entity) out.Function = entity->Function;
         out.Relation = RelationOf(team, entity);
@@ -171,7 +189,7 @@ namespace
 
     // Casts the aim ray and the rays of the pattern of one agent through the shared scene, with the exclusion of its row.
     // note: The aim ray starts at the eye (Eye is zero when the biped has no tag: then it does not fire). The perception rays start at the
-    // bounding center of the vehicle the biped rides, or of the biped, and their frame is the forward of that object, as the Self of before.
+    // bounding center of the vehicle the biped rides, or of the biped, and their frame is the heading of the aim (D311).
     auto CastViewRays(View& view, const Player& player, const Vec3& aim, bool hasEye, std::size_t row, const RayContext& context) -> void
     {
         const SelfExclusion& exclusion{ context.Exclusions[row] };
@@ -186,9 +204,7 @@ namespace
         if (object == context.Objects.end()) return;
 
         const Vec3 origin{ object->second.BoundingCenter };
-        Vec3 forward{}, right{}, up{};
-        Common::Math::System::BuildFrame(object->second.Forward, forward, right, up);
-        const Vec3 left{ -right.X, -right.Y, -right.Z };
+        view.RayOrigin = origin;
 
         float radius{ 0.0f };
         for (const PatternRay& ray : k_PatternRays) radius = (std::max)(radius, ray.Range);
@@ -197,7 +213,7 @@ namespace
         for (std::size_t index{ 0 }; index < k_PatternRays.size(); ++index)
         {
             const PatternRay& ray{ k_PatternRays[index] };
-            const Vec3 direction{ PatternDirection(ray, forward, left, up) };
+            const Vec3 direction{ PatternDirectionAt(ray, view.Self.FrameYaw) };
             FillRayHit(view.Rays[index], CastSceneRayReach(context.Caster, context.Scene, reach, exclusion, origin, direction, ray.Range, nullptr), context, player.Team);
         }
     }
@@ -321,6 +337,8 @@ namespace Views::View::System
             ::View& view{ table[row] };
             view.Head.PlayerHandle = player.Handle;
             view.Head.PlayerRow = static_cast<std::uint8_t>(row);
+            view.Head.LocalIndex = player.LocalIndex.value_or(k_NoRow);
+            view.Head.BipedHandle = player.BipedHandle;
             view.Head.Mode = ViewMode::HumanLike;
             view.Head.IsComputed = true;
             view.Head.HasBody = player.IsAlive();
@@ -393,5 +411,83 @@ namespace Views::View::System
     auto ViewsService::Cleanup() -> void
     {
         m_ViewsStore.Cleanup();
+        m_SceneStore.Cleanup();
+
+        m_Log.Message("[ViewsService] INFO: Cleanup completed.");
+    }
+
+    auto FindObservedView(const ViewTable& views, std::uint32_t observedHandle) -> const ::View*
+    {
+        const ::View* local{ nullptr };
+        for (const ::View& view : views)
+        {
+            if (!view.Head.IsComputed) continue;
+            if (observedHandle != k_NoHandle && view.Head.PlayerHandle == observedHandle) return &view;
+            if (view.Head.LocalIndex == k_PrimaryLocalUser && !local) local = &view;
+        }
+
+        return local;
+    }
+
+    auto AimDirectionOf(const ::View& view) -> Vec3
+    {
+        const float aimCos{ std::cos(view.Self.AimPitch) };
+        return Vec3{ aimCos * std::cos(view.Self.FrameYaw), aimCos * std::sin(view.Self.FrameYaw), std::sin(view.Self.AimPitch) };
+    }
+
+    auto ViewPositionOf(const ::View& view) -> Vec3
+    {
+        const Vec3& eye{ view.Self.Eye };
+        return (eye.X == 0.0f && eye.Y == 0.0f && eye.Z == 0.0f) ? view.Self.Feet : eye;
+    }
+
+    auto RaycastsOf(const ::View& view) -> Raycasts
+    {
+        Raycasts result{};
+
+        const ViewAimHit& aim{ view.AimHit };
+        RaycastHit& aimHit{ result.AimHit };
+        aimHit.Origin = view.Self.Eye;
+        aimHit.Direction = AimDirectionOf(view);
+        aimHit.MaxDistance = aim.MaxDistance;
+        aimHit.Kind = aim.Kind;
+        aimHit.Hit = aim.Kind != HitKind::None;
+        aimHit.SurfaceFlags = aim.SurfaceFlags;
+        aimHit.Material = aim.Material;
+        if (aimHit.Hit)
+        {
+            aimHit.Distance = aim.Distance;
+            aimHit.Point = aim.Point;
+            aimHit.RegionIndex = aim.RegionIndex;
+            if (aim.Kind == HitKind::Dynamic) aimHit.ObjectHandle = aim.ObjectHandle;
+        }
+
+        // The rays were cast only if the first one has a distance (a miss reports its range).
+        if (!view.Head.HasBody || view.Rays[0].Distance <= 0.0f) return result;
+
+        result.PerceptionHits.reserve(k_PatternRays.size());
+        for (std::size_t index{ 0 }; index < k_PatternRays.size(); ++index)
+        {
+            const PatternRay& ray{ k_PatternRays[index] };
+            const ViewRayHit& source{ view.Rays[index] };
+            RaycastHit hit{};
+            hit.Origin = view.RayOrigin;
+            hit.Direction = PatternDirectionAt(ray, view.Self.FrameYaw);
+            hit.MaxDistance = ray.Range;
+            hit.Kind = source.Kind;
+            hit.Hit = source.Kind != HitKind::None;
+            hit.SurfaceFlags = source.SurfaceFlags;
+            hit.Material = source.Material;
+            if (hit.Hit)
+            {
+                hit.Distance = source.Distance;
+                hit.Point = Vec3{ hit.Origin.X + hit.Direction.X * source.Distance, hit.Origin.Y + hit.Direction.Y * source.Distance,
+                    hit.Origin.Z + hit.Direction.Z * source.Distance };
+                if (source.Kind == HitKind::Dynamic) hit.ObjectHandle = source.ObjectHandle;
+            }
+            result.PerceptionHits.push_back(hit);
+        }
+
+        return result;
     }
 }

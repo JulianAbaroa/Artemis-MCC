@@ -19,7 +19,7 @@ import Tests.Support.Pipeline;
 import Tests.Support.ViewProbe;
 import std;
 
-// Offline bench of the rays of Views (D273, F3.B): what each part of RaycastService costs today for one agent, and what it would cost
+// Offline bench of the rays of Views (D273, F3.B): what each part of the rays of the Self of before cost for one agent, and what it would cost
 // for 16 agents with a cache of their own, with one cache shared by all and with the static world only. The films are the golden
 // recordings of Ignore/Regresion, replayed once through the pipeline. Nothing here changes the Tick. The tests are DISABLED_: run them
 // with tools/test.py --disabled --filter "DISABLED_RaycastBench.CtfD".
@@ -45,23 +45,19 @@ namespace
     using Views::Raycast::System::ArmFixedScene;
     using Views::Raycast::System::ArmMobileScene;
     using Views::Raycast::System::BuildGraphExclusions;
-    using Views::Raycast::System::BuildSelfExclusion;
     using Views::Raycast::System::CastScene;
     using Views::Raycast::System::CastSceneRay;
     using Views::Raycast::System::CastSceneRayReach;
     using Views::Raycast::System::CastStatic;
     using Views::Raycast::System::GatherSceneObjects;
     using Views::Raycast::System::GatherSceneReach;
-    using Views::Raycast::System::PerceptionDirections;
     using Views::Raycast::System::PrepareMeshBvhs;
     using Views::Raycast::System::PreparePart;
-    using Views::Raycast::System::ResolveAimRange;
-    using Views::Raycast::System::ResolvePerceptionOrigin;
+    using Views::Raycast::System::FindVehicleRoot;
     using Views::Raycast::Type::CachedPart;
     using Views::Raycast::Type::EyePoint;
     using Views::Raycast::Type::FixedRebuildRule;
     using Views::Raycast::Type::MobileRebuildRule;
-    using Views::Raycast::Type::PerceptionOrigin;
     using Views::Raycast::Type::PlayerExclusions;
     using Views::Raycast::Type::RaycastHit;
     using Views::Raycast::Type::RaycastScene;
@@ -79,8 +75,13 @@ namespace
     using Tests::Support::Bench::k_NanosPerMicro;
     using Blam::MapModel::World::Type::Raycast::k_BoxPadding;
     using Views::Raycast::Type::Constant::k_MobileRebuildArea;
-    using Views::Raycast::Type::Constant::k_PerceptionRange;
-    using Views::Raycast::Type::Constant::k_PerceptionRayCount;
+    using Views::Raycast::Type::Constant::k_FallbackAimRange;
+    using Views::Raycast::Type::Constant::k_MaxRayRange;
+    using Common::Engine::Type::k_PrimaryLocalUser;
+
+    // The rays of the perception of the Self of before: a cube of 14 rays of 20 m, kept as the reference of the cost of one agent.
+    constexpr int k_PerceptionRayCount{ 14 };
+    constexpr float k_PerceptionRange{ 20.0f };
 
     // Agents of the 16 agent metrics.
     constexpr std::size_t k_Agents{ 16 };
@@ -94,11 +95,8 @@ namespace
     // The 16 agent metrics (M4, M5) run every K records, M0 and M1 run at every record. K = 30 on ctf_d, to stay under 150 s.
     constexpr std::size_t k_EveryRecords{ 30 };
 
-    // The shared scene is armed and checked against RaycastStore every this many records: a decision every 4 ticks (D273).
+    // The shared scene is armed every this many records: a decision every 4 ticks (D273).
     constexpr std::size_t k_SceneEvery{ 4 };
-
-    // Differences between Self and the published rays that the report describes in full.
-    constexpr std::size_t k_MaxDifferenceLines{ 6 };
 
     // Where and where to one agent looks from.
     struct Origin
@@ -111,7 +109,119 @@ namespace
         bool IsPast{ false };
     };
 
-    // What one agent needs before it casts: the same values RaycastService::Update resolves.
+    // The cube of the perception rays of the Self of before: six faces and eight corners, 14 rays, kept for the cost of the rays of one agent.
+    constexpr float k_InvSqrt3{ 0.57735026918962576451f };
+    constexpr std::array<Vec3, k_PerceptionRayCount> k_CubeDirections{ {
+        {  1.0f,  0.0f,  0.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f }, {  0.0f, -1.0f,  0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  0.0f, -1.0f },
+        {  k_InvSqrt3,  k_InvSqrt3,  k_InvSqrt3 }, {  k_InvSqrt3,  k_InvSqrt3, -k_InvSqrt3 }, {  k_InvSqrt3, -k_InvSqrt3,  k_InvSqrt3 },
+        {  k_InvSqrt3, -k_InvSqrt3, -k_InvSqrt3 }, { -k_InvSqrt3,  k_InvSqrt3,  k_InvSqrt3 }, { -k_InvSqrt3,  k_InvSqrt3, -k_InvSqrt3 },
+        { -k_InvSqrt3, -k_InvSqrt3,  k_InvSqrt3 }, { -k_InvSqrt3, -k_InvSqrt3, -k_InvSqrt3 } } };
+
+    // Where the perception rays of an agent start and the forward of their frame.
+    struct PerceptionOrigin
+    {
+        Vec3 Position{};
+        Vec3 Forward{};
+        bool Valid{ false };
+    };
+
+    // return: The 14 directions of the cube in the frame of forward.
+    auto PerceptionDirections(const Vec3& forward) -> std::array<Vec3, k_PerceptionRayCount>
+    {
+        Vec3 originForward{}, originRight{}, originUp{};
+        Common::Math::System::BuildFrame(forward, originForward, originRight, originUp);
+
+        std::array<Vec3, k_PerceptionRayCount> directions{};
+        for (std::size_t index{ 0 }; index < directions.size(); ++index)
+        {
+            const Vec3& local{ k_CubeDirections[index] };
+            directions[index] = Vec3{
+                originRight.X * local.X + originUp.X * local.Y + originForward.X * local.Z,
+                originRight.Y * local.X + originUp.Y * local.Y + originForward.Y * local.Z,
+                originRight.Z * local.X + originUp.Z * local.Y + originForward.Z * local.Z };
+        }
+
+        return directions;
+    }
+
+    // return: The aim range of the primary weapon of the player, capped at the maximum ray range. The fallback range if it has none.
+    auto ResolveAimRange(const Chain& chain, std::uint32_t playerHandle) -> float
+    {
+        float range{ k_FallbackAimRange };
+        const auto players{ chain.m_Tables.m_PlayerStore.Acquire() };
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (players && objects)
+        {
+            const auto player{ players->find(playerHandle) };
+            const std::uint32_t weaponHandle{ player != players->end() ? player->second.PrimaryWeaponHandle : k_NoHandle };
+            const auto weapon{ objects->find(weaponHandle) };
+            if (weaponHandle != 0 && weapon != objects->end())
+            {
+                const auto* weap{ chain.m_Resolved.m_DefinitionsStore.m_Weap.Get(weapon->second.TagName) };
+                if (weap && weap->AutoaimRange > 0.0f) range = weap->AutoaimRange;
+            }
+        }
+
+        return (std::min)(range, k_MaxRayRange);
+    }
+
+    // return: The center and the forward of the biped, or of the vehicle it rides.
+    auto ResolvePerceptionOrigin(const Chain& chain, std::uint32_t bipedHandle) -> PerceptionOrigin
+    {
+        std::uint32_t target{ bipedHandle };
+        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+        if (entities && bipedHandle != k_NoHandle)
+        {
+            const std::uint32_t vehicle{ FindVehicleRoot(*entities, bipedHandle) };
+            if (vehicle != k_NoHandle) target = vehicle;
+        }
+
+        const auto objects{ chain.m_Tables.m_ObjectStore.Acquire() };
+        if (target == k_NoHandle || !objects) return {};
+
+        const auto object{ objects->find(target) };
+        if (object == objects->end()) return {};
+
+        return { object->second.BoundingCenter, object->second.Forward, true };
+    }
+
+    // return: The exclusion of one player, from the pass over the object graph. Empty if the player is not in the tick.
+    auto ExclusionOf(const Chain& chain, std::uint32_t playerHandle) -> SelfExclusion
+    {
+        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
+        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
+        const auto nodes{ chain.m_Environment.m_ObjectGraphStore.Acquire() };
+        if (!players || !entities || !nodes) return {};
+
+        const Player* player{ players->Find(playerHandle) };
+        if (!player) return {};
+
+        const PlayerExclusions exclusions{ BuildGraphExclusions(*players, *entities, *nodes) };
+        const std::size_t row{ static_cast<std::size_t>(player - players->Rows.data()) };
+        return row < exclusions.size() ? exclusions[row] : SelfExclusion{};
+    }
+
+    // return: The primary local player as the bench sees it: the camera, the forward of the camera and the handles. Empty if it is not alive.
+    auto LocalOrigin(const Chain& chain) -> std::optional<Origin>
+    {
+        const auto table{ chain.m_Tables.m_PlayerStore.Acquire() };
+        if (!table) return std::nullopt;
+
+        for (const auto& entry : *table)
+        {
+            const auto& player{ entry.second };
+            if (player.LocalIndex != k_PrimaryLocalUser) continue;
+            if (player.AliveBipedHandle == k_NoHandle) return std::nullopt;
+
+            Vec3 forward{}, right{}, up{};
+            Common::Math::System::BuildFrame(player.CameraForward, forward, right, up);
+            return Origin{ player.CameraPosition, forward, player.Handle, player.CurrentBipedHandle, false };
+        }
+
+        return std::nullopt;
+    }
+
+    // What one agent needs before it casts: the aim range, the exclusion and the perception origin and directions of the old Self.
     struct Agent
     {
         Origin Source{};
@@ -140,18 +250,15 @@ namespace
         return rays;
     }
 
-    // The same values RaycastService::Update resolves for an agent.
+    // The values the Self of before resolved for an agent.
     auto PrepareAgent(const Chain& chain, const Origin& source) -> Agent
     {
         Agent agent{};
         agent.Source = source;
-        agent.AimRange = ResolveAimRange(chain.m_Tables.m_PlayerStore, chain.m_Tables.m_ObjectStore,
-            chain.m_Resolved.m_DefinitionsStore, source.PlayerHandle);
-        agent.Exclusion = BuildSelfExclusion(chain.m_Environment.m_PlayersStore, chain.m_Environment.m_EntitiesStore,
-            chain.m_Tables.m_ObjectStore, source.PlayerHandle, source.BipedHandle);
+        agent.AimRange = ResolveAimRange(chain, source.PlayerHandle);
+        agent.Exclusion = ExclusionOf(chain, source.PlayerHandle);
 
-        const PerceptionOrigin perceptionOrigin{ source.IsPast ? PerceptionOrigin{} :
-            ResolvePerceptionOrigin(chain.m_Environment.m_EntitiesStore, chain.m_Tables.m_ObjectStore, source.BipedHandle) };
+        const PerceptionOrigin perceptionOrigin{ source.IsPast ? PerceptionOrigin{} : ResolvePerceptionOrigin(chain, source.BipedHandle) };
         agent.RayPosition = perceptionOrigin.Valid ? perceptionOrigin.Position : source.Camera;
         const Vec3 forward{ perceptionOrigin.Valid ? perceptionOrigin.Forward : source.Forward };
         agent.Directions = PerceptionDirections(forward);
@@ -168,12 +275,6 @@ namespace
     {
         return SameHit(a, b) && a.RegionIndex == b.RegionIndex && a.SurfaceFlags == b.SurfaceFlags && a.Material == b.Material
             && a.Point.X == b.Point.X && a.Point.Y == b.Point.Y && a.Point.Z == b.Point.Z;
-    }
-
-    auto DescribeHit(const RaycastHit& hit) -> std::string
-    {
-        return std::format("hit={} kind={} d={:.9g} handle={:08X} region={} flags={} material={}", hit.Hit, static_cast<int>(hit.Kind),
-            hit.Distance, hit.ObjectHandle, hit.RegionIndex, hit.SurfaceFlags, hit.Material);
     }
 
     auto TimeLine(std::string_view label, const Series& series) -> std::string
@@ -379,7 +480,7 @@ namespace
     public:
         RaycastScene Scene{};
 
-        // Gathers the objects of the tick and arms both trees, as RaycastService would on a decision.
+        // Gathers the objects of the tick and arms both trees, as the Views do on a decision.
         auto Arm(Chain& chain) -> SceneArming
         {
             SceneArming times{};
@@ -467,16 +568,8 @@ namespace
             const RaycastScene& scene{ m_Stream.Scene };
             const SelfExclusion none{};
 
-            // The exclusions of the players: the scan of today, once per agent, and the pass over the graph.
+            // The exclusions of the players: one pass over the graph.
             auto start{ steady_clock::now() };
-            for (const Origin& origin : origins)
-            {
-                m_Sink += static_cast<double>(BuildSelfExclusion(chain.m_Environment.m_PlayersStore, chain.m_Environment.m_EntitiesStore,
-                    chain.m_Tables.m_ObjectStore, origin.PlayerHandle, origin.BipedHandle).size());
-            }
-            m_ExclusionScan.Add(Micros(start, steady_clock::now()));
-
-            start = steady_clock::now();
             const PlayerExclusions graph{ BuildGraphExclusions(*players, *entities, *nodes) };
             const double exclusionUs{ Micros(start, steady_clock::now()) };
 
@@ -577,7 +670,6 @@ namespace
         {
             std::vector<std::string> lines{};
             lines.push_back(std::format("M6 16 agents, one decision every {} records (all of RS.2 and the views per agent), us per decision", k_SceneEvery));
-            lines.push_back(TimeLine("M6 exclusions: BuildSelfExclusion x16", m_ExclusionScan));
             lines.push_back(TimeLine("M6 exclusions: one pass over the graph", m_Exclusion));
             lines.push_back(TimeLine("M6 eye A + aim + range + origin x16", m_Prepare));
             lines.push_back(TimeLine("M6 scene: gather + FIXED + MOBILE", m_Scene));
@@ -622,10 +714,9 @@ namespace
             const EyePoint eye{ (!origin.IsPast && player) ? PlayerEye(chain, objects, *player) : EyePoint{} };
             agent.Eye = eye.Valid ? eye : EyePoint{ origin.Camera, true };
             agent.Aim = (!origin.IsPast && player && player->Body) ? UnitOf(player->Body->Aim, origin.Forward) : origin.Forward;
-            agent.AimRange = ResolveAimRange(chain.m_Tables.m_PlayerStore, chain.m_Tables.m_ObjectStore, chain.m_Resolved.m_DefinitionsStore, origin.PlayerHandle);
+            agent.AimRange = ResolveAimRange(chain, origin.PlayerHandle);
 
-            const PerceptionOrigin perceptionOrigin{ origin.IsPast ? PerceptionOrigin{} :
-                ResolvePerceptionOrigin(chain.m_Environment.m_EntitiesStore, chain.m_Tables.m_ObjectStore, origin.BipedHandle) };
+            const PerceptionOrigin perceptionOrigin{ origin.IsPast ? PerceptionOrigin{} : ResolvePerceptionOrigin(chain, origin.BipedHandle) };
             agent.RayPosition = perceptionOrigin.Valid ? perceptionOrigin.Position : origin.Camera;
             agent.Directions = PerceptionDirections(perceptionOrigin.Valid ? perceptionOrigin.Forward : origin.Forward);
             return agent;
@@ -697,7 +788,7 @@ namespace
         double m_Sink{};
         std::size_t m_LocalAimTargetChanged{};
         std::size_t m_LocalAimRays{}, m_LocalAimChanged{}, m_OtherAimRays{}, m_OtherAimChanged{};
-        Series m_ExclusionScan{}, m_Exclusion{}, m_Prepare{}, m_Scene{}, m_Aim{}, m_AimToday{}, m_Perception{}, m_SightUs{}, m_SightRay{}, m_Views{}, m_Total{};
+        Series m_Exclusion{}, m_Prepare{}, m_Scene{}, m_Aim{}, m_AimToday{}, m_Perception{}, m_SightUs{}, m_SightRay{}, m_Views{}, m_Total{};
         Series m_Alive{}, m_Pairs{}, m_Candidates{}, m_Free{}, m_AimAngle{}, m_AimDistance{};
     };
 
@@ -719,10 +810,10 @@ namespace
             m_TickStream.Arm(chain);
             m_Eye.Observe(chain);
 
-            const auto selfPtr{ chain.m_Egocentric.m_SelfStore.Acquire() };
-            if (!selfPtr || !selfPtr->IsAlive) return;
+            const std::optional<Origin> local{ LocalOrigin(chain) };
+            if (!local) return;
 
-            const Origin self{ selfPtr->Position, selfPtr->Forward, selfPtr->Handle, selfPtr->BipedHandle, false };
+            const Origin self{ *local };
             if (record % k_HistoryEvery == 1) m_History.push_back(Origin{ self.Camera, self.Forward, self.PlayerHandle, self.BipedHandle, true });
             if (isDecision) m_Decision.Measure(chain, this->BuildOrigins(chain, self), armed);
             if (isDecision) this->MeasureViewsUpdate(chain);
@@ -739,9 +830,8 @@ namespace
             ++m_Measured;
             const RaycastHit down{ CastStatic(chain.m_Resolved.m_Raycaster, self.Camera, Vec3{ 0.0f, 0.0f, -1.0f }, 150.0f) };
             m_DownHits += down.Hit ? 1 : 0;
-            this->MeasureUpdate(chain);
+            this->MeasureUpdate(chain, self);
             this->MeasureOneAgent(chain, self);
-            if (record % k_SceneEvery == 0) this->MeasureSelfScene(chain, self);
             if (record % k_EveryRecords == 0) this->MeasureSixteenAgents(chain, self);
         }
 
@@ -798,9 +888,6 @@ namespace
             lines.push_back(TimeLine("M5   each mesh BVH call that built", m_MeshBvhCall));
             lines.push_back(std::format("M5 exactness check against a reference scene with every object gathered without reuse and all in MOBILE (same tick, own scene): {} rays compared, {} differences.",
                 m_ReuseCompared, m_ReuseDifferences));
-            lines.push_back(std::format("M1 check of the scene for Self against RaycastStore: {} rays compared, {} differences.",
-                m_SelfCompared, m_SelfDifferences));
-            for (const std::string& line : m_SceneMessages) lines.push_back("  " + line);
             for (const std::string& line : this->MobileGroupLines()) lines.push_back(line);
             return lines;
         }
@@ -824,11 +911,11 @@ namespace
             lines.push_back(std::format("Static world: {} sbsp, {} triangles. A ray straight down from the camera of Self hit it in {} of {} records.",
                 m_Sbsps, m_StaticTriangles, m_DownHits, m_Measured));
             lines.push_back("");
-            lines.push_back("M0 Update real (1 agent: Self), every record, us per tick");
+            lines.push_back("M0 ViewsService::Update (1 agent: the local player), every record, us per tick");
             time("M0 Update", m_Update);
             lines.push_back("");
             lines.push_back("M1 pieces of Update that do not depend on the scene, every record, us per tick");
-            time("M1 BuildSelfExclusion", m_Exclusion);
+            time("M1 exclusions (pass over the graph)", m_Exclusion);
             time("M1 aim range + origin + directions", m_Setup);
             time("M1 15 rays, static part (sum)", m_StaticTick);
             ray("M1 ray, static part", m_StaticRay);
@@ -853,7 +940,7 @@ namespace
 
             lines.push_back("");
             lines.push_back("Heaviest, 1 agent (ms per tick, mean):");
-            this->AppendHeaviest(lines, { { "BuildSelfExclusion", &m_Exclusion }, { "static rays (15)", &m_StaticTick }, { "Update (M0)", &m_Update } });
+            this->AppendHeaviest(lines, { { "exclusions (graph)", &m_Exclusion }, { "static rays (15)", &m_StaticTick }, { "Update (M0)", &m_Update } });
             lines.push_back("Heaviest, 16 agents (ms per tick, mean):");
             this->AppendHeaviest(lines, { { "M4 static rays", &m_M4Total }, { "M5 total", &m_M5Total }, { "M5 gather (reuse)", &m_GatherReuse }, { "M5 rays", &m_M5Rays } });
             return lines;
@@ -901,10 +988,6 @@ namespace
         std::size_t m_RebuildBoth{};
         std::size_t m_MeshesBuilt{};
         double m_MeshBvhUs{};
-        std::size_t m_SelfCompared{};
-        std::size_t m_SelfDifferences{};
-        std::size_t m_DifferenceLines{};
-        std::vector<std::string> m_SceneMessages{};
 
         // What the MOBILE tree holds, by kind of object: objects and leaves per arming, and the part of them at rest but waiting.
         struct MobileGroup
@@ -985,11 +1068,13 @@ namespace
             m_ViewsReal.Add(std::chrono::duration<double, std::micro>(end - start).count());
         }
 
-        // M0: RaycastService::Update as it is.
-        auto MeasureUpdate(Chain& chain) -> void
+        // M0: ViewsService::Update with only the local player as an agent.
+        auto MeasureUpdate(Chain& chain, const Origin& self) -> void
         {
+            Views::View::Type::AgentSet agents{};
+            agents.Add(self.PlayerHandle);
             const auto start{ steady_clock::now() };
-            chain.m_Egocentric.m_RaycastService.Update();
+            chain.m_Egocentric.m_ViewsService.Update(agents);
             m_Update.Add(Micros(start, steady_clock::now()));
         }
 
@@ -999,8 +1084,7 @@ namespace
             const auto& raycaster{ chain.m_Resolved.m_Raycaster };
 
             auto start{ steady_clock::now() };
-            const SelfExclusion exclusion{ BuildSelfExclusion(chain.m_Environment.m_PlayersStore, chain.m_Environment.m_EntitiesStore,
-                chain.m_Tables.m_ObjectStore, self.PlayerHandle, self.BipedHandle) };
+            const SelfExclusion exclusion{ ExclusionOf(chain, self.PlayerHandle) };
             m_Exclusion.Add(Micros(start, steady_clock::now()));
             m_Sink += static_cast<double>(exclusion.size());
 
@@ -1092,32 +1176,6 @@ namespace
             m_FixedLeaves.Add(static_cast<double>(m_Scene.Fixed.Pieces.size()));
             m_MobileLeaves.Add(static_cast<double>(m_Scene.Mobile.Pieces.size()));
             return { gatherUs, mobileUs };
-        }
-
-        // M1 with the scene: the rays of Self cast through a scene of the bench against what RaycastService published.
-        auto MeasureSelfScene(Chain& chain, const Origin& self) -> void
-        {
-            const auto published{ chain.m_Egocentric.m_RaycastStore.Acquire() };
-            if (!published) return;
-
-            this->ArmScene(chain);
-            const Agent agent{ PrepareAgent(chain, self) };
-            const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
-            for (std::size_t index{ 0 }; index < rays.size(); ++index)
-            {
-                const Ray& ray{ rays[index] };
-                const RaycastHit hit{ CastSceneRay(chain.m_Resolved.m_Raycaster, m_Scene, agent.Exclusion, ray.Origin, ray.Direction, ray.Range, nullptr) };
-                const RaycastHit& expected{ index == 0 ? published->AimHit : published->PerceptionHits[index - 1] };
-
-                ++m_SelfCompared;
-                if (SameFullHit(hit, expected)) continue;
-
-                ++m_SelfDifferences;
-                if (m_DifferenceLines >= k_MaxDifferenceLines) continue;
-
-                ++m_DifferenceLines;
-                m_SceneMessages.push_back(std::format("Self ray {}: RaycastStore [{}] scene [{}]", index, DescribeHit(expected), DescribeHit(hit)));
-            }
         }
 
         // The origins of the 16 agents: the live players first, then past positions of Self.
@@ -1574,10 +1632,10 @@ namespace
         auto Observe(const Chain& constChain, std::size_t record) -> void
         {
             Chain& chain{ const_cast<Chain&>(constChain) };
-            const auto selfPtr{ chain.m_Egocentric.m_SelfStore.Acquire() };
-            if (!selfPtr || !selfPtr->IsAlive) return;
+            const std::optional<Origin> local{ LocalOrigin(chain) };
+            if (!local) return;
 
-            const Origin self{ selfPtr->Position, selfPtr->Forward, selfPtr->Handle, selfPtr->BipedHandle, false };
+            const Origin self{ *local };
             const Agent agent{ PrepareAgent(chain, self) };
             const std::array<Ray, k_RaysPerAgent> rays{ RaysOf(agent) };
 

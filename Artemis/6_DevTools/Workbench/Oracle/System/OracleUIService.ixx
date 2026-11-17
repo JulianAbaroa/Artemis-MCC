@@ -1,6 +1,7 @@
 export module DevTools.Workbench.Oracle.System;
 
 import Common.Log.System;
+import Services.Observed.State;
 import Services.Settings.State;
 import Engine.Capture.Oracle.Type;
 import Engine.Capture.Oracle.State;
@@ -23,6 +24,7 @@ export namespace DevTools::Workbench::Oracle::System
     {
     private:
         using Log = Common::Log::System::Log;
+        using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
         using OracleBatch = Engine::Capture::Oracle::Type::OracleBatch;
         using OracleProbe = Engine::Capture::Oracle::Type::OracleProbe;
@@ -38,9 +40,10 @@ export namespace DevTools::Workbench::Oracle::System
         using OracleUIStore = DevTools::Workbench::Oracle::State::OracleUIStore;
 
     public:
-        OracleUIService(Log& log, SettingsStore& settingsStore, OracleStore& oracleStore, Raycaster& raycaster,
-            OracleUIStore& oracleUIStore) :
-            m_Log(log), m_SettingsStore(settingsStore), m_OracleStore(oracleStore), m_Raycaster(raycaster),
+        // param observedStore: The player the Viewer follows. Its View gives the rays of the tick, and the local player's when nobody is followed.
+        OracleUIService(Log& log, SettingsStore& settingsStore, const ObservedPlayerStore& observedStore, OracleStore& oracleStore,
+            Raycaster& raycaster, OracleUIStore& oracleUIStore) :
+            m_Log(log), m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_OracleStore(oracleStore), m_Raycaster(raycaster),
             m_OracleUIStore(oracleUIStore) {}
         ~OracleUIService() = default;
 
@@ -57,6 +60,7 @@ export namespace DevTools::Workbench::Oracle::System
     private:
         Log& m_Log;
         SettingsStore& m_SettingsStore;
+        const ObservedPlayerStore& m_ObservedStore;
         OracleStore& m_OracleStore;
         Raycaster& m_Raycaster;
         OracleUIStore& m_OracleUIStore;

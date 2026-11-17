@@ -3,6 +3,7 @@ export module DevTools.Viewer.Scene.System;
 import Common.Math.Type;
 import Services.Observed.State;
 import Services.Settings.State;
+import Views.View.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Camera.State;
@@ -19,6 +20,7 @@ export namespace DevTools::Viewer::Scene::System
     {
     private:
         using Tick = Bridge::Codec::Tick::Type::Tick;
+        using View = Views::View::Type::View;
         using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
@@ -48,6 +50,10 @@ export namespace DevTools::Viewer::Scene::System
         // note: Follows or orbits the selected object according to the follow mode of the camera. When it follows the biped of a player, that
         // player is the observed one of the Services (the AI thread gives it a View).
         auto Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport) -> void;
+
+        // return: The View of the player the viewer watches (the observed one, else the primary local player), or null when the tick has none.
+        // note: Valid as long as the tick is.
+        auto GetObservedView(const Tick& tick) const -> const View*;
 
         auto ClearSelection() -> void;
 

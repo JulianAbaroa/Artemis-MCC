@@ -6,29 +6,41 @@ import Common.Semantic.Type;
 import Blam.MapModel.Definitions.Type;
 import Blam.MapModel.World.System;
 import Blam.Runtime.Object.Type;
+import Perception.Entities.Type;
+import Perception.ObjectGraph.Type;
+import Perception.Players.Type;
 import Perception.Collidable.Type;
-import Views.Self.Type;
 import Views.Raycast.Type;
 import Views.Raycast.State;
 import Views.Raycast.System;
+import Views.View.Type;
 import Tests.Support.Pipeline;
 import std;
 
 // The shared two level ray scene (D298, RS.0) with made-up meshes: poses, exclusion, ties, the fixed tree and the exactness against
-// a linear reference written here. RS.1 (D299): the reuse of the parts, the store between ticks and the Self update. RS.1b (D300): the
+// a linear reference written here. RS.1 (D299): the reuse of the parts, the store between ticks and the Views update. RS.1b (D300): the
 // objects at rest, the filter of the fixed tree and its rebuilds.
 
 namespace
 {
     using Common::Math::Type::Triangle;
     using Common::Math::Type::Vec3;
+    using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Physics;
+    using Blam::MapModel::Definitions::Type::Bipd::Bipd;
     using Blam::MapModel::Definitions::Type::Coll::Coll;
     using Blam::MapModel::Definitions::Type::Coll::CollMesh;
     using Blam::MapModel::World::System::Raycaster;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
     using Blam::Runtime::Object::Type::Placement::Placement;
     using Perception::Collidable::Type::CollidablePart;
+    using Perception::Entities::Type::Entities;
+    using Perception::Entities::Type::Entity;
+    using Perception::ObjectGraph::Type::ObjectNode;
+    using Perception::ObjectGraph::Type::ObjectNodes;
+    using Perception::Players::Type::Body;
+    using Perception::Players::Type::Player;
+    using Perception::Players::Type::Players;
     using Perception::Collidable::Type::CollidablePartsKey;
     using Tests::Support::Pipeline::Chain;
     using Views::Raycast::State::RaycastSceneStore;
@@ -59,6 +71,8 @@ namespace
     using Views::Raycast::Type::SceneRef;
     using Views::Raycast::Type::SceneRefs;
     using Views::Raycast::Type::SelfExclusion;
+    using Views::View::Type::AgentSet;
+    using Views::View::Type::ViewAimHit;
 
     using Views::Raycast::Type::Constant::k_FixedRebuildGathers;
     using Views::Raycast::Type::Constant::k_FixedRebuildMaxGathers;
@@ -807,11 +821,13 @@ TEST(RaycastScene, GivesTheSameHitAsTheLinearReferenceWhenTheTreeWaitsForManyOrF
 
 namespace
 {
-    // The update of Self over a made-up map with one collision model and one object.
-    class RaycastSelfUpdateTests : public ::testing::Test, protected Chain
+    // The Views update over a made-up map with one collision model and one object: the aim ray of one agent through the shared scene.
+    class RaycastViewUpdateTests : public ::testing::Test, protected Chain
     {
     protected:
         static constexpr std::uint32_t k_BigHandle{ 0xB1600001 };
+        static constexpr std::uint32_t k_PlayerHandle{ 0xE5A10001 };
+        static constexpr std::uint32_t k_BipedHandle{ 0xEC010011 };
 
         // A wall of 40 x 40 m on the plane x = -20 of the collision model, whose center is at x = 65.
         // note: The aim range without a weapon is 50 m, so the center is out of reach and the wall is at 45 m.
@@ -830,19 +846,45 @@ namespace
             coll.BoundsMin = { -20.0f, -20.0f, -20.0f };
             coll.BoundsMax = { 20.0f, 20.0f, 20.0f };
 
+            Bipd bipd{};
+            bipd.StandingCameraHeight = 0.62f;
+            bipd.CrouchingCameraHeight = 0.42f;
+
             m_Resolved.m_DefinitionsStore.m_Coll.Add("big\\wall", coll);
+            m_Resolved.m_DefinitionsStore.m_Bipd.Add("big\\spartan", bipd);
             m_Resolved.m_DefinitionsStore.Freeze();
             m_Resolved.m_WorldStore.LinkObjectColl("big\\object", "big\\wall");
             m_Resolved.m_WorldStore.Freeze();
 
-            Views::Self::Type::Self self{};
-            self.Handle = 1;
-            self.Position = { 0.0f, 0.0f, 0.0f };
-            self.Forward = { 1.0f, 0.0f, 0.0f };
-            self.Right = { 0.0f, -1.0f, 0.0f };
-            self.Up = { 0.0f, 0.0f, 1.0f };
-            self.IsAlive = true;
-            m_Egocentric.m_SelfStore.Publish(self);
+            // The agent: a player with a body at the origin that aims along x, its biped, and the graph and entities the Views read.
+            AliveObject biped{};
+            biped.Handle = k_BipedHandle;
+            biped.DatumIndex = 0x3002;
+            biped.TagName = "big\\spartan";
+            biped.Forward = { 1.0f, 0.0f, 0.0f };
+            biped.Up = { 0.0f, 0.0f, 1.0f };
+            m_Tables.m_ObjectStore.AddObject(k_BipedHandle, biped);
+
+            Entity entity{};
+            entity.Handle = k_BipedHandle;
+            entity.Function = Function::Combatant;
+            Entities entities{};
+            entities.Rows = { entity };
+            m_Environment.m_EntitiesStore.Publish(std::move(entities));
+
+            Player player{};
+            player.Handle = k_PlayerHandle;
+            player.BipedHandle = k_BipedHandle;
+            player.Body = Body{};
+            player.Body->Aim = { 1.0f, 0.0f, 0.0f };
+            Players players{};
+            players.Rows = { player };
+            players.Index[k_PlayerHandle] = 0;
+            m_Environment.m_PlayersStore.Publish(std::move(players));
+
+            ObjectNodes nodes{};
+            nodes.Nodes = { ObjectNode{ .Handle = k_BipedHandle } };
+            m_Environment.m_ObjectGraphStore.Publish(std::move(nodes));
         }
 
         auto PublishWall(float x, Physics physics) -> void
@@ -861,40 +903,43 @@ namespace
             m_Tables.m_ObjectStore.Publish();
         }
 
-        auto Aim() -> RaycastHit
+        // return: The aim hit of the agent after one Views update.
+        auto Aim() -> ViewAimHit
         {
-            m_Egocentric.m_RaycastService.Update();
-            const auto published{ m_Egocentric.m_RaycastStore.Acquire() };
-            return published ? published->AimHit : RaycastHit{};
+            AgentSet agents{};
+            agents.Add(k_PlayerHandle);
+            m_Egocentric.m_ViewsService.Update(agents);
+            const auto published{ m_Egocentric.m_ViewsStore.Acquire() };
+            return published ? (*published)[0].AimHit : ViewAimHit{};
         }
     };
 }
 
-TEST_F(RaycastSelfUpdateTests, ALargeObjectWhoseCenterIsBeyondTheReachIsHit)
+TEST_F(RaycastViewUpdateTests, ALargeObjectWhoseCenterIsBeyondTheReachIsHit)
 {
     this->PublishWall(65.0f, Physics::Normal);
 
-    const RaycastHit hit{ this->Aim() };
-    ASSERT_TRUE(hit.Hit);
-    EXPECT_EQ(hit.Kind, HitKind::Dynamic);
+    const ViewAimHit hit{ this->Aim() };
+    ASSERT_EQ(hit.Kind, HitKind::Dynamic);
     EXPECT_EQ(hit.ObjectHandle, k_BigHandle);
     EXPECT_NEAR(hit.Distance, 45.0f, 1.0e-3f);
 
     // A normal wall hits from the mobile tree: it is not at rest yet.
-    EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Parts().size(), 1u);
+    // The cache holds the wall and the biped of the agent, which has no part to hit.
+    EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Parts().size(), 2u);
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().Fixed.Pieces.empty());
     EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().Mobile.Pieces.size(), 1u);
 }
 
-TEST_F(RaycastSelfUpdateTests, ANormalObjectThatStaysEntersTheFixedTreeAfterTheRestGathers)
+TEST_F(RaycastViewUpdateTests, ANormalObjectThatStaysEntersTheFixedTreeAfterTheRestGathers)
 {
     this->PublishWall(65.0f, Physics::Normal);
 
     // The first gather has StillGathers 0 and each equal one adds 1: it rests when it reaches k_RestGathers.
     for (std::size_t tick{ 0 }; tick <= k_RestGathers; ++tick)
     {
-        const RaycastHit hit{ this->Aim() };
-        ASSERT_TRUE(hit.Hit) << tick;
+        const ViewAimHit hit{ this->Aim() };
+        ASSERT_EQ(hit.Kind, HitKind::Dynamic) << tick;
         EXPECT_NEAR(hit.Distance, 45.0f, 1.0e-3f) << tick;
         EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().Fixed.Pieces.size(), tick == k_RestGathers ? 1u : 0u) << tick;
         EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().Mobile.Pieces.size(), tick == k_RestGathers ? 0u : 1u) << tick;
@@ -903,19 +948,20 @@ TEST_F(RaycastSelfUpdateTests, ANormalObjectThatStaysEntersTheFixedTreeAfterTheR
     EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().FixedBuilds, 1u);
 }
 
-TEST_F(RaycastSelfUpdateTests, AFixedObjectKeepsItsPartsAndTheFixedTreeBetweenTicks)
+TEST_F(RaycastViewUpdateTests, AFixedObjectKeepsItsPartsAndTheFixedTreeBetweenTicks)
 {
     this->PublishWall(65.0f, Physics::Fixed);
 
     for (int tick{ 0 }; tick < 3; ++tick)
     {
-        const RaycastHit hit{ this->Aim() };
-        ASSERT_TRUE(hit.Hit) << tick;
+        const ViewAimHit hit{ this->Aim() };
+        ASSERT_EQ(hit.Kind, HitKind::Dynamic) << tick;
         EXPECT_EQ(hit.ObjectHandle, k_BigHandle) << tick;
         EXPECT_NEAR(hit.Distance, 45.0f, 1.0e-3f) << tick;
     }
 
-    EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Parts().size(), 1u);
+    // The cache holds the wall and the biped of the agent, which has no part to hit.
+    EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Parts().size(), 2u);
     EXPECT_EQ(m_Egocentric.m_RaycastSceneStore.Scene().FixedBuilds, 1u);
 
     // The object moves: the key changes, the old leaf is filtered, the new parts hit from the mobile tree and the fixed tree waits.
@@ -935,21 +981,21 @@ TEST_F(RaycastSelfUpdateTests, AFixedObjectKeepsItsPartsAndTheFixedTreeBetweenTi
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().FixedFilter.empty());
 }
 
-TEST_F(RaycastSelfUpdateTests, CleanupOfTheServiceForgetsTheSceneOnTheNextUpdate)
+TEST_F(RaycastViewUpdateTests, CleanupOfTheServiceForgetsTheSceneOnTheNextUpdate)
 {
     this->PublishWall(65.0f, Physics::Fixed);
-    ASSERT_TRUE(this->Aim().Hit);
+    ASSERT_EQ(this->Aim().Kind, HitKind::Dynamic);
     ASSERT_FALSE(m_Egocentric.m_RaycastSceneStore.Scene().Meshes.empty());
 
-    m_Egocentric.m_RaycastService.Cleanup();
-    EXPECT_EQ(m_Egocentric.m_RaycastStore.Acquire(), nullptr);
+    m_Egocentric.m_ViewsService.Cleanup();
+    EXPECT_EQ(m_Egocentric.m_ViewsStore.Acquire(), nullptr);
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().Meshes.empty());
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Parts().empty());
 
-    // The map is gone: the object table is empty and Self sees nothing, the scene arms from nothing.
+    // The map is gone: the wall is not in the object table, the aim ray hits nothing and the scene arms from nothing.
     m_Tables.m_ObjectStore.RemoveObject(k_BigHandle);
     m_Tables.m_ObjectStore.Publish();
-    EXPECT_FALSE(this->Aim().Hit);
+    EXPECT_EQ(this->Aim().Kind, HitKind::None);
     EXPECT_TRUE(m_Egocentric.m_RaycastSceneStore.Scene().Meshes.empty());
 }
 

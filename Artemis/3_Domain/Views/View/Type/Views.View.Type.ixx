@@ -114,6 +114,12 @@ export namespace Views::View::Type
 
         // Row of the player in Players.
         std::uint8_t PlayerRow{};
+
+        // Split-screen user of the player, 0xFF when it is not a local one.
+        std::uint8_t LocalIndex{};
+
+        // Handle of the biped of the player, 0xFFFFFFFF without one.
+        std::uint32_t BipedHandle{};
         ViewMode Mode{};
         bool IsComputed{};
         bool HasBody{};
@@ -187,6 +193,13 @@ export namespace Views::View::Type
     struct ViewAimHit
     {
         float Distance{};
+
+        // Range of the ray (the autoaim of the weapon, capped), 0 when it was not cast.
+        float MaxDistance{};
+
+        // World point of a hit, zero on a miss.
+        Vec3 Point{};
+        std::int16_t Material{};
         HitKind Kind{};
         std::uint32_t ObjectHandle{};
         ::Function Function{};
@@ -205,6 +218,10 @@ export namespace Views::View::Type
     {
         float Distance{};
         HitKind Kind{};
+        std::uint32_t ObjectHandle{};
+
+        // Global material of a static hit, -1 for none.
+        std::int16_t Material{};
         ::Function Function{};
         ViewRelation Relation{};
         std::uint8_t SurfaceFlags{};
@@ -274,6 +291,9 @@ export namespace Views::View::Type
         ViewHead Head{};
         ViewSelf Self{};
         ViewAimHit AimHit{};
+
+        // Where the rays of the pattern start from (bounding center of the vehicle or of the biped), zero when they were not cast.
+        Vec3 RayOrigin{};
         std::array<ViewRayHit, k_ViewRayCount> Rays{};
         std::array<ViewOther, k_MaxPlayers> Others{};
         std::array<ViewFlag, k_ViewFlags> Flags{};

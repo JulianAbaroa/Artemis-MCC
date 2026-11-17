@@ -34,18 +34,6 @@
     <Filter Include="Raycast\Type">
       <UniqueIdentifier>{67dd28ad-e275-5621-a3fd-12a67f4c5362}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Self">
-      <UniqueIdentifier>{e7130c0d-03da-5222-ab34-5888cc08bec8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Self\State">
-      <UniqueIdentifier>{39fed804-0e6e-5208-b866-6c4dfb9e378b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Self\System">
-      <UniqueIdentifier>{2e964a5b-f6a2-5a8c-80ae-7faba8451894}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Self\Type">
-      <UniqueIdentifier>{24a6158c-fafd-5e60-92e8-741605e5143c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="View">
       <UniqueIdentifier>{429cee67-e4a6-4310-b82e-551ddc9fe169}</UniqueIdentifier>
     </Filter>
@@ -76,14 +64,20 @@
     <ClCompile Include="Raycast\Views.Raycast.Type.ixx">
       <Filter>Raycast</Filter>
     </ClCompile>
+    <ClCompile Include="Raycast\Views.Raycast.System.ixx">
+      <Filter>Raycast</Filter>
+    </ClCompile>
+    <ClCompile Include="Raycast\Views.Raycast.State.ixx">
+      <Filter>Raycast</Filter>
+    </ClCompile>
     <ClCompile Include="Raycast\State\RaycastSceneStore.cpp">
       <Filter>Raycast\State</Filter>
     </ClCompile>
     <ClCompile Include="Raycast\State\RaycastSceneStore.ixx">
       <Filter>Raycast\State</Filter>
     </ClCompile>
-    <ClCompile Include="Raycast\State\RaycastStore.ixx">
-      <Filter>Raycast\State</Filter>
+    <ClCompile Include="Raycast\System\RaycastCast.cpp">
+      <Filter>Raycast\System</Filter>
     </ClCompile>
     <ClCompile Include="Raycast\System\RaycastCast.ixx">
       <Filter>Raycast\System</Filter>
@@ -106,12 +100,6 @@
     <ClCompile Include="Raycast\System\RaycastScene.ixx">
       <Filter>Raycast\System</Filter>
     </ClCompile>
-    <ClCompile Include="Raycast\System\RaycastService.cpp">
-      <Filter>Raycast\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Raycast\System\RaycastService.ixx">
-      <Filter>Raycast\System</Filter>
-    </ClCompile>
     <ClCompile Include="Raycast\Type\RaycastConstant.ixx">
       <Filter>Raycast\Type</Filter>
     </ClCompile>
@@ -123,18 +111,6 @@
     </ClCompile>
     <ClCompile Include="Raycast\Type\Raycasts.ixx">
       <Filter>Raycast\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Self\State\SelfStore.ixx">
-      <Filter>Self\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Self\System\SelfService.cpp">
-      <Filter>Self\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Self\System\SelfService.ixx">
-      <Filter>Self\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Self\Type\Views.Self.Type.ixx">
-      <Filter>Self\Type</Filter>
     </ClCompile>
     <ClCompile Include="View\State\ViewsStore.ixx">
       <Filter>View\State</Filter>

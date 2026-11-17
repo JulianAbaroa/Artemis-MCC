@@ -74,9 +74,8 @@ namespace DevTools::Viewer::Hud::System
     auto DistanceRow(const DevTools::Viewer::Hud::Type::LabelContext& context,
         const Common::Math::Type::Vec3& point, ImU32 color) -> DevTools::Viewer::Hud::Type::LabelRow
     {
-        const auto distance = context.Frame.Self ? context.Frame.Self->DistanceTo(point) : std::nullopt;
-
-        return DevTools::Viewer::Hud::Type::LabelRow{ distance ? std::format("d: {:.1f} wu", *distance) : std::string{ "d: n/a" }, color };
+        return DevTools::Viewer::Hud::Type::LabelRow{ context.HasSelf ? std::format("d: {:.1f} wu", Common::Math::System::Distance(context.SelfPosition, point))
+            : std::string{ "d: n/a" }, color };
     }
 
     auto TeamColorOf(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32

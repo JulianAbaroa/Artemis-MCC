@@ -26,6 +26,10 @@ export namespace Common::Engine::Type
     // Local players (split-screen) the engine supports.
     inline constexpr std::size_t k_MaxLocalUsers{ 4 };
 
+    // The local player the Viewer shows when it follows nobody, the one whose interaction the Tick carries and who always gets a View (D307).
+    // note: One agent of the process until every local player gets its own.
+    inline constexpr std::uint8_t k_PrimaryLocalUser{ 0 };
+
     // Slots of the object table: Artemis scans at most this many objects per tick and the bridge exports this many entities.
     // note: The capacity of the engine table (data array +0x2C), assumed and checked once per map load. Not read from it.
     inline constexpr std::uint32_t k_MaxObjects{ 2048 };

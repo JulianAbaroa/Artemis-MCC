@@ -1,6 +1,7 @@
 export module Views.View.System;
 
 import Common.Log.System;
+import Common.Math.Type;
 import Blam.MapModel.Definitions.State;
 import Blam.MapModel.World.System;
 import Blam.Runtime.Object.State;
@@ -9,6 +10,7 @@ import Perception.Details.State;
 import Perception.Entities.State;
 import Perception.ObjectGraph.State;
 import Perception.Players.State;
+import Views.Raycast.Type;
 import Views.Raycast.State;
 import Views.View.Type;
 import Views.View.State;
@@ -16,6 +18,20 @@ import std;
 
 export namespace Views::View::System
 {
+    // return: The View of the player with that handle, or the View of the primary local player when the handle is 0xFFFFFFFF or has none.
+    // Null when neither has a computed View. The Viewer and the oracle read the View of the player they watch through it (F4.2).
+    auto FindObservedView(const Views::View::Type::ViewTable& views, std::uint32_t observedHandle) -> const Views::View::Type::View*;
+
+    // return: The unit direction the agent aims along, from the heading and pitch of its aim.
+    auto AimDirectionOf(const Views::View::Type::View& view) -> Common::Math::Type::Vec3;
+
+    // return: Where the agent looks from: its eye, or its feet when the biped has no tag (the eye is zero then).
+    auto ViewPositionOf(const Views::View::Type::View& view) -> Common::Math::Type::Vec3;
+
+    // return: The raycasts of a View in the form the dev tools draw and compare: the aim ray from the eye along the aim, and the rays of the
+    // pattern from the ray origin in the frame of the aim. Empty perception hits when the rays were not cast (dead agent, no body).
+    auto RaycastsOf(const Views::View::Type::View& view) -> Views::Raycast::Type::Raycasts;
+
     // Builds the View of every agent of the set, one per row of Players (F4, D307).
     // note: F4.1 fills the head and Self, F4.2 the aim hit and the rays. The other sections are zero until F4.3 to F4.6.
     class ViewsService

@@ -13,8 +13,6 @@ import Perception.Aim.Type;
 import Perception.Events.Type;
 import Perception.Match.Type;
 import Views.Affordance.Type;
-import Views.Self.Type;
-import Views.Raycast.Type;
 import Views.View.Type;
 import std;
 
@@ -58,8 +56,6 @@ namespace
 
     using Views::Affordance::Type::Affordance;
     using Views::Affordance::Type::Affordances;
-    using Views::Self::Type::Self;
-    using Views::Raycast::Type::Raycasts;
     using Views::View::Type::ViewTable;
 }
 
@@ -78,7 +74,7 @@ export namespace Bridge::Codec::Tick::Type
         // --- Layer 3: Tables ---
         std::shared_ptr<const ObjectTable> ObjectTable{};
         std::shared_ptr<const PlayerTable> PlayerTable{};
-        // Interaction of the agent (local player Views::Self::Type::k_SelfLocalIndex).
+        // Interaction of the agent (primary local player, Common k_PrimaryLocalUser).
         std::shared_ptr<const AliveInteraction> Interaction{};
 
         // --- Layer 4: Relations ---
@@ -103,9 +99,7 @@ export namespace Bridge::Codec::Tick::Type
         std::shared_ptr<const MatchStatus> Match{};
 
         // --- Layer 6: Egocentric ---
-        std::shared_ptr<const Self> Self{};
         std::shared_ptr<const Affordances> Affordances{};
-        std::shared_ptr<const Raycasts> Raycasts{};
         // One View per row of Players, in the same order (F4, D307). Not in the bridge yet.
         std::shared_ptr<const ViewTable> Views{};
     };

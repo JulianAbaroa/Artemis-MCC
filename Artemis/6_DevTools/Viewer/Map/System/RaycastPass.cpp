@@ -67,7 +67,7 @@ namespace
 namespace DevTools::Viewer::Map::System
 {
     auto RaycastPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const std::shared_ptr<const Raycasts>& raycasts, std::uint64_t generation) -> void
+        const Raycasts* raycasts, std::uint64_t generation) -> void
     {
         if (!device || !context) return;
 

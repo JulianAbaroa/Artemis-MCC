@@ -1,6 +1,6 @@
 module Bridge.Codec.Tick.System;
 
-import Views.Self.Type;
+import Common.Engine.Type;
 import Bridge.Codec.Tick.Type;
 
 namespace
@@ -8,7 +8,7 @@ namespace
     using Bridge::Codec::Tick::Type::Tick;
     using Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
 
-    using Views::Self::Type::k_SelfLocalIndex;
+    using Common::Engine::Type::k_PrimaryLocalUser;
 }
 
 namespace Bridge::Codec::Tick::System
@@ -59,7 +59,7 @@ namespace Bridge::Codec::Tick::System
         // note: Shares the published interactions and points to the one of the agent.
         const auto interactions{ m_InteractionStore.Acquire() };
         tick.Interaction = interactions
-            ? std::shared_ptr<const AliveInteraction>(interactions, &(*interactions)[k_SelfLocalIndex])
+            ? std::shared_ptr<const AliveInteraction>(interactions, &(*interactions)[k_PrimaryLocalUser])
             : nullptr;
 
         // --- Layer 4: Relations ---
@@ -83,9 +83,7 @@ namespace Bridge::Codec::Tick::System
         tick.Match = m_MatchStore.Acquire();
 
         // --- Layer 6: Egocentric ---
-        tick.Self = m_SelfStore.Acquire();
         tick.Affordances = m_AffordanceStore.Acquire();
-        tick.Raycasts = m_RaycastStore.Acquire();
         tick.Views = m_ViewsStore.Acquire();
 
         // --- Layer 7: Export ---

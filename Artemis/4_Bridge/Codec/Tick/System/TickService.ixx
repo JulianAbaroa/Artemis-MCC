@@ -14,9 +14,7 @@ import Perception.Players.State;
 import Perception.Aim.State;
 import Perception.Events.State;
 import Perception.Match.State;
-import Views.Self.State;
 import Views.Affordance.State;
-import Views.Raycast.State;
 import Views.View.State;
 import Bridge.Codec.Tick.Type;
 import Bridge.Codec.Tick.State;
@@ -46,9 +44,7 @@ export namespace Bridge::Codec::Tick::System
         using AimStore = Perception::Aim::State::AimStore;
         using EventsStore = Perception::Events::State::EventsStore;
         using MatchStore = Perception::Match::State::MatchStore;
-        using SelfStore = Views::Self::State::SelfStore;
         using AffordanceStore = Views::Affordance::State::AffordanceStore;
-        using RaycastStore = Views::Raycast::State::RaycastStore;
         using ViewsStore = Views::View::State::ViewsStore;
         using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
         using TickStore = Bridge::Codec::Tick::State::TickStore;
@@ -64,8 +60,8 @@ export namespace Bridge::Codec::Tick::System
             TeleporterDetailsStore& teleporterDetailsStore, LiftDetailsStore& liftDetailsStore, BarrierDetailsStore& barrierDetailsStore,
             ExplosiveDetailsStore& explosiveDetailsStore,
             ObjectiveDetailsStore& objectiveDetailsStore, ProjectileDetailsStore& projectileDetailsStore, WeaponDetailsStore& weaponDetailsStore,
-            AimStore& aimStore, EventsStore& eventsStore, MatchStore& matchStore, SelfStore& selfStore,
-            AffordanceStore& affordanceStore, RaycastStore& raycastStore, ViewsStore& viewsStore,
+            AimStore& aimStore, EventsStore& eventsStore, MatchStore& matchStore,
+            AffordanceStore& affordanceStore, ViewsStore& viewsStore,
             DefinitionsStore& definitionsStore, TickStore& tickStore) :
             m_ObjectStore(objectStore), m_PlayerStore(playerStore),
             m_InteractionStore(interactionStore), m_ClassifierStore(classifierStore),
@@ -74,8 +70,8 @@ export namespace Bridge::Codec::Tick::System
             m_TeleporterDetailsStore(teleporterDetailsStore), m_LiftDetailsStore(liftDetailsStore), m_BarrierDetailsStore(barrierDetailsStore),
             m_ExplosiveDetailsStore(explosiveDetailsStore),
             m_ObjectiveDetailsStore(objectiveDetailsStore), m_ProjectileDetailsStore(projectileDetailsStore), m_WeaponDetailsStore(weaponDetailsStore),
-            m_AimStore(aimStore), m_EventsStore(eventsStore), m_MatchStore(matchStore), m_SelfStore(selfStore),
-            m_AffordanceStore(affordanceStore), m_RaycastStore(raycastStore), m_ViewsStore(viewsStore),
+            m_AimStore(aimStore), m_EventsStore(eventsStore), m_MatchStore(matchStore),
+            m_AffordanceStore(affordanceStore), m_ViewsStore(viewsStore),
             m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
         ~TickService() = default;
 
@@ -101,9 +97,7 @@ export namespace Bridge::Codec::Tick::System
         AimStore& m_AimStore;
         EventsStore& m_EventsStore;
         MatchStore& m_MatchStore;
-        SelfStore& m_SelfStore;
         AffordanceStore& m_AffordanceStore;
-        RaycastStore& m_RaycastStore;
         ViewsStore& m_ViewsStore;
         DefinitionsStore& m_DefinitionsStore;
         TickStore& m_TickStore;

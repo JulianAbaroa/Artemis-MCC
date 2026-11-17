@@ -9,7 +9,6 @@ import Contract.Bridge.Type;
 import Control.Lockstep.Type;
 import Engine.Base.Lifecycle.Type;
 import Blam.Runtime.Player.Type;
-import Views.Self.Type;
 import Bridge.Codec.Flat.Type;
 import std;
 
@@ -21,7 +20,7 @@ namespace
     using Contract::Bridge::Type::BridgeOwner;
     using Control::Lockstep::Type::BridgeControlState;
     using Bridge::Codec::Flat::Type::FlatRequest;
-    using Views::Self::Type::k_SelfLocalIndex;
+    using Common::Engine::Type::k_PrimaryLocalUser;
     using Services::Telemetry::System::OtherStageNs;
     using Services::Telemetry::Type::k_MaxStages;
     using Common::Engine::Type::k_NoHandle;
@@ -242,7 +241,7 @@ namespace Mod::Thread::System
 
         for (const auto& [handle, player] : *players)
         {
-            if (player.LocalIndex == k_SelfLocalIndex) agents.Add(player.Handle);
+            if (player.LocalIndex == k_PrimaryLocalUser) agents.Add(player.Handle);
         }
         return agents;
     }

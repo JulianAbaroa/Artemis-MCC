@@ -7,6 +7,7 @@ export module DevTools.Viewer.Hud.Type;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Perception.Classifier.Type;
+import Views.Raycast.Type;
 import Bridge.Codec.Tick.Type;
 import std;
 
@@ -36,7 +37,7 @@ export namespace DevTools::Viewer::Hud::Type
 
     // What the label collectors read in a frame.
     // Selected is the selected handle, or the no-selection handle.
-    // The self fields are valid only if HasSelf is true, except SelfBiped which is set whenever the local player exists.
+    // The self fields are valid only if HasSelf is true, except SelfBiped which is set whenever the watched player exists.
     struct LabelContext
     {
         const Bridge::Codec::Tick::Type::Tick& Frame;
@@ -48,6 +49,9 @@ export namespace DevTools::Viewer::Hud::Type
         bool HasSelf{ false };
         Common::Math::Type::Vec3 SelfPosition{};
         std::uint32_t SelfBiped{ k_NoHandle };
+
+        // The aim ray of the watched player. Hit is false when it hit nothing or was not cast.
+        Views::Raycast::Type::RaycastHit AimHit{};
     };
 
     // Label already projected to the screen. Rows are drawn from top to bottom.

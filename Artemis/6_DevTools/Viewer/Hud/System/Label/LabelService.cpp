@@ -5,6 +5,7 @@ module;
 module DevTools.Viewer.Hud.System;
 import :Labels;
 
+import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Options.Type;
@@ -14,6 +15,8 @@ import std;
 namespace
 {
     using DevTools::Viewer::Options::Type::Flag;
+    using Views::View::System::RaycastsOf;
+    using Views::View::System::ViewPositionOf;
 }
 
 namespace DevTools::Viewer::Hud::System
@@ -39,15 +42,16 @@ namespace DevTools::Viewer::Hud::System
         LabelContext context{ *tick, m_Classifications };
         context.Selected = m_SelectionStore.GetSelected();
 
-        if (tick->Self && tick->Self->IsAlive)
+        // note: The player the camera watches: the followed one, else the primary local player.
+        if (const auto* view{ m_SceneService.GetObservedView(*tick) })
         {
-            context.HasSelf = true;
-            context.SelfPosition = tick->Self->Position;
-            context.SelfBiped = tick->Self->BipedHandle;
-        }
-        else if (tick->Self)
-        {
-            context.SelfBiped = tick->Self->BipedHandle;
+            context.SelfBiped = view->Head.BipedHandle;
+            if (view->Head.HasBody)
+            {
+                context.HasSelf = true;
+                context.SelfPosition = ViewPositionOf(*view);
+                context.AimHit = RaycastsOf(*view).AimHit;
+            }
         }
 
         m_Canvas.Reset();

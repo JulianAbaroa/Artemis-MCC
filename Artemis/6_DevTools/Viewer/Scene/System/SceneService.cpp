@@ -2,6 +2,7 @@ module DevTools.Viewer.Scene.System;
 
 import Common.Engine.Type;
 import Perception.Players.Type;
+import Views.View.System;
 import DevTools.Viewer.Selection.State;
 import std;
 
@@ -9,6 +10,8 @@ namespace
 {
     using DevTools::Viewer::Camera::Type::Follow;
     using Perception::Players::Type::Player;
+
+    using Views::View::System::FindObservedView;
 
     using Common::Engine::Type::k_NoHandle;
 }
@@ -18,6 +21,11 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::IsActive() const -> bool
     {
         return m_CameraStore.IsActive();
+    }
+
+    auto SceneService::GetObservedView(const Tick& tick) const -> const View*
+    {
+        return tick.Views ? FindObservedView(*tick.Views, m_ObservedStore.Get()) : nullptr;
     }
 
     auto SceneService::Deactivate() -> void

@@ -176,9 +176,9 @@ namespace DevTools::Viewer::Hud::System
             }
         }
 
-        if (showHit && tick.Raycasts && tick.Raycasts->AimHit.Hit)
+        if (showHit && context.AimHit.Hit)
         {
-            const auto& hit = tick.Raycasts->AimHit;
+            const auto& hit = context.AimHit;
 
             std::vector<LabelRow> rows{};
             rows.push_back(LabelRow{ "AIM HIT", ToImColor(k_InteractionAim) });

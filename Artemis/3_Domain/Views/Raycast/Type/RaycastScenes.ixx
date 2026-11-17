@@ -157,8 +157,7 @@ export namespace Views::Raycast::Type
     // The two level ray scene shared by all agents: a hierarchy per mesh and two hierarchies of instances.
     struct RaycastScene
     {
-        // Object table the scene was last prepared for, and how many times it was prepared (PrepareScene).
-        std::weak_ptr<const ObjectTable> PreparedFor{};
+        // How many times the scene was prepared (PrepareScene).
         std::size_t Prepares{ 0 };
 
         MeshBvhs Meshes{};

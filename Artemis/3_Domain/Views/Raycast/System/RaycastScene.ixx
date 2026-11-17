@@ -37,13 +37,8 @@ export namespace Views::Raycast::System
 {
     // Gathers the objects of the tick and arms the fixed and the mobile tree, once for all the agents of the tick (F4.2).
     // param parts: The parts of the objects of the last gather.
-    // note: It marks the scene as prepared for the object table of the tick and counts the call in RaycastScene::Prepares.
+    // note: Counts the call in RaycastScene::Prepares.
     auto PrepareScene(RaycastScene& scene, ScenePartsCache& parts, CollidableService& collidableService, const ObjectTableStore& objectStore) -> void;
-
-    // return: Whether the scene was prepared for the object table that is published now, by a PrepareScene since the last call of this function.
-    // note: Takes the mark: the next call answers false until the scene is prepared again. The Self of before uses it to share the gather of
-    // the Views in a tick and to gather by itself when it runs alone (F4.2, until the Self is deleted).
-    auto TakePreparedScene(RaycastScene& scene, const ObjectTableStore& objectStore) -> bool;
 
     // Collects the parts of every object of the tick that has collision, sorted by handle, and marks the ones at rest.
     // param reuse: The parts of the objects of the last gather. An object whose key is the same keeps its parts without collecting them

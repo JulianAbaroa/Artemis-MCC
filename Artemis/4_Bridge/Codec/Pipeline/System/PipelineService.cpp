@@ -57,13 +57,9 @@ namespace Bridge::Codec::Pipeline::System
         m_Environment.m_MatchService.Update();
         if (!stage()) return;
 
-        m_Egocentric.m_SelfService.Update();
-        if (!stage()) return;
         m_Egocentric.m_AffordanceService.Update();
         if (!stage()) return;
         m_Egocentric.m_ViewsService.Update(agents);
-        if (!stage()) return;
-        m_Egocentric.m_RaycastService.Update();
         if (!stage()) return;
 
         m_TickService.Assemble(generation);

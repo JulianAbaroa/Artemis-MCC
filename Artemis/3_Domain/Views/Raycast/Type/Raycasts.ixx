@@ -60,13 +60,6 @@ export namespace Views::Raycast::Type
         Vec3 Max{};
     };
 
-    struct PerceptionOrigin
-    {
-        Vec3 Position{};
-        Vec3 Forward{};
-        bool Valid{ false };
-    };
-
     struct Raycasts
     {
         RaycastHit AimHit{};

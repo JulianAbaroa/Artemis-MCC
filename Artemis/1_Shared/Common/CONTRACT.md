@@ -20,7 +20,7 @@ Other projects may import only these modules; everything else in the project is 
 
 | Module | What it gives |
 |---|---|
-| `Common.Engine.Type` | Sentinels and limits shared with the engine: `k_NoHandle`, `k_NoTick`, handle masks, `k_MaxPlayers`, `k_MaxLocalUsers`, `k_MaxObjects`, `k_TicksPerSecond`. |
+| `Common.Engine.Type` | Sentinels and limits shared with the engine: `k_NoHandle`, `k_NoTick`, handle masks, `k_MaxPlayers`, `k_MaxLocalUsers`, `k_PrimaryLocalUser` (the local player the Viewer shows, whose interaction the Tick carries and who always gets a View), `k_MaxObjects`, `k_TicksPerSecond`. |
 | `Common.Math.Type`, `Common.Math.System` | `Vec2/3/4`, `Matrix`, `Triangle` (fixed layout, used inside generated structs) and vector math (including the rotation of a vector by a quaternion, the move of a point by a 3x4 instance matrix and `IsFinite`, whether a vector has no NaN or infinite component). |
 | `Common.Geometry.System` | Ray against triangle (a distance that is not a number is out of range), and `AppendCollisionSurface` (the polygon of one surface of a collision bsp as triangles with its flags and material, shared by the model collision and the structure collision). |
 | `Common.State.Type` | `Store<T>`: publish an immutable value, readers acquire a `Snapshot` without locks. `ByteBoundedQueue<T>`: queue between two threads capped in bytes (the producer waits for room; an entry alone above the cap still goes in). `BoundedQueue<T>`: queue between one producer and one consumer capped in entries (the producer waits for room up to a timeout and then gives the entry up; closing it wakes the producer; `Clear` empties it). |

@@ -5,12 +5,13 @@ module;
 
 module Views.Affordance.System;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Blam.MapModel.Definitions.Type;
 import Blam.Runtime.Object.Type;
+import Blam.Runtime.Player.Type;
 import Perception.Classifier.Type;
 import Views.Affordance.Type;
-import Views.Self.Type;
 
 namespace
 {
@@ -19,9 +20,10 @@ namespace
     using Blam::Runtime::Object::Type::Vehicle::Seat::Seat;
     using Perception::Classifier::Type::Classified;
     using Perception::Classifier::Type::Classifieds;
-    using Views::Self::Type::Self;
+    using Blam::Runtime::Player::Type::Alive::AlivePlayer;
 
-    using Views::Self::Type::k_SelfLocalIndex;
+    using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_PrimaryLocalUser;
 
     using Common::Semantic::Type::Binding;
     using Common::Semantic::Type::Capability;
@@ -34,18 +36,25 @@ namespace Views::Affordance::System
 {
     auto AffordanceService::Update() -> void
     {
-        auto selfPtr = m_SelfStore.Acquire();
-        if (!selfPtr) return;
-        const ::Self& self = *selfPtr;
+        // note: The agent is the primary local player, seen from its camera.
+        auto playerTablePtr = m_PlayerStore.Acquire();
+        if (!playerTablePtr) return;
 
-        if (!self.IsAlive)
+        const AlivePlayer* self{ nullptr };
+        for (const auto& entry : *playerTablePtr)
+        {
+            if (entry.second.LocalIndex == k_PrimaryLocalUser) self = &entry.second;
+        }
+        if (!self) return;
+
+        if (self->AliveBipedHandle == k_NoHandle)
         {
             m_AffordanceStore.Publish({});
             return;
         }
 
-        const Vec3& selfPosition = self.Position;
-        const std::uint32_t selfBipedHandle = self.BipedHandle;
+        const Vec3 selfPosition = self->CameraPosition;
+        const std::uint32_t selfBipedHandle = self->CurrentBipedHandle;
 
         auto interactionsPtr = m_InteractionStore.Acquire();
         auto classifiedsPtr = m_ClassifierStore.Acquire();
@@ -54,7 +63,7 @@ namespace Views::Affordance::System
 
         if (!interactionsPtr || !classifiedsPtr || !objectGraphPtr || !objectTablePtr) return;
 
-        const AliveInteraction& interaction = (*interactionsPtr)[k_SelfLocalIndex];
+        const AliveInteraction& interaction = (*interactionsPtr)[k_PrimaryLocalUser];
         const Classifieds& classifieds = *classifiedsPtr;
         const ObjectNodes& nodes = *objectGraphPtr;
         const ObjectTable& objectTable = *objectTablePtr;

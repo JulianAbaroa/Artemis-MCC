@@ -12,12 +12,12 @@ import Perception.Players.Type;
 import Views.Raycast.State;
 import Views.Raycast.Type;
 import Views.View.Type;
-import Tests.Support.FilmPass;
+import Views.View.System;
 import Tests.Support.Pipeline;
 import std;
 
 // The rays of each agent (F4.2): the aim hit and the perception rays of a View, cast through the one scene of the tick with the exclusion of
-// each player, over made-up objects (planes the rays cross), and the comparison with the Self of before over a film.
+// each player, over made-up objects (planes the rays cross).
 
 namespace
 {
@@ -36,10 +36,10 @@ namespace
     using Perception::Players::Type::Body;
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Players;
-    using Tests::Support::FilmPass::FilmOutcome;
-    using Tests::Support::FilmPass::RunFilmPass;
     using Tests::Support::Pipeline::Chain;
     using Views::Raycast::Type::HitKind;
+    using Views::View::System::FindObservedView;
+    using Views::View::System::RaycastsOf;
     using Views::View::Type::AgentSet;
     using Views::View::Type::View;
     using Views::View::Type::ViewRelation;
@@ -296,75 +296,57 @@ TEST_F(ViewRaysTests, DeadAgentHasNoRays)
     EXPECT_FALSE(table[0].Head.IsComputed);
 }
 
-namespace
+// The watched player is the one with the observed handle, else the primary local player, and nobody when neither has a computed View.
+TEST(ViewObservedTests, FindsTheObservedPlayerThenTheLocalOne)
 {
-    struct RayComparison
-    {
-        std::size_t Records{};
-        std::size_t Rays{};
-        std::size_t Differences{};
-        std::size_t AimDifferences{};
-        std::string First{};
-    };
+    ViewTable table{};
+    table[0].Head = { .PlayerHandle = k_PlayerA, .PlayerRow = 0, .LocalIndex = 0xFF, .IsComputed = true };
+    table[1].Head = { .PlayerHandle = k_PlayerB, .PlayerRow = 1, .LocalIndex = 0, .IsComputed = true };
+    table[2].Head = { .PlayerHandle = k_PlayerC, .PlayerRow = 2, .LocalIndex = 0, .IsComputed = false };
 
-    // Compares the perception rays of the local View with the ones the Self of before cast, ray by ray: kind, distance, surface flags, and function
-    // and relation of a dynamic hit. The aim ray starts at the eye and not at the camera, so it is only counted.
-    auto CompareLocal(const Chain& chain, RayComparison& result) -> void
-    {
-        const auto views{ chain.m_Egocentric.m_ViewsStore.Acquire() };
-        const auto players{ chain.m_Environment.m_PlayersStore.Acquire() };
-        const auto entities{ chain.m_Environment.m_EntitiesStore.Acquire() };
-        const auto old{ chain.m_Egocentric.m_RaycastStore.Acquire() };
-        if (!views || !players || !entities || !old || old->PerceptionHits.empty()) return;
+    EXPECT_EQ(FindObservedView(table, k_PlayerA), &table[0]);
+    EXPECT_EQ(FindObservedView(table, k_NoHandle), &table[1]);
+    EXPECT_EQ(FindObservedView(table, 0xDEAD0001), &table[1]);
+    EXPECT_EQ(FindObservedView(table, k_PlayerC), &table[1]);
 
-        for (std::size_t row{ 0 }; row < players->Rows.size(); ++row)
-        {
-            const Player& player{ players->Rows[row] };
-            if (player.LocalIndex != 0 || !player.Body) continue;
-
-            const View& view{ (*views)[row] };
-            ++result.Records;
-            for (std::size_t index{ 0 }; index < old->PerceptionHits.size(); ++index)
-            {
-                const auto& expected{ old->PerceptionHits[index] };
-                const auto& actual{ view.Rays[index] };
-                ++result.Rays;
-
-                bool isSame{ expected.Hit == (actual.Kind != HitKind::None) && (!expected.Hit || expected.Kind == actual.Kind) };
-                isSame = isSame && std::abs(actual.Distance - (expected.Hit ? expected.Distance : expected.MaxDistance)) <= 1.0e-3f;
-                isSame = isSame && actual.SurfaceFlags == expected.SurfaceFlags;
-                if (isSame && expected.Hit && expected.Kind == HitKind::Dynamic)
-                {
-                    const Entity* entity{ entities->Find(expected.ObjectHandle) };
-                    const Team team{ entity ? entity->Team : Team::Neutral };
-                    const ViewRelation relation{ (!entity || team == Team::Neutral || player.Team == Team::Neutral) ? ViewRelation::Neutral
-                        : (team == player.Team ? ViewRelation::Ally : ViewRelation::Enemy) };
-                    isSame = actual.Function == (entity ? entity->Function : Function::Unknown) && actual.Relation == relation;
-                }
-                if (isSame) continue;
-
-                if (result.Differences++ == 0) result.First = std::format("record {} ray {}: kind {} vs {}, distance {} vs {}", result.Records, index,
-                    static_cast<int>(expected.Kind), static_cast<int>(actual.Kind), expected.Distance, actual.Distance);
-            }
-
-            const auto& aim{ old->AimHit };
-            const bool isSameAim{ aim.Hit == (view.AimHit.Kind != HitKind::None) && (!aim.Hit || std::abs(aim.Distance - view.AimHit.Distance) <= 0.05f) };
-            if (!isSameAim) ++result.AimDifferences;
-        }
-    }
+    table[1].Head.IsComputed = false;
+    EXPECT_EQ(FindObservedView(table, k_NoHandle), nullptr);
+    EXPECT_EQ(FindObservedView(table, k_PlayerA), &table[0]);
 }
 
-// The perception rays of the local View are the ones of the Self of before, over ctf_d (the pattern starts as the cube of the Self, in the same
-// frame). A film pass costs about 17 s of map load, so it runs by hand: python Tools/test.py --disabled --filter "DISABLED_ViewRaysTests.*".
-TEST(DISABLED_ViewRaysTests, LocalViewEqualsOldSelfRays)
+// The raycasts the dev tools draw come out of the View: the aim ray from the eye, the pattern from the ray origin in the frame of the aim.
+TEST_F(ViewRaysTests, RaycastsOfRebuildsTheRaysOfTheView)
 {
-    RayComparison result{};
-    const FilmOutcome outcome{ RunFilmPass("ctf_d", false, [&result](const Chain& chain, std::size_t) { CompareLocal(chain, result); }, {}, 4) };
-    if (!outcome.Skip.empty()) GTEST_SKIP() << outcome.Skip;
+    AgentSet agents{};
+    agents.Add(k_PlayerA);
+    agents.Add(k_PlayerC);
+    const ViewTable table{ this->Compute(agents) };
+    const View& view{ table[0] };
+    ASSERT_TRUE(view.Head.IsComputed);
+    EXPECT_EQ(view.Head.BipedHandle, k_BipedA);
+    EXPECT_EQ(view.Head.LocalIndex, 0xFF);
 
-    EXPECT_TRUE(outcome.Error.empty()) << outcome.Error;
-    EXPECT_GT(result.Records, 0u);
-    EXPECT_EQ(result.Differences, 0u) << result.First;
-    std::println("ctf_d: {} records, {} rays compared, {} differences, aim ray (eye against camera): {} differences. {}", result.Records, result.Rays,
-        result.Differences, result.AimDifferences, result.First);
+    const auto rebuilt{ RaycastsOf(view) };
+    EXPECT_EQ(rebuilt.AimHit.Origin.Z, view.Self.Eye.Z);
+    EXPECT_NEAR(rebuilt.AimHit.Direction.X, 1.0f, 1.0e-5f);
+    EXPECT_EQ(rebuilt.AimHit.Hit, view.AimHit.Kind != HitKind::None);
+    EXPECT_EQ(rebuilt.AimHit.MaxDistance, view.AimHit.MaxDistance);
+
+    ASSERT_EQ(rebuilt.PerceptionHits.size(), 14u);
+    for (std::size_t index{ 0 }; index < rebuilt.PerceptionHits.size(); ++index)
+    {
+        const auto& hit{ rebuilt.PerceptionHits[index] };
+        const auto& ray{ view.Rays[index] };
+        const float length{ std::sqrt(hit.Direction.X * hit.Direction.X + hit.Direction.Y * hit.Direction.Y + hit.Direction.Z * hit.Direction.Z) };
+        EXPECT_NEAR(length, 1.0f, 1.0e-5f) << index;
+        EXPECT_EQ(hit.MaxDistance, 20.0f) << index;
+        EXPECT_EQ(hit.Hit, ray.Kind != HitKind::None) << index;
+        if (hit.Hit) EXPECT_NEAR(hit.Origin.X + hit.Direction.X * ray.Distance, hit.Point.X, 1.0e-4f) << index;
+    }
+    EXPECT_NEAR(rebuilt.PerceptionHits[4].Direction.X, 1.0f, 1.0e-5f);
+
+    // A dead agent has no rays, and its aim was not cast.
+    const auto dead{ RaycastsOf(table[2]) };
+    EXPECT_TRUE(dead.PerceptionHits.empty());
+    EXPECT_FALSE(dead.AimHit.Hit);
 }

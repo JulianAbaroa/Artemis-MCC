@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!-- Pattern of the perception rays of a View (D311). One row per ray, in the frame of the agent: yaw in degrees from its forward, positive to the
      left, pitch in degrees from the horizontal, positive up, and the range in world units. Tools/TagTranspiler/GenerateViews.py generates
-     Views.Raycast.Type:Pattern from it. The rows start as the cube of the old Self (6 faces and 8 corners, range 20), in the same order. At most
-     16 rows (k_ViewRayCount of Views.View.Type). -->
+     Views.Raycast.Type:Pattern from it. The rows are a cube (6 faces and 8 corners, range 20). The frame is the heading of the aim on the ground
+     plane, with the world up. At most 16 rows (k_ViewRayCount of Views.View.Type). -->
 <rays>
 	<ray yaw="-90" pitch="0" range="20" doc="right face" />
 	<ray yaw="90" pitch="0" range="20" doc="left face" />

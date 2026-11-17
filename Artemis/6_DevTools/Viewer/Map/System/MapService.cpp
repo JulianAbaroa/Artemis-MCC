@@ -6,6 +6,8 @@ module DevTools.Viewer.Map.System;
 import :MapService;
 
 import Common.Semantic.Type;
+import Views.Raycast.Type;
+import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Collidable.Type;
@@ -29,6 +31,8 @@ namespace
     using DevTools::Viewer::Map::Type::FixturePassOptions;
     using DevTools::Viewer::Map::Type::LimitsPassOptions;
     using Common::Semantic::Type::Function;
+    using Views::Raycast::Type::Raycasts;
+    using Views::View::System::RaycastsOf;
 
     using DevTools::Viewer::Style::Type::k_Background;
 }
@@ -118,7 +122,9 @@ namespace DevTools::Viewer::Map::System
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Raycast };
-                m_RaycastPass.Upload(frame.Device, frame.Context, tick->Raycasts, tick->Generation);
+                const auto* view{ m_SceneService.GetObservedView(*tick) };
+                const Raycasts raycasts{ view ? RaycastsOf(*view) : Raycasts{} };
+                m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation);
             }
 
             {

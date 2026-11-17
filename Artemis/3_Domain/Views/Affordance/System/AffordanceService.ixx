@@ -5,6 +5,8 @@ import Common.Semantic.Type;
 import Common.Log.System;
 import Blam.Runtime.Object.Type;
 import Blam.Runtime.Object.State;
+import Blam.Runtime.Player.Type;
+import Blam.Runtime.Player.State;
 import Blam.Runtime.Interaction.Type;
 import Blam.Runtime.Interaction.State;
 import Perception.Classifier.Type;
@@ -12,7 +14,6 @@ import Perception.Classifier.State;
 import Perception.ObjectGraph.Type;
 import Perception.ObjectGraph.State;
 import Perception.Collidable.System;
-import Views.Self.State;
 import Views.Affordance.Type;
 import Views.Affordance.State;
 import std;
@@ -45,17 +46,18 @@ export namespace Views::Affordance::System
         using AffordanceActivation = Views::Affordance::Type::AffordanceActivation;
 
         using Log = Common::Log::System::Log;
-        using SelfStore = Views::Self::State::SelfStore;
+        using PlayerTable = Blam::Runtime::Player::Type::Alive::PlayerTable;
+        using PlayerTableStore = Blam::Runtime::Player::State::PlayerTableStore;
         using AffordanceStore = Views::Affordance::State::AffordanceStore;
 
     public:
         AffordanceService(Log& log, ObjectTableStore& objectStore,
             BoneMatricesStore& boneMatricesStore, InteractionStore& interactionStore,
-            SelfStore& selfStore, ClassifierStore& classifierStore,
+            PlayerTableStore& playerStore, ClassifierStore& classifierStore,
             ObjectGraphStore& objectGraphStore, AffordanceStore& affordanceStore, CollidableService& collidableService) :
             m_Log(log), m_ObjectStore(objectStore),
             m_BoneMatricesStore(boneMatricesStore),
-            m_InteractionStore(interactionStore), m_SelfStore(selfStore),
+            m_InteractionStore(interactionStore), m_PlayerStore(playerStore),
             m_ClassifierStore(classifierStore), m_ObjectGraphStore(objectGraphStore),
             m_AffordanceStore(affordanceStore),
             m_CollidableService(collidableService)  {}
@@ -70,7 +72,7 @@ export namespace Views::Affordance::System
         ObjectTableStore& m_ObjectStore;
         BoneMatricesStore& m_BoneMatricesStore;
         InteractionStore& m_InteractionStore;
-        SelfStore& m_SelfStore;
+        PlayerTableStore& m_PlayerStore;
         ClassifierStore& m_ClassifierStore;
         ObjectGraphStore& m_ObjectGraphStore;
         AffordanceStore& m_AffordanceStore;

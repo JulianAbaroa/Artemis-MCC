@@ -35,8 +35,9 @@ export namespace DevTools::Viewer::Map::System
         auto operator=(const RaycastPass&) -> RaycastPass& = delete;
 
         // Rebuilds the vertices when the generation changes.
+        // param raycasts: The rays of the watched player. Null for none.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-            const std::shared_ptr<const Raycasts>& raycasts, std::uint64_t generation) -> void;
+            const Raycasts* raycasts, std::uint64_t generation) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 
