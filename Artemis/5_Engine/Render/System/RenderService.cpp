@@ -751,6 +751,11 @@ namespace Engine::Render::System
             m_RenderStore.CaptureFirstPersonDepth(depthResource.Get());
         }
 
+        // Measured (VW.6.y.2 A2): at the HUD draw the depth stencil no longer holds the first person model (no 0x80 bit, far depth only,
+        // the same with the model hidden). The forward phase of the view comes after the G-buffer passes and before the post, so the
+        // stencil is read there (once per probe, the HUD draw then finds it attempted). The view is bound read only, a copy only reads it.
+        if (caller == FirstPersonCaller::ViewPhase) this->ReadFirstPersonStencil();
+
         UINT viewportCount{ 1 };
         D3D11_VIEWPORT viewport{};
         context->RSGetViewports(&viewportCount, &viewport);
