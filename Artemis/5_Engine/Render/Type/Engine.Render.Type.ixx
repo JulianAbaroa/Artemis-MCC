@@ -19,6 +19,12 @@ export namespace Engine::Render::Type
     // A HUD pass of the game (chud): void(uint32 user).
     using ChudDrawFunction = auto(__fastcall*)(std::uint32_t user) -> void;
 
+    // The first person model pass of the game: void(void* camera, uint32 user, uint8 pass).
+    using FirstPersonModelFunction = auto(__fastcall*)(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
+
+    // The game's test of a first person unit: bool(uint32 user, uint32 objectHandle).
+    using IsFirstPersonUnitFunction = auto(__fastcall*)(std::uint32_t user, std::uint32_t objectHandle) -> bool;
+
     // Why the last completed frame did or did not draw before the HUD of the game.
     enum class BeforeHudStatus : std::uint8_t
     {

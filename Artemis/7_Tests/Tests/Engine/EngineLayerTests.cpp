@@ -158,6 +158,56 @@ TEST(EngineLayerTests, ChudDetourWithoutTheGameInstallsNothing)
     render.m_ChudDetour.Uninstall();
 }
 
+TEST(EngineLayerTests, FirstPersonDetourWithoutTheGameInstallsNothing)
+{
+    Services::Layer service{};
+    Engine::Base::Layer base{ service };
+    Engine::Render::Layer render{ service, base };
+
+    // No haloreach.dll in the process: neither function is found, nothing is hooked and the store says so.
+    EXPECT_FALSE(render.m_FirstPersonDetour.Install());
+    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonModelHooked());
+    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonUnitHooked());
+    render.m_FirstPersonDetour.Uninstall();
+}
+
+TEST(EngineLayerTests, FirstPersonDecisionsOnlyChangeUserZero)
+{
+    using Engine::Render::Hook::FirstPersonDetour;
+
+    // The model pass: skipped for user 0 with the flag or with Drive, never for another user.
+    EXPECT_FALSE(FirstPersonDetour::IsFirstPersonModelSkipped(0, false, false));
+    EXPECT_TRUE(FirstPersonDetour::IsFirstPersonModelSkipped(0, true, false));
+    EXPECT_TRUE(FirstPersonDetour::IsFirstPersonModelSkipped(0, false, true));
+    EXPECT_TRUE(FirstPersonDetour::IsFirstPersonModelSkipped(0, true, true));
+    EXPECT_FALSE(FirstPersonDetour::IsFirstPersonModelSkipped(1, true, true));
+    EXPECT_FALSE(FirstPersonDetour::IsFirstPersonModelSkipped(1, false, false));
+
+    // The unit test: false only for user 0 with Drive when the game said true. The flag alone never changes it.
+    EXPECT_TRUE(FirstPersonDetour::IsThirdPersonShown(0, true, true));
+    EXPECT_FALSE(FirstPersonDetour::IsThirdPersonShown(0, true, false));
+    EXPECT_FALSE(FirstPersonDetour::IsThirdPersonShown(0, false, true));
+    EXPECT_FALSE(FirstPersonDetour::IsThirdPersonShown(1, true, true));
+}
+
+TEST(EngineLayerTests, RenderStoreFirstPersonFlagAndThirdPersonFrame)
+{
+    Engine::Render::State::RenderStore store{};
+
+    EXPECT_FALSE(store.IsFirstPersonHidden());
+    store.SetFirstPersonHidden(true);
+    EXPECT_TRUE(store.IsFirstPersonHidden());
+
+    // The third person count of a frame is read after the frame is closed, and starts again.
+    EXPECT_FALSE(store.WasThirdPersonLastFrame());
+    store.CountThirdPerson();
+    EXPECT_FALSE(store.WasThirdPersonLastFrame());
+    store.EndHudFrame();
+    EXPECT_TRUE(store.WasThirdPersonLastFrame());
+    store.EndHudFrame();
+    EXPECT_FALSE(store.WasThirdPersonLastFrame());
+}
+
 TEST(EngineLayerTests, ObserverCameraDetourWithoutTheGameInstallsNothing)
 {
     Services::Layer service{};

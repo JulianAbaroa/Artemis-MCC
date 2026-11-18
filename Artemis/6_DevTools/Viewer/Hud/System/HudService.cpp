@@ -294,6 +294,7 @@ namespace DevTools::Viewer::Hud::System
 
         this->DrawOverride();
         this->DrawHudHook();
+        this->DrawFirstPersonHook();
         this->DrawLatency();
     }
 
@@ -416,6 +417,24 @@ namespace DevTools::Viewer::Hud::System
 
         ImGui::TextColored(info.IsBackBuffer ? k_Green : k_Orange, "thread same, %u calls/frame, RTV %s, back buffer %s, viewport %s",
             info.CallsPerFrame, target, info.IsBackBuffer ? "yes" : "no", viewport);
+    }
+
+    auto HudService::DrawFirstPersonHook() -> void
+    {
+        const bool isModelHooked{ m_RenderStore.IsFirstPersonModelHooked() };
+        const bool isUnitHooked{ m_RenderStore.IsFirstPersonUnitHooked() };
+
+        ImGui::Text("First person hook:");
+        ImGui::SameLine();
+
+        if (!isModelHooked && !isUnitHooked)
+        {
+            ImGui::TextColored(k_Orange, "not installed (model, unit)");
+            return;
+        }
+
+        ImGui::TextColored(isModelHooked && isUnitHooked ? k_Green : k_Orange, "installed (model %s, unit %s), third person: %s",
+            isModelHooked ? "yes" : "no", isUnitHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no");
     }
 
     auto HudService::DrawLatency() -> void

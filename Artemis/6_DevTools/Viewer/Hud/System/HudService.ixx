@@ -88,6 +88,7 @@ export namespace DevTools::Viewer::Hud::System
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawHudHook() -> void;
+        auto DrawFirstPersonHook() -> void;
 
         // Draws the measurement of the lag between the scene of the overlay and the frame of the game (VW.5c), over the last k_WindowFrames.
         auto DrawLatency() -> void;

@@ -56,6 +56,8 @@
     <ClCompile Include="Engine.Render.Layer.ixx" />
     <ClCompile Include="Hook\ChudDetour.cpp" />
     <ClCompile Include="Hook\ChudDetour.ixx" />
+    <ClCompile Include="Hook\FirstPersonDetour.cpp" />
+    <ClCompile Include="Hook\FirstPersonDetour.ixx" />
     <ClCompile Include="Hook\PresentDetour.cpp" />
     <ClCompile Include="Hook\PresentDetour.ixx" />
     <ClCompile Include="Hook\ResizeBuffersDetour.cpp" />

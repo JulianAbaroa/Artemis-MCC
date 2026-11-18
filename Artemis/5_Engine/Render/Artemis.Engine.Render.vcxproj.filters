@@ -34,6 +34,12 @@
     <ClCompile Include="Hook\ChudDetour.ixx">
       <Filter>Hook</Filter>
     </ClCompile>
+    <ClCompile Include="Hook\FirstPersonDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\FirstPersonDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Hook\PresentDetour.cpp">
       <Filter>Hook</Filter>
     </ClCompile>

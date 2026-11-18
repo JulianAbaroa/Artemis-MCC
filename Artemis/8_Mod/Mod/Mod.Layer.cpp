@@ -134,6 +134,7 @@ namespace Mod
 
             // The HUD passes are code of the game module like the hooks above: the engine is created again, so they go in with it.
             m_Render.m_ChudDetour.Install();
+            m_Render.m_FirstPersonDetour.Install();
 
             // The camera of the game is built by code of the game module too: its hook goes in and out with the engine.
             m_Base.m_ObserverCameraDetour.Install();
@@ -144,6 +145,7 @@ namespace Mod
             m_Transport.m_BridgeService.Stop();
             this->UninstallHostHooks();
             m_Base.m_ObserverCameraDetour.Uninstall();
+            m_Render.m_FirstPersonDetour.Uninstall();
             m_Render.m_ChudDetour.Uninstall();
             m_Control.m_SetMachinesDetour.Uninstall();
             m_Control.m_PlayerActionDetour.Uninstall();
@@ -197,6 +199,7 @@ namespace Mod
         m_Render.m_RenderService.RequestShutdown();
         m_Render.m_RenderService.WaitForShutdown(k_RenderShutdownTimeout);
 
+        m_Render.m_FirstPersonDetour.Uninstall();
         m_Render.m_ChudDetour.Uninstall();
         m_Render.m_PresentDetour.Uninstall();
         m_Render.m_ResizeBuffersDetour.Uninstall();

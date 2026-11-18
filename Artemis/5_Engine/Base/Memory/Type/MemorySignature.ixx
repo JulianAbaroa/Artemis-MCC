@@ -299,6 +299,27 @@ export namespace Engine::Base::Memory::Type::Signature
 
     inline constexpr std::uint32_t k_ObserverCameraRva{ 0xC9CF8 };
 
+    // The first person model pass (A21 sec. 8, D331): void(void* camera, uint32 user, uint8 pass). It draws the arms and the weapon of the
+    // local player in first person. Hooked to skip it (option Hide first person, or while Drive moves the camera).
+    // Read from haloreach.dll MD5 012f4079...
+    inline constexpr Signature k_FirstPersonModelPrologue
+    {
+        "FirstPersonModelPrologue",
+        "48 89 5C 24 08 57 48 83 EC 20 4C 63 CA 45 8A D0"
+    };
+
+    // The test the game asks to know if an object is the first person unit of a user (A21 sec. 8, D331): bool(uint32 user, uint32 objectHandle),
+    // returned in AL. The render of the biped and some effects call it. Hooked to answer false while Drive moves the camera, so the game draws
+    // the player's own biped and the third person effects.
+    inline constexpr Signature k_IsFirstPersonUnitPrologue
+    {
+        "IsFirstPersonUnitPrologue",
+        "48 83 EC 28 44 8B CA 45 33 D2 48 63 D1 41 83 F9 FF"
+    };
+
+    inline constexpr std::uint32_t k_FirstPersonModelRva{ 0x286EBC };
+    inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
+
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
     inline constexpr std::uint32_t k_CollisionTestVectorWindow{ 0 };
 
@@ -307,4 +328,7 @@ export namespace Engine::Base::Memory::Type::Signature
 
     // Same rule for the observer camera.
     inline constexpr std::uint32_t k_ObserverCameraWindow{ 0 };
+
+    // Same rule for the two first person functions.
+    inline constexpr std::uint32_t k_FirstPersonWindow{ 0 };
 }

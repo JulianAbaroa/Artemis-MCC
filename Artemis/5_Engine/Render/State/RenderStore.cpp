@@ -124,6 +124,42 @@ namespace Engine::Render::State
         m_IsGameHudHidden.store(isHidden, std::memory_order_relaxed);
     }
 
+    auto RenderStore::IsFirstPersonHidden() const -> bool
+    {
+        return m_IsFirstPersonHidden.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetFirstPersonHidden(bool isHidden) -> void
+    {
+        m_IsFirstPersonHidden.store(isHidden, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked) -> void
+    {
+        m_IsFirstPersonModelHooked.store(isModelHooked, std::memory_order_relaxed);
+        m_IsFirstPersonUnitHooked.store(isUnitHooked, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsFirstPersonModelHooked() const -> bool
+    {
+        return m_IsFirstPersonModelHooked.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsFirstPersonUnitHooked() const -> bool
+    {
+        return m_IsFirstPersonUnitHooked.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::CountThirdPerson() -> void
+    {
+        m_ThirdPersonCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::WasThirdPersonLastFrame() const -> bool
+    {
+        return m_ThirdPersonLastFrame.load(std::memory_order_relaxed) != 0;
+    }
+
     auto RenderStore::GetPresentThread() const -> std::uint32_t
     {
         return m_PresentThread.load(std::memory_order_relaxed);
@@ -147,6 +183,7 @@ namespace Engine::Render::State
     auto RenderStore::EndHudFrame() -> void
     {
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
     }
 
     auto RenderStore::CountHudFailure() -> void

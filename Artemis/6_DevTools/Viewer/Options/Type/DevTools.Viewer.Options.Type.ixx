@@ -94,6 +94,7 @@ export namespace DevTools::Viewer::Options::Type
         Overlay,
         OverlayWireframe,
         HideGameHud,
+        HideFirstPerson,
         DriveGameCamera,
         WaitFrameScene,
         RecordFrameClock,
@@ -361,6 +362,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },
+
+        { Flag::HideFirstPerson, Group::Camera, "HideFirstPerson", "Hide first person",
+            "Skips the game's first person arms and weapon. While Drive game camera moves the camera they are always hidden and the game draws the player's body.", false },
 
         { Flag::DriveGameCamera, Group::Camera, "DriveGameCamera", "Drive game camera",
             "Moves the game's camera with the free camera of the Viewer.", false },

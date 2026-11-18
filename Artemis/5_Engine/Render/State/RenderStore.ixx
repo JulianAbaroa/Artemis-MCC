@@ -86,6 +86,20 @@ export namespace Engine::Render::State
         auto IsGameHudHidden() const -> bool;
         auto SetGameHudHidden(bool isHidden) -> void;
 
+        // return: Whether the game's first person arms and weapon are skipped (D331). Read from any thread by the first person detour.
+        auto IsFirstPersonHidden() const -> bool;
+        auto SetFirstPersonHidden(bool isHidden) -> void;
+
+        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked) -> void;
+        auto IsFirstPersonModelHooked() const -> bool;
+        auto IsFirstPersonUnitHooked() const -> bool;
+
+        // Counts one answer of the first person test turned to false by Drive. Any thread, no allocation.
+        auto CountThirdPerson() -> void;
+
+        // return: Whether the last completed frame (closed by EndHudFrame) turned the first person test to false at least once.
+        auto WasThirdPersonLastFrame() const -> bool;
+
         // Thread of Present, noted at every Present. 0 until the first one.
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
@@ -148,6 +162,11 @@ export namespace Engine::Render::State
 
         std::atomic<bool> m_IsGameHudHidden{ false };
         std::atomic<bool> m_IsHudHookInstalled{ false };
+        std::atomic<bool> m_IsFirstPersonHidden{ false };
+        std::atomic<bool> m_IsFirstPersonModelHooked{ false };
+        std::atomic<bool> m_IsFirstPersonUnitHooked{ false };
+        std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
+        std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
         std::atomic<std::uint32_t> m_PresentThread{ 0 };
         std::atomic<std::uint32_t> m_HudCalls{ 0 };
         std::atomic<std::uint32_t> m_HudCallsLastFrame{ 0 };
