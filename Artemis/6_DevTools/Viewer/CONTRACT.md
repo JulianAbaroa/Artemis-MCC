@@ -17,7 +17,9 @@ Overlay on the game frame (VW.5a, D323, D325). With the game camera the view-pro
 
 Option `Overlay on the game frame` (key `Viewer_Overlay`, off by default) with the game camera: `MapService` does not clear the color, so the frame of the game stays under what the Viewer draws (its own depth is still cleared), the map collision is drawn in depth only (it hides what comes after it, no color) and, with `Overlay: collision wireframe` (key `Viewer_OverlayWireframe`, on by default), also as visible wireframe to check that it lines up with the walls. The other passes are the same. With the overlay off, or with the free camera, it draws as before.
 
-The overlay window (telemetry mode) shows the game camera: valid or not, position, horizontal and vertical field of view, aspect (m11 / m00) against the back buffer, the off-center terms and the distance to the eye of the View of the local player.
+Option `Hide game HUD` (key `Viewer_HideGameHud`, off by default, group Camera; VW.6.x): `Layer` copies it to `RenderStore::SetGameHudHidden` at the start of every Present frame, and the HUD detours of `Engine.Render` then skip the game's HUD passes (clean captures). Without the hooks installed it does nothing.
+
+The overlay window (telemetry mode) shows the game camera: valid or not, position, horizontal and vertical field of view, aspect (m11 / m00) against the back buffer, the off-center terms and the distance to the eye of the View of the local player, and the line `HUD hook` (thread same or other than Present, calls per frame of the HUD draw, the render target it draws to with size and format, whether that is the back buffer, and viewport 0) from `RenderStore::GetHudHook`.
 
 ## Does not
 - Take part in the tick: it reads published values only, after the tick (the observers of the AI thread).

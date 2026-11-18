@@ -10,6 +10,10 @@ import std;
 
 namespace
 {
+    using Microsoft::WRL::ComPtr;
+
+    using Engine::Render::Type::HudHookInfo;
+
     using std::chrono::steady_clock;
     using std::chrono::microseconds;
 }
@@ -238,6 +242,76 @@ namespace Engine::Render::System
         }
 
         return true;
+    }
+
+    auto RenderService::MeasureHud() -> void
+    {
+        HudHookInfo sample{};
+        sample.HasSample = true;
+
+        const std::uint32_t presentThread{ m_RenderStore.GetPresentThread() };
+        sample.IsSameThread = presentThread != 0 && presentThread == GetCurrentThreadId();
+
+        if (!sample.IsSameThread || m_RenderStore.IsResizing() || !m_RenderStore.IsReady())
+        {
+            m_RenderStore.SetHudSample(sample);
+            return;
+        }
+
+        ID3D11DeviceContext* context{ m_RenderStore.GetContext() };
+
+        if (context == nullptr)
+        {
+            m_RenderStore.SetHudSample(sample);
+            return;
+        }
+
+        ComPtr<ID3D11RenderTargetView> target{};
+        context->OMGetRenderTargets(1, target.GetAddressOf(), nullptr);
+
+        if (target != nullptr)
+        {
+            D3D11_RENDER_TARGET_VIEW_DESC viewDesc{};
+            target->GetDesc(&viewDesc);
+
+            ComPtr<ID3D11Resource> resource{};
+            target->GetResource(resource.GetAddressOf());
+
+            ComPtr<ID3D11Texture2D> texture{};
+            if (resource != nullptr && SUCCEEDED(resource.As(&texture)))
+            {
+                D3D11_TEXTURE2D_DESC textureDesc{};
+                texture->GetDesc(&textureDesc);
+
+                sample.HasTarget = true;
+                sample.Width = textureDesc.Width;
+                sample.Height = textureDesc.Height;
+                sample.Format = static_cast<std::uint32_t>(viewDesc.Format != DXGI_FORMAT_UNKNOWN ? viewDesc.Format : textureDesc.Format);
+
+                ComPtr<ID3D11Resource> backBuffer{};
+                if (ID3D11RenderTargetView* backBufferView{ m_RenderStore.GetRenderTarget() }; backBufferView != nullptr)
+                {
+                    backBufferView->GetResource(backBuffer.GetAddressOf());
+                }
+
+                sample.IsBackBuffer = backBuffer != nullptr && backBuffer.Get() == resource.Get();
+            }
+        }
+
+        UINT viewportCount{ 1 };
+        D3D11_VIEWPORT viewport{};
+        context->RSGetViewports(&viewportCount, &viewport);
+
+        if (viewportCount >= 1 && viewport.Width > 0.0f)
+        {
+            sample.HasViewport = true;
+            sample.ViewportX = viewport.TopLeftX;
+            sample.ViewportY = viewport.TopLeftY;
+            sample.ViewportWidth = viewport.Width;
+            sample.ViewportHeight = viewport.Height;
+        }
+
+        m_RenderStore.SetHudSample(sample);
     }
 
     auto RenderService::WaitForIdle(milliseconds timeout) -> bool

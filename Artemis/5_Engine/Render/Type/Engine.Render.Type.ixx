@@ -16,6 +16,25 @@ export namespace Engine::Render::Type
         UINT bufferCount, UINT width, UINT height, DXGI_FORMAT newFormat,
         UINT swapChainFlags) -> HRESULT;
 
+    // A HUD pass of the game (chud): void(uint32 user).
+    using ChudDrawFunction = auto(__fastcall*)(std::uint32_t user) -> void;
+
+    // What the HUD detour measured at the last call of the draw for user 0 (VW.6.x). Only reads, never drawn from.
+    struct HudHookInfo
+    {
+        bool IsHooked{ false };         // the draw detour is installed
+        bool HasSample{ false };        // the draw ran at least once
+        bool IsSameThread{ false };     // it ran on the thread of Present. When false the next fields are not read
+        bool HasTarget{ false };        // a render target was bound in slot 0
+        bool IsBackBuffer{ false };     // that target is the back buffer of the swap chain
+        bool HasViewport{ false };
+        std::uint32_t CallsPerFrame{ 0 };   // calls for user 0 between the last two Present
+        std::uint32_t Width{ 0 };
+        std::uint32_t Height{ 0 };
+        std::uint32_t Format{ 0 };      // DXGI_FORMAT of the target view
+        float ViewportX{ 0.0f }, ViewportY{ 0.0f }, ViewportWidth{ 0.0f }, ViewportHeight{ 0.0f };
+    };
+
     // Layout of the vertex data of a draw. Each one has its own input layout and vertex shader.
     enum class VertexLayout : std::uint8_t
     {

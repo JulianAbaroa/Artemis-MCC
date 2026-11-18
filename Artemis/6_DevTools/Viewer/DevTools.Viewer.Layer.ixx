@@ -16,6 +16,7 @@ import DevTools.Viewer.Collidable.System;
 import DevTools.Viewer.Selection.State;
 import DevTools.Viewer.Selection.System;
 import DevTools.Viewer.Overlay.State;
+import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Control.System;
 import DevTools.Viewer.Map.System;
@@ -41,6 +42,7 @@ export namespace DevTools::Viewer
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
+        using Flag = DevTools::Viewer::Options::Type::Flag;
 
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
         using CollidableSceneService = DevTools::Viewer::Collidable::System::CollidableSceneService;
@@ -72,7 +74,9 @@ export namespace DevTools::Viewer
                 [this](std::ostream& stream) { m_OptionsStore.Save(stream); },
                 [this](std::string_view key, std::string_view value) { m_OptionsStore.Load(key, value); });
 
-            engine.m_RenderService.OnFrame([this, &gui](const FrameContext& frame) {
+            engine.m_RenderService.OnFrame([this, &gui, &engine](const FrameContext& frame) {
+                engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
+
                 m_MapService.Render(frame);
 
                 if (!gui.m_BackendGuiService.IsReady()) return;

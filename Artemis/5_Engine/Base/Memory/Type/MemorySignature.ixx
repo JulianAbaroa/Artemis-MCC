@@ -253,10 +253,41 @@ export namespace Engine::Base::Memory::Type::Signature
 
     inline constexpr std::uint32_t k_CollisionTestVectorRva{ 0x12969C };
 
+    // The game's HUD (chud) passes inside the render of a view (A21 sec. 5, D325). Each one is void(uint32 user). They are found by their RVA and
+    // checked like collision_test_vector: the unwind table must say a function begins there and the bytes must be the start of its prologue.
+    // Read from haloreach.dll MD5 012f4079...
+    // The draw of the list of widgets (0x2c29f8).
+    inline constexpr Signature k_ChudDrawPrologue
+    {
+        "ChudDrawPrologue",
+        "48 89 5C 24 10 48 89 6C 24 18 48 89 74 24 20 57 41 54 41 55 41 56 41 57 48 81 EC 70 03 00 00"
+    };
+
+    // The second list of widgets, drawn after the screen effects (0x2c2628).
+    inline constexpr Signature k_ChudDrawLatePrologue
+    {
+        "ChudDrawLatePrologue",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56"
+    };
+
+    // The 3D part of the HUD (0x2c279c).
+    inline constexpr Signature k_ChudDraw3DPrologue
+    {
+        "ChudDraw3DPrologue",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 56 48 83 EC 30"
+    };
+
+    inline constexpr std::uint32_t k_ChudDrawRva{ 0x2C29F8 };
+    inline constexpr std::uint32_t k_ChudDrawLateRva{ 0x2C2628 };
+    inline constexpr std::uint32_t k_ChudDraw3DRva{ 0x2C279C };
+
     // s_render_projection (A21 sec. 3): a global of haloreach.dll, not TLS. The game rebuilds it for each view before it draws it, so the
     // Present of the frame finds the projection of the last view. 0x30 floats, read only.
     inline constexpr std::uint32_t k_RenderProjectionRva{ 0xC9FB70 };
 
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
     inline constexpr std::uint32_t k_CollisionTestVectorWindow{ 0 };
+
+    // Same rule for the three HUD passes.
+    inline constexpr std::uint32_t k_ChudWindow{ 0 };
 }

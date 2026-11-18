@@ -131,12 +131,16 @@ namespace Mod
             // ExecuteGameFrame goes first, so the first SimulationTicks call already counts every tick.
             m_Capture.m_ExecuteGameFrameDetour.Install();
             m_Capture.m_SimulationTicksDetour.Install();
+
+            // The HUD passes are code of the game module like the hooks above: the engine is created again, so they go in with it.
+            m_Render.m_ChudDetour.Install();
         });
 
         // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
         m_Base.m_LifecycleService.OnUnhook([this] {
             m_Transport.m_BridgeService.Stop();
             this->UninstallHostHooks();
+            m_Render.m_ChudDetour.Uninstall();
             m_Control.m_SetMachinesDetour.Uninstall();
             m_Control.m_PlayerActionDetour.Uninstall();
             m_Base.m_OpenMapDetour.Uninstall();
@@ -188,6 +192,7 @@ namespace Mod
         m_Render.m_RenderService.RequestShutdown();
         m_Render.m_RenderService.WaitForShutdown(k_RenderShutdownTimeout);
 
+        m_Render.m_ChudDetour.Uninstall();
         m_Render.m_PresentDetour.Uninstall();
         m_Render.m_ResizeBuffersDetour.Uninstall();
 

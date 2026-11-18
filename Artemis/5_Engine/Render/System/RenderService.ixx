@@ -67,6 +67,11 @@ export namespace Engine::Render::System
         // return: False if the shutdown did not finish before the timeout.
         auto WaitForShutdown(milliseconds timeout) -> bool;
 
+        // Measures what the game draws its HUD with: the thread, the render target bound in slot 0 and viewport 0. The sample goes to the store.
+        // note: Called by the HUD detour. Only on the thread of Present and with the targets ready the immediate context is read (COM calls
+        // only, no allocation). Otherwise the sample says so and no D3D object is touched.
+        auto MeasureHud() -> void;
+
         // Waits for the calls inside the render hooks to finish.
         // return: False if some are still running after the timeout.
         auto WaitForIdle(milliseconds timeout) -> bool;

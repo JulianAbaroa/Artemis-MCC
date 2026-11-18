@@ -5,7 +5,13 @@ module;
 
 export module Engine.Render.State;
 
+import Engine.Render.Type;
 import std;
+
+namespace
+{
+    using Engine::Render::Type::HudHookInfo;
+}
 
 export namespace Engine::Render::State
 {
@@ -75,6 +81,28 @@ export namespace Engine::Render::State
         auto SetShutdownDone() -> void;
         auto RequestShutdown() -> void;
 
+        // return: Whether the game HUD passes are skipped (VW.6.x). Read on the render thread by the HUD detours.
+        auto IsGameHudHidden() const -> bool;
+        auto SetGameHudHidden(bool isHidden) -> void;
+
+        // Thread of Present, noted at every Present. 0 until the first one.
+        auto GetPresentThread() const -> std::uint32_t;
+        auto SetPresentThread(std::uint32_t threadId) -> void;
+
+        auto SetHudHookInstalled(bool isInstalled) -> void;
+
+        // Counts one draw of the HUD for user 0 in the frame in progress.
+        auto CountHudCall() -> void;
+
+        // Closes the frame at Present: the count becomes the calls of the last frame and starts again.
+        auto EndHudFrame() -> void;
+
+        // Keeps the measure of the last HUD draw. note: A short lock, no allocation. CallsPerFrame and IsHooked are ignored here.
+        auto SetHudSample(const HudHookInfo& sample) -> void;
+
+        // return: The last measure with the counters filled in.
+        auto GetHudHook() const -> HudHookInfo;
+
         // Releases the render target and the depth stencil. Keeps the device and the context.
         auto ReleaseTargets() -> void;
 
@@ -96,5 +124,14 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsShutdownRequested{ false };
         std::atomic<bool> m_IsShutdownDone{ false };
         std::atomic<int> m_InFlight{ 0 };
+
+        std::atomic<bool> m_IsGameHudHidden{ false };
+        std::atomic<bool> m_IsHudHookInstalled{ false };
+        std::atomic<std::uint32_t> m_PresentThread{ 0 };
+        std::atomic<std::uint32_t> m_HudCalls{ 0 };
+        std::atomic<std::uint32_t> m_HudCallsLastFrame{ 0 };
+
+        mutable std::mutex m_HudSampleMutex{};
+        HudHookInfo m_HudSample{};
     };
 }

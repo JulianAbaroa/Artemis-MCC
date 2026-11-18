@@ -29,6 +29,8 @@ namespace Engine::Render::Hook
             RenderStore::HookScope scope{ self->m_RenderStore };
 
             self->m_TelemetryStore.RecordPresent();
+            self->m_RenderStore.SetPresentThread(GetCurrentThreadId());
+            self->m_RenderStore.EndHudFrame();
             self->m_RenderService.PresentFrame(swapChain);
         }
 

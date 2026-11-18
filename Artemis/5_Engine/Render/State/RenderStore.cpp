@@ -5,6 +5,11 @@ module;
 
 module Engine.Render.State;
 
+namespace
+{
+    using Engine::Render::Type::HudHookInfo;
+}
+
 namespace Engine::Render::State
 {
     auto RenderStore::GetDevice() const -> ID3D11Device*
@@ -106,6 +111,61 @@ namespace Engine::Render::State
     auto RenderStore::RequestShutdown() -> void
     {
         m_IsShutdownRequested.store(true, std::memory_order_release);
+    }
+
+    auto RenderStore::IsGameHudHidden() const -> bool
+    {
+        return m_IsGameHudHidden.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetGameHudHidden(bool isHidden) -> void
+    {
+        m_IsGameHudHidden.store(isHidden, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetPresentThread() const -> std::uint32_t
+    {
+        return m_PresentThread.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetPresentThread(std::uint32_t threadId) -> void
+    {
+        m_PresentThread.store(threadId, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetHudHookInstalled(bool isInstalled) -> void
+    {
+        m_IsHudHookInstalled.store(isInstalled, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::CountHudCall() -> void
+    {
+        m_HudCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::EndHudFrame() -> void
+    {
+        m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetHudSample(const HudHookInfo& sample) -> void
+    {
+        const std::lock_guard<std::mutex> lock{ m_HudSampleMutex };
+        m_HudSample = sample;
+    }
+
+    auto RenderStore::GetHudHook() const -> HudHookInfo
+    {
+        HudHookInfo info{};
+
+        {
+            const std::lock_guard<std::mutex> lock{ m_HudSampleMutex };
+            info = m_HudSample;
+        }
+
+        info.IsHooked = m_IsHudHookInstalled.load(std::memory_order_relaxed);
+        info.CallsPerFrame = m_HudCallsLastFrame.load(std::memory_order_relaxed);
+        return info;
     }
 
     auto RenderStore::ReleaseTargets() -> void

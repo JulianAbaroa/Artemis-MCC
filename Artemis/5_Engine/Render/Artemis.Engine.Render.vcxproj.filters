@@ -28,6 +28,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine.Render.Layer.ixx" />
+    <ClCompile Include="Hook\ChudDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\ChudDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Hook\PresentDetour.cpp">
       <Filter>Hook</Filter>
     </ClCompile>

@@ -16,6 +16,7 @@ export import :Labels;
 
 import Common.Engine.Type;
 import Services.Telemetry.State;
+import Engine.Render.Type;
 import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Collidable.State;
@@ -38,6 +39,8 @@ export namespace DevTools::Viewer::Hud::System
         using Tick = Bridge::Codec::Tick::Type::Tick;
 
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
+        using HudHookInfo = Engine::Render::Type::HudHookInfo;
+
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
@@ -80,5 +83,6 @@ export namespace DevTools::Viewer::Hud::System
         // Draws the camera of the game: validity, position, fields of view, aspect against the back buffer and the distance to the View of the
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
+        auto DrawHudHook() -> void;
     };
 }

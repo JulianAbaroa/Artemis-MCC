@@ -20,6 +20,7 @@ export namespace Engine::Render
         using SwapChainLocator = Engine::Render::System::SwapChainLocator;
         using PresentDetour = Engine::Render::Hook::PresentDetour;
         using ResizeBuffersDetour = Engine::Render::Hook::ResizeBuffersDetour;
+        using ChudDetour = Engine::Render::Hook::ChudDetour;
 
         using InputService = Engine::Render::Window::System::InputService;
         using GetRawInputDataDetour = Engine::Render::Window::Hook::GetRawInputDataDetour;
@@ -33,7 +34,8 @@ export namespace Engine::Render
             m_GetRawInputDataDetour(service.m_Log, service.m_SettingsStore, m_InputService),
             m_WndProcDetour(service.m_Log, m_InputService, base.m_LifecycleStore, base.m_LifecycleService),
             m_PresentDetour(service.m_Log, service.m_TelemetryStore, m_RenderStore, m_RenderService, m_SwapChainLocator),
-            m_ResizeBuffersDetour(service.m_Log, m_RenderStore, m_RenderService, m_SwapChainLocator) {}
+            m_ResizeBuffersDetour(service.m_Log, m_RenderStore, m_RenderService, m_SwapChainLocator),
+            m_ChudDetour(service.m_Log, base.m_AOBService, m_RenderStore, m_RenderService) {}
         ~Layer() = default;
 
         // Not copyable. Members hold references to each other.
@@ -53,5 +55,6 @@ export namespace Engine::Render
         WndProcDetour m_WndProcDetour;
         PresentDetour m_PresentDetour;
         ResizeBuffersDetour m_ResizeBuffersDetour;
+        ChudDetour m_ChudDetour;
     };
 }

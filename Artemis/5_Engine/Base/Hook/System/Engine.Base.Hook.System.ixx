@@ -21,6 +21,7 @@ export namespace Engine::Base::Hook::System
         void** outOriginal, const char* tag, Log& log) -> bool;
 
     // Disables the hook but keeps it created, so calls already inside can finish.
+    // note: A null address is ignored (MinHook would take it as every hook).
     // note: Pair with WaitForDrain and RemoveDetour for a safe removal.
     auto DisableDetour(void* functionAddress) -> void;
 

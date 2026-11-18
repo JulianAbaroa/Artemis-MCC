@@ -93,6 +93,7 @@ export namespace DevTools::Viewer::Options::Type
 
         Overlay,
         OverlayWireframe,
+        HideGameHud,
 
         Count
     };
@@ -354,6 +355,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::OverlayWireframe, Group::Camera, "OverlayWireframe", "Overlay: collision wireframe",
             "With the overlay on, also draws the map collision as a visible wireframe, to check that it lines up with the walls of the game frame.", true },
+
+        { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
+            "Skips the game's HUD passes. For clean captures.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

@@ -9,12 +9,14 @@ import Engine.Capture.Layer;
 import Engine.Control.Layer;
 import Engine.Match.Layer;
 import Engine.Render.Layer;
+import Engine.Render.State;
 import Bridge.Transport.Layer;
 import Bridge.Transport.System;
 import Bridge.Transport.Type;
 import Engine.Control.Input.State;
 import Engine.Control.Input.Hook;
 import Engine.Base.Memory.System;
+import Engine.Base.Hook.System;
 import Engine.Control.Simulation.State;
 import Engine.Control.Simulation.System;
 import Tests.Support.Log;
@@ -22,6 +24,9 @@ import std;
 
 // The Layers of the engine projects and of Bridge.Transport (M8 C.2, D242, D243): owners with no callbacks, built over a Services::Layer
 // and the Base, and the action source of PlayerActionDetour set by the one that composes them. No MCC in the process of the tests.
+
+extern "C" auto MH_Initialize() -> int;
+extern "C" auto MH_Uninitialize() -> int;
 
 namespace
 {
@@ -34,6 +39,23 @@ namespace
     using Engine::Control::Simulation::State::BotStore;
     using Engine::Control::Simulation::System::BotService;
     using Tests::Support::Log::CollectingSink;
+
+    volatile int s_HookSink{ 0 };
+
+    // Function the test hooks. Long enough for the trampoline of MinHook.
+    __declspec(noinline) auto HookTarget(int value) -> int
+    {
+        s_HookSink = value;
+        s_HookSink = s_HookSink + 1;
+        s_HookSink = s_HookSink * 2;
+        s_HookSink = s_HookSink - 3;
+        return value + 1;
+    }
+
+    __declspec(noinline) auto HookReplacement(int value) -> int
+    {
+        return value + 100;
+    }
 
     // Engine behind the port: it answers with idle values and keeps nothing.
     class IdleBridgeEngine : public BridgeEngine
@@ -93,6 +115,62 @@ TEST(EngineLayerTests, BuildsAndDestroysWithoutTheGame)
         EXPECT_FALSE(base.m_LifecycleStore.IsRunning());
     }
     SUCCEED();
+}
+
+TEST(EngineLayerTests, DisableAndRemoveDetourIgnoreANullAddress)
+{
+    CollectingSink sink{};
+    Log log{ sink };
+
+    ASSERT_EQ(MH_Initialize(), 0);
+
+    using TargetFunction = auto(*)(int) -> int;
+    volatile TargetFunction target{ &HookTarget };
+    TargetFunction original{ nullptr };
+
+    ASSERT_TRUE(Engine::Base::Hook::System::InstallDetour(reinterpret_cast<void*>(&HookTarget), reinterpret_cast<void*>(&HookReplacement),
+        reinterpret_cast<void**>(&original), "[Test]", log));
+    EXPECT_EQ(target(1), 101);
+
+    // A null address is MH_ALL_HOOKS for MinHook: the hook of the target must stay on.
+    Engine::Base::Hook::System::DisableDetour(nullptr);
+    Engine::Base::Hook::System::RemoveDetour(nullptr, "[Test]", log);
+    EXPECT_EQ(target(1), 101);
+
+    Engine::Base::Hook::System::DisableDetour(reinterpret_cast<void*>(&HookTarget));
+    EXPECT_EQ(target(1), 2);
+
+    Engine::Base::Hook::System::RemoveDetour(reinterpret_cast<void*>(&HookTarget), "[Test]", log);
+    MH_Uninitialize();
+}
+
+TEST(EngineLayerTests, ChudDetourWithoutTheGameInstallsNothing)
+{
+    Services::Layer service{};
+    Engine::Base::Layer base{ service };
+    Engine::Render::Layer render{ service, base };
+
+    // No haloreach.dll in the process: no pass is found, nothing is hooked and the store says so.
+    EXPECT_FALSE(render.m_ChudDetour.Install());
+    EXPECT_FALSE(render.m_RenderStore.GetHudHook().IsHooked);
+    render.m_ChudDetour.Uninstall();
+}
+
+TEST(EngineLayerTests, RenderStoreHudFlagAndCallsPerFrame)
+{
+    Engine::Render::State::RenderStore store{};
+
+    EXPECT_FALSE(store.IsGameHudHidden());
+    store.SetGameHudHidden(true);
+    EXPECT_TRUE(store.IsGameHudHidden());
+
+    store.CountHudCall();
+    store.CountHudCall();
+    EXPECT_EQ(store.GetHudHook().CallsPerFrame, 0u);
+    store.EndHudFrame();
+    EXPECT_EQ(store.GetHudHook().CallsPerFrame, 2u);
+    store.EndHudFrame();
+    EXPECT_EQ(store.GetHudHook().CallsPerFrame, 0u);
 }
 
 TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)

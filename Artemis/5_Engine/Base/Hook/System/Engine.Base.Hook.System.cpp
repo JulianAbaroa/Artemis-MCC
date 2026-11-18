@@ -83,12 +83,17 @@ namespace Engine::Base::Hook::System
 
     auto DisableDetour(void* functionAddress) -> void
     {
+        // MinHook takes a null address as MH_ALL_HOOKS: it would disable every hook of the process.
+        if (functionAddress == nullptr) return;
+
         MH_DisableHook(functionAddress);
     }
 
     auto RemoveDetour(void* functionAddress, const char* tag,
         Log& log) -> void
     {
+        if (functionAddress == nullptr) return;
+
         MH_RemoveHook(functionAddress);
         log.Message("{} INFO: Hook uninstalled.", tag);
     }

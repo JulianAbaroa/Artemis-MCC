@@ -1,11 +1,14 @@
 module;
 
+#include <dxgiformat.h>
+
 #include "External/imgui/imgui.h"
 
 module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
 import Engine.Base.Memory.Type;
+import Engine.Render.Type;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Overlay.Type;
 import std;
@@ -15,6 +18,7 @@ namespace
     using DevTools::Viewer::Overlay::Type::Mode;
 
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
+    using Engine::Render::Type::HudHookInfo;
 
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
@@ -26,6 +30,21 @@ namespace
     const ImVec4 k_Orange{ 1.0f, 0.6f, 0.0f, 1.0f };
     const ImVec4 k_Red{ 1.0f, 0.0f, 0.0f, 1.0f };
     const ImVec4 k_Info{ 0.6f, 0.8f, 1.0f, 1.0f };
+
+    auto FormatName(std::uint32_t format) -> const char*
+    {
+        switch (format)
+        {
+        case DXGI_FORMAT_R8G8B8A8_UNORM:        return "R8G8B8A8_UNORM";
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:   return "R8G8B8A8_UNORM_SRGB";
+        case DXGI_FORMAT_B8G8R8A8_UNORM:        return "B8G8R8A8_UNORM";
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:   return "B8G8R8A8_UNORM_SRGB";
+        case DXGI_FORMAT_R10G10B10A2_UNORM:     return "R10G10B10A2_UNORM";
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:    return "R16G16B16A16_FLOAT";
+        case DXGI_FORMAT_R11G11B10_FLOAT:       return "R11G11B10_FLOAT";
+        default:                                return nullptr;
+        }
+    }
 
     auto ModeLabel(Mode mode) -> const char*
     {
@@ -67,6 +86,9 @@ namespace DevTools::Viewer::Hud::System
         if (ImGui::Begin("##overlay", nullptr, flags))
         {
             this->DrawNavBar();
+
+            if (m_RenderStore.IsGameHudHidden()) ImGui::TextColored(k_Orange, "Game HUD hidden");
+
             ImGui::Separator();
 
             if (m_OverlayStore.GetMode() == Mode::Default)
@@ -261,6 +283,63 @@ namespace DevTools::Viewer::Hud::System
         {
             ImGui::TextDisabled("n/a (no View)");
         }
+
+        this->DrawHudHook();
+    }
+
+    auto HudService::DrawHudHook() -> void
+    {
+        const HudHookInfo info{ m_RenderStore.GetHudHook() };
+
+        ImGui::Text("HUD hook:");
+        ImGui::SameLine();
+
+        if (!info.IsHooked)
+        {
+            ImGui::TextColored(k_Orange, "not installed");
+            return;
+        }
+
+        if (!info.HasSample)
+        {
+            ImGui::TextDisabled("no HUD draw yet");
+            return;
+        }
+
+        if (!info.IsSameThread)
+        {
+            ImGui::TextColored(k_Orange, "thread other, %u calls/frame (no D3D read)", info.CallsPerFrame);
+            return;
+        }
+
+        char target[96]{};
+
+        if (info.HasTarget)
+        {
+            const char* name{ FormatName(info.Format) };
+
+            if (name != nullptr) std::snprintf(target, sizeof(target), "%ux%u %s", info.Width, info.Height, name);
+            else std::snprintf(target, sizeof(target), "%ux%u fmt %u", info.Width, info.Height, info.Format);
+        }
+        else
+        {
+            std::snprintf(target, sizeof(target), "none");
+        }
+
+        char viewport[64]{};
+
+        if (info.HasViewport)
+        {
+            std::snprintf(viewport, sizeof(viewport), "%.0f,%.0f %.0fx%.0f",
+                info.ViewportX, info.ViewportY, info.ViewportWidth, info.ViewportHeight);
+        }
+        else
+        {
+            std::snprintf(viewport, sizeof(viewport), "none");
+        }
+
+        ImGui::TextColored(info.IsBackBuffer ? k_Green : k_Orange, "thread same, %u calls/frame, RTV %s, back buffer %s, viewport %s",
+            info.CallsPerFrame, target, info.IsBackBuffer ? "yes" : "no", viewport);
     }
 
     auto HudService::DrawTelemetry() -> void
