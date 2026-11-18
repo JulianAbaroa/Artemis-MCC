@@ -5,9 +5,7 @@ module;
 module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
-import Common.Math.System;
 import Engine.Base.Memory.Type;
-import Views.View.System;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Overlay.Type;
 import std;
@@ -20,8 +18,6 @@ namespace
 
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
-    using Views::View::System::FindObservedView;
-    using Views::View::System::ViewPositionOf;
 
     constexpr float k_DegreesPerRadian{ 180.0f / std::numbers::pi_v<float> };
 
@@ -252,14 +248,14 @@ namespace DevTools::Viewer::Hud::System
         ImGui::SameLine();
         ImGui::TextColored(k_Info, "%.4f %.4f", camera->M20, camera->M21);
 
-        const auto* view{ (tick && tick->Views) ? FindObservedView(*tick->Views, k_NoHandle) : nullptr };
+        const std::optional<float> eyeDistance{ tick ? m_SceneService.GetEyeDistance(*tick) : std::nullopt };
 
         ImGui::Text("Distance to View eye:");
         ImGui::SameLine();
 
-        if (view && view->Head.HasBody)
+        if (eyeDistance)
         {
-            ImGui::TextColored(k_Info, "%.3f wu", Common::Math::System::Distance(camera->Position, ViewPositionOf(*view)));
+            ImGui::TextColored(k_Info, "%.3f wu", *eyeDistance);
         }
         else
         {

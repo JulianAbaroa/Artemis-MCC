@@ -16,6 +16,16 @@ namespace
 
 export namespace DevTools::Viewer::Map::Type
 {
+    // Folds a set of object handles into one value for the upload gates of the passes (order independent).
+    inline auto HandleSetKeyOf(const std::unordered_set<std::uint32_t>& handles) -> std::uint32_t
+    {
+        constexpr std::uint32_t k_HandleHash{ 0x9E3779B1u };
+
+        std::uint32_t key{ static_cast<std::uint32_t>(handles.size()) };
+        for (const std::uint32_t handle : handles) key += handle * k_HandleHash;
+        return key;
+    }
+
     // Which fixture arrows the fixture pass draws, and how long the direction arrows are in world units.
     struct FixturePassOptions
     {

@@ -65,6 +65,7 @@ export namespace DevTools::Viewer::Options::Type
         HealthShieldSections,
         HealthIncludeCenter,
         HealthTintSpheres,
+        AimSpheres,
 
         InteractionObject,
         InteractionMelee,
@@ -284,6 +285,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::HealthTintSpheres, Group::Health, "HealthTintSpheres", "Tint aim spheres by vitality",
             "Colors each aim sphere from red to green according to its vitality, instead of its anchor source.", true },
+
+        { Flag::AimSpheres, Group::Health, "AimSpheres", "Aim spheres",
+            "Draws a sphere at each damage section of the objects.", true },
 
         { Flag::InteractionObject, Group::Interaction, "InteractionObject", "Engine-highlighted object",
             "Marks the object the game engine currently offers to interact with, with the interaction kind and detail.", true },

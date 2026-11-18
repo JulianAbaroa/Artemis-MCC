@@ -41,13 +41,15 @@ export namespace DevTools::Viewer::Map::System
         AimPass(const AimPass&) = delete;
         auto operator=(const AimPass&) -> AimPass& = delete;
 
-        // Rebuilds the spheres when the generation, the selection or the tint option change.
+        // Rebuilds the spheres when the generation, the selection, the hidden set or the tint option change.
+        // param aims: Null draws nothing (the AimSpheres option is off).
+        // param hiddenHandles: Objects whose sections are skipped (spheres and center markers).
         // param selectedHandle: If set, only the aim of that object is drawn.
         // param tintByHealth: Colors each sphere by the vitality of its section.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Aims>& aims,
             const std::shared_ptr<const VitalityDetails>& vitalities, bool tintByHealth,
-            std::uint32_t selectedHandle, std::uint64_t generation) -> void;
+            std::uint32_t selectedHandle, const std::unordered_set<std::uint32_t>& hiddenHandles, std::uint64_t generation) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

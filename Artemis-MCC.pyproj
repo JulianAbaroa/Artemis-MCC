@@ -19,6 +19,7 @@
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="Data\Views\" />
     <Folder Include="Tools\" />
     <Folder Include="Tools\TagTranspiler\" />
     <Folder Include="Tools\Tests\" />

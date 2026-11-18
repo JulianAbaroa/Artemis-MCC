@@ -52,6 +52,9 @@ export namespace DevTools::Viewer::Hud::Type
 
         // The aim ray of the watched player. Hit is false when it hit nothing or was not cast.
         Views::Raycast::Type::RaycastHit AimHit{};
+
+        // Objects the camera hides (the own biped in first person). Labels anchored to them are skipped. Null draws all.
+        const std::unordered_set<std::uint32_t>* Hidden{ nullptr };
     };
 
     // Label already projected to the screen. Rows are drawn from top to bottom.

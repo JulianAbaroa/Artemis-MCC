@@ -28,6 +28,7 @@ namespace
     using Engine::Render::Type::SurfaceMode;
     using Engine::Render::Type::VertexLayout;
 
+    using DevTools::Viewer::Map::Type::HandleSetKeyOf;
     using DevTools::Viewer::Style::Type::k_AimModelTarget;
     using DevTools::Viewer::Style::Type::k_AimHeadshotTarget;
     using DevTools::Viewer::Style::Type::k_AimCollRegion;
@@ -204,14 +205,17 @@ namespace DevTools::Viewer::Map::System
     auto AimPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Aims>& aims,
         const std::shared_ptr<const VitalityDetails>& vitalities, bool tintByHealth,
-        std::uint32_t selectedHandle, std::uint64_t generation) -> void
+        std::uint32_t selectedHandle, const std::unordered_set<std::uint32_t>& hiddenHandles, std::uint64_t generation) -> void
     {
         if (!device || !context) return;
 
-        if (m_Gate.IsCurrent(generation, selectedHandle) && tintByHealth == m_IsTintByHealth) return;
+        // note: The hidden set and the off state (no aims) are part of the gate, like in DynamicPass.
+        const std::uint32_t key{ selectedHandle ^ HandleSetKeyOf(hiddenHandles) ^ (aims ? 0u : 0xA5A5A5A5u) };
+
+        if (m_Gate.IsCurrent(generation, key) && tintByHealth == m_IsTintByHealth) return;
 
         m_IsTintByHealth = tintByHealth;
-        m_Gate.Mark(generation, selectedHandle);
+        m_Gate.Mark(generation, key);
         m_InstanceCount = 0;
         m_FillInstanceCount = 0;
 
@@ -224,6 +228,8 @@ namespace DevTools::Viewer::Map::System
 
         auto emit = [&](const Aim& aim)
         {
+            if (hiddenHandles.contains(aim.Handle)) return;
+
             const VitalityDetail* detail{ nullptr };
             if (tintByHealth && vitalities)
             {

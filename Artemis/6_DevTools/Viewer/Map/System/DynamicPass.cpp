@@ -20,12 +20,12 @@ namespace
     using Engine::Render::Type::SurfaceMode;
     using Engine::Render::Type::VertexLayout;
 
+    using DevTools::Viewer::Map::Type::HandleSetKeyOf;
     using DevTools::Viewer::Style::Type::k_Selected;
     using Common::Engine::Type::k_NoHandle;
 
     constexpr UINT k_InitialGeometryVertices{ 1u << 16 };
     constexpr UINT k_InitialInstances{ 512 };
-    constexpr std::uint32_t k_HandleHash{ 0x9E3779B1u };
     constexpr std::uint32_t k_Invalid{ (std::numeric_limits<std::uint32_t>::max)() };
 }
 
@@ -40,8 +40,7 @@ namespace DevTools::Viewer::Map::System
         if (!device || !context) return;
 
         // note: The hidden set is part of the gate: it changes with the camera mode and with the respawn of the followed player.
-        std::uint32_t hiddenKey{ static_cast<std::uint32_t>(hiddenHandles.size()) };
-        for (const std::uint32_t handle : hiddenHandles) hiddenKey += handle * k_HandleHash;
+        const std::uint32_t hiddenKey{ HandleSetKeyOf(hiddenHandles) };
 
         const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au) ^ hiddenKey;
 

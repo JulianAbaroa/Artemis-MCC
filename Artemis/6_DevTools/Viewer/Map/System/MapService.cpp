@@ -96,6 +96,7 @@ namespace DevTools::Viewer::Map::System
 
             const auto& palette = m_SceneService.GetPalette();
             const std::uint32_t selected = m_SceneService.GetSelected();
+            const auto& hidden = m_SceneService.GetHiddenHandles();
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Dynamic };
@@ -112,7 +113,7 @@ namespace DevTools::Viewer::Map::System
 
                 // note: The debug collidables are not part of the Tick. They come with it in the scene.
                 m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
-                    palette, selected, translucentHandles, m_SceneService.HiddenHandlesOf(*tick));
+                    palette, selected, translucentHandles, hidden);
             }
 
             {
@@ -153,9 +154,11 @@ namespace DevTools::Viewer::Map::System
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Aim };
-                m_AimPass.Upload(frame.Device, frame.Context, tick->Aims, tick->VitalityDetails,
+                // note: With the option off the pass gets no aims and draws nothing.
+                m_AimPass.Upload(frame.Device, frame.Context,
+                    m_OptionsStore.IsEnabled(Flag::AimSpheres) ? tick->Aims : nullptr, tick->VitalityDetails,
                     m_OptionsStore.IsEnabled(Flag::HealthTintSpheres),
-                    selected, tick->Generation);
+                    selected, hidden, tick->Generation);
             }
 
             m_Profiler.SetCounter(Counter::DynamicInstances,

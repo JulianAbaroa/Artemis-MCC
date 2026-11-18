@@ -59,9 +59,13 @@ export namespace DevTools::Viewer::Scene::System
 
         // return: The handles of the biped of the player whose eyes the camera is in, and of the objects hanging from it (weapons in hand).
         // Empty with the Orbit follow, the free camera that follows nothing, or a View without a biped.
-        // note: The camera is in the eyes of the primary local player in Game mode, and of the followed player with the FirstPerson follow.
-        // Drawn, that biped covers the scene.
-        auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;
+        // note: Computed once per frame by Update. In Game mode the camera is in the eyes of the primary local player only when the game
+        // camera is within k_FirstPersonDistance of the View eye (on foot), so in a vehicle or turret nothing is hidden. With the FirstPerson
+        // follow it is the followed player. Drawn, that biped and its aim spheres cover the scene.
+        auto GetHiddenHandles() const -> const std::unordered_set<std::uint32_t>&;
+
+        // return: The distance from the game camera to the eye of the View of the local player, or nothing without a valid game camera or a View body.
+        auto GetEyeDistance(const Tick& tick) const -> std::optional<float>;
 
         auto ClearSelection() -> void;
 
@@ -82,6 +86,11 @@ export namespace DevTools::Viewer::Scene::System
         auto GetPalette() const -> const PaletteService&;
 
     private:
+        std::unordered_set<std::uint32_t> m_Hidden{};
+
+        // Builds the hidden set of GetHiddenHandles.
+        auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;
+
         SettingsStore& m_SettingsStore;
         ObservedPlayerStore& m_ObservedStore;
         CameraStore& m_CameraStore;

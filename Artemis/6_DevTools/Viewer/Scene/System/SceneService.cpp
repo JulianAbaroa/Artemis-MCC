@@ -1,6 +1,7 @@
 module DevTools.Viewer.Scene.System;
 
 import Common.Engine.Type;
+import Common.Math.System;
 import Perception.ObjectGraph.Type;
 import Perception.Players.Type;
 import Views.View.System;
@@ -16,8 +17,12 @@ namespace
     using Perception::Players::Type::Player;
 
     using Views::View::System::FindObservedView;
+    using Views::View::System::ViewPositionOf;
 
     using Common::Engine::Type::k_NoHandle;
+
+    // The game camera counts as in the eyes of the View when closer than this. On foot it measures 0.004, in third person it is meters.
+    constexpr float k_FirstPersonDistance{ 0.1f };
 }
 
 namespace DevTools::Viewer::Scene::System
@@ -32,13 +37,32 @@ namespace DevTools::Viewer::Scene::System
         return tick.Views ? FindObservedView(*tick.Views, m_ObservedStore.Get()) : nullptr;
     }
 
+    auto SceneService::GetHiddenHandles() const -> const std::unordered_set<std::uint32_t>&
+    {
+        return m_Hidden;
+    }
+
+    auto SceneService::GetEyeDistance(const Tick& tick) const -> std::optional<float>
+    {
+        const std::optional<GameCamera>& camera{ m_CameraService.GetGameCamera() };
+        const View* view{ tick.Views ? FindObservedView(*tick.Views, k_NoHandle) : nullptr };
+        if (!camera || !view || !view->Head.HasBody) return std::nullopt;
+
+        return static_cast<float>(Common::Math::System::Distance(camera->Position, ViewPositionOf(*view)));
+    }
+
     auto SceneService::HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>
     {
         std::unordered_set<std::uint32_t> hidden{};
         if (!tick.Views) return hidden;
 
         const View* view{ nullptr };
-        if (m_CameraStore.GetMode() == Mode::Game) view = FindObservedView(*tick.Views, k_NoHandle);
+        if (m_CameraStore.GetMode() == Mode::Game)
+        {
+            // note: Without a valid game camera the camera sits on the View of the local player, so it is hidden.
+            const std::optional<float> distance{ this->GetEyeDistance(tick) };
+            if (!distance || *distance < k_FirstPersonDistance) view = FindObservedView(*tick.Views, k_NoHandle);
+        }
         else if (m_CameraStore.GetFollow() == Follow::FirstPerson && m_ObservedStore.Get() != k_NoHandle) view = this->GetObservedView(tick);
 
         if (!view || view->Head.BipedHandle == k_NoHandle) return hidden;
@@ -79,6 +103,8 @@ namespace DevTools::Viewer::Scene::System
             }
         }
         m_ObservedStore.Set(observed);
+
+        m_Hidden = tick ? this->HiddenHandlesOf(*tick) : std::unordered_set<std::uint32_t>{};
 
         m_PaletteService.Build(tick);
 

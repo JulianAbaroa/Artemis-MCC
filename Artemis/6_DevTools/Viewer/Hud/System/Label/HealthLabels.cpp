@@ -57,6 +57,8 @@ namespace DevTools::Viewer::Hud::System
 
         auto emit = [&](std::uint32_t handle)
         {
+            if (context.Hidden && context.Hidden->contains(handle)) return;
+
             const auto aimIt = tick.Aims->find(handle);
             const auto detailIt = tick.VitalityDetails->find(handle);
             if (aimIt == tick.Aims->end() || detailIt == tick.VitalityDetails->end()) return;
