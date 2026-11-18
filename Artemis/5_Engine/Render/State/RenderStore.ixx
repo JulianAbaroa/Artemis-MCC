@@ -11,7 +11,11 @@ import std;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::FirstPersonCaller;
+    using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+
+    using Engine::Render::Type::k_FirstPersonCallerCount;
 }
 
 export namespace Engine::Render::State
@@ -100,6 +104,35 @@ export namespace Engine::Render::State
         // return: Whether the last completed frame (closed by EndHudFrame) turned the first person test to false at least once.
         auto WasThirdPersonLastFrame() const -> bool;
 
+        // Counts one call of the first person model pass for user 0 in the frame in progress. Any thread, no allocation.
+        auto CountFirstPersonCall(FirstPersonCaller caller) -> void;
+
+        // return: The calls of that caller in the last completed frame (closed by EndHudFrame).
+        auto GetFirstPersonCalls(FirstPersonCaller caller) const -> std::uint32_t;
+
+        // return: How many callers had at least one call in the last completed frame.
+        auto GetFirstPersonCallerCount() const -> std::uint32_t;
+
+        // Asks for one probe of the first person model pass (VW.6.y.2). Does nothing if one is already pending. Any thread.
+        auto RequestFirstPersonProbe() -> void;
+
+        // return: Whether a probe was requested and has not been reported yet.
+        auto IsFirstPersonProbePending() const -> bool;
+
+        // return: Whether the detour must measure its calls: the probe began at a Present and its frame is in progress.
+        auto IsFirstPersonProbeArmed() const -> bool;
+
+        // Moves the probe one Present on, after EndHudFrame: a requested probe is armed (the samples are cleared, so the frame that follows
+        // is measured whole) and an armed one ends when the closed frame had first person calls.
+        // return: True when the frame just closed is the one to report. The probe is then idle again.
+        auto StepFirstPersonProbe() -> bool;
+
+        // Keeps the measure of a call of the first person model pass, in the slot of its caller. note: A short lock, no allocation.
+        auto SetFirstPersonSample(const FirstPersonSample& sample) -> void;
+
+        // return: The last measure of that caller with the calls of the last frame filled in.
+        auto GetFirstPersonSample(FirstPersonCaller caller) const -> FirstPersonSample;
+
         // Thread of Present, noted at every Present. 0 until the first one.
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
@@ -180,5 +213,12 @@ export namespace Engine::Render::State
 
         mutable std::mutex m_HudSampleMutex{};
         HudHookInfo m_HudSample{};
+
+        std::array<std::atomic<std::uint32_t>, k_FirstPersonCallerCount> m_FirstPersonCalls{};
+        std::array<std::atomic<std::uint32_t>, k_FirstPersonCallerCount> m_FirstPersonCallsLastFrame{};
+        std::atomic<std::uint8_t> m_FirstPersonProbe{ 0 };
+
+        mutable std::mutex m_FirstPersonSampleMutex{};
+        std::array<FirstPersonSample, k_FirstPersonCallerCount> m_FirstPersonSamples{};
     };
 }

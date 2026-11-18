@@ -208,6 +208,89 @@ TEST(EngineLayerTests, RenderStoreFirstPersonFlagAndThirdPersonFrame)
     EXPECT_FALSE(store.WasThirdPersonLastFrame());
 }
 
+TEST(EngineLayerTests, FirstPersonCallerIsClassifiedByFunctionRange)
+{
+    using Engine::Render::Hook::FirstPersonDetour;
+    using Engine::Render::Type::FirstPersonCaller;
+
+    // The first byte and the last byte of each function belong to it, the byte before and the one after do not.
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26DA08), FirstPersonCaller::Pass1);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26DA08 + 497), FirstPersonCaller::Pass1);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26DA08 - 1), FirstPersonCaller::Other);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26DA08 + 498), FirstPersonCaller::Other);
+
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26E2A0), FirstPersonCaller::Func26E2A0);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26E2A0 + 604), FirstPersonCaller::Func26E2A0);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26E2A0 + 605), FirstPersonCaller::Other);
+
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26EA78), FirstPersonCaller::ViewPhase);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26EA78 + 787), FirstPersonCaller::ViewPhase);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26EA78 - 1), FirstPersonCaller::Other);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x26EA78 + 788), FirstPersonCaller::Other);
+
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x277D00), FirstPersonCaller::Func277D00);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x277D00 + 542), FirstPersonCaller::Func277D00);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0x277D00 + 543), FirstPersonCaller::Other);
+
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0), FirstPersonCaller::Other);
+    EXPECT_EQ(FirstPersonDetour::ClassifyCaller(0xFFFFFFFF), FirstPersonCaller::Other);
+}
+
+TEST(EngineLayerTests, RenderStoreFirstPersonSampleAndOneShotProbe)
+{
+    using Engine::Render::Type::FirstPersonCaller;
+    using Engine::Render::Type::FirstPersonSample;
+
+    Engine::Render::State::RenderStore store{};
+
+    // A sample is kept in the slot of its caller, with the calls of the last closed frame.
+    FirstPersonSample sample{};
+    sample.HasSample = true;
+    sample.Caller = FirstPersonCaller::ViewPhase;
+    sample.Pass = 3;
+    sample.Depth.HasDepth = true;
+    sample.Depth.Resource = 0x1234;
+    store.SetFirstPersonSample(sample);
+
+    store.CountFirstPersonCall(FirstPersonCaller::ViewPhase);
+    store.CountFirstPersonCall(FirstPersonCaller::ViewPhase);
+    store.CountFirstPersonCall(FirstPersonCaller::Other);
+    EXPECT_EQ(store.GetFirstPersonCallerCount(), 0u);
+    store.EndHudFrame();
+    EXPECT_EQ(store.GetFirstPersonCallerCount(), 2u);
+    EXPECT_EQ(store.GetFirstPersonCalls(FirstPersonCaller::ViewPhase), 2u);
+
+    const FirstPersonSample read{ store.GetFirstPersonSample(FirstPersonCaller::ViewPhase) };
+    EXPECT_TRUE(read.HasSample);
+    EXPECT_EQ(read.Pass, 3u);
+    EXPECT_EQ(read.Depth.Resource, 0x1234u);
+    EXPECT_EQ(read.CallsPerFrame, 2u);
+    EXPECT_FALSE(store.GetFirstPersonSample(FirstPersonCaller::Pass1).HasSample);
+
+    // The probe is armed at the Present after the request, and ends at the Present that closes a frame with calls. One shot.
+    EXPECT_FALSE(store.IsFirstPersonProbePending());
+    store.RequestFirstPersonProbe();
+    EXPECT_TRUE(store.IsFirstPersonProbePending());
+    EXPECT_FALSE(store.IsFirstPersonProbeArmed());
+
+    EXPECT_FALSE(store.StepFirstPersonProbe());
+    EXPECT_TRUE(store.IsFirstPersonProbeArmed());
+    EXPECT_FALSE(store.GetFirstPersonSample(FirstPersonCaller::ViewPhase).HasSample);   // cleared when armed
+
+    store.EndHudFrame();    // a frame with no first person call: keeps waiting
+    EXPECT_FALSE(store.StepFirstPersonProbe());
+    EXPECT_TRUE(store.IsFirstPersonProbeArmed());
+
+    store.CountFirstPersonCall(FirstPersonCaller::Func26E2A0);
+    store.EndHudFrame();
+    EXPECT_TRUE(store.StepFirstPersonProbe());
+    EXPECT_FALSE(store.IsFirstPersonProbePending());
+
+    EXPECT_FALSE(store.StepFirstPersonProbe());
+    store.RequestFirstPersonProbe();
+    EXPECT_TRUE(store.IsFirstPersonProbePending());
+}
+
 TEST(EngineLayerTests, ObserverCameraDetourWithoutTheGameInstallsNothing)
 {
     Services::Layer service{};

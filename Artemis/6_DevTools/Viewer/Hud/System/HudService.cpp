@@ -1,7 +1,5 @@
 module;
 
-#include <dxgiformat.h>
-
 #include "External/imgui/imgui.h"
 
 module DevTools.Viewer.Hud.System;
@@ -23,6 +21,7 @@ namespace
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
     using Engine::Base::Memory::Type::FrameClock::InterpolationState;
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
 
     using Common::Engine::Type::k_NoHandle;
@@ -37,21 +36,6 @@ namespace
     const ImVec4 k_Orange{ 1.0f, 0.6f, 0.0f, 1.0f };
     const ImVec4 k_Red{ 1.0f, 0.0f, 0.0f, 1.0f };
     const ImVec4 k_Info{ 0.6f, 0.8f, 1.0f, 1.0f };
-
-    auto FormatName(std::uint32_t format) -> const char*
-    {
-        switch (format)
-        {
-        case DXGI_FORMAT_R8G8B8A8_UNORM:        return "R8G8B8A8_UNORM";
-        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:   return "R8G8B8A8_UNORM_SRGB";
-        case DXGI_FORMAT_B8G8R8A8_UNORM:        return "B8G8R8A8_UNORM";
-        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:   return "B8G8R8A8_UNORM_SRGB";
-        case DXGI_FORMAT_R10G10B10A2_UNORM:     return "R10G10B10A2_UNORM";
-        case DXGI_FORMAT_R16G16B16A16_FLOAT:    return "R16G16B16A16_FLOAT";
-        case DXGI_FORMAT_R11G11B10_FLOAT:       return "R11G11B10_FLOAT";
-        default:                                return nullptr;
-        }
-    }
 
     auto ModeLabel(Mode mode) -> const char*
     {
@@ -435,6 +419,11 @@ namespace DevTools::Viewer::Hud::System
 
         ImGui::TextColored(isModelHooked && isUnitHooked ? k_Green : k_Orange, "installed (model %s, unit %s), third person: %s",
             isModelHooked ? "yes" : "no", isUnitHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no");
+
+        ImGui::Text("FP probe:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%u callers last frame%s", m_RenderStore.GetFirstPersonCallerCount(),
+            m_RenderStore.IsFirstPersonProbePending() ? " (probe pending)" : "");
     }
 
     auto HudService::DrawLatency() -> void

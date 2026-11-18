@@ -8,7 +8,21 @@ module Engine.Render.State;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::FirstPersonCaller;
+    using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+
+    using Engine::Render::Type::k_FirstPersonCallerCount;
+
+    // States of the first person probe.
+    constexpr std::uint8_t k_ProbeIdle{ 0 };
+    constexpr std::uint8_t k_ProbeRequested{ 1 };
+    constexpr std::uint8_t k_ProbeArmed{ 2 };
+
+    auto SlotOf(FirstPersonCaller caller) -> std::size_t
+    {
+        return (std::min)(static_cast<std::size_t>(caller), k_FirstPersonCallerCount - 1);
+    }
 }
 
 namespace Engine::Render::State
@@ -184,6 +198,93 @@ namespace Engine::Render::State
     {
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+
+        for (std::size_t i{ 0 }; i < k_FirstPersonCallerCount; ++i)
+        {
+            m_FirstPersonCallsLastFrame[i].store(m_FirstPersonCalls[i].exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+        }
+    }
+
+    auto RenderStore::CountFirstPersonCall(FirstPersonCaller caller) -> void
+    {
+        m_FirstPersonCalls[SlotOf(caller)].fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetFirstPersonCalls(FirstPersonCaller caller) const -> std::uint32_t
+    {
+        return m_FirstPersonCallsLastFrame[SlotOf(caller)].load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetFirstPersonCallerCount() const -> std::uint32_t
+    {
+        std::uint32_t count{ 0 };
+
+        for (const auto& calls : m_FirstPersonCallsLastFrame)
+        {
+            if (calls.load(std::memory_order_relaxed) != 0) ++count;
+        }
+
+        return count;
+    }
+
+    auto RenderStore::RequestFirstPersonProbe() -> void
+    {
+        std::uint8_t expected{ k_ProbeIdle };
+        m_FirstPersonProbe.compare_exchange_strong(expected, k_ProbeRequested, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsFirstPersonProbePending() const -> bool
+    {
+        return m_FirstPersonProbe.load(std::memory_order_relaxed) != k_ProbeIdle;
+    }
+
+    auto RenderStore::IsFirstPersonProbeArmed() const -> bool
+    {
+        return m_FirstPersonProbe.load(std::memory_order_relaxed) == k_ProbeArmed;
+    }
+
+    auto RenderStore::StepFirstPersonProbe() -> bool
+    {
+        const std::uint8_t state{ m_FirstPersonProbe.load(std::memory_order_relaxed) };
+
+        if (state == k_ProbeArmed)
+        {
+            if (this->GetFirstPersonCallerCount() == 0) return false;
+
+            m_FirstPersonProbe.store(k_ProbeIdle, std::memory_order_relaxed);
+            return true;
+        }
+
+        if (state == k_ProbeRequested)
+        {
+            {
+                const std::lock_guard<std::mutex> lock{ m_FirstPersonSampleMutex };
+                m_FirstPersonSamples = {};
+            }
+
+            m_FirstPersonProbe.store(k_ProbeArmed, std::memory_order_relaxed);
+        }
+
+        return false;
+    }
+
+    auto RenderStore::SetFirstPersonSample(const FirstPersonSample& sample) -> void
+    {
+        const std::lock_guard<std::mutex> lock{ m_FirstPersonSampleMutex };
+        m_FirstPersonSamples[SlotOf(sample.Caller)] = sample;
+    }
+
+    auto RenderStore::GetFirstPersonSample(FirstPersonCaller caller) const -> FirstPersonSample
+    {
+        FirstPersonSample sample{};
+
+        {
+            const std::lock_guard<std::mutex> lock{ m_FirstPersonSampleMutex };
+            sample = m_FirstPersonSamples[SlotOf(caller)];
+        }
+
+        sample.CallsPerFrame = this->GetFirstPersonCalls(caller);
+        return sample;
     }
 
     auto RenderStore::CountHudFailure() -> void

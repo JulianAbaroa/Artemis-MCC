@@ -41,6 +41,18 @@ export namespace Engine::Render::Type
         Failed              // a handler threw: the frame counts as handled, so Present does not draw it again
     };
 
+    // The depth stencil view that was bound.
+    struct DepthTargetInfo
+    {
+        bool HasDepth{ false };
+        std::uint64_t Resource{ 0 };        // address of the resource, only to compare it with another sample. Never dereferenced
+        std::uint32_t Width{ 0 };
+        std::uint32_t Height{ 0 };
+        std::uint32_t ResourceFormat{ 0 };
+        std::uint32_t ViewFormat{ 0 };
+        std::uint32_t ViewFlags{ 0 };       // D3D11_DSV_READ_ONLY_DEPTH (1) and D3D11_DSV_READ_ONLY_STENCIL (2)
+    };
+
     // What the HUD detour measured at the last call of the draw for user 0 (VW.6.x). Only reads, never drawn from.
     struct HudHookInfo
     {
@@ -56,6 +68,125 @@ export namespace Engine::Render::Type
         std::uint32_t Height{ 0 };
         std::uint32_t Format{ 0 };      // DXGI_FORMAT of the target view
         float ViewportX{ 0.0f }, ViewportY{ 0.0f }, ViewportWidth{ 0.0f }, ViewportHeight{ 0.0f };
+        DepthTargetInfo Depth{};        // the depth stencil view bound at the draw (VW.6.y.2)
+    };
+
+    // Name of a DXGI format the render passes use (color and depth). return: Null for the others.
+    inline auto FormatName(std::uint32_t format) -> const char*
+    {
+        switch (format)
+        {
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:         return "R8G8B8A8_TYPELESS";
+        case DXGI_FORMAT_R8G8B8A8_UNORM:            return "R8G8B8A8_UNORM";
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:       return "R8G8B8A8_UNORM_SRGB";
+        case DXGI_FORMAT_B8G8R8A8_UNORM:            return "B8G8R8A8_UNORM";
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:       return "B8G8R8A8_UNORM_SRGB";
+        case DXGI_FORMAT_R10G10B10A2_UNORM:         return "R10G10B10A2_UNORM";
+        case DXGI_FORMAT_R16G16B16A16_FLOAT:        return "R16G16B16A16_FLOAT";
+        case DXGI_FORMAT_R11G11B10_FLOAT:           return "R11G11B10_FLOAT";
+        case DXGI_FORMAT_R32_TYPELESS:              return "R32_TYPELESS";
+        case DXGI_FORMAT_D32_FLOAT:                 return "D32_FLOAT";
+        case DXGI_FORMAT_R32_FLOAT:                 return "R32_FLOAT";
+        case DXGI_FORMAT_R24G8_TYPELESS:            return "R24G8_TYPELESS";
+        case DXGI_FORMAT_D24_UNORM_S8_UINT:         return "D24_UNORM_S8_UINT";
+        case DXGI_FORMAT_R24_UNORM_X8_TYPELESS:     return "R24_UNORM_X8_TYPELESS";
+        case DXGI_FORMAT_R32G8X24_TYPELESS:         return "R32G8X24_TYPELESS";
+        case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:      return "D32_FLOAT_S8X24_UINT";
+        case DXGI_FORMAT_R16_TYPELESS:              return "R16_TYPELESS";
+        case DXGI_FORMAT_D16_UNORM:                 return "D16_UNORM";
+        default:                                    return nullptr;
+        }
+    }
+
+    // The callers of the first person model pass that the probe tells apart (VW.6.y.2). Each is a function of the game that calls it.
+    enum class FirstPersonCaller : std::uint8_t
+    {
+        Pass1,          // 0x26DA08 (called by 0x26C6DC with 0xB and by 0x26D740)
+        Func26E2A0,     // 0x26E2A0
+        ViewPhase,      // 0x26EA78 (phase 0 or 1 of the view)
+        Func277D00,     // 0x277D00 (no known direct caller)
+        Other           // any other return address, the raw RVA is kept
+    };
+
+    inline constexpr std::size_t k_FirstPersonCallerCount{ 5 };
+
+    // A function of the game by its first byte and its size, as the decompiled code gives them.
+    struct FirstPersonCallerRange
+    {
+        FirstPersonCaller Caller{ FirstPersonCaller::Other };
+        std::uint32_t Rva{ 0 };
+        std::uint32_t Size{ 0 };
+    };
+
+    inline constexpr std::array<FirstPersonCallerRange, 4> k_FirstPersonCallerRanges
+    { {
+        { FirstPersonCaller::Pass1,      0x26DA08, 498 },
+        { FirstPersonCaller::Func26E2A0, 0x26E2A0, 605 },
+        { FirstPersonCaller::ViewPhase,  0x26EA78, 788 },
+        { FirstPersonCaller::Func277D00, 0x277D00, 543 }
+    } };
+
+    // The color target in slot 0: its texture, its view and whether it is the back buffer.
+    struct ColorTargetInfo
+    {
+        bool HasTarget{ false };
+        bool IsBackBuffer{ false };     // the resource is the one of the back buffer view of the store
+        bool IsSameDevice{ false };     // the target belongs to the device of the store
+        std::uint32_t Width{ 0 };
+        std::uint32_t Height{ 0 };
+        std::uint32_t ResourceFormat{ 0 };  // DXGI_FORMAT of the texture
+        std::uint32_t ViewFormat{ 0 };      // DXGI_FORMAT of the view (0 = same as the texture)
+    };
+
+    struct ViewportInfo
+    {
+        bool HasViewport{ false };
+        float X{ 0.0f }, Y{ 0.0f }, Width{ 0.0f }, Height{ 0.0f };
+        float MinDepth{ 0.0f }, MaxDepth{ 0.0f };
+    };
+
+    // The depth stencil state that was bound. HasState false is the default state of D3D11 (a null state).
+    struct DepthStencilStateInfo
+    {
+        bool HasState{ false };
+        bool IsDepthEnabled{ false };
+        bool IsStencilEnabled{ false };
+        std::uint32_t DepthWriteMask{ 0 };      // D3D11_DEPTH_WRITE_MASK
+        std::uint32_t DepthFunc{ 0 };           // D3D11_COMPARISON_FUNC
+        std::uint32_t StencilReadMask{ 0 };
+        std::uint32_t StencilWriteMask{ 0 };
+        std::uint32_t StencilRef{ 0 };          // read even when the state is null
+        std::uint32_t FrontFunc{ 0 };           // D3D11_COMPARISON_FUNC
+        std::uint32_t FrontPassOp{ 0 };         // D3D11_STENCIL_OP
+        std::uint32_t FrontFailOp{ 0 };
+        std::uint32_t FrontDepthFailOp{ 0 };
+    };
+
+    // The rasterizer state that was bound. HasState false is the default state (a null state).
+    struct RasterizerStateInfo
+    {
+        bool HasState{ false };
+        bool IsDepthClipEnabled{ false };
+        std::int32_t DepthBias{ 0 };
+        float SlopeScaledDepthBias{ 0.0f };
+        std::uint32_t CullMode{ 0 };            // D3D11_CULL_MODE
+    };
+
+    // What the first person model detour measured at a call for user 0 (VW.6.y.2). Only reads, never drawn from.
+    struct FirstPersonSample
+    {
+        bool HasSample{ false };
+        bool IsSameThread{ false };     // it ran on the thread of Present. When false the next fields are not read
+        FirstPersonCaller Caller{ FirstPersonCaller::Other };
+        std::uint32_t CallerRva{ 0 };   // return address minus the base of haloreach.dll
+        std::uint32_t Pass{ 0 };        // the uint8 argument of the model pass
+        std::uint32_t CallsPerFrame{ 0 };   // calls of this caller between the last two Present
+        std::uint32_t RenderTargetCount{ 0 };   // non null render targets bound
+        ColorTargetInfo Color{};        // render target 0
+        DepthTargetInfo Depth{};
+        ViewportInfo Viewport{};        // viewport 0
+        DepthStencilStateInfo DepthState{};
+        RasterizerStateInfo Rasterizer{};
     };
 
     // Layout of the vertex data of a draw. Each one has its own input layout and vertex shader.

@@ -306,6 +306,27 @@ namespace DevTools::Workbench::Settings::System
         }
     }
 
+    auto SettingsUIService::DrawFirstPersonProbe() -> void
+    {
+        const bool isPending{ m_RenderStore.IsFirstPersonProbePending() };
+
+        ImGui::SameLine();
+        if (isPending) ImGui::BeginDisabled();
+
+        if (ImGui::Button("Probe first person"))
+        {
+            m_RenderStore.RequestFirstPersonProbe();
+        }
+
+        if (isPending) ImGui::EndDisabled();
+
+        if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        {
+            ImGui::SetTooltip("Writes to the Artemis log, once, what the game's first person pass draws with (targets, depth, viewport, "
+                "depth and stencil state). Lines start with [FirstPersonProbe]. Play on foot with the game camera and the overlay on.");
+        }
+    }
+
     auto SettingsUIService::DrawViewerGroup(Group group) -> void
     {
         const bool areLabelsEnabled{ m_OptionsStore.IsEnabled(Flag::Labels) };
@@ -335,6 +356,8 @@ namespace DevTools::Workbench::Settings::System
             }
 
             if (isDisabled) ImGui::EndDisabled();
+
+            if (info.Id == Flag::HideFirstPerson) this->DrawFirstPersonProbe();
         }
 
         for (const ScalarInfo& info : k_Scalars)

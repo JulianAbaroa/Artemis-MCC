@@ -30,6 +30,7 @@ export namespace Engine::Render::System
         using FrameHandler = Engine::Render::Type::FrameHandler;
         using BeforeHudHandler = Engine::Render::Type::BeforeHudHandler;
         using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
+        using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
         using HudHookInfo = Engine::Render::Type::HudHookInfo;
         using ShutdownCallback = Engine::Render::Type::ShutdownCallback;
 
@@ -87,6 +88,14 @@ export namespace Engine::Render::System
         static auto FindBeforeHudBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
             -> std::optional<BeforeHudStatus>;
 
+        // Runs for each call of the first person model pass for user 0 while the probe is armed, before the original: reads the render
+        // targets, depth stencil, viewport 0, depth stencil state and rasterizer state bound now, and keeps them in the slot of the caller.
+        // param callerRva: The return address minus the base of the game module.
+        // param pass: The uint8 argument of the model pass.
+        // note: Called by the first person detour. Reads only, nothing changes what is drawn. The immediate context is only touched on the
+        // thread of Present with the targets ready, on another thread the sample only says so. COM calls only, no allocation, no log.
+        auto MeasureFirstPerson(FirstPersonCaller caller, std::uint32_t callerRva, std::uint8_t pass) -> void;
+
         // Waits for the calls inside the render hooks to finish.
         // return: False if some are still running after the timeout.
         auto WaitForIdle(milliseconds timeout) -> bool;
@@ -123,6 +132,10 @@ export namespace Engine::Render::System
 
         // Reads the render target bound in slot 0 and the viewport into a sample, and stores it.
         auto MeasureHud() -> HudHookInfo;
+
+        // Logs one INFO line per first person caller that had calls in the last frame and one for the HUD draw (VW.6.y.2).
+        // note: Runs at Present, never in a detour.
+        auto ReportFirstPersonProbe() -> void;
 
         auto Raise(const std::vector<FrameHandler>& handlers, const char* stage) -> void;
 

@@ -1,3 +1,7 @@
+module;
+
+#include <intrin.h>
+
 module Engine.Render.Hook;
 import :FirstPerson;
 
@@ -7,6 +11,7 @@ import std;
 namespace
 {
     using Engine::Render::State::RenderStore;
+    using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_IdleTimeout;
 
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
@@ -25,6 +30,28 @@ namespace
 
 namespace Engine::Render::Hook
 {
+    auto FirstPersonDetour::ClassifyCaller(std::uint32_t rva) -> FirstPersonCaller
+    {
+        for (const auto& range : k_FirstPersonCallerRanges)
+        {
+            if (rva >= range.Rva && rva - range.Rva < range.Size) return range.Caller;
+        }
+
+        return FirstPersonCaller::Other;
+    }
+
+    auto FirstPersonDetour::NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void
+    {
+        const std::uintptr_t base{ m_ModuleBase.load() };
+        const std::uintptr_t address{ reinterpret_cast<std::uintptr_t>(returnAddress) };
+        const std::uint32_t rva{ base != 0 && address >= base ? static_cast<std::uint32_t>(address - base) : 0 };
+        const FirstPersonCaller caller{ FirstPersonDetour::ClassifyCaller(rva) };
+
+        m_RenderStore.CountFirstPersonCall(caller);
+
+        if (m_RenderStore.IsFirstPersonProbeArmed()) m_RenderService.MeasureFirstPerson(caller, rva, pass);
+    }
+
     auto FirstPersonDetour::IsFirstPersonModelSkipped(std::uint32_t user, bool isHidden, bool isDriveActive) -> bool
     {
         return user == k_LocalUser && (isHidden || isDriveActive);
@@ -52,6 +79,8 @@ namespace Engine::Render::Hook
         }
 
         RenderStore::HookScope scope{ self->m_RenderStore };
+
+        if (user == k_LocalUser) self->NoteModelCall(_ReturnAddress(), pass);
 
         if (FirstPersonDetour::IsFirstPersonModelSkipped(user, self->m_RenderStore.IsFirstPersonHidden(), self->IsDriveActive())) return;
 
@@ -98,6 +127,7 @@ namespace Engine::Render::Hook
         }
 
         address.store(functionAddress);
+        m_ModuleBase.store(reinterpret_cast<std::uintptr_t>(functionAddress) - rva);
         m_Log.Message("[FirstPersonDetour] INFO: {} hooked at rva {:X}.", name, rva);
         return true;
     }
@@ -175,6 +205,7 @@ namespace Engine::Render::Hook
         s_OriginalModel = nullptr;
         s_OriginalUnit = nullptr;
 
+        m_ModuleBase.store(0);
         m_IsInstalled.store(false);
         s_Instance.store(nullptr);
     }
