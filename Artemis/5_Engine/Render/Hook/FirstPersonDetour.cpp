@@ -49,7 +49,10 @@ namespace Engine::Render::Hook
 
         m_RenderStore.CountFirstPersonCall(caller);
 
-        if (m_RenderStore.IsFirstPersonProbeArmed()) m_RenderService.MeasureFirstPerson(caller, rva, pass);
+        if (!m_RenderStore.IsFirstPersonProbeArmed()) return;
+
+        m_RenderStore.SetFirstPersonDriveActive(this->IsDriveActive());
+        m_RenderService.MeasureFirstPerson(caller, rva, pass);
     }
 
     auto FirstPersonDetour::IsFirstPersonModelSkipped(std::uint32_t user, bool isHidden, bool isDriveActive) -> bool

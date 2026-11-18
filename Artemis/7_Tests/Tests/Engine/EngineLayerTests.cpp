@@ -291,6 +291,122 @@ TEST(EngineLayerTests, RenderStoreFirstPersonSampleAndOneShotProbe)
     EXPECT_TRUE(store.IsFirstPersonProbePending());
 }
 
+TEST(EngineLayerTests, ReduceStencilRespectsRowPitchAndRegions)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::StencilProbeInfo;
+    using Engine::Render::Type::StencilReadStatus;
+    using Engine::Render::Type::StencilRegion;
+
+    // A texture of 8x8 texels of 8 bytes with a row pitch of 80 bytes (16 padding bytes of 0xFF per row, they must not be read).
+    constexpr std::uint32_t width{ 8 };
+    constexpr std::uint32_t height{ 8 };
+    constexpr std::uint32_t pitch{ 80 };
+    std::vector<std::uint8_t> data(static_cast<std::size_t>(pitch) * height, 0xFF);
+
+    const auto put = [&data](std::uint32_t x, std::uint32_t y, float depth, std::uint8_t stencil)
+    {
+        std::uint8_t* texel{ data.data() + static_cast<std::size_t>(y) * pitch + static_cast<std::size_t>(x) * 8 };
+        std::memcpy(texel, &depth, sizeof(depth));
+        texel[4] = stencil;
+        texel[5] = texel[6] = texel[7] = 0;
+    };
+
+    for (std::uint32_t y{ 0 }; y < height; ++y)
+    {
+        for (std::uint32_t x{ 0 }; x < width; ++x)
+        {
+            put(x, y, x >= 4 && y >= 4 ? 1.0f : 0.5f, x >= 4 && y >= 4 ? 0xA4 : 0x00);
+        }
+    }
+
+    put(3, 3, 0.5f, 0x01);      // the one texel of the center box
+    put(0, 0, 0.0f, 0x80);      // top, depth 0
+    put(0, 1, 0.5f, 0x80);      // top
+
+    const StencilProbeInfo info{ RenderService::ReduceStencil(data.data(), pitch, width, height) };
+    ASSERT_EQ(info.Status, StencilReadStatus::Read);
+
+    const auto& all{ info.Regions[static_cast<std::size_t>(StencilRegion::All)] };
+    EXPECT_EQ(all.Texels, 64u);
+    EXPECT_EQ(all.Histogram[0x00], 45u);
+    EXPECT_EQ(all.Histogram[0xA4], 16u);
+    EXPECT_EQ(all.Histogram[0x01], 1u);
+    EXPECT_EQ(all.Histogram[0x80], 2u);
+    EXPECT_EQ(all.BitCounts[0], 1u);
+    EXPECT_EQ(all.BitCounts[2], 16u);
+    EXPECT_EQ(all.BitCounts[5], 16u);
+    EXPECT_EQ(all.BitCounts[7], 18u);
+    EXPECT_EQ(all.BitCounts[1], 0u);
+    EXPECT_FLOAT_EQ(all.MinDepth, 0.0f);
+    EXPECT_FLOAT_EQ(all.MaxDepth, 1.0f);
+    EXPECT_EQ(all.ZeroDepthTexels, 1u);
+
+    const auto& weapon{ info.Regions[static_cast<std::size_t>(StencilRegion::Weapon)] };
+    EXPECT_EQ(weapon.Texels, 16u);
+    EXPECT_EQ(weapon.Histogram[0xA4], 16u);
+    EXPECT_FLOAT_EQ(weapon.MinDepth, 1.0f);
+    EXPECT_FLOAT_EQ(weapon.MaxDepth, 1.0f);
+    EXPECT_EQ(weapon.ZeroDepthTexels, 0u);
+
+    const auto& center{ info.Regions[static_cast<std::size_t>(StencilRegion::Center)] };
+    EXPECT_EQ(center.Texels, 1u);
+    EXPECT_EQ(center.Histogram[0x01], 1u);
+    EXPECT_FLOAT_EQ(center.MinDepth, 0.5f);
+
+    const auto& top{ info.Regions[static_cast<std::size_t>(StencilRegion::Top)] };
+    EXPECT_EQ(top.Texels, 16u);
+    EXPECT_EQ(top.Histogram[0x80], 2u);
+    EXPECT_EQ(top.Histogram[0x00], 14u);
+    EXPECT_FLOAT_EQ(top.MinDepth, 0.0f);
+    EXPECT_FLOAT_EQ(top.MaxDepth, 0.5f);
+    EXPECT_EQ(top.ZeroDepthTexels, 1u);
+
+    // The line of a region lists the most frequent values first.
+    const std::string line{ RenderService::DescribeStencilRegion(StencilRegion::Weapon, weapon) };
+    EXPECT_NE(line.find("stencil weapon n=16 top 0XA4:16 bits"), std::string::npos) << line;
+    EXPECT_NE(line.find("b2:16"), std::string::npos) << line;
+    EXPECT_NE(line.find("zero=0"), std::string::npos) << line;
+
+    const std::string allLine{ RenderService::DescribeStencilRegion(StencilRegion::All, all) };
+    EXPECT_NE(allLine.find("top 0X00:45 0XA4:16 0X80:2 0X01:1 bits"), std::string::npos) << allLine;
+
+    // A pitch smaller than a row or no data is refused.
+    EXPECT_EQ(RenderService::ReduceStencil(data.data(), 32, width, height).Status, StencilReadStatus::BadLayout);
+    EXPECT_EQ(RenderService::ReduceStencil(nullptr, pitch, width, height).Status, StencilReadStatus::BadLayout);
+}
+
+TEST(EngineLayerTests, RenderStoreStencilProbeIsClearedWhenArmed)
+{
+    using Engine::Render::Type::FirstPersonCaller;
+    using Engine::Render::Type::StencilProbeInfo;
+    using Engine::Render::Type::StencilReadStatus;
+
+    Engine::Render::State::RenderStore store{};
+
+    StencilProbeInfo info{};
+    info.IsAttempted = true;
+    info.Status = StencilReadStatus::MapFailed;
+    info.Result = -2005270523;
+    store.SetStencilProbe(info);
+    EXPECT_TRUE(store.IsStencilProbeAttempted());
+    EXPECT_EQ(store.GetStencilProbe().Status, StencilReadStatus::MapFailed);
+    EXPECT_EQ(store.GetFirstPersonDepth(), nullptr);
+
+    store.SetFirstPersonDriveActive(true);
+    EXPECT_TRUE(store.IsFirstPersonDriveActive());
+
+    store.RequestFirstPersonProbe();
+    EXPECT_FALSE(store.StepFirstPersonProbe());     // armed: the stencil of the old probe is gone
+    EXPECT_FALSE(store.IsStencilProbeAttempted());
+    EXPECT_FALSE(store.GetStencilProbe().IsAttempted);
+
+    store.CountFirstPersonCall(FirstPersonCaller::Pass1);
+    store.EndHudFrame();
+    EXPECT_TRUE(store.StepFirstPersonProbe());
+    EXPECT_EQ(store.GetFirstPersonDepth(), nullptr);
+}
+
 TEST(EngineLayerTests, ObserverCameraDetourWithoutTheGameInstallsNothing)
 {
     Services::Layer service{};

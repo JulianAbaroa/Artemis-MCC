@@ -189,6 +189,55 @@ export namespace Engine::Render::Type
         RasterizerStateInfo Rasterizer{};
     };
 
+    // Where the stencil of the game is reduced in the probe (VW.6.y.2 A2), in texels of the depth stencil texture. Weapon is the lower right
+    // quadrant, Center a box of 10% of the width and height in the middle, Top the upper quarter.
+    enum class StencilRegion : std::uint8_t
+    {
+        All,
+        Weapon,
+        Center,
+        Top
+    };
+
+    inline constexpr std::size_t k_StencilRegionCount{ 4 };
+    inline constexpr std::size_t k_StencilValueCount{ 256 };
+    inline constexpr std::size_t k_StencilBitCount{ 8 };
+
+    // What happened reading the depth stencil texture of the game.
+    enum class StencilReadStatus : std::uint8_t
+    {
+        NotRead,
+        Read,
+        NotTexture,         // the resource is not a 2D texture
+        UnsupportedFormat,  // not R32G8X24 (typeless or D32_FLOAT_S8X24_UINT)
+        CreateFailed,       // the staging texture could not be created (Result is the HRESULT)
+        MapFailed,          // Map(READ) of the staging copy failed (Result is the HRESULT)
+        BadLayout           // no data or a row pitch smaller than a row
+    };
+
+    // The stencil and depth of one region: texel count, 256 stencil counters, how many texels have each bit set, depth range.
+    struct StencilRegionStats
+    {
+        std::uint32_t Texels{ 0 };
+        std::array<std::uint32_t, k_StencilValueCount> Histogram{};
+        std::array<std::uint32_t, k_StencilBitCount> BitCounts{};
+        float MinDepth{ 0.0f };
+        float MaxDepth{ 0.0f };
+        std::uint32_t ZeroDepthTexels{ 0 };     // reversed Z: 0 is far or sky
+    };
+
+    // One read of the stencil of the first person depth stencil resource at the HUD draw (VW.6.y.2 A2). Fixed size, no allocation.
+    struct StencilProbeInfo
+    {
+        bool IsAttempted{ false };      // the read was tried at a HUD draw of this probe
+        StencilReadStatus Status{ StencilReadStatus::NotRead };
+        std::int32_t Result{ 0 };       // HRESULT of the step that failed
+        std::uint32_t Width{ 0 };
+        std::uint32_t Height{ 0 };
+        std::uint32_t ResourceFormat{ 0 };  // DXGI_FORMAT of the texture
+        std::array<StencilRegionStats, k_StencilRegionCount> Regions{};
+    };
+
     // Layout of the vertex data of a draw. Each one has its own input layout and vertex shader.
     enum class VertexLayout : std::uint8_t
     {

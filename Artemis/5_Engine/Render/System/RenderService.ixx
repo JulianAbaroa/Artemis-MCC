@@ -32,6 +32,9 @@ export namespace Engine::Render::System
         using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
         using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
         using HudHookInfo = Engine::Render::Type::HudHookInfo;
+        using StencilProbeInfo = Engine::Render::Type::StencilProbeInfo;
+        using StencilRegion = Engine::Render::Type::StencilRegion;
+        using StencilRegionStats = Engine::Render::Type::StencilRegionStats;
         using ShutdownCallback = Engine::Render::Type::ShutdownCallback;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -96,6 +99,15 @@ export namespace Engine::Render::System
         // thread of Present with the targets ready, on another thread the sample only says so. COM calls only, no allocation, no log.
         auto MeasureFirstPerson(FirstPersonCaller caller, std::uint32_t callerRva, std::uint8_t pass) -> void;
 
+        // Reduces a mapped R32G8X24 depth stencil texture to the stats of its regions (VW.6.y.2 A2): 8 bytes per texel, the float depth in
+        // bytes 0..3 and the stencil in byte 4, rows rowPitch bytes apart (the pitch may be larger than the row).
+        // return: Status Read with the stats, or BadLayout when data is null, a size is 0 or the pitch is smaller than a row.
+        static auto ReduceStencil(const std::uint8_t* data, std::uint32_t rowPitch, std::uint32_t width, std::uint32_t height)
+            -> StencilProbeInfo;
+
+        // return: One log line of a region: texel count, the 8 most frequent stencil values with their counts, texels per bit and depth range.
+        static auto DescribeStencilRegion(StencilRegion region, const StencilRegionStats& stats) -> std::string;
+
         // Waits for the calls inside the render hooks to finish.
         // return: False if some are still running after the timeout.
         auto WaitForIdle(milliseconds timeout) -> bool;
@@ -132,6 +144,11 @@ export namespace Engine::Render::System
 
         // Reads the render target bound in slot 0 and the viewport into a sample, and stores it.
         auto MeasureHud() -> HudHookInfo;
+
+        // At a HUD draw of an armed probe, once: copies the depth stencil texture the first person model was drawn with to a staging texture,
+        // maps it and keeps the reduced stencil in the store (VW.6.y.2 A2). Blocks until the GPU finishes the copy, accepted for the one frame
+        // a probe measures. A failed step is kept as status and HRESULT. Thread of Present only (the caller checks), no log.
+        auto ReadFirstPersonStencil() -> void;
 
         // Logs one INFO line per first person caller that had calls in the last frame and one for the HUD draw (VW.6.y.2).
         // note: Runs at Present, never in a detour.

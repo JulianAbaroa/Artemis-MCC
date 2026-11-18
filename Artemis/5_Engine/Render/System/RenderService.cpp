@@ -21,13 +21,94 @@ namespace
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::RasterizerStateInfo;
+    using Engine::Render::Type::StencilProbeInfo;
+    using Engine::Render::Type::StencilReadStatus;
+    using Engine::Render::Type::StencilRegion;
+    using Engine::Render::Type::StencilRegionStats;
     using Engine::Render::Type::ViewportInfo;
 
     using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
+    using Engine::Render::Type::k_StencilBitCount;
+    using Engine::Render::Type::k_StencilRegionCount;
+    using Engine::Render::Type::k_StencilValueCount;
 
     using std::chrono::steady_clock;
     using std::chrono::microseconds;
+
+    // Bytes of a texel of R32G8X24: float depth, stencil byte, 3 unused.
+    constexpr std::uint32_t k_StencilTexelBytes{ 8 };
+    constexpr std::uint32_t k_StencilByteOffset{ 4 };
+    constexpr std::size_t k_StencilTopCount{ 8 };
+
+    auto IsInStencilRegion(StencilRegion region, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height) -> bool
+    {
+        switch (region)
+        {
+        case StencilRegion::All:
+            return true;
+        case StencilRegion::Weapon:
+            return x >= width / 2 && y >= height / 2;
+        case StencilRegion::Center:
+            return x >= width * 45 / 100 && x < width * 55 / 100 && y >= height * 45 / 100 && y < height * 55 / 100;
+        case StencilRegion::Top:
+            return y < height / 4;
+        }
+
+        return false;
+    }
+
+    auto StencilRegionName(StencilRegion region) -> const char*
+    {
+        switch (region)
+        {
+        case StencilRegion::All:    return "all";
+        case StencilRegion::Weapon: return "weapon";
+        case StencilRegion::Center: return "center";
+        case StencilRegion::Top:    return "top";
+        }
+
+        return "?";
+    }
+
+    auto AddStencilTexel(StencilRegionStats& stats, float depth, std::uint8_t stencil) -> void
+    {
+        if (stats.Texels == 0)
+        {
+            stats.MinDepth = depth;
+            stats.MaxDepth = depth;
+        }
+        else
+        {
+            stats.MinDepth = (std::min)(stats.MinDepth, depth);
+            stats.MaxDepth = (std::max)(stats.MaxDepth, depth);
+        }
+
+        ++stats.Texels;
+        ++stats.Histogram[stencil];
+        if (depth == 0.0f) ++stats.ZeroDepthTexels;
+
+        for (std::size_t bit{ 0 }; bit < k_StencilBitCount; ++bit)
+        {
+            if (((stencil >> bit) & 1u) != 0) ++stats.BitCounts[bit];
+        }
+    }
+
+    auto StencilStatusName(StencilReadStatus status) -> const char*
+    {
+        switch (status)
+        {
+        case StencilReadStatus::NotRead:            return "not read";
+        case StencilReadStatus::Read:               return "read";
+        case StencilReadStatus::NotTexture:         return "resource is not a 2D texture";
+        case StencilReadStatus::UnsupportedFormat:  return "unsupported format";
+        case StencilReadStatus::CreateFailed:       return "staging texture not created";
+        case StencilReadStatus::MapFailed:          return "map of the staging copy failed";
+        case StencilReadStatus::BadLayout:          return "bad layout";
+        }
+
+        return "?";
+    }
 
     // Reads the texture, the view and the identity of a render target. The caller owns the view.
     auto MeasureColorTarget(ID3D11RenderTargetView* target, ID3D11RenderTargetView* backBufferView, ID3D11Device* storeDevice)
@@ -505,6 +586,8 @@ namespace Engine::Render::System
 
         const HudHookInfo sample{ this->MeasureHud() };
 
+        if (sample.IsSameThread) this->ReadFirstPersonStencil();
+
         if (m_RenderStore.IsGameHudHidden())
         {
             m_RenderStore.SetBeforeHudStatus(BeforeHudStatus::HudHidden);
@@ -660,6 +743,14 @@ namespace Engine::Render::System
         sample.Color = MeasureColorTarget(first.Get(), m_RenderStore.GetRenderTarget(), m_RenderStore.GetDevice());
         sample.Depth = MeasureDepthTarget(depth.Get());
 
+        if (depth != nullptr && (caller == FirstPersonCaller::Pass1 || caller == FirstPersonCaller::Func26E2A0))
+        {
+            // The depth stencil of the model draw is kept (one reference) to read its stencil at the HUD draw.
+            ComPtr<ID3D11Resource> depthResource{};
+            depth->GetResource(depthResource.GetAddressOf());
+            m_RenderStore.CaptureFirstPersonDepth(depthResource.Get());
+        }
+
         UINT viewportCount{ 1 };
         D3D11_VIEWPORT viewport{};
         context->RSGetViewports(&viewportCount, &viewport);
@@ -711,6 +802,146 @@ namespace Engine::Render::System
         m_RenderStore.SetFirstPersonSample(sample);
     }
 
+    auto RenderService::ReduceStencil(const std::uint8_t* data, std::uint32_t rowPitch, std::uint32_t width, std::uint32_t height)
+        -> StencilProbeInfo
+    {
+        StencilProbeInfo info{ .IsAttempted = true, .Width = width, .Height = height };
+
+        if (data == nullptr || width == 0 || height == 0 || rowPitch < width * k_StencilTexelBytes)
+        {
+            info.Status = StencilReadStatus::BadLayout;
+            return info;
+        }
+
+        info.Status = StencilReadStatus::Read;
+
+        for (std::uint32_t y{ 0 }; y < height; ++y)
+        {
+            const std::uint8_t* row{ data + static_cast<std::size_t>(y) * rowPitch };
+
+            for (std::uint32_t x{ 0 }; x < width; ++x)
+            {
+                const std::uint8_t* texel{ row + static_cast<std::size_t>(x) * k_StencilTexelBytes };
+
+                float depth{ 0.0f };
+                std::memcpy(&depth, texel, sizeof(depth));
+                const std::uint8_t stencil{ texel[k_StencilByteOffset] };
+
+                for (std::size_t i{ 0 }; i < k_StencilRegionCount; ++i)
+                {
+                    if (IsInStencilRegion(static_cast<StencilRegion>(i), x, y, width, height)) AddStencilTexel(info.Regions[i], depth, stencil);
+                }
+            }
+        }
+
+        return info;
+    }
+
+    auto RenderService::DescribeStencilRegion(StencilRegion region, const StencilRegionStats& stats) -> std::string
+    {
+        std::array<std::uint32_t, k_StencilValueCount> order{};
+        std::iota(order.begin(), order.end(), 0u);
+
+        std::stable_sort(order.begin(), order.end(), [&stats](std::uint32_t a, std::uint32_t b)
+        {
+            return stats.Histogram[a] > stats.Histogram[b];
+        });
+
+        std::string top{};
+
+        for (std::size_t i{ 0 }; i < k_StencilTopCount; ++i)
+        {
+            if (stats.Histogram[order[i]] == 0) break;
+
+            top += std::format(" {:#04X}:{}", order[i], stats.Histogram[order[i]]);
+        }
+
+        std::string bits{};
+
+        for (std::size_t bit{ 0 }; bit < k_StencilBitCount; ++bit)
+        {
+            bits += std::format(" b{}:{}", bit, stats.BitCounts[bit]);
+        }
+
+        return std::format("stencil {} n={} top{} bits{} depth {}..{} zero={}", StencilRegionName(region), stats.Texels, top, bits,
+            stats.MinDepth, stats.MaxDepth, stats.ZeroDepthTexels);
+    }
+
+    auto RenderService::ReadFirstPersonStencil() -> void
+    {
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || m_RenderStore.IsStencilProbeAttempted()) return;
+        if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return;
+
+        ID3D11Resource* resource{ m_RenderStore.GetFirstPersonDepth() };
+        if (resource == nullptr) return;
+
+        StencilProbeInfo info{ .IsAttempted = true };
+
+        ComPtr<ID3D11Texture2D> texture{};
+
+        if (FAILED(resource->QueryInterface(IID_PPV_ARGS(texture.GetAddressOf()))))
+        {
+            info.Status = StencilReadStatus::NotTexture;
+            m_RenderStore.SetStencilProbe(info);
+            return;
+        }
+
+        D3D11_TEXTURE2D_DESC desc{};
+        texture->GetDesc(&desc);
+
+        info.Width = desc.Width;
+        info.Height = desc.Height;
+        info.ResourceFormat = static_cast<std::uint32_t>(desc.Format);
+
+        if (desc.Format != DXGI_FORMAT_R32G8X24_TYPELESS && desc.Format != DXGI_FORMAT_D32_FLOAT_S8X24_UINT)
+        {
+            info.Status = StencilReadStatus::UnsupportedFormat;
+            m_RenderStore.SetStencilProbe(info);
+            return;
+        }
+
+        desc.Usage = D3D11_USAGE_STAGING;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+        desc.BindFlags = 0;
+        desc.MiscFlags = 0;
+
+        ComPtr<ID3D11Device> device{};
+        resource->GetDevice(device.GetAddressOf());
+
+        ComPtr<ID3D11DeviceContext> context{};
+        if (device != nullptr) device->GetImmediateContext(context.GetAddressOf());
+
+        ComPtr<ID3D11Texture2D> staging{};
+        const HRESULT createResult{ device != nullptr ? device->CreateTexture2D(&desc, nullptr, staging.GetAddressOf()) : E_POINTER };
+
+        if (FAILED(createResult) || staging == nullptr || context == nullptr)
+        {
+            info.Status = StencilReadStatus::CreateFailed;
+            info.Result = static_cast<std::int32_t>(createResult);
+            m_RenderStore.SetStencilProbe(info);
+            return;
+        }
+
+        context->CopyResource(staging.Get(), resource);
+
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        const HRESULT mapResult{ context->Map(staging.Get(), 0, D3D11_MAP_READ, 0, &mapped) };
+
+        if (FAILED(mapResult))
+        {
+            info.Status = StencilReadStatus::MapFailed;
+            info.Result = static_cast<std::int32_t>(mapResult);
+            m_RenderStore.SetStencilProbe(info);
+            return;
+        }
+
+        info = RenderService::ReduceStencil(static_cast<const std::uint8_t*>(mapped.pData), mapped.RowPitch, desc.Width, desc.Height);
+        context->Unmap(staging.Get(), 0);
+
+        info.ResourceFormat = static_cast<std::uint32_t>(desc.Format);
+        m_RenderStore.SetStencilProbe(info);
+    }
+
     auto RenderService::ReportFirstPersonProbe() -> void
     {
         for (std::size_t i{ 0 }; i < k_FirstPersonCallerCount; ++i)
@@ -723,6 +954,31 @@ namespace Engine::Render::System
 
         m_Log.Message("[FirstPersonProbe] INFO: {}.",
             DescribeChud(m_RenderStore.GetHudHook(), m_RenderStore.GetFirstPersonSample(FirstPersonCaller::ViewPhase)));
+
+        const StencilProbeInfo stencil{ m_RenderStore.GetStencilProbe() };
+        const std::string state{ std::format("hide first person {} drive {}", m_RenderStore.IsFirstPersonHidden() ? "on" : "off",
+            m_RenderStore.IsFirstPersonDriveActive() ? "on" : "off") };
+
+        if (!stencil.IsAttempted)
+        {
+            m_Log.Message("[FirstPersonProbe] INFO: stencil not read (no depth stencil captured from the model draw or no HUD draw on the thread "
+                "of Present) | {}.", state);
+            return;
+        }
+
+        if (stencil.Status != StencilReadStatus::Read)
+        {
+            m_Log.Message("[FirstPersonProbe] INFO: stencil not read: {} hresult {:#010X} texture {}x{} res {} | {}.",
+                StencilStatusName(stencil.Status), static_cast<std::uint32_t>(stencil.Result), stencil.Width, stencil.Height,
+                FormatText(stencil.ResourceFormat), state);
+            return;
+        }
+
+        for (std::size_t i{ 0 }; i < k_StencilRegionCount; ++i)
+        {
+            m_Log.Message("[FirstPersonProbe] INFO: {} | {}.", RenderService::DescribeStencilRegion(static_cast<StencilRegion>(i), stencil.Regions[i]),
+                state);
+        }
     }
 
     auto RenderService::WaitForIdle(milliseconds timeout) -> bool

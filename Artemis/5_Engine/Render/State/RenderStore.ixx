@@ -14,6 +14,7 @@ namespace
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::StencilProbeInfo;
 
     using Engine::Render::Type::k_FirstPersonCallerCount;
 }
@@ -133,6 +134,29 @@ export namespace Engine::Render::State
         // return: The last measure of that caller with the calls of the last frame filled in.
         auto GetFirstPersonSample(FirstPersonCaller caller) const -> FirstPersonSample;
 
+        // Keeps a reference to the resource of the depth stencil view the first person model is drawn with (the first one seen while the probe
+        // is armed). Does nothing when one is held or the resource is null. note: Thread of Present only (VW.6.y.2 A2).
+        auto CaptureFirstPersonDepth(ID3D11Resource* resource) -> void;
+
+        // return: The captured resource, null when none. Not owned. Thread of Present only.
+        auto GetFirstPersonDepth() const -> ID3D11Resource*;
+
+        // Releases the captured resource. Also done when the probe ends, a new probe is armed, the targets are released and at cleanup.
+        auto ReleaseFirstPersonDepth() -> void;
+
+        // Keeps the stencil read of the probe. note: A short lock.
+        auto SetStencilProbe(const StencilProbeInfo& info) -> void;
+
+        // return: The stencil read of the probe (IsAttempted false when none).
+        auto GetStencilProbe() const -> StencilProbeInfo;
+
+        // return: Whether the stencil of this probe was already tried, so it is read once.
+        auto IsStencilProbeAttempted() const -> bool;
+
+        // Notes whether Drive was active at the last measured model call, to log it with the probe. Any thread.
+        auto SetFirstPersonDriveActive(bool isActive) -> void;
+        auto IsFirstPersonDriveActive() const -> bool;
+
         // Thread of Present, noted at every Present. 0 until the first one.
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
@@ -220,5 +244,11 @@ export namespace Engine::Render::State
 
         mutable std::mutex m_FirstPersonSampleMutex{};
         std::array<FirstPersonSample, k_FirstPersonCallerCount> m_FirstPersonSamples{};
+
+        ComPtr<ID3D11Resource> m_FirstPersonDepth{};    // Thread of Present only
+        std::atomic<bool> m_IsStencilAttempted{ false };
+        std::atomic<bool> m_IsFirstPersonDriveActive{ false };
+        mutable std::mutex m_StencilMutex{};
+        StencilProbeInfo m_StencilProbe{};
     };
 }

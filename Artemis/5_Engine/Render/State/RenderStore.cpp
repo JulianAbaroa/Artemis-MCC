@@ -11,6 +11,7 @@ namespace
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::StencilProbeInfo;
 
     using Engine::Render::Type::k_FirstPersonCallerCount;
 
@@ -252,6 +253,7 @@ namespace Engine::Render::State
             if (this->GetFirstPersonCallerCount() == 0) return false;
 
             m_FirstPersonProbe.store(k_ProbeIdle, std::memory_order_relaxed);
+            this->ReleaseFirstPersonDepth();
             return true;
         }
 
@@ -262,10 +264,67 @@ namespace Engine::Render::State
                 m_FirstPersonSamples = {};
             }
 
+            this->ReleaseFirstPersonDepth();
+
+            {
+                const std::lock_guard<std::mutex> lock{ m_StencilMutex };
+                m_StencilProbe = {};
+            }
+
+            m_IsStencilAttempted.store(false, std::memory_order_relaxed);
+
             m_FirstPersonProbe.store(k_ProbeArmed, std::memory_order_relaxed);
         }
 
         return false;
+    }
+
+    auto RenderStore::CaptureFirstPersonDepth(ID3D11Resource* resource) -> void
+    {
+        if (resource == nullptr || m_FirstPersonDepth != nullptr) return;
+
+        m_FirstPersonDepth = resource;
+    }
+
+    auto RenderStore::GetFirstPersonDepth() const -> ID3D11Resource*
+    {
+        return m_FirstPersonDepth.Get();
+    }
+
+    auto RenderStore::ReleaseFirstPersonDepth() -> void
+    {
+        m_FirstPersonDepth.Reset();
+    }
+
+    auto RenderStore::SetStencilProbe(const StencilProbeInfo& info) -> void
+    {
+        {
+            const std::lock_guard<std::mutex> lock{ m_StencilMutex };
+            m_StencilProbe = info;
+        }
+
+        m_IsStencilAttempted.store(info.IsAttempted, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetStencilProbe() const -> StencilProbeInfo
+    {
+        const std::lock_guard<std::mutex> lock{ m_StencilMutex };
+        return m_StencilProbe;
+    }
+
+    auto RenderStore::IsStencilProbeAttempted() const -> bool
+    {
+        return m_IsStencilAttempted.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetFirstPersonDriveActive(bool isActive) -> void
+    {
+        m_IsFirstPersonDriveActive.store(isActive, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsFirstPersonDriveActive() const -> bool
+    {
+        return m_IsFirstPersonDriveActive.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::SetFirstPersonSample(const FirstPersonSample& sample) -> void
@@ -347,6 +406,7 @@ namespace Engine::Render::State
     {
         m_RenderTarget.Reset();
         m_DepthStencil.Reset();
+        this->ReleaseFirstPersonDepth();
     }
 
     auto RenderStore::Cleanup() -> void
