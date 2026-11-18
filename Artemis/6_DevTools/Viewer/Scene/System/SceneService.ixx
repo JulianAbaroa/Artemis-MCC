@@ -29,6 +29,7 @@ export namespace DevTools::Viewer::Scene::System
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
         using Viewport = DevTools::Viewer::Camera::Type::Viewport;
+        using Vec3 = Common::Math::Type::Vec3;
         using Matrix = Common::Math::Type::Matrix;
         using GameCamera = Engine::Base::Memory::Type::GameCamera::GameCamera;
         using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
@@ -75,6 +76,12 @@ export namespace DevTools::Viewer::Scene::System
 
         // return: The distance from the game camera to the eye of the View of the local player, or nothing without a valid game camera or a View body.
         auto GetEyeDistance(const Tick& tick) const -> std::optional<float>;
+
+        // return: The eye of the View of the local player in the tick, or nothing without a View body.
+        auto GetLocalEye(const Tick& tick) const -> std::optional<Vec3>;
+
+        // return: True if the camera mode is Game, the free camera driving the game camera not included (IsGameCamera counts both).
+        auto IsGameMode() const -> bool;
 
         auto ClearSelection() -> void;
 

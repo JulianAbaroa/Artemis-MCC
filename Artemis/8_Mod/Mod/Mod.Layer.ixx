@@ -119,6 +119,7 @@ export namespace Mod
             .m_OracleStore = m_Capture.m_OracleStore,
             .m_MemoryReaderService = m_Base.m_MemoryReaderService,
             .m_GameCameraService = m_Base.m_GameCameraService,
+            .m_FrameClockReader = m_Base.m_FrameClockReader,
             .m_LifecycleService = m_Base.m_LifecycleService,
             .m_LifecycleStore = m_Base.m_LifecycleStore,
             .m_MatchConfigStore = m_Match.m_MatchConfigStore,

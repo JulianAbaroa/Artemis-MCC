@@ -292,6 +292,12 @@
     <ClCompile Include="Memory\Engine.Base.Memory.State.ixx">
       <Filter>Memory</Filter>
     </ClCompile>
+    <ClCompile Include="Memory\Hook\FrameClockReader.cpp">
+      <Filter>Memory\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Hook\FrameClockReader.ixx">
+      <Filter>Memory\Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Memory\Hook\ObserverCameraDetour.cpp">
       <Filter>Memory\Hook</Filter>
     </ClCompile>
@@ -330,6 +336,9 @@
     </ClCompile>
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.ixx">
       <Filter>Memory\System\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Type\FrameClock.ixx">
+      <Filter>Memory\Type</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Type\GameCamera.ixx">
       <Filter>Memory\Type</Filter>

@@ -15,6 +15,8 @@ import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Collidable.System;
 import DevTools.Viewer.Selection.State;
 import DevTools.Viewer.Selection.System;
+import DevTools.Viewer.Latency.State;
+import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Overlay.State;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
@@ -40,6 +42,7 @@ export namespace DevTools::Viewer
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
+        using LatencyStore = DevTools::Viewer::Latency::State::LatencyStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using Flag = DevTools::Viewer::Options::Type::Flag;
@@ -49,6 +52,7 @@ export namespace DevTools::Viewer
         using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
         using ControlService = DevTools::Viewer::Control::System::ControlService;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
+        using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
         using MapService = DevTools::Viewer::Map::System::MapService;
         using HudService = DevTools::Viewer::Hud::System::HudService;
         using LabelService = DevTools::Viewer::Hud::System::LabelService;
@@ -64,8 +68,10 @@ export namespace DevTools::Viewer
             m_SelectionService(m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService),
-            m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SelectionStore, m_SceneService),
+            m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
+            m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService),
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SelectionStore, m_SceneService,
+                m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
         {
             auto& lifecycle = engine.m_LifecycleService;
@@ -126,6 +132,7 @@ export namespace DevTools::Viewer
         SelectionStore m_SelectionStore{};
         OverlayStore m_OverlayStore{};
         OptionsStore m_OptionsStore{};
+        LatencyStore m_LatencyStore{};
 
         // --- System ---
         CameraService m_CameraService;
@@ -133,6 +140,7 @@ export namespace DevTools::Viewer
         SelectionService m_SelectionService;
         ControlService m_ControlService;
         SceneService m_SceneService;
+        LatencyService m_LatencyService;
         MapService m_MapService;
         HudService m_HudService;
         LabelService m_LabelService;

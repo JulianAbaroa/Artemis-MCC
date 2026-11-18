@@ -67,6 +67,18 @@
     <Filter Include="Hud\Type">
       <UniqueIdentifier>{c759c1c8-4136-5133-87c4-a8515b515742}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Latency">
+      <UniqueIdentifier>{44357f7a-339f-5cdd-adbf-b5f73fdcbbe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Latency\State">
+      <UniqueIdentifier>{6a990e47-9ac4-5822-ad91-40b6546ccdd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Latency\System">
+      <UniqueIdentifier>{44cf4352-03c6-55a8-9425-34fb9c1de771}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Latency\Type">
+      <UniqueIdentifier>{e921247a-c24a-5565-9130-2f40a01fc3da}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Map">
       <UniqueIdentifier>{1be10f82-9669-50dc-8807-e856b249f8d7}</UniqueIdentifier>
     </Filter>
@@ -261,6 +273,21 @@
     </ClCompile>
     <ClCompile Include="Options\Type\DevTools.Viewer.Options.Type.ixx">
       <Filter>Options\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Latency\State\LatencyStore.cpp">
+      <Filter>Latency\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Latency\State\LatencyStore.ixx">
+      <Filter>Latency\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Latency\System\LatencyService.cpp">
+      <Filter>Latency\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Latency\System\LatencyService.ixx">
+      <Filter>Latency\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Latency\Type\DevTools.Viewer.Latency.Type.ixx">
+      <Filter>Latency\Type</Filter>
     </ClCompile>
     <ClCompile Include="Overlay\State\OverlayStore.cpp">
       <Filter>Overlay\State</Filter>

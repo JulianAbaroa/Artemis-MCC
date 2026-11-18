@@ -20,6 +20,7 @@ import Engine.Render.Type;
 import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Overlay.State;
 import DevTools.Viewer.Scene.System;
 import DevTools.Viewer.Selection.State;
@@ -47,12 +48,13 @@ export namespace DevTools::Viewer::Hud::System
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
+        using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
 
     public:
         HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, CollidableStore& collidableStore,
-            OverlayStore& overlayStore, SelectionStore& selectionStore, SceneService& sceneService) :
+            OverlayStore& overlayStore, SelectionStore& selectionStore, SceneService& sceneService, LatencyService& latencyService) :
             m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_CollidableStore(collidableStore),
-            m_OverlayStore(overlayStore), m_SelectionStore(selectionStore), m_SceneService(sceneService) {}
+            m_OverlayStore(overlayStore), m_SelectionStore(selectionStore), m_SceneService(sceneService), m_LatencyService(latencyService) {}
         ~HudService() = default;
 
         HudService(const HudService&) = delete;
@@ -69,6 +71,7 @@ export namespace DevTools::Viewer::Hud::System
         OverlayStore& m_OverlayStore;
         SelectionStore& m_SelectionStore;
         SceneService& m_SceneService;
+        LatencyService& m_LatencyService;
 
         std::uint32_t m_LastHandle{ k_NoHandle };
 
@@ -85,6 +88,9 @@ export namespace DevTools::Viewer::Hud::System
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawHudHook() -> void;
+
+        // Draws the measurement of the lag between the scene of the overlay and the frame of the game (VW.5c), over the last k_WindowFrames.
+        auto DrawLatency() -> void;
         auto DrawOverlayPoint(bool isHooked) -> void;
         auto DrawOverride() -> void;
     };

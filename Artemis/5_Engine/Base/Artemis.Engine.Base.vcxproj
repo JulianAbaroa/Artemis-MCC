@@ -116,6 +116,8 @@
     <ClCompile Include="Memory\Engine.Base.Memory.Type.ixx" />
     <ClCompile Include="Memory\System\AOB\AOBService.cpp" />
     <ClCompile Include="Memory\System\AOB\AOBService.ixx" />
+    <ClCompile Include="Memory\Hook\FrameClockReader.cpp" />
+    <ClCompile Include="Memory\Hook\FrameClockReader.ixx" />
     <ClCompile Include="Memory\Hook\ObserverCameraDetour.cpp" />
     <ClCompile Include="Memory\Hook\ObserverCameraDetour.ixx" />
     <ClCompile Include="Memory\State\CameraOverrideStore.cpp" />
@@ -124,6 +126,7 @@
     <ClCompile Include="Memory\System\Camera\GameCameraService.ixx" />
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.cpp" />
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.ixx" />
+    <ClCompile Include="Memory\Type\FrameClock.ixx" />
     <ClCompile Include="Memory\Type\GameCamera.ixx" />
     <ClCompile Include="Memory\Type\ObserverCamera.ixx" />
     <ClCompile Include="Memory\Type\MemorySignature.ixx" />

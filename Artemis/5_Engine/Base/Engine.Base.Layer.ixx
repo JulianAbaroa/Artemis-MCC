@@ -44,6 +44,7 @@ export namespace Engine::Base
         using GameCameraService = Engine::Base::Memory::System::GameCameraService;
         using CameraOverrideStore = Engine::Base::Memory::State::CameraOverrideStore;
         using ObserverCameraDetour = Engine::Base::Memory::Hook::ObserverCameraDetour;
+        using FrameClockReader = Engine::Base::Memory::Hook::FrameClockReader;
 
         using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using MatchSetupStore = Engine::Base::MatchSetup::State::MatchSetupStore;
@@ -71,7 +72,8 @@ export namespace Engine::Base
             m_LocalUserGetGamepadMappingDetour(service.m_Log, m_HostService, m_LocalUserStore),
             m_CanAcceptAnyJoinRequestDetour(service.m_Log, m_AOBService, m_LocalUserStore),
             m_SessionJoinCheckPatch(service.m_Log, m_AOBService, m_LocalUserStore),
-            m_ObserverCameraDetour(service.m_Log, m_AOBService, m_CameraOverrideStore) {}
+            m_ObserverCameraDetour(service.m_Log, m_AOBService, m_CameraOverrideStore),
+            m_FrameClockReader(m_MemoryReaderService, m_AOBService) {}
         ~Layer() = default;
 
         // Not copyable. Members hold references to each other.
@@ -107,5 +109,6 @@ export namespace Engine::Base
         CanAcceptAnyJoinRequestDetour m_CanAcceptAnyJoinRequestDetour;
         SessionJoinCheckPatch m_SessionJoinCheckPatch;
         ObserverCameraDetour m_ObserverCameraDetour;
+        FrameClockReader m_FrameClockReader;
     };
 }

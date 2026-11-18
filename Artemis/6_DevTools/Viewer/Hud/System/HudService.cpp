@@ -8,8 +8,10 @@ module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
 import Engine.Base.Memory.Type;
+import Engine.Base.Memory.Type;
 import Engine.Render.Type;
 import DevTools.Viewer.Collidable.Type;
+import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Overlay.Type;
 import std;
 
@@ -18,11 +20,15 @@ namespace
     using DevTools::Viewer::Overlay::Type::Mode;
 
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
+    using Engine::Base::Memory::Type::FrameClock::ClockSource;
+    using Engine::Base::Memory::Type::FrameClock::InterpolationState;
     using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::HudHookInfo;
 
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Latency::Type::LatencyReport;
+    using DevTools::Viewer::Latency::Type::LatencySample;
 
     constexpr float k_DegreesPerRadian{ 180.0f / std::numbers::pi_v<float> };
 
@@ -288,6 +294,7 @@ namespace DevTools::Viewer::Hud::System
 
         this->DrawOverride();
         this->DrawHudHook();
+        this->DrawLatency();
     }
 
     auto HudService::DrawOverride() -> void
@@ -409,6 +416,62 @@ namespace DevTools::Viewer::Hud::System
 
         ImGui::TextColored(info.IsBackBuffer ? k_Green : k_Orange, "thread same, %u calls/frame, RTV %s, back buffer %s, viewport %s",
             info.CallsPerFrame, target, info.IsBackBuffer ? "yes" : "no", viewport);
+    }
+
+    auto HudService::DrawLatency() -> void
+    {
+        const LatencyReport report{ m_LatencyService.GetReport() };
+
+        ImGui::Text("Frame clock:");
+        ImGui::SameLine();
+
+        if (!report.HasLast)
+        {
+            ImGui::TextDisabled("no frame yet");
+            return;
+        }
+
+        const LatencySample& last{ report.Last };
+        const char* where{ last.IsBeforeHud ? "at HUD" : "at Present" };
+
+        if (last.Clock.Source == ClockSource::None)
+        {
+            ImGui::TextColored(k_Red, "unreadable (%s)", where);
+        }
+        else
+        {
+            const bool isThread{ last.Clock.Source == ClockSource::ThreadContext };
+            const char* interpolation{ last.Clock.Interpolation == InterpolationState::On ? "yes"
+                : last.Clock.Interpolation == InterpolationState::Off ? "no" : "?" };
+
+            char scene[48]{};
+            if (last.SceneTick) std::snprintf(scene, sizeof(scene), "S %u lag %d", *last.SceneTick, last.Lag);
+            else std::snprintf(scene, sizeof(scene), "S n/a");
+
+            ImGui::TextColored(isThread ? k_Green : k_Orange, "TLS %s (%s), T %u f %.3f interp %s, %s",
+                isThread ? "yes" : "no, published ctx", where, last.Clock.Tick, last.Clock.Fraction, interpolation, scene);
+        }
+
+        ImGui::Text("Scene lag (%u f):", static_cast<unsigned>(report.Frames));
+        ImGui::SameLine();
+        ImGui::TextColored(report.Lag[0] == report.Frames ? k_Green : k_Orange, "0:%u 1:%u 2:%u 3:%u 4+:%u neg:%u max:%d",
+            report.Lag[0], report.Lag[1], report.Lag[2], report.Lag[3], report.Lag[4], report.Negative, report.MaxLag);
+
+        ImGui::Text("Camera moved within a tick:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%u / %u", report.CameraMovedFrames, report.SameTickFrames);
+
+        ImGui::Text("Interp probe (%u up to date, %u behind):", report.ProbeFrames, report.BehindFrames);
+        ImGui::SameLine();
+
+        if (report.ProbeFrames == 0)
+        {
+            ImGui::TextDisabled("n/a (Game mode, on foot and moving)");
+            return;
+        }
+
+        ImGui::TextColored(k_Info, "to E(S) %.3f/%.3f  to E(S-1) %.3f/%.3f  to lerp %.3f/%.3f wu (p50/p99)",
+            report.ToCurrent.P50, report.ToCurrent.P99, report.ToPrevious.P50, report.ToPrevious.P99, report.ToLerp.P50, report.ToLerp.P99);
     }
 
     auto HudService::DrawTelemetry() -> void

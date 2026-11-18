@@ -25,6 +25,8 @@ Option `Drive game camera` (key `Viewer_DriveGameCamera`, off by default, group 
 
 The overlay window (telemetry mode) shows the game camera: valid or not, position, horizontal and vertical field of view, aspect (m11 / m00) against the back buffer, the off-center terms and the distance to the eye of the View of the local player, and the line `HUD hook` (thread same or other than Present, calls per frame of the HUD draw, the render target it draws to with size and format, whether that is the back buffer, and viewport 0) from `RenderStore::GetHudHook`.
 
+Latency measurement (VW.5c, telemetry only, nothing it measures changes what is drawn): `MapService::RenderFrame` calls `LatencyService::Record` once per frame with the game camera, right after the scene update (under the HUD of the game when the frame is drawn there, at Present otherwise). `LatencyService` reads the clock of the engine through `EngineAccess::m_FrameClockReader` (`FrameClockReader::Read`, passing the thread context published in `CaptureStore`: TLS of the drawing thread when it has the engine context, else the published one) and pairs it with the tick of the scene that is drawn (`Match.GameTick` of the `Tick` of the `CollidableScene`, the same engine tick as `*(time globals) + 0xC`). `LatencyStore` keeps the last `k_WindowFrames` (600) frames behind one short mutex. The panel adds, after `HUD hook`, `Frame clock` (TLS yes or no, at HUD or at Present, tick T, raw fraction f, whether the game interpolates, scene tick S and lag L = T - S), `Scene lag` (histogram of L over the window: 0, 1, 2, 3, 4 or more, negative, largest), `Camera moved within a tick` (n / m: of the m frames whose T equals the previous frame's, in n the game camera moved more than 1e-4 wu: if n > 0 while the player moves, the camera is interpolated) and `Interp probe` (Game mode only: with the eyes of the local player of two consecutive scenes, E(S - 1) and E(S) further apart than 0.05 wu, p50 / p99 of the distance from the game camera to E(S), to E(S - 1) and to the lerp of both with the fraction clamped to 0..1, over the frames whose scene is up to date (S == T), and how many frames had the scene behind (S < T)). `Observe` and `Summarize` of `LatencyService` are pure.
+
 ## Does not
 - Take part in the tick: it reads published values only, after the tick (the observers of the AI thread).
 - Build the collidable scene inside the pipeline: its `CollidableSceneService` asks `Perception.Collidable.System` for it on the AI
@@ -40,9 +42,10 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `DevTools.Viewer.Layer` | The facade: camera, selection, overlay, options and the services that draw. While the camera follows or orbits the biped of a player, `SceneService` writes that player in the `ObservedPlayerStore` of `Services` (none otherwise), so the AI thread gives it a View (F4.2). The camera, the labels, the aim hit label and the rays and the View it draws come from the View of the watched player (`SceneService::GetObservedView`: the observed one, else the primary local player), and the free camera seats on the View of the local player. |
-| `DevTools.Viewer.Access.Type` | `EngineAccess`: what the tools use of the engine and the bridge (it also carries the `OracleStore` of the raycast oracle and the `MapVariantDecodeStore` the bench asks decodes through), built by `Mod`. |
+| `DevTools.Viewer.Access.Type` | `EngineAccess`: what the tools use of the engine and the bridge (it also carries the `FrameClockReader` of the latency measurement, the `OracleStore` of the raycast oracle and the `MapVariantDecodeStore` the bench asks decodes through), built by `Mod`. |
 | `DevTools.Viewer.Camera.Type`, `DevTools.Viewer.Camera.State` | Camera modes, lens, rays and the camera input. |
 | `DevTools.Viewer.Options.Type`, `DevTools.Viewer.Options.State` | Viewer options and their preference keys (`Viewer_PlayerView` is the one of the View pass, `Viewer_AimSpheres` the one of the aim spheres, `Viewer_Overlay` and `Viewer_OverlayWireframe` the ones of the overlay, `Viewer_DriveGameCamera` the one that moves the camera of the game). |
+| `DevTools.Viewer.Latency.Type`, `DevTools.Viewer.Latency.State`, `DevTools.Viewer.Latency.System` | The latency measurement of the overlay: window of frames, `LatencyService` (`Record`, pure `Observe` and `Summarize`) and the report the panel shows. |
 | `DevTools.Viewer.Overlay.State`, `DevTools.Viewer.Selection.State` | Overlay mode (telemetry, the panels of the selected object and `View`) and page; selected object and pick requests. |
 
 ## Depends on
@@ -53,7 +56,7 @@ through what `EngineAccess` exposes.
 Camera, selection and options (saved in the preferences file; the keys never change).
 
 ## Threads
-Render thread for drawing, for reading the game camera and for writing the camera override (the one writer of the `CameraOverrideStore`); window thread for input; AI thread only for the collidable scene, after the tick. Stores are atomic.
+Render thread for drawing, for reading the game camera and for writing the camera override (the one writer of the `CameraOverrideStore`); window thread for input; AI thread only for the collidable scene, after the tick. Stores are atomic. `LatencyService::Record` runs on the thread that draws the overlay (the game render thread under the HUD, or Present), the panel reads at Present: `LatencyStore` shares them with one short mutex, and the clock is read without waiting for the game thread.
 
 ## Errors
 A failure in the viewer never reaches the tick; the viewer just draws nothing.

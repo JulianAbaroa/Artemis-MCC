@@ -45,10 +45,23 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::GetEyeDistance(const Tick& tick) const -> std::optional<float>
     {
         const std::optional<GameCamera>& camera{ m_CameraService.GetGameCamera() };
-        const View* view{ tick.Views ? FindObservedView(*tick.Views, k_NoHandle) : nullptr };
-        if (!camera || !view || !view->Head.HasBody) return std::nullopt;
+        const std::optional<Vec3> eye{ this->GetLocalEye(tick) };
+        if (!camera || !eye) return std::nullopt;
 
-        return static_cast<float>(Common::Math::System::Distance(camera->Position, ViewPositionOf(*view)));
+        return static_cast<float>(Common::Math::System::Distance(camera->Position, *eye));
+    }
+
+    auto SceneService::GetLocalEye(const Tick& tick) const -> std::optional<Vec3>
+    {
+        const View* view{ tick.Views ? FindObservedView(*tick.Views, k_NoHandle) : nullptr };
+        if (!view || !view->Head.HasBody) return std::nullopt;
+
+        return ViewPositionOf(*view);
+    }
+
+    auto SceneService::IsGameMode() const -> bool
+    {
+        return m_CameraStore.GetMode() == Mode::Game;
     }
 
     auto SceneService::HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>

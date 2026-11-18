@@ -12,6 +12,7 @@ import Engine.Control.Input.State;
 import Engine.Render.Window.System;
 import Engine.Control.Simulation.State;
 import Engine.Base.Memory.System;
+import Engine.Base.Memory.Hook;
 import Engine.Capture.State;
 import Engine.Capture.Oracle.State;
 import Bridge.Transport.System;
@@ -37,6 +38,7 @@ namespace
     using Engine::Render::Window::System::InputService;
     using Engine::Control::Simulation::State::BotStore;
     using Engine::Base::Memory::System::GameCameraService;
+    using Engine::Base::Memory::Hook::FrameClockReader;
     using Engine::Base::Memory::System::MemoryReaderService;
     using Engine::Capture::State::CaptureStore;
     using Engine::Capture::Oracle::State::OracleStore;
@@ -58,6 +60,7 @@ export namespace DevTools::Viewer::Access::Type
         OracleStore& m_OracleStore;
         MemoryReaderService& m_MemoryReaderService;
         GameCameraService& m_GameCameraService;
+        FrameClockReader& m_FrameClockReader;
         LifecycleService& m_LifecycleService;
         LifecycleStore& m_LifecycleStore;
         MatchConfigStore& m_MatchConfigStore;

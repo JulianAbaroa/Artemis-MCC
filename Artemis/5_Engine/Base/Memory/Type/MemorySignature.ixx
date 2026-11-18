@@ -285,6 +285,10 @@ export namespace Engine::Base::Memory::Type::Signature
     // Present of the frame finds the projection of the last view. 0x30 floats, read only.
     inline constexpr std::uint32_t k_RenderProjectionRva{ 0xC9FB70 };
 
+    // DAT_180c4d958 (VW.5c, RE not verified live): the pointer to the buffer of node matrices the game interpolates the frame with. Null when
+    // the game does not interpolate. A global of haloreach.dll, read only.
+    inline constexpr std::uint32_t k_InterpolationBufferRva{ 0xC4D958 };
+
     // The function that builds the camera result of a user from the WORK of the observer (A21 sec. 6, VW.5b): void(uint32 user, void* out).
     // Found by RVA like the HUD passes. Read from haloreach.dll MD5 012f4079...
     inline constexpr Signature k_ObserverCameraPrologue

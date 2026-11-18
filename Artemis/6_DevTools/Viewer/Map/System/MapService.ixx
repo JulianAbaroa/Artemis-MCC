@@ -16,7 +16,9 @@ import :ViewPass;
 import Common.Log.System;
 import Engine.Render.Type;
 import Engine.Render.System;
+import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Scene.System;
 import DevTools.Viewer.Options.State;
@@ -54,18 +56,21 @@ export namespace DevTools::Viewer::Map::System
         using GpuPipeline = Engine::Render::System::GpuPipeline;
         using GpuStateGuard = Engine::Render::System::GpuStateGuard;
 
+        using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
 
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
+        using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         // param collidableStore: The scene drawn, with the Tick it belongs to (D294).
+        // param latencyService: Told, once per frame, what the overlay draws against the clock of the game (VW.5c).
         MapService(Log& log, CollidableStore& collidableStore,
-            SceneService& sceneService, OptionsStore& optionsStore) :
+            SceneService& sceneService, OptionsStore& optionsStore, LatencyService& latencyService) :
             m_Log(log), m_CollidableStore(collidableStore),
-            m_SceneService(sceneService), m_OptionsStore(optionsStore),
+            m_SceneService(sceneService), m_OptionsStore(optionsStore), m_LatencyService(latencyService),
             m_GpuPipeline(log), m_MapPass(log),
             m_DynamicPass(log), m_ZonePass(log),
             m_RaycastPass(log), m_ViewPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
@@ -96,6 +101,7 @@ export namespace DevTools::Viewer::Map::System
         CollidableStore& m_CollidableStore;
         SceneService& m_SceneService;
         OptionsStore& m_OptionsStore;
+        LatencyService& m_LatencyService;
 
         GpuPipeline m_GpuPipeline;
         MapPass m_MapPass;
@@ -123,6 +129,9 @@ export namespace DevTools::Viewer::Map::System
 
         // return: Whether the game camera and the overlay option are on, so what is drawn goes over the game frame.
         auto IsOverlayActive() const -> bool;
+
+        // Records the frame for the latency measurement, after the scene update. The caller holds the mutex.
+        auto RecordLatency(const CollidableScene& scene, bool isBeforeHud) -> void;
 
         auto Draw(const FrameContext& frame, bool isBeforeHud) -> void;
 

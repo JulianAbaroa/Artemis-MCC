@@ -6,11 +6,13 @@ module DevTools.Viewer.Map.System;
 import :MapService;
 
 import Common.Semantic.Type;
+import Engine.Base.Memory.Type;
 import Views.Raycast.Type;
 import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Collidable.Type;
+import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Profiler.Type;
 import DevTools.Viewer.Profiler.System;
@@ -20,8 +22,11 @@ import std;
 
 namespace
 {
+    using Engine::Base::Memory::Type::GameCamera::GameCamera;
+
     using DevTools::Viewer::Camera::Type::Viewport;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Latency::Type::LatencyInput;
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Scalar;
     using DevTools::Viewer::Profiler::Type::Cpu;
@@ -125,6 +130,8 @@ namespace DevTools::Viewer::Map::System
                 m_SceneService.Update(scene, viewport);
             }
 
+            this->RecordLatency(*scene, isBeforeHud);
+
             // note: The mode may have changed since RenderBeforeHud decided. The frame still counts as handled (the scene was updated once),
             // but nothing is drawn over the game frame that is not an overlay.
             if (isBeforeHud && !this->IsOverlayActive()) return true;
@@ -216,6 +223,22 @@ namespace DevTools::Viewer::Map::System
     auto MapService::IsOverlayActive() const -> bool
     {
         return m_SceneService.IsGameCamera() && m_OptionsStore.IsEnabled(Flag::Overlay);
+    }
+
+    auto MapService::RecordLatency(const CollidableScene& scene, bool isBeforeHud) -> void
+    {
+        if (!m_SceneService.IsGameCamera()) return;
+
+        const std::optional<GameCamera>& camera{ m_SceneService.GetGameCamera() };
+
+        LatencyInput input{};
+        input.IsBeforeHud = isBeforeHud;
+        input.IsGameMode = m_SceneService.IsGameMode();
+        if (camera) input.Camera = camera->Position;
+        if (scene.Tick->Match) input.SceneTick = scene.Tick->Match->GameTick;
+        input.Eye = m_SceneService.GetLocalEye(*scene.Tick);
+
+        m_LatencyService.Record(input);
     }
 
     auto MapService::Draw(const FrameContext& frame, bool isBeforeHud) -> void
