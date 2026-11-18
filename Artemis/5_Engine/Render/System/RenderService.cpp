@@ -44,8 +44,12 @@ namespace
     using std::chrono::steady_clock;
     using std::chrono::microseconds;
 
-    // How the log names the first person G-buffer pass whose depth the pairs measure.
-    constexpr const char* k_PassCallerName{ "26E2A0 pass" };
+    // How the log names the first person pass of a depth pair: the function and, for 0x26DA08, its pass argument.
+    auto DepthCallerName(const DepthPairNote& note) -> std::string
+    {
+        if (note.Caller == FirstPersonCaller::Pass1) return std::format("26DA08 pass {}", note.Pass);
+        return "26E2A0";
+    }
 
     // Bytes of a texel of R32G8X24: float depth, stencil byte, 3 unused.
     constexpr std::uint32_t k_StencilTexelBytes{ 8 };
@@ -870,7 +874,7 @@ namespace Engine::Render::System
         return m_RenderStore.GetContext();
     }
 
-    auto RenderService::BeginDepthPair() -> std::optional<std::size_t>
+    auto RenderService::BeginDepthPair(FirstPersonCaller caller, std::int32_t pass) -> std::optional<std::size_t>
     {
         ID3D11DeviceContext* context{ this->GetDepthPairContext() };
         if (context == nullptr) return std::nullopt;
@@ -891,7 +895,7 @@ namespace Engine::Render::System
         D3D11_TEXTURE2D_DESC desc{};
         if (texture != nullptr) texture->GetDesc(&desc);
 
-        const DepthPairNote note{ .IsCaptured = isCaptured };
+        const DepthPairNote note{ .Caller = caller, .Pass = pass, .IsCaptured = isCaptured };
 
         if (texture == nullptr || !IsSameDepthDesc(desc, m_RenderStore.GetDepthPairDesc()))
         {
@@ -1149,11 +1153,11 @@ namespace Engine::Render::System
             if (report.Note.State == DepthPairState::Mismatch)
             {
                 m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} not copied (the depth stencil is not the texture of the "
-                    "copies){}.", k, k_PassCallerName, source);
+                    "copies){}.", k, DepthCallerName(report.Note), source);
             }
             else if (report.Status != StencilReadStatus::Read)
             {
-                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} not read: {} hresult {:#010X}{}.", k, k_PassCallerName,
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} not read: {} hresult {:#010X}{}.", k, DepthCallerName(report.Note),
                     StencilStatusName(report.Status), static_cast<std::uint32_t>(report.Result), source);
             }
             else
@@ -1161,7 +1165,7 @@ namespace Engine::Render::System
                 const DepthDiff& changed{ report.Changed };
 
                 m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} changed {} box {},{}..{},{} depth {}..{} weapon {} right {} "
-                    "left {}{}.", k, k_PassCallerName, changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.MinDepth,
+                    "left {}{}.", k, DepthCallerName(report.Note), changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.MinDepth,
                     changed.MaxDepth, changed.Weapon, changed.Right, changed.Changed - changed.Right, source);
             }
 

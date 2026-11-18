@@ -99,10 +99,11 @@ export namespace Engine::Render::State
         auto IsFirstPersonHidden() const -> bool;
         auto SetFirstPersonHidden(bool isHidden) -> void;
 
-        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked) -> void;
+        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked, bool isDepthPassHooked) -> void;
         auto IsFirstPersonModelHooked() const -> bool;
         auto IsFirstPersonUnitHooked() const -> bool;
         auto IsFirstPersonPassHooked() const -> bool;
+        auto IsFirstPersonDepthPassHooked() const -> bool;
 
         // Counts one answer of the first person test turned to false by Drive. Any thread, no allocation.
         auto CountThirdPerson() -> void;
@@ -261,6 +262,7 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonModelHooked{ false };
         std::atomic<bool> m_IsFirstPersonUnitHooked{ false };
         std::atomic<bool> m_IsFirstPersonPassHooked{ false };
+        std::atomic<bool> m_IsFirstPersonDepthPassHooked{ false };
         std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
         std::atomic<std::uint32_t> m_PresentThread{ 0 };

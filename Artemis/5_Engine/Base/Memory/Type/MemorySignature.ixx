@@ -326,8 +326,18 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 08 48 89 6C 24 10 48 89 7C 24 18 41 56 48 83 EC 30"
     };
 
+    // The pass between the entry and the exit of the first person draw (A21 sec. 8, D331): void(void* view, int32 pass). It queues the model,
+    // sets the first person camera, draws the list, restores the normal camera and pops, like 0x26E2A0 (it is called with 0xB by 0x26C6DC and with 0
+    // twice by 0x26D740). VW.6.y.2 A5 measures whether it is the one that changes the depth of the arms and weapon.
+    inline constexpr Signature k_FirstPersonDepthPassPrologue
+    {
+        "FirstPersonDepthPassPrologue",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20"
+    };
+
     inline constexpr std::uint32_t k_FirstPersonModelRva{ 0x286EBC };
     inline constexpr std::uint32_t k_FirstPersonPassRva{ 0x26E2A0 };
+    inline constexpr std::uint32_t k_FirstPersonDepthPassRva{ 0x26DA08 };
     inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
 
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).

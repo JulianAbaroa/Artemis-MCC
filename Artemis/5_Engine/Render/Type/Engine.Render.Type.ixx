@@ -23,6 +23,9 @@ export namespace Engine::Render::Type
     using FirstPersonModelFunction = auto(__fastcall*)(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
     using FirstPersonPassFunction = auto(__fastcall*)(void* view) -> void;
 
+    // The pass 0x26DA08 between the entry and the exit of the first person draw: void(void* view, int32 pass).
+    using FirstPersonDepthPassFunction = auto(__fastcall*)(void* view, std::int32_t pass) -> void;
+
     // The game's test of a first person unit: bool(uint32 user, uint32 objectHandle).
     using IsFirstPersonUnitFunction = auto(__fastcall*)(std::uint32_t user, std::uint32_t objectHandle) -> bool;
 
@@ -239,8 +242,8 @@ export namespace Engine::Render::Type
         std::array<StencilRegionStats, k_StencilRegionCount> Regions{};
     };
 
-    // How many calls of the first person G-buffer pass (0x26E2A0) the probe copies the depth of, before and after (VW.6.y.2 A4). Two textures each.
-    inline constexpr std::size_t k_DepthPairCount{ 4 };
+    // How many calls of the first person passes (0x26DA08 and 0x26E2A0) the probe copies the depth of, before and after (VW.6.y.2 A4, A5). Two textures each.
+    inline constexpr std::size_t k_DepthPairCount{ 6 };
     inline constexpr std::size_t k_DepthCopyCount{ k_DepthPairCount * 2 };
 
     // What the detour did with a call of the pass while the depth pairs were ready.
@@ -255,6 +258,8 @@ export namespace Engine::Render::Type
     struct DepthPairNote
     {
         DepthPairState State{ DepthPairState::Free };
+        FirstPersonCaller Caller{ FirstPersonCaller::Other };   // Pass1 (0x26DA08) or Func26E2A0
+        std::int32_t Pass{ 0 };                                 // the pass argument of 0x26DA08, 0 for 0x26E2A0 which has none
         bool IsCaptured{ false };   // no depth stencil was bound at the entry, the resource captured from the model draw was copied instead
     };
 

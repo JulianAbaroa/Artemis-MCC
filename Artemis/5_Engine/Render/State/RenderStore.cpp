@@ -153,11 +153,17 @@ namespace Engine::Render::State
         m_IsFirstPersonHidden.store(isHidden, std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked) -> void
+    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked, bool isDepthPassHooked) -> void
     {
         m_IsFirstPersonModelHooked.store(isModelHooked, std::memory_order_relaxed);
         m_IsFirstPersonUnitHooked.store(isUnitHooked, std::memory_order_relaxed);
         m_IsFirstPersonPassHooked.store(isPassHooked, std::memory_order_relaxed);
+        m_IsFirstPersonDepthPassHooked.store(isDepthPassHooked, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsFirstPersonDepthPassHooked() const -> bool
+    {
+        return m_IsFirstPersonDepthPassHooked.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::IsFirstPersonPassHooked() const -> bool

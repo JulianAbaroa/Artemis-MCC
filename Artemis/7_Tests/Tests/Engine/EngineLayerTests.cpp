@@ -169,6 +169,7 @@ TEST(EngineLayerTests, FirstPersonDetourWithoutTheGameInstallsNothing)
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonModelHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonUnitHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonPassHooked());
+    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonDepthPassHooked());
     render.m_FirstPersonDetour.Uninstall();
 }
 
@@ -474,7 +475,8 @@ TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
     for (std::size_t i{ 0 }; i < k_DepthPairCount; ++i)
     {
         const auto index{ store.NoteDepthPair({ .State = i == 1 ? DepthPairState::Mismatch : DepthPairState::Copied,
-            .IsCaptured = i == 2 }, nullptr) };
+            .Caller = i == 2 ? Engine::Render::Type::FirstPersonCaller::Pass1 : Engine::Render::Type::FirstPersonCaller::Func26E2A0,
+            .Pass = i == 2 ? 0xB : 0, .IsCaptured = i == 2 }, nullptr) };
         ASSERT_TRUE(index.has_value());
         EXPECT_EQ(*index, i);
     }
@@ -483,6 +485,9 @@ TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
     EXPECT_EQ(store.GetDepthPairNoteCount(), static_cast<std::uint32_t>(k_DepthPairCount));
     EXPECT_EQ(store.GetDepthPairNote(1).State, DepthPairState::Mismatch);
     EXPECT_TRUE(store.GetDepthPairNote(2).IsCaptured);
+    EXPECT_EQ(store.GetDepthPairNote(2).Caller, Engine::Render::Type::FirstPersonCaller::Pass1);
+    EXPECT_EQ(store.GetDepthPairNote(2).Pass, 0xB);
+    EXPECT_EQ(store.GetDepthPairNote(3).Caller, Engine::Render::Type::FirstPersonCaller::Func26E2A0);
     EXPECT_FALSE(store.GetDepthPairNote(3).IsCaptured);
 
     store.ReleaseDepthPairs();

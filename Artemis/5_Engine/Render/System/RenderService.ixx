@@ -101,14 +101,16 @@ export namespace Engine::Render::System
         // thread of Present with the targets ready, on another thread the sample only says so. COM calls only, no allocation, no log.
         auto MeasureFirstPerson(FirstPersonCaller caller, std::uint32_t callerRva, std::uint8_t pass) -> void;
 
-        // Runs at the entry of each call of the first person G-buffer pass (0x26E2A0) while the probe is armed and the depth pairs exist
-        // (VW.6.y.2 A4): copies the bound depth stencil to the before texture of the next pair and notes the call. When no depth stencil is
+        // Runs at the entry of each call of the first person passes (0x26E2A0 and 0x26DA08) while the probe is armed and the depth pairs exist
+        // (VW.6.y.2 A4, A5): copies the bound depth stencil to the before texture of the next pair and notes the call. When no depth stencil is
         // bound it copies the resource captured from the model draw and notes that.
+        // param caller: Pass1 for 0x26DA08, Func26E2A0 for 0x26E2A0.
+        // param pass: The pass argument of 0x26DA08, 0 for 0x26E2A0.
         // return: The pair to give to EndDepthPair after the original returns, nothing when no copy was made (probe not armed, other
         // thread, resizing, copies not ready, pairs taken, or a resource that does not match the copies).
         // note: Called by the first person detour. The immediate context is only touched on the thread of Present. COM calls only, no
         // allocation, no log.
-        auto BeginDepthPair() -> std::optional<std::size_t>;
+        auto BeginDepthPair(FirstPersonCaller caller, std::int32_t pass) -> std::optional<std::size_t>;
 
         // Copies the same resource to the after texture of the pair, once the original returned. Same rules as BeginDepthPair.
         auto EndDepthPair(std::size_t pair) -> void;
