@@ -47,7 +47,7 @@ export namespace DevTools::Viewer::Camera::System
             const Viewport& viewport, bool acceptInput,
             std::optional<std::uint32_t> followHandle) -> void;
 
-        // Makes the next Update place the camera on the local player again.
+        // Makes the next Update place the camera on the local player again and gives the game camera back to the game.
         auto Deactivate() -> void;
 
         auto GetEye() const -> Vec3;
@@ -61,6 +61,20 @@ export namespace DevTools::Viewer::Camera::System
 
         // return: The camera of the game this frame, or nothing when the mode is not Game or the game camera is not valid.
         auto GetGameCamera() const -> const std::optional<GameCamera>&;
+
+        // return: True while the free camera moves the camera of the game (option Drive game camera, Free mode, nothing followed). The
+        // projection is then the one of the game camera read (as in Game mode) and the pose is the free one.
+        auto IsDriving() const -> bool;
+
+        // return: Whether the override of the game camera is published (it can fail to publish when the pose is not valid).
+        auto IsOverrideActive() const -> bool;
+
+        // return: How many faults the observer hook caught while it touched the engine memory.
+        auto GetOverrideFaults() const -> std::uint32_t;
+
+        // return: The distance between the eye asked of the game last frame and the position of the game camera read this frame (about 0 with a
+        // frame of delay), or nothing when the camera is not driving or the game camera is not valid.
+        auto GetOverrideDistance() const -> std::optional<float>;
 
         // return: The view matrix multiplied by the projection matrix.
         auto GetViewProjection() const -> const Matrix&;
@@ -81,6 +95,8 @@ export namespace DevTools::Viewer::Camera::System
         GameCameraService& m_GameCameraService;
 
         std::optional<GameCamera> m_GameCamera{};
+        std::optional<float> m_OverrideDistance{};
+        bool m_IsDriving{ false };
 
         // Projection terms of the last Build: the focal values and the off-center terms of x and y.
         float m_FocalX{ 1.0f };

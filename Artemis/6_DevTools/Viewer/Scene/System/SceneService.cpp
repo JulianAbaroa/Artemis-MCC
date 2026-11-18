@@ -130,7 +130,22 @@ namespace DevTools::Viewer::Scene::System
 
     auto SceneService::IsGameCamera() const -> bool
     {
-        return m_CameraStore.GetMode() == Mode::Game;
+        return m_CameraStore.GetMode() == Mode::Game || m_CameraService.IsDriving();
+    }
+
+    auto SceneService::IsOverrideActive() const -> bool
+    {
+        return m_CameraService.IsOverrideActive();
+    }
+
+    auto SceneService::GetOverrideFaults() const -> std::uint32_t
+    {
+        return m_CameraService.GetOverrideFaults();
+    }
+
+    auto SceneService::GetOverrideDistance() const -> std::optional<float>
+    {
+        return m_CameraService.GetOverrideDistance();
     }
 
     auto SceneService::GetGameCamera() const -> const std::optional<GameCamera>&

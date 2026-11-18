@@ -38,6 +38,8 @@ export namespace Engine::Render::Hook
         auto Install() -> bool;
 
         // Waits for the calls in flight to drain, then removes the hooks that were installed. Does nothing if not installed.
+        // note: Can be called from two threads (the unhook of the game thread and the shutdown of the main thread): Install and Uninstall take one
+        // mutex, so the second caller finds the hooks already gone and never clears the originals of a hook that is still live.
         auto Uninstall() -> void;
 
     private:
@@ -55,6 +57,7 @@ export namespace Engine::Render::Hook
         std::atomic<void*> m_DrawLateAddress{ nullptr };
         std::atomic<void*> m_Draw3DAddress{ nullptr };
         std::atomic<bool> m_IsInstalled{ false };
+        std::mutex m_Mutex{};
 
         // return: True if the pass was hooked.
         auto InstallOne(const char* name, const Signature& prologue, std::uint32_t rva, void* hooked, void** original,

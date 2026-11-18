@@ -105,6 +105,8 @@ namespace Engine::Render::Hook
 
     auto ChudDetour::Install() -> bool
     {
+        const std::lock_guard<std::mutex> lock{ m_Mutex };
+
         if (m_IsInstalled.load()) return m_DrawAddress.load() != nullptr;
         s_Instance.store(this);
 
@@ -145,6 +147,8 @@ namespace Engine::Render::Hook
 
     auto ChudDetour::Uninstall() -> void
     {
+        const std::lock_guard<std::mutex> lock{ m_Mutex };
+
         if (!m_IsInstalled.load()) return;
 
         m_RenderStore.SetHudHookInstalled(false);

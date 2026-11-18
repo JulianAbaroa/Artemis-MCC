@@ -84,5 +84,6 @@ export namespace DevTools::Viewer::Hud::System
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawHudHook() -> void;
+        auto DrawOverride() -> void;
     };
 }

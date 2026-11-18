@@ -7,7 +7,9 @@ import Engine.Base.Lifecycle.Hook;
 import Engine.Base.Host.State;
 import Engine.Base.Host.System;
 import Engine.Base.Host.Hook;
+import Engine.Base.Memory.State;
 import Engine.Base.Memory.System;
+import Engine.Base.Memory.Hook;
 import Engine.Base.MapVariant.State;
 import Engine.Base.MapVariant.System;
 import Engine.Base.MatchSetup.State;
@@ -40,6 +42,8 @@ export namespace Engine::Base
         using AOBService = Engine::Base::Memory::System::AOBService;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
         using GameCameraService = Engine::Base::Memory::System::GameCameraService;
+        using CameraOverrideStore = Engine::Base::Memory::State::CameraOverrideStore;
+        using ObserverCameraDetour = Engine::Base::Memory::Hook::ObserverCameraDetour;
 
         using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using MatchSetupStore = Engine::Base::MatchSetup::State::MatchSetupStore;
@@ -54,7 +58,7 @@ export namespace Engine::Base
             m_LifecycleService(service.m_Log, m_LifecycleStore),
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),
-            m_GameCameraService(m_MemoryReaderService),
+            m_GameCameraService(m_MemoryReaderService, m_CameraOverrideStore),
             m_PresetService(service.m_Log, service.m_SettingsStore, m_PresetStore),
             m_MapVariantService(service.m_Log, m_MapVariantStore),
             m_MapVariantDecodeService(service.m_Log, m_AOBService),
@@ -66,7 +70,8 @@ export namespace Engine::Base
             m_LocalUserGetProfileDetour(service.m_Log, m_HostService, m_LocalUserStore),
             m_LocalUserGetGamepadMappingDetour(service.m_Log, m_HostService, m_LocalUserStore),
             m_CanAcceptAnyJoinRequestDetour(service.m_Log, m_AOBService, m_LocalUserStore),
-            m_SessionJoinCheckPatch(service.m_Log, m_AOBService, m_LocalUserStore) {}
+            m_SessionJoinCheckPatch(service.m_Log, m_AOBService, m_LocalUserStore),
+            m_ObserverCameraDetour(service.m_Log, m_AOBService, m_CameraOverrideStore) {}
         ~Layer() = default;
 
         // Not copyable. Members hold references to each other.
@@ -79,6 +84,7 @@ export namespace Engine::Base
         PresetStore m_PresetStore{};
         MapVariantStore m_MapVariantStore{};
         MatchSetupStore m_MatchSetupStore{};
+        CameraOverrideStore m_CameraOverrideStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
@@ -100,5 +106,6 @@ export namespace Engine::Base
         LocalUserGetGamepadMappingDetour m_LocalUserGetGamepadMappingDetour;
         CanAcceptAnyJoinRequestDetour m_CanAcceptAnyJoinRequestDetour;
         SessionJoinCheckPatch m_SessionJoinCheckPatch;
+        ObserverCameraDetour m_ObserverCameraDetour;
     };
 }

@@ -29,6 +29,9 @@ namespace
     using Engine::Base::Memory::Type::GameCamera::k_ViewToWorldPosition;
     using Engine::Base::Memory::Type::GameCamera::k_ViewToWorldRight;
     using Engine::Base::Memory::Type::GameCamera::k_ViewToWorldUp;
+    using Engine::Base::Memory::Type::ObserverCamera::CameraOverride;
+    using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxEyeLength;
+    using Engine::Base::Memory::Type::ObserverCamera::k_OverrideTolerance;
     using Engine::Base::Memory::Type::Signature::k_RenderProjectionRva;
 
     auto VecAt(const std::array<float, k_ProjectionFloatCount>& floats, std::size_t index) -> Vec3
@@ -44,6 +47,11 @@ namespace
     auto IsPerpendicular(const Vec3& a, const Vec3& b) -> bool
     {
         return std::abs(VecMath::Dot(a, b)) <= k_AxisTolerance;
+    }
+
+    auto IsFinite(const Vec3& value) -> bool
+    {
+        return std::isfinite(value.X) && std::isfinite(value.Y) && std::isfinite(value.Z);
     }
 }
 
@@ -93,5 +101,46 @@ namespace Engine::Base::Memory::System
             .M20 = floats[k_ProjectionM20],
             .M21 = floats[k_ProjectionM21],
         };
+    }
+
+    auto GameCameraService::SetOverride(const Vec3& eye, const Vec3& forward, const Vec3& up) -> bool
+    {
+        const CameraOverride pose{ .Eye = eye, .Forward = forward, .Up = up };
+
+        if (!this->IsValidOverride(pose))
+        {
+            m_OverrideStore.Clear();
+            return false;
+        }
+
+        m_OverrideStore.Publish(pose);
+        return true;
+    }
+
+    auto GameCameraService::ClearOverride() -> void
+    {
+        m_OverrideStore.Clear();
+    }
+
+    auto GameCameraService::IsOverrideActive() const -> bool
+    {
+        return m_OverrideStore.IsActive();
+    }
+
+    auto GameCameraService::GetOverrideFaultCount() const -> std::uint32_t
+    {
+        return m_OverrideStore.GetFaultCount();
+    }
+
+    auto GameCameraService::IsValidOverride(const CameraOverride& pose) -> bool
+    {
+        if (!IsFinite(pose.Eye) || !IsFinite(pose.Forward) || !IsFinite(pose.Up)) return false;
+
+        if (VecMath::Length(pose.Eye) >= k_OverrideMaxEyeLength) return false;
+
+        const auto isUnit = [](const Vec3& axis) { return std::abs(VecMath::Length(axis) - 1.0f) <= k_OverrideTolerance; };
+        if (!isUnit(pose.Forward) || !isUnit(pose.Up)) return false;
+
+        return std::abs(VecMath::Dot(pose.Forward, pose.Up)) <= k_OverrideTolerance;
     }
 }

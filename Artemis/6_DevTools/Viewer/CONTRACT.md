@@ -19,6 +19,8 @@ Option `Overlay on the game frame` (key `Viewer_Overlay`, off by default) with t
 
 Option `Hide game HUD` (key `Viewer_HideGameHud`, off by default, group Camera; VW.6.x): `Layer` copies it to `RenderStore::SetGameHudHidden` at the start of every Present frame, and the HUD detours of `Engine.Render` then skip the game's HUD passes (clean captures). Without the hooks installed it does nothing.
 
+Option `Drive game camera` (key `Viewer_DriveGameCamera`, off by default, group Camera; VW.5b, D323): with the Free mode and nothing followed or orbited, every frame `CameraService` asks `GameCameraService::SetOverride` for the eye, forward and up of the free camera, and the observer hook of `Engine.Base` makes the game build its camera there (position, location for culling and vertical field of view the normal way, one frame later). In any other case, when the option is turned off or when the Viewer is deactivated, it calls `ClearOverride` and the camera goes back to the player. While it drives, the projection of the Viewer comes from the game camera read (x and y as in Game mode, depth its own) and the pose is the free one, so `SceneService::IsGameCamera` is true and the overlay lines up with the frame. The telemetry shows `Override: on/off`, `Override faults` (only when the hook caught any fault touching the engine memory) and `Override error`: the distance between the eye asked last frame and the position of the game camera read (about 0 with a frame of delay).
+
 The overlay window (telemetry mode) shows the game camera: valid or not, position, horizontal and vertical field of view, aspect (m11 / m00) against the back buffer, the off-center terms and the distance to the eye of the View of the local player, and the line `HUD hook` (thread same or other than Present, calls per frame of the HUD draw, the render target it draws to with size and format, whether that is the back buffer, and viewport 0) from `RenderStore::GetHudHook`.
 
 ## Does not
@@ -38,7 +40,7 @@ Other projects may import only these modules; everything else in the project is 
 | `DevTools.Viewer.Layer` | The facade: camera, selection, overlay, options and the services that draw. While the camera follows or orbits the biped of a player, `SceneService` writes that player in the `ObservedPlayerStore` of `Services` (none otherwise), so the AI thread gives it a View (F4.2). The camera, the labels, the aim hit label and the rays and the View it draws come from the View of the watched player (`SceneService::GetObservedView`: the observed one, else the primary local player), and the free camera seats on the View of the local player. |
 | `DevTools.Viewer.Access.Type` | `EngineAccess`: what the tools use of the engine and the bridge (it also carries the `OracleStore` of the raycast oracle and the `MapVariantDecodeStore` the bench asks decodes through), built by `Mod`. |
 | `DevTools.Viewer.Camera.Type`, `DevTools.Viewer.Camera.State` | Camera modes, lens, rays and the camera input. |
-| `DevTools.Viewer.Options.Type`, `DevTools.Viewer.Options.State` | Viewer options and their preference keys (`Viewer_PlayerView` is the one of the View pass, `Viewer_AimSpheres` the one of the aim spheres, `Viewer_Overlay` and `Viewer_OverlayWireframe` the ones of the overlay). |
+| `DevTools.Viewer.Options.Type`, `DevTools.Viewer.Options.State` | Viewer options and their preference keys (`Viewer_PlayerView` is the one of the View pass, `Viewer_AimSpheres` the one of the aim spheres, `Viewer_Overlay` and `Viewer_OverlayWireframe` the ones of the overlay, `Viewer_DriveGameCamera` the one that moves the camera of the game). |
 | `DevTools.Viewer.Overlay.State`, `DevTools.Viewer.Selection.State` | Overlay mode (telemetry, the panels of the selected object and `View`) and page; selected object and pick requests. |
 
 ## Depends on
@@ -49,7 +51,7 @@ through what `EngineAccess` exposes.
 Camera, selection and options (saved in the preferences file; the keys never change).
 
 ## Threads
-Render thread for drawing and for reading the game camera; window thread for input; AI thread only for the collidable scene, after the tick. Stores are atomic.
+Render thread for drawing, for reading the game camera and for writing the camera override (the one writer of the `CameraOverrideStore`); window thread for input; AI thread only for the collidable scene, after the tick. Stores are atomic.
 
 ## Errors
 A failure in the viewer never reaches the tick; the viewer just draws nothing.

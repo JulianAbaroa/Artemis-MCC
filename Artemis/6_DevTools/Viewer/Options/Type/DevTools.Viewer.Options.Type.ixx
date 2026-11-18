@@ -94,6 +94,7 @@ export namespace DevTools::Viewer::Options::Type
         Overlay,
         OverlayWireframe,
         HideGameHud,
+        DriveGameCamera,
 
         Count
     };
@@ -358,6 +359,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },
+
+        { Flag::DriveGameCamera, Group::Camera, "DriveGameCamera", "Drive game camera",
+            "Moves the game's camera with the free camera of the Viewer.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

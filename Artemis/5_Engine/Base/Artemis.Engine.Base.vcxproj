@@ -110,15 +110,22 @@
     <ClCompile Include="Preset\System\PresetService.cpp" />
     <ClCompile Include="Preset\System\PresetService.ixx" />
     <ClCompile Include="Preset\Type\Engine.Base.Preset.Type.ixx" />
+    <ClCompile Include="Memory\Engine.Base.Memory.Hook.ixx" />
+    <ClCompile Include="Memory\Engine.Base.Memory.State.ixx" />
     <ClCompile Include="Memory\Engine.Base.Memory.System.ixx" />
     <ClCompile Include="Memory\Engine.Base.Memory.Type.ixx" />
     <ClCompile Include="Memory\System\AOB\AOBService.cpp" />
     <ClCompile Include="Memory\System\AOB\AOBService.ixx" />
+    <ClCompile Include="Memory\Hook\ObserverCameraDetour.cpp" />
+    <ClCompile Include="Memory\Hook\ObserverCameraDetour.ixx" />
+    <ClCompile Include="Memory\State\CameraOverrideStore.cpp" />
+    <ClCompile Include="Memory\State\CameraOverrideStore.ixx" />
     <ClCompile Include="Memory\System\Camera\GameCameraService.cpp" />
     <ClCompile Include="Memory\System\Camera\GameCameraService.ixx" />
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.cpp" />
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.ixx" />
     <ClCompile Include="Memory\Type\GameCamera.ixx" />
+    <ClCompile Include="Memory\Type\ObserverCamera.ixx" />
     <ClCompile Include="Memory\Type\MemorySignature.ixx" />
   </ItemGroup>
   <ItemGroup>

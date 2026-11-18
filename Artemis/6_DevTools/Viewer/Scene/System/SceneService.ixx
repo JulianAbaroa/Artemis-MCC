@@ -75,11 +75,22 @@ export namespace DevTools::Viewer::Scene::System
 
         auto GetViewProjection() const -> const Matrix&;
 
-        // return: True if the camera mode is Game (the camera of the game, or the View of the local player when the game one is not valid).
+        // return: True if the camera mode is Game (the camera of the game, or the View of the local player when the game one is not valid), or the
+        // free camera drives the game camera (then the frame under the Viewer is the one of the game camera).
         auto IsGameCamera() const -> bool;
 
-        // return: The camera of the game this frame, or nothing when the mode is not Game or that camera is not valid.
+        // return: The camera of the game this frame, or nothing when the mode is not Game, the free camera is not driving it or that camera is
+        // not valid.
         auto GetGameCamera() const -> const std::optional<GameCamera>&;
+
+        // return: Whether the override of the game camera is published.
+        auto IsOverrideActive() const -> bool;
+
+        // return: How many faults the observer hook caught while it touched the engine memory.
+        auto GetOverrideFaults() const -> std::uint32_t;
+
+        // return: The distance between the eye asked of the game and the position of its camera, or nothing when the camera is not driving.
+        auto GetOverrideDistance() const -> std::optional<float>;
 
         // return: The selected handle, or k_NoHandle.
         auto GetSelected() const -> std::uint32_t;

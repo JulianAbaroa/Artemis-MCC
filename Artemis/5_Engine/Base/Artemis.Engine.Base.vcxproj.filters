@@ -94,6 +94,12 @@
     <Filter Include="Memory">
       <UniqueIdentifier>{976cb345-f534-51cd-8f06-c47ed5869894}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory\Hook">
+      <UniqueIdentifier>{efb13a6b-5cd1-4e3f-9e9f-52832f66c7c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory\State">
+      <UniqueIdentifier>{4188e8b3-39ed-4493-b33f-f9e2e044c484}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Memory\System">
       <UniqueIdentifier>{914a4e49-228e-5793-9080-dcd5e8e693b2}</UniqueIdentifier>
     </Filter>
@@ -279,6 +285,27 @@
     </ClCompile>
     <ClCompile Include="Lifecycle\Type\Engine.Base.Lifecycle.Type.ixx">
       <Filter>Lifecycle\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Engine.Base.Memory.Hook.ixx">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Engine.Base.Memory.State.ixx">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Hook\ObserverCameraDetour.cpp">
+      <Filter>Memory\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Hook\ObserverCameraDetour.ixx">
+      <Filter>Memory\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\State\CameraOverrideStore.cpp">
+      <Filter>Memory\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\State\CameraOverrideStore.ixx">
+      <Filter>Memory\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Type\ObserverCamera.ixx">
+      <Filter>Memory\Type</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Engine.Base.Memory.System.ixx">
       <Filter>Memory</Filter>

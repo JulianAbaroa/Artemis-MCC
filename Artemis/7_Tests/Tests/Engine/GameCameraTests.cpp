@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
+import Common.Math.Type;
 import Engine.Base.Memory.Type;
+import Engine.Base.Memory.State;
 import Engine.Base.Memory.System;
 import std;
 
@@ -10,6 +12,10 @@ namespace
 {
     using Engine::Base::Memory::System::GameCameraService;
     using Engine::Base::Memory::Type::GameCamera::k_ProjectionFloatCount;
+
+    using Common::Math::Type::Vec3;
+    using Engine::Base::Memory::State::CameraOverrideStore;
+    using Engine::Base::Memory::Type::ObserverCamera::CameraOverride;
 
     using Floats = std::array<float, k_ProjectionFloatCount>;
 
@@ -84,4 +90,165 @@ TEST(GameCameraTests, AProjectionThatIsNotPositiveGivesNothing)
     Floats negativeHeight{ MakeFloats() };
     negativeHeight[0x23] = -1.0f;
     EXPECT_FALSE(GameCameraService::Parse(negativeHeight).has_value());
+}
+
+// The override of the game camera (VW.5b): the validation of a requested pose and the seqlock that carries it to the game thread.
+
+namespace
+{
+    // At (10, 20, 30) looking along +X with +Z up.
+    auto MakePose() -> CameraOverride
+    {
+        return CameraOverride{ .Eye = Vec3{ 10.0f, 20.0f, 30.0f }, .Forward = Vec3{ 1.0f, 0.0f, 0.0f }, .Up = Vec3{ 0.0f, 0.0f, 1.0f } };
+    }
+}
+
+TEST(GameCameraTests, AnOrthonormalPoseInsideTheLimitIsValid)
+{
+    EXPECT_TRUE(GameCameraService::IsValidOverride(MakePose()));
+
+    // A tilted pair is still valid when it is orthonormal.
+    CameraOverride tilted{ MakePose() };
+    tilted.Forward = Vec3{ 0.6f, 0.8f, 0.0f };
+    tilted.Up = Vec3{ 0.0f, 0.0f, 1.0f };
+    EXPECT_TRUE(GameCameraService::IsValidOverride(tilted));
+}
+
+TEST(GameCameraTests, APoseThatIsNotFiniteIsNotValid)
+{
+    const float nan{ std::numeric_limits<float>::quiet_NaN() };
+    const float inf{ std::numeric_limits<float>::infinity() };
+
+    CameraOverride eye{ MakePose() };
+    eye.Eye.Y = nan;
+    EXPECT_FALSE(GameCameraService::IsValidOverride(eye));
+
+    CameraOverride forward{ MakePose() };
+    forward.Forward.X = inf;
+    EXPECT_FALSE(GameCameraService::IsValidOverride(forward));
+
+    CameraOverride up{ MakePose() };
+    up.Up.Z = nan;
+    EXPECT_FALSE(GameCameraService::IsValidOverride(up));
+}
+
+TEST(GameCameraTests, AnAxisThatIsNotUnitOrPerpendicularIsNotValid)
+{
+    CameraOverride longForward{ MakePose() };
+    longForward.Forward = Vec3{ 2.0f, 0.0f, 0.0f };
+    EXPECT_FALSE(GameCameraService::IsValidOverride(longForward));
+
+    CameraOverride zeroUp{ MakePose() };
+    zeroUp.Up = Vec3{ 0.0f, 0.0f, 0.0f };
+    EXPECT_FALSE(GameCameraService::IsValidOverride(zeroUp));
+
+    CameraOverride skewed{ MakePose() };
+    skewed.Up = Vec3{ 0.6f, 0.0f, 0.8f };
+    EXPECT_FALSE(GameCameraService::IsValidOverride(skewed));
+}
+
+TEST(GameCameraTests, AnEyeFarFromTheOriginIsNotValid)
+{
+    CameraOverride far{ MakePose() };
+    far.Eye = Vec3{ 50000.0f, 0.0f, 0.0f };
+    EXPECT_FALSE(GameCameraService::IsValidOverride(far));
+
+    far.Eye = Vec3{ 40000.0f, 40000.0f, 0.0f };
+    EXPECT_FALSE(GameCameraService::IsValidOverride(far));
+
+    far.Eye = Vec3{ 49000.0f, 0.0f, 0.0f };
+    EXPECT_TRUE(GameCameraService::IsValidOverride(far));
+}
+
+TEST(GameCameraTests, TheOverrideStoreGivesWhatWasPublishedUntilItIsCleared)
+{
+    CameraOverrideStore store{};
+    EXPECT_FALSE(store.IsActive());
+    EXPECT_FALSE(store.Read(std::chrono::seconds{ 1 }).has_value());
+
+    store.Publish(MakePose());
+    EXPECT_TRUE(store.IsActive());
+
+    const std::optional<CameraOverride> pose{ store.Read(std::chrono::seconds{ 1 }) };
+    ASSERT_TRUE(pose.has_value());
+    EXPECT_EQ(pose->Eye.X, 10.0f);
+    EXPECT_EQ(pose->Eye.Z, 30.0f);
+    EXPECT_EQ(pose->Forward.X, 1.0f);
+    EXPECT_EQ(pose->Up.Z, 1.0f);
+
+    store.Clear();
+    EXPECT_FALSE(store.IsActive());
+    EXPECT_FALSE(store.Read(std::chrono::seconds{ 1 }).has_value());
+}
+
+TEST(GameCameraTests, AStalePoseIsTakenAsNone)
+{
+    CameraOverrideStore store{};
+    store.Publish(MakePose());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 20 });
+
+    EXPECT_FALSE(store.Read(std::chrono::milliseconds{ 5 }).has_value());
+    EXPECT_TRUE(store.Read(std::chrono::seconds{ 5 }).has_value());
+
+    // A new pose is fresh again.
+    store.Publish(MakePose());
+    EXPECT_TRUE(store.Read(std::chrono::milliseconds{ 5 }).has_value());
+}
+
+TEST(GameCameraTests, TheOverrideStoreCountsFaults)
+{
+    CameraOverrideStore store{};
+    EXPECT_EQ(store.GetFaultCount(), 0u);
+
+    store.CountFault();
+    store.CountFault();
+    EXPECT_EQ(store.GetFaultCount(), 2u);
+}
+
+TEST(GameCameraTests, SettingAnInvalidOverrideClearsTheOneThatWasSet)
+{
+    CameraOverrideStore store{};
+    Engine::Base::Memory::System::MemoryReaderService reader{};
+    GameCameraService service{ reader, store };
+
+    EXPECT_TRUE(service.SetOverride(Vec3{ 1.0f, 2.0f, 3.0f }, Vec3{ 1.0f, 0.0f, 0.0f }, Vec3{ 0.0f, 0.0f, 1.0f }));
+    EXPECT_TRUE(service.IsOverrideActive());
+
+    EXPECT_FALSE(service.SetOverride(Vec3{ 1.0f, 2.0f, 3.0f }, Vec3{ 2.0f, 0.0f, 0.0f }, Vec3{ 0.0f, 0.0f, 1.0f }));
+    EXPECT_FALSE(service.IsOverrideActive());
+
+    EXPECT_TRUE(service.SetOverride(Vec3{ 1.0f, 2.0f, 3.0f }, Vec3{ 1.0f, 0.0f, 0.0f }, Vec3{ 0.0f, 0.0f, 1.0f }));
+    service.ClearOverride();
+    EXPECT_FALSE(service.IsOverrideActive());
+}
+
+TEST(GameCameraTests, TheOverrideStoreNeverGivesATornPose)
+{
+    CameraOverrideStore store{};
+    std::atomic<bool> isDone{ false };
+
+    // The writer alternates two poses whose nine floats are all the same value each, so a mix of two writes shows as different floats.
+    std::thread writer{ [&] {
+        for (int i{ 0 }; i < 200000; ++i)
+        {
+            const float value{ (i % 2 == 0) ? 1.0f : 2.0f };
+            store.Publish(CameraOverride{ .Eye = Vec3{ value, value, value }, .Forward = Vec3{ value, value, value }, .Up = Vec3{ value, value, value } });
+        }
+        isDone.store(true);
+    } };
+
+    int torn{ 0 };
+    while (!isDone.load())
+    {
+        const std::optional<CameraOverride> pose{ store.Read(std::chrono::seconds{ 5 }) };
+        if (!pose) continue;
+
+        const float value{ pose->Eye.X };
+        if (pose->Eye.Y != value || pose->Eye.Z != value || pose->Forward.X != value || pose->Forward.Y != value ||
+            pose->Forward.Z != value || pose->Up.X != value || pose->Up.Y != value || pose->Up.Z != value) ++torn;
+    }
+
+    writer.join();
+    EXPECT_EQ(torn, 0);
 }

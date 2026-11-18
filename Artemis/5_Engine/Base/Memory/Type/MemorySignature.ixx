@@ -285,9 +285,22 @@ export namespace Engine::Base::Memory::Type::Signature
     // Present of the frame finds the projection of the last view. 0x30 floats, read only.
     inline constexpr std::uint32_t k_RenderProjectionRva{ 0xC9FB70 };
 
+    // The function that builds the camera result of a user from the WORK of the observer (A21 sec. 6, VW.5b): void(uint32 user, void* out).
+    // Found by RVA like the HUD passes. Read from haloreach.dll MD5 012f4079...
+    inline constexpr Signature k_ObserverCameraPrologue
+    {
+        "ObserverCameraPrologue",
+        "48 8B C4 48 89 58 08 48 89 70 18 48 89 78 20 48 89 50 10 55 41 54 41 55 41 56"
+    };
+
+    inline constexpr std::uint32_t k_ObserverCameraRva{ 0xC9CF8 };
+
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
     inline constexpr std::uint32_t k_CollisionTestVectorWindow{ 0 };
 
     // Same rule for the three HUD passes.
     inline constexpr std::uint32_t k_ChudWindow{ 0 };
+
+    // Same rule for the observer camera.
+    inline constexpr std::uint32_t k_ObserverCameraWindow{ 0 };
 }

@@ -231,6 +231,7 @@ namespace DevTools::Viewer::Hud::System
             ImGui::Text("Game camera:");
             ImGui::SameLine();
             ImGui::TextDisabled("n/a (free camera)");
+            this->DrawOverride();
             return;
         }
 
@@ -284,7 +285,33 @@ namespace DevTools::Viewer::Hud::System
             ImGui::TextDisabled("n/a (no View)");
         }
 
+        this->DrawOverride();
         this->DrawHudHook();
+    }
+
+    auto HudService::DrawOverride() -> void
+    {
+        const bool isActive{ m_SceneService.IsOverrideActive() };
+
+        ImGui::Text("Override:");
+        ImGui::SameLine();
+        ImGui::TextColored(isActive ? k_Green : k_Orange, "%s", isActive ? "on" : "off");
+
+        // note: The hook cannot log on the game thread, so the faults it caught are shown here.
+        const std::uint32_t faults{ m_SceneService.GetOverrideFaults() };
+        if (faults > 0)
+        {
+            ImGui::Text("Override faults:");
+            ImGui::SameLine();
+            ImGui::TextColored(k_Red, "%u", faults);
+        }
+
+        const std::optional<float> distance{ m_SceneService.GetOverrideDistance() };
+        if (!isActive || !distance) return;
+
+        ImGui::Text("Override error:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.3f wu (asked eye to game camera)", *distance);
     }
 
     auto HudService::DrawHudHook() -> void

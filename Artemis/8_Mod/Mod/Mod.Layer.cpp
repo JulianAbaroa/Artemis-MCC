@@ -134,12 +134,16 @@ namespace Mod
 
             // The HUD passes are code of the game module like the hooks above: the engine is created again, so they go in with it.
             m_Render.m_ChudDetour.Install();
+
+            // The camera of the game is built by code of the game module too: its hook goes in and out with the engine.
+            m_Base.m_ObserverCameraDetour.Install();
         });
 
         // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
         m_Base.m_LifecycleService.OnUnhook([this] {
             m_Transport.m_BridgeService.Stop();
             this->UninstallHostHooks();
+            m_Base.m_ObserverCameraDetour.Uninstall();
             m_Render.m_ChudDetour.Uninstall();
             m_Control.m_SetMachinesDetour.Uninstall();
             m_Control.m_PlayerActionDetour.Uninstall();
@@ -188,6 +192,7 @@ namespace Mod
     {
         m_Render.m_WndProcDetour.Uninstall();
         m_Render.m_GetRawInputDataDetour.Uninstall();
+        m_Base.m_ObserverCameraDetour.Uninstall();
 
         m_Render.m_RenderService.RequestShutdown();
         m_Render.m_RenderService.WaitForShutdown(k_RenderShutdownTimeout);

@@ -156,6 +156,22 @@ TEST(EngineLayerTests, ChudDetourWithoutTheGameInstallsNothing)
     render.m_ChudDetour.Uninstall();
 }
 
+TEST(EngineLayerTests, ObserverCameraDetourWithoutTheGameInstallsNothing)
+{
+    Services::Layer service{};
+    Engine::Base::Layer base{ service };
+
+    // No haloreach.dll in the process: the function is not found and nothing is hooked. Uninstall of a hook that was never installed is a no-op.
+    EXPECT_FALSE(base.m_ObserverCameraDetour.Install());
+    base.m_ObserverCameraDetour.Uninstall();
+
+    // The override still works without the hook: the store only carries the pose.
+    EXPECT_TRUE(base.m_GameCameraService.SetOverride({ 1.0f, 2.0f, 3.0f }, { 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }));
+    EXPECT_TRUE(base.m_CameraOverrideStore.IsActive());
+    base.m_GameCameraService.ClearOverride();
+    EXPECT_FALSE(base.m_CameraOverrideStore.IsActive());
+}
+
 TEST(EngineLayerTests, RenderStoreHudFlagAndCallsPerFrame)
 {
     Engine::Render::State::RenderStore store{};
