@@ -53,7 +53,7 @@ namespace DevTools::Viewer::Hud::System
                 rows.push_back(LabelRow{ context.HasSelf
                     ? std::format("d: {:.1f} wu", seat.DistanceToPlayer) : std::string{ "d: n/a" }, k_MutedColor });
 
-                canvas.Add(position, std::move(rows), ToImColor(k_Affordance),
+                canvas.Add(ShiftedBy(context, affordance.Handle, position), std::move(rows), ToImColor(k_Affordance),
                     TeamColorOf(context, affordance.Handle), affordance.Handle == context.Selected ? 1.0f : 0.0f);
             }
         }

@@ -9,6 +9,7 @@ import Common.Math.Type;
 import Perception.Classifier.Type;
 import Views.Raycast.Type;
 import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Interpolation.Type;
 import std;
 
 namespace
@@ -55,6 +56,10 @@ export namespace DevTools::Viewer::Hud::Type
 
         // Objects the camera hides (the own biped in first person). Labels anchored to them are skipped. Null draws all.
         const std::unordered_set<std::uint32_t>* Hidden{ nullptr };
+
+        // How far the overlay draws each moving object from where the scene shows it (VW.5e). Labels anchored to an object move by its offset.
+        // Null draws everything where the scene shows it.
+        const DevTools::Viewer::Interpolation::Type::FramePoses* Poses{ nullptr };
     };
 
     // Label already projected to the screen. Rows are drawn from top to bottom.

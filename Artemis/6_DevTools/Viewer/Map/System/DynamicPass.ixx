@@ -10,6 +10,7 @@ import Engine.Render.Type;
 import Engine.Render.System;
 import Perception.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Palette.System;
 import DevTools.Viewer.Map.Type;
 import std;
@@ -32,6 +33,7 @@ export namespace DevTools::Viewer::Map::System
         using Collidables = Perception::Collidable::Type::Collidables;
 
         using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
+        using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
         using Geometry = DevTools::Viewer::Map::Type::Geometry;
         using DrawRange = DevTools::Viewer::Map::Type::DrawRange;
 
@@ -47,11 +49,13 @@ export namespace DevTools::Viewer::Map::System
         // param hiddenHandles: Objects not drawn at all, translucent pass included.
         // note: The scene is published after the Tick (D223), so it is compared by snapshot and not by the Tick generation. A gate on
         // the generation drew the previous scene for a whole tick whenever the frame saw the Tick first (D294).
+        // param poses: The poses the objects are drawn with in this frame (VW.5e). Each part of a listed object is moved by the delta of its object,
+        // and a frame with other poses is uploaded again. Inactive poses draw the scene as it is.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Collidables>& collidables,
             const PaletteService& palette, std::uint32_t selectedHandle,
             const std::unordered_set<std::uint32_t>& translucentHandles,
-            const std::unordered_set<std::uint32_t>& hiddenHandles) -> void;
+            const std::unordered_set<std::uint32_t>& hiddenHandles, const FramePoses& poses) -> void;
 
         // return: Instances uploaded in the last rebuild, translucent ones included.
         auto GetInstanceCount() const -> UINT;

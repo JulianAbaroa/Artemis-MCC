@@ -22,6 +22,7 @@ namespace
 
     using Engine::Render::Type::VertexLayout;
 
+    using DevTools::Viewer::Map::Type::OffsetKeyOf;
     using DevTools::Viewer::Style::Type::k_RayAimNoHit;
     using DevTools::Viewer::Style::Type::k_RayPerceptionNoHit;
     using DevTools::Viewer::Style::Type::k_RayAimHitDynamic;
@@ -54,12 +55,13 @@ namespace
         return isDynamic ? k_RayPerceptionHitDynamic : k_RayPerceptionHitStatic;
     }
 
-    auto AppendRay(std::vector<Vertex>& vertices, const RaycastHit& hit, bool isAimRay) -> void
+    auto AppendRay(std::vector<Vertex>& vertices, const RaycastHit& hit, bool isAimRay, const Vec3& originOffset) -> void
     {
         const Vec3 end = EndpointOf(hit);
         const Color color = ColorFor(hit, isAimRay);
 
-        vertices.push_back(Vertex{ hit.Origin.X, hit.Origin.Y, hit.Origin.Z, color.R, color.G, color.B });
+        vertices.push_back(Vertex{ hit.Origin.X + originOffset.X, hit.Origin.Y + originOffset.Y, hit.Origin.Z + originOffset.Z,
+            color.R, color.G, color.B });
         vertices.push_back(Vertex{ end.X, end.Y, end.Z, color.R, color.G, color.B });
     }
 }
@@ -67,13 +69,14 @@ namespace
 namespace DevTools::Viewer::Map::System
 {
     auto RaycastPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const Raycasts* raycasts, std::uint64_t generation) -> void
+        const Raycasts* raycasts, std::uint64_t generation, const Vec3& originOffset) -> void
     {
         if (!device || !context) return;
 
-        if (m_Gate.IsCurrent(generation)) return;
+        const std::uint32_t key{ OffsetKeyOf(originOffset) };
+        if (m_Gate.IsCurrent(generation, key)) return;
 
-        m_Gate.Mark(generation);
+        m_Gate.Mark(generation, key);
         m_VertexCount = 0;
 
         if (!raycasts) return;
@@ -81,11 +84,11 @@ namespace DevTools::Viewer::Map::System
         std::vector<Vertex> vertices{};
         vertices.reserve(2 + raycasts->PerceptionHits.size() * 2);
 
-        AppendRay(vertices, raycasts->AimHit, true);
+        AppendRay(vertices, raycasts->AimHit, true, originOffset);
 
         for (const auto& ray : raycasts->PerceptionHits)
         {
-            AppendRay(vertices, ray, false);
+            AppendRay(vertices, ray, false, originOffset);
         }
 
         if (vertices.empty()) return;

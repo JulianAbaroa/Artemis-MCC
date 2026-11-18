@@ -457,6 +457,14 @@ namespace DevTools::Viewer::Hud::System
         ImGui::TextColored(report.Lag[0] == report.Frames ? k_Green : k_Orange, "0:%u 1:%u 2:%u 3:%u 4+:%u neg:%u max:%d",
             report.Lag[0], report.Lag[1], report.Lag[2], report.Lag[3], report.Lag[4], report.Negative, report.MaxLag);
 
+        if (report.InterpExact + report.InterpExtrapolated + report.InterpNone > 0)
+        {
+            ImGui::Text("Interp (%u f):", static_cast<unsigned>(report.Frames));
+            ImGui::SameLine();
+            ImGui::TextColored(report.InterpNone == 0 ? k_Green : k_Orange, "exact %u  extrap %u  none %u",
+                report.InterpExact, report.InterpExtrapolated, report.InterpNone);
+        }
+
         if (report.DrawnExact + report.DrawnOlder + report.DrawnNewer > 0)
         {
             ImGui::Text("Drawn scene (%u f):", static_cast<unsigned>(report.Frames));

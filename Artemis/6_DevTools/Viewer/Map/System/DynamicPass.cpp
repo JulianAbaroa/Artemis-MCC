@@ -6,8 +6,10 @@ module DevTools.Viewer.Map.System;
 import :DynamicPass;
 
 import Common.Engine.Type;
+import Common.Math.System;
 import Engine.Render.Type;
 import Engine.Render.System;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Selection.State;
 import DevTools.Viewer.Style.Type;
 import std;
@@ -20,6 +22,7 @@ namespace
     using Engine::Render::Type::SurfaceMode;
     using Engine::Render::Type::VertexLayout;
 
+    using DevTools::Viewer::Interpolation::Type::ObjectDelta;
     using DevTools::Viewer::Map::Type::HandleSetKeyOf;
     using DevTools::Viewer::Style::Type::k_Selected;
     using Common::Engine::Type::k_NoHandle;
@@ -35,14 +38,15 @@ namespace DevTools::Viewer::Map::System
         const std::shared_ptr<const Collidables>& collidables,
         const PaletteService& palette, std::uint32_t selectedHandle,
         const std::unordered_set<std::uint32_t>& translucentHandles,
-        const std::unordered_set<std::uint32_t>& hiddenHandles) -> void
+        const std::unordered_set<std::uint32_t>& hiddenHandles, const FramePoses& poses) -> void
     {
         if (!device || !context) return;
 
         // note: The hidden set is part of the gate: it changes with the camera mode and with the respawn of the followed player.
         const std::uint32_t hiddenKey{ HandleSetKeyOf(hiddenHandles) };
 
-        const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au) ^ hiddenKey;
+        // note: The revision of the poses changes with the tick fraction, so while the game interpolates the instances are rebuilt every frame.
+        const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au) ^ hiddenKey ^ poses.Revision;
 
         if (m_IsUploaded && collidables == m_UploadedScene && gateKey == m_UploadedKey) return;
 
@@ -109,6 +113,8 @@ namespace DevTools::Viewer::Map::System
 
             const Color color = isSelected ? k_Selected : palette.ColorOf(collidable.Handle);
 
+            const ObjectDelta* delta{ poses.Find(collidable.Handle) };
+
             for (const auto& part : collidable.Parts)
             {
                 if (!part.Source) continue;
@@ -117,7 +123,7 @@ namespace DevTools::Viewer::Map::System
                 if (index == k_Invalid) continue;
 
                 MeshInstance instance{};
-                instance.Transform = part.Transform;
+                instance.Transform = delta ? Common::Math::System::Compose3x4(part.Transform, delta->Transform) : part.Transform;
                 instance.R = color.R;
                 instance.G = color.G;
                 instance.B = color.B;

@@ -5,6 +5,7 @@ module;
 
 export module DevTools.Viewer.Map.Type;
 
+import Common.Math.Type;
 import Common.State.Type;
 import Engine.Render.Type;
 import DevTools.Viewer.Collidable.Type;
@@ -12,6 +13,7 @@ import std;
 
 namespace
 {
+    using Common::Math::Type::Vec3;
     using Common::State::Type::PickKind;
     using Engine::Render::Type::MeshInstance;
     using DevTools::Viewer::Collidable::Type::CollidableScene;
@@ -47,6 +49,18 @@ export namespace DevTools::Viewer::Map::Type
         std::uint32_t key{ static_cast<std::uint32_t>(handles.size()) };
         for (const std::uint32_t handle : handles) key += handle * k_HandleHash;
         return key;
+    }
+
+    // Folds an offset into a value for the upload gates of the passes: a frame with another offset is uploaded again (VW.5e). Zero for no offset.
+    inline auto OffsetKeyOf(const Vec3& offset) -> std::uint32_t
+    {
+        constexpr std::uint32_t k_OffsetHash{ 0x9E3779B1u };
+
+        const bool isZero{ offset.X == 0.0f && offset.Y == 0.0f && offset.Z == 0.0f };
+        if (isZero) return 0u;
+
+        return (std::bit_cast<std::uint32_t>(offset.X) * k_OffsetHash) ^ (std::bit_cast<std::uint32_t>(offset.Y) * (k_OffsetHash + 2u))
+            ^ std::bit_cast<std::uint32_t>(offset.Z);
     }
 
     // Which fixture arrows the fixture pass draws, and how long the direction arrows are in world units.

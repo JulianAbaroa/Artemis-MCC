@@ -6,6 +6,7 @@ module;
 export module DevTools.Viewer.Map.System:RaycastPass;
 
 import Common.Log.System;
+import Common.Math.Type;
 import Engine.Render.System;
 import Views.Raycast.Type;
 import Bridge.Codec.Tick.Type;
@@ -25,6 +26,7 @@ export namespace DevTools::Viewer::Map::System
 
         using GpuPipeline = Engine::Render::System::GpuPipeline;
 
+        using Vec3 = Common::Math::Type::Vec3;
         using Raycasts = Views::Raycast::Type::Raycasts;
 
     public:
@@ -36,8 +38,10 @@ export namespace DevTools::Viewer::Map::System
 
         // Rebuilds the vertices when the generation changes.
         // param raycasts: The rays of the watched player. Null for none.
+        // param originOffset: How far the overlay draws the biped of the watched player from where the scene shows it (VW.5e). Every ray starts
+        // from its origin moved by it and ends where the scene hit, and a frame with another offset is uploaded again.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-            const Raycasts* raycasts, std::uint64_t generation) -> void;
+            const Raycasts* raycasts, std::uint64_t generation, const Vec3& originOffset) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

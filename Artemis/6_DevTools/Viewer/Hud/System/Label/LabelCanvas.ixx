@@ -29,6 +29,11 @@ export namespace DevTools::Viewer::Hud::System
     auto DistanceRow(const DevTools::Viewer::Hud::Type::LabelContext& context,
         const Common::Math::Type::Vec3& point, ImU32 color) -> DevTools::Viewer::Hud::Type::LabelRow;
 
+    // return: The point moved by how far the overlay draws the object with this handle from where the scene shows it (VW.5e), the point itself if
+    // the object is not moved or the context has no poses.
+    auto ShiftedBy(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle,
+        const Common::Math::Type::Vec3& point) -> Common::Math::Type::Vec3;
+
     // return: The color of the team of the object, or the neutral color if it has no team or is not in the table.
     auto TeamColorOf(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32;
 

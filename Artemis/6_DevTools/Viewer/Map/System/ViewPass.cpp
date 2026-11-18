@@ -42,6 +42,7 @@ namespace
     using DevTools::Viewer::Geometry::System::AppendCone;
     using DevTools::Viewer::Geometry::System::AppendCross;
     using DevTools::Viewer::Geometry::System::AppendLine;
+    using DevTools::Viewer::Map::Type::OffsetKeyOf;
     using DevTools::Viewer::Style::Type::Color;
 
     using Common::Engine::Type::k_MaxPlayers;
@@ -197,11 +198,11 @@ namespace
 namespace DevTools::Viewer::Map::System
 {
     auto ViewPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const View* view, const Tick* tick, std::uint64_t generation) -> void
+        const View* view, const Tick* tick, std::uint64_t generation, const Vec3& eyeOffset) -> void
     {
         if (!device || !context) return;
 
-        const std::uint32_t key{ view ? view->Head.PlayerHandle : k_NoHandle };
+        const std::uint32_t key{ (view ? view->Head.PlayerHandle : k_NoHandle) ^ OffsetKeyOf(eyeOffset) };
         if (m_Gate.IsCurrent(generation, key)) return;
 
         m_Gate.Mark(generation, key);
@@ -210,7 +211,8 @@ namespace DevTools::Viewer::Map::System
         if (!view) return;
 
         std::vector<Vertex> vertices{};
-        const Vec3 eye{ ViewPositionOf(*view) };
+        const Vec3 plainEye{ ViewPositionOf(*view) };
+        const Vec3 eye{ plainEye.X + eyeOffset.X, plainEye.Y + eyeOffset.Y, plainEye.Z + eyeOffset.Z };
 
         // note: The Full mode has no cone: it sees every living player without one.
         if (view->Head.HasBody && view->Head.Mode == ViewMode::HumanLike)

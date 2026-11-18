@@ -96,7 +96,7 @@ namespace DevTools::Viewer::Hud::System
                     ? ToImColor(k_VitalityShield)
                     : ToImColor(DevTools::Viewer::Style::Type::ColorOfVitality(vitality));
 
-                canvas.AddBar(aim.Position, vitality, color, std::move(text), priority);
+                canvas.AddBar(ShiftedBy(context, handle, aim.Position), vitality, color, std::move(text), priority);
             }
         };
 

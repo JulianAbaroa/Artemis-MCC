@@ -7,6 +7,7 @@ import std;
 
 namespace
 {
+    using Common::Math::Type::PoseSource;
     using Common::Math::Type::Vec3;
     using Common::Time::System::LocalNow;
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
@@ -17,7 +18,8 @@ namespace
 
     constexpr std::string_view k_Header{
         "qpc_us,mode,T,f,interp,S_newest,S_drawn,waited_us,timed_out,cam_x,cam_y,cam_z,fwd_x,fwd_y,fwd_z,eye_x,eye_y,eye_z,"
-        "eye_prev_x,eye_prev_y,eye_prev_z,veh_x,veh_y,veh_z\n" };
+        "eye_prev_x,eye_prev_y,eye_prev_z,veh_x,veh_y,veh_z,"
+        "interp_pose,eyed_x,eyed_y,eyed_z,vehd_x,vehd_y,vehd_z\n" };
 
     // Adds ",x,y,z", or three empty fields without a value.
     auto AppendVec3(std::string& line, const std::optional<Vec3>& value) -> void
@@ -62,6 +64,10 @@ namespace DevTools::Viewer::Recorder::System
         AppendVec3(line, row.Eye);
         AppendVec3(line, row.EyePrevious);
         AppendVec3(line, row.Vehicle);
+
+        line += row.Interp == PoseSource::Exact ? ",exact" : row.Interp == PoseSource::Extrapolated ? ",extrap" : ",none";
+        AppendVec3(line, row.EyeRender);
+        AppendVec3(line, row.VehicleRender);
 
         line += '\n';
         return line;

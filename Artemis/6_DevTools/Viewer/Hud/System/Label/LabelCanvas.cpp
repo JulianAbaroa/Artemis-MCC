@@ -9,6 +9,7 @@ import Common.Engine.Type;
 import Common.Math.System;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Style.Type;
@@ -76,6 +77,14 @@ namespace DevTools::Viewer::Hud::System
     {
         return DevTools::Viewer::Hud::Type::LabelRow{ context.HasSelf ? std::format("d: {:.1f} wu", Common::Math::System::Distance(context.SelfPosition, point))
             : std::string{ "d: n/a" }, color };
+    }
+
+    auto ShiftedBy(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle,
+        const Common::Math::Type::Vec3& point) -> Common::Math::Type::Vec3
+    {
+        if (!context.Poses) return point;
+
+        return Common::Math::System::Add(point, context.Poses->OffsetOf(handle));
     }
 
     auto TeamColorOf(const DevTools::Viewer::Hud::Type::LabelContext& context, std::uint32_t handle) -> ImU32

@@ -261,7 +261,7 @@ namespace DevTools::Viewer::Hud::System
             const ImU32 group = isSelected
                 ? ToImColor(k_Selected) : ToImColor(GroupOf(category));
 
-            canvas.Add(anchor, std::move(rows), group, TeamColorOf(context, object.Handle),
+            canvas.Add(ShiftedBy(context, object.Handle, anchor), std::move(rows), group, TeamColorOf(context, object.Handle),
                 isSelected ? k_SelectedObjectPriority : 0.0f, object.Handle);
 
             if (showArrow && speed > k_MinimumSpeed)

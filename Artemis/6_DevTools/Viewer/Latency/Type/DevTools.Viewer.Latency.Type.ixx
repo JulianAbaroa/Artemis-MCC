@@ -7,6 +7,7 @@ import std;
 
 namespace
 {
+    using Common::Math::Type::PoseSource;
     using Common::Math::Type::Vec3;
     using Common::State::Type::PickKind;
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
@@ -46,6 +47,8 @@ export namespace DevTools::Viewer::Latency::Type
         std::uint32_t WaitedUs{};
         bool IsWaited{};
         bool IsTimedOut{};
+        // How the poses of the objects were found for the frame (VW.5e): between two ticks, extrapolated, or as the scene shows them.
+        PoseSource Interp{};
     };
 
     // Eye of the local player in the scene of one tick.
@@ -85,6 +88,7 @@ export namespace DevTools::Viewer::Latency::Type
         std::uint32_t WaitedUs{};
         bool IsWaited{};
         bool IsTimedOut{};
+        PoseSource Interp{};
 
         // Lag in ticks: the tick of the game minus the tick of the scene.
         bool HasLag{};
@@ -141,6 +145,12 @@ export namespace DevTools::Viewer::Latency::Type
         std::uint32_t Waits{};
         std::uint32_t Timeouts{};
         std::uint32_t WaitP99Us{};
+
+        // Frames drawn for a target tick by how the poses were found (VW.5e): blended between two ticks, extrapolated from the last two, or the
+        // pose of the scene as is (interpolation off in the game, no next or older scene, or no overlay target).
+        std::uint32_t InterpExact{};
+        std::uint32_t InterpExtrapolated{};
+        std::uint32_t InterpNone{};
     };
 
     // One line of the frame clock CSV: a frame drawn over the game (VW.5d).
@@ -164,5 +174,9 @@ export namespace DevTools::Viewer::Latency::Type
         std::optional<Vec3> EyePrevious{};
         // Position of the vehicle the local player is in, in the scene drawn.
         std::optional<Vec3> Vehicle{};
+        // How the poses were found (VW.5e), and the eye and the vehicle with the pose the overlay draws them in (none where the plain ones are none).
+        PoseSource Interp{};
+        std::optional<Vec3> EyeRender{};
+        std::optional<Vec3> VehicleRender{};
     };
 }

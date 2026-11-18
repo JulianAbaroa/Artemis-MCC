@@ -6,6 +6,7 @@ module DevTools.Viewer.Map.System;
 import :MapService;
 
 import Common.Semantic.Type;
+import Common.Math.Type;
 import Common.State.Type;
 import Engine.Base.Memory.Type;
 import Views.Raycast.Type;
@@ -13,6 +14,7 @@ import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Collidable.Type;
+import DevTools.Viewer.Interpolation.System;
 import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Profiler.Type;
@@ -23,14 +25,18 @@ import std;
 
 namespace
 {
+    using Common::Math::Type::PoseSource;
+    using Common::Math::Type::Vec3;
     using Common::State::Type::PickKind;
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
+    using Engine::Base::Memory::Type::FrameClock::InterpolationState;
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
 
     using DevTools::Viewer::Camera::Type::Viewport;
     using DevTools::Viewer::Collidable::Type::SceneTickOf;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Interpolation::System::InterpolationService;
     using DevTools::Viewer::Latency::Type::FrameClockRow;
     using DevTools::Viewer::Latency::Type::LatencyInput;
     using DevTools::Viewer::Options::Type::Flag;
@@ -144,6 +150,7 @@ namespace DevTools::Viewer::Map::System
                 m_SceneService.Update(scene, viewport);
             }
 
+            this->UpdateFramePoses(*scene, clock, pick);
             this->RecordLatency(*scene, clock, pick, isBeforeHud);
             this->RecordFrameClock(*scene, clock, pick);
 
@@ -170,7 +177,7 @@ namespace DevTools::Viewer::Map::System
 
                 // note: The debug collidables are not part of the Tick. They come with it in the scene.
                 m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
-                    palette, selected, translucentHandles, hidden);
+                    palette, selected, translucentHandles, hidden, m_FramePoses);
             }
 
             {
@@ -182,11 +189,14 @@ namespace DevTools::Viewer::Map::System
                 CpuTimer timer{ m_Profiler, Cpu::Raycast };
                 const auto* view{ m_SceneService.GetObservedView(*tick) };
                 const Raycasts raycasts{ view ? RaycastsOf(*view) : Raycasts{} };
-                m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation);
+
+                // note: The eye of the watched player moves with its biped, so the View and its rays start from where the overlay draws that biped.
+                const Vec3 eyeOffset{ view ? m_FramePoses.OffsetOf(view->Head.BipedHandle) : Vec3{} };
+                m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation, eyeOffset);
 
                 // note: With the option off the pass gets no View and draws nothing.
                 const bool showView{ m_OptionsStore.IsEnabled(Flag::PlayerView) };
-                m_ViewPass.Upload(frame.Device, frame.Context, showView ? view : nullptr, tick.get(), tick->Generation);
+                m_ViewPass.Upload(frame.Device, frame.Context, showView ? view : nullptr, tick.get(), tick->Generation, eyeOffset);
             }
 
             {
@@ -215,7 +225,7 @@ namespace DevTools::Viewer::Map::System
                 m_AimPass.Upload(frame.Device, frame.Context,
                     m_OptionsStore.IsEnabled(Flag::AimSpheres) ? tick->Aims : nullptr, tick->VitalityDetails,
                     m_OptionsStore.IsEnabled(Flag::HealthTintSpheres),
-                    selected, hidden, tick->Generation);
+                    selected, hidden, tick->Generation, m_FramePoses);
             }
 
             m_Profiler.SetCounter(Counter::DynamicInstances,
@@ -292,6 +302,30 @@ namespace DevTools::Viewer::Map::System
         return result;
     }
 
+    auto MapService::UpdateFramePoses(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void
+    {
+        const std::optional<std::uint32_t> drawn{ SceneTickOf{}(scene) };
+
+        const bool isInterpolated{ this->IsOverlayActive() && clock.Source != ClockSource::None &&
+            clock.Interpolation == InterpolationState::On && pick.Kind == PickKind::Exact && drawn };
+
+        if (isInterpolated)
+        {
+            // note: The next tick is taken only if it is already published (no wait). Without it the pose goes on from the two before.
+            const auto newer{ m_CollidableStore.FindKey(*drawn + 1) };
+            const auto older{ *drawn > 0 ? m_CollidableStore.FindKey(*drawn - 1) : nullptr };
+            InterpolationService::Build(scene, newer, older, std::clamp(clock.Fraction, 0.0f, 1.0f), m_FramePoses);
+        }
+        else
+        {
+            m_FramePoses.Objects.clear();
+            m_FramePoses.Revision = 0;
+            m_FramePoses.Source = PoseSource::None;
+        }
+
+        m_SceneService.SetFramePoses(m_FramePoses);
+    }
+
     auto MapService::RecordFrameClock(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void
     {
         if (!m_OptionsStore.IsEnabled(Flag::RecordFrameClock) || !this->IsOverlayActive()) return;
@@ -315,6 +349,9 @@ namespace DevTools::Viewer::Map::System
         }
         row.Eye = m_SceneService.GetLocalEye(tick);
         row.Vehicle = m_SceneService.GetLocalVehiclePosition(tick);
+        row.Interp = m_FramePoses.Source;
+        row.EyeRender = m_SceneService.GetLocalEyeRender(tick);
+        row.VehicleRender = m_SceneService.GetLocalVehicleRender(tick);
 
         if (drawn && *drawn > 0)
         {
@@ -344,6 +381,7 @@ namespace DevTools::Viewer::Map::System
         if (camera) input.Camera = camera->Position;
         if (scene.Tick->Match) input.SceneTick = scene.Tick->Match->GameTick;
         input.Eye = m_SceneService.GetLocalEye(*scene.Tick);
+        input.Interp = m_FramePoses.Source;
 
         m_LatencyService.Record(input);
     }

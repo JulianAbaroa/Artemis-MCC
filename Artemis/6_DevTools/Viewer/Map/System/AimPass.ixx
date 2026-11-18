@@ -11,6 +11,7 @@ import Engine.Render.System;
 import Perception.Aim.Type;
 import Perception.Details.Type;
 import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Map.Type;
 import std;
 
@@ -33,6 +34,7 @@ export namespace DevTools::Viewer::Map::System
         using VitalityDetails = Perception::Details::Type::VitalityDetails;
         using Aim = Perception::Aim::Type::Aim;
         using Aims = Perception::Aim::Type::Aims;
+        using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
 
     public:
         explicit AimPass(Log& log) : m_Log(log) {}
@@ -46,10 +48,13 @@ export namespace DevTools::Viewer::Map::System
         // param hiddenHandles: Objects whose sections are skipped (spheres and center markers).
         // param selectedHandle: If set, only the aim of that object is drawn.
         // param tintByHealth: Colors each sphere by the vitality of its section.
+        // param poses: The poses the objects are drawn with in this frame (VW.5e). The spheres of an object move by its offset, and a frame with
+        // other poses is uploaded again.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Aims>& aims,
             const std::shared_ptr<const VitalityDetails>& vitalities, bool tintByHealth,
-            std::uint32_t selectedHandle, const std::unordered_set<std::uint32_t>& hiddenHandles, std::uint64_t generation) -> void;
+            std::uint32_t selectedHandle, const std::unordered_set<std::uint32_t>& hiddenHandles, std::uint64_t generation,
+            const FramePoses& poses) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

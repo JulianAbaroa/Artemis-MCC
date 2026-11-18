@@ -62,18 +62,51 @@ namespace DevTools::Viewer::Scene::System
         return ViewPositionOf(*view);
     }
 
-    auto SceneService::GetLocalVehiclePosition(const Tick& tick) const -> std::optional<Vec3>
+    auto SceneService::GetLocalVehicleHandle(const Tick& tick) const -> std::uint32_t
     {
         const View* view{ tick.Views ? FindObservedView(*tick.Views, k_NoHandle) : nullptr };
-        if (!view || view->Head.BipedHandle == k_NoHandle || !tick.ObjectGraph || !tick.ObjectTable) return std::nullopt;
+        if (!view || view->Head.BipedHandle == k_NoHandle || !tick.ObjectGraph) return k_NoHandle;
 
         const ObjectNode* node{ tick.ObjectGraph->Find(view->Head.BipedHandle) };
-        if (!node || node->ParentHandle == k_NoHandle) return std::nullopt;
+        return node ? node->ParentHandle : k_NoHandle;
+    }
 
-        const auto parent{ tick.ObjectTable->find(node->ParentHandle) };
+    auto SceneService::GetLocalVehiclePosition(const Tick& tick) const -> std::optional<Vec3>
+    {
+        const std::uint32_t handle{ this->GetLocalVehicleHandle(tick) };
+        if (handle == k_NoHandle || !tick.ObjectTable) return std::nullopt;
+
+        const auto parent{ tick.ObjectTable->find(handle) };
         if (parent == tick.ObjectTable->end()) return std::nullopt;
 
         return parent->second.WorldOrigin;
+    }
+
+    auto SceneService::GetLocalEyeRender(const Tick& tick) const -> std::optional<Vec3>
+    {
+        const std::optional<Vec3> eye{ this->GetLocalEye(tick) };
+        const View* view{ tick.Views ? FindObservedView(*tick.Views, k_NoHandle) : nullptr };
+        if (!eye || !view) return std::nullopt;
+
+        return Common::Math::System::Add(*eye, m_FramePoses.OffsetOf(view->Head.BipedHandle));
+    }
+
+    auto SceneService::GetLocalVehicleRender(const Tick& tick) const -> std::optional<Vec3>
+    {
+        const std::optional<Vec3> position{ this->GetLocalVehiclePosition(tick) };
+        if (!position) return std::nullopt;
+
+        return Common::Math::System::Add(*position, m_FramePoses.OffsetOf(this->GetLocalVehicleHandle(tick)));
+    }
+
+    auto SceneService::SetFramePoses(const FramePoses& poses) -> void
+    {
+        m_FramePoses = poses;
+    }
+
+    auto SceneService::GetFramePoses() const -> const FramePoses&
+    {
+        return m_FramePoses;
     }
 
     auto SceneService::IsGameMode() const -> bool
@@ -111,6 +144,7 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::Deactivate() -> void
     {
         m_Scene.reset();
+        m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
         m_CameraService.Deactivate();
     }
@@ -158,6 +192,7 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::Reset() -> void
     {
         m_Scene.reset();
+        m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
         m_PaletteService.Reset();
         m_SelectionService.Reset();

@@ -137,6 +137,9 @@
     <ClCompile Include="Map\System\ZonePass.cpp" />
     <ClCompile Include="Map\System\ZonePass.ixx" />
     <ClCompile Include="Map\Type\DevTools.Viewer.Map.Type.ixx" />
+    <ClCompile Include="Interpolation\System\InterpolationService.cpp" />
+    <ClCompile Include="Interpolation\System\InterpolationService.ixx" />
+    <ClCompile Include="Interpolation\Type\DevTools.Viewer.Interpolation.Type.ixx" />
     <ClCompile Include="Latency\State\LatencyStore.cpp" />
     <ClCompile Include="Latency\State\LatencyStore.ixx" />
     <ClCompile Include="Latency\System\LatencyService.cpp" />

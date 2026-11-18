@@ -11,6 +11,7 @@ import DevTools.Viewer.Camera.State;
 import DevTools.Viewer.Camera.System;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Palette.System;
 import DevTools.Viewer.Selection.System;
 import std;
@@ -34,6 +35,7 @@ export namespace DevTools::Viewer::Scene::System
         using GameCamera = Engine::Base::Memory::Type::GameCamera::GameCamera;
         using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
+        using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
         using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
         using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
@@ -84,6 +86,21 @@ export namespace DevTools::Viewer::Scene::System
         // without a View body.
         auto GetLocalVehiclePosition(const Tick& tick) const -> std::optional<Vec3>;
 
+        // return: The handle of the vehicle the local player is in, or the no-handle value on foot or without a View.
+        auto GetLocalVehicleHandle(const Tick& tick) const -> std::uint32_t;
+
+        // return: The eye of the local player with the pose the overlay draws its biped in (VW.5e), the plain eye when the biped is not blended.
+        auto GetLocalEyeRender(const Tick& tick) const -> std::optional<Vec3>;
+
+        // return: The position of the vehicle of the local player with the pose the overlay draws it in (VW.5e).
+        auto GetLocalVehicleRender(const Tick& tick) const -> std::optional<Vec3>;
+
+        // Keeps the poses the objects are drawn with in this frame (VW.5e, D330), for what is drawn apart from the passes: the labels.
+        // note: Set once per frame by MapService after Update, empty when nothing is blended. Read on the thread that draws.
+        auto SetFramePoses(const FramePoses& poses) -> void;
+
+        auto GetFramePoses() const -> const FramePoses&;
+
         // return: True if the camera mode is Game, the free camera driving the game camera not included (IsGameCamera counts both).
         auto IsGameMode() const -> bool;
 
@@ -119,6 +136,7 @@ export namespace DevTools::Viewer::Scene::System
     private:
         std::unordered_set<std::uint32_t> m_Hidden{};
         std::shared_ptr<const CollidableScene> m_Scene{};
+        FramePoses m_FramePoses{};
 
         // Builds the hidden set of GetHiddenHandles.
         auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;

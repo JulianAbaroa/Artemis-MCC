@@ -20,6 +20,7 @@ import Engine.Render.Type;
 import Engine.Render.System;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Map.Type;
@@ -68,6 +69,7 @@ export namespace DevTools::Viewer::Map::System
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
 
         using FrameScenePick = DevTools::Viewer::Map::Type::FrameScenePick;
+        using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
 
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
@@ -139,6 +141,9 @@ export namespace DevTools::Viewer::Map::System
         bool m_IsLastClockTickKnown{ false };
         std::uint32_t m_LastClockTick{ 0 };
 
+        // Poses the objects are drawn with in this frame, copied to the SceneService for what is drawn apart from the passes (VW.5e).
+        FramePoses m_FramePoses{};
+
         // Device the resources were created on. Compared only, never used.
         const ID3D11Device* m_Device{ nullptr };
 
@@ -157,6 +162,12 @@ export namespace DevTools::Viewer::Map::System
         // param isOverlay: The frame goes over the game frame. Without it, or without a clock, the newest scene is taken and nothing waits.
         // note: The caller holds the mutex of this service, which the AI thread never takes, and the wait holds no lock of the store.
         auto AcquireFrameScene(const FrameClock& clock, bool isOverlay) -> FrameScenePick;
+
+        // Finds the poses of the frame (VW.5e, D330): over the game frame, with the game interpolating and the scene of T - 1 drawn, each dynamic
+        // object goes between its pose in T - 1 and in T by the tick fraction of the clock, or on from T - 2 when T is not in the history. Otherwise
+        // the poses are empty and everything is drawn as the scene shows it. Gives them to the SceneService. The caller holds the mutex.
+        // note: Reads the history of the store (a short mutex to copy a pointer each). Waits for nothing: T is used only if it is already there.
+        auto UpdateFramePoses(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
         // Records the frame for the latency measurement, after the scene update. The caller holds the mutex.
         auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick, bool isBeforeHud) -> void;

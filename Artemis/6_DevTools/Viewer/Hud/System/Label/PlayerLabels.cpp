@@ -179,7 +179,7 @@ namespace DevTools::Viewer::Hud::System
                 rows.push_back(DistanceRow(context, biped->BoundingCenter, k_MutedColor));
             }
 
-            canvas.Add(anchor, std::move(rows), ToImColor(k_Health), teamColor,
+            canvas.Add(ShiftedBy(context, player.BipedHandle, anchor), std::move(rows), ToImColor(k_Health), teamColor,
                 player.BipedHandle == context.Selected ? k_SelectedPriority : 0.0f,
                 player.BipedHandle);
         }

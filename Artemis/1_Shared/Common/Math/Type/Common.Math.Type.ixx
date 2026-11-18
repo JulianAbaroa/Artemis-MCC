@@ -75,4 +75,28 @@ export namespace Common::Math::Type
 
     // Row-major 4x4 matrix.
     struct Matrix : std::array<float, 16> {};
+
+    // Where an object is and which way it faces: its position, the forward axis and the up axis (unit vectors, at right angles).
+    struct Pose
+    {
+        Vec3 Position{};
+        Vec3 Forward{};
+        Vec3 Up{};
+    };
+
+    // How the pose an object is drawn with was found (VW.5e, D330).
+    // Exact: between two ticks the engine has. Extrapolated: from the last two ticks at constant velocity. None: the pose of the tick as is.
+    enum class PoseSource : std::uint8_t
+    {
+        None = 0,
+        Exact = 1,
+        Extrapolated = 2,
+    };
+
+    // The pose an object is drawn with and how it was found.
+    struct RenderPose
+    {
+        Pose Value{};
+        PoseSource Source{ PoseSource::None };
+    };
 }

@@ -124,6 +124,15 @@
     <Filter Include="Profiler\Type">
       <UniqueIdentifier>{13c67f37-ae43-52f9-9a13-6b7406766b9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Interpolation">
+      <UniqueIdentifier>{1646bf5c-8b6a-41eb-a495-9727f929f405}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interpolation\System">
+      <UniqueIdentifier>{23b4ea98-a26e-4fee-9ca0-9546782fda98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interpolation\Type">
+      <UniqueIdentifier>{d2927e9a-6343-44b4-bc57-3c417f5e0ed6}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Recorder">
       <UniqueIdentifier>{b09ac3c1-5f08-4d26-8281-194a352fab8a}</UniqueIdentifier>
     </Filter>
@@ -324,6 +333,15 @@
     </ClCompile>
     <ClCompile Include="Profiler\Type\DevTools.Viewer.Profiler.Type.ixx">
       <Filter>Profiler\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Interpolation\System\InterpolationService.cpp">
+      <Filter>Interpolation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Interpolation\System\InterpolationService.ixx">
+      <Filter>Interpolation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Interpolation\Type\DevTools.Viewer.Interpolation.Type.ixx">
+      <Filter>Interpolation\Type</Filter>
     </ClCompile>
     <ClCompile Include="Recorder\State\FrameClockStore.cpp">
       <Filter>Recorder\State</Filter>

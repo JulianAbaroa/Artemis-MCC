@@ -1,5 +1,6 @@
 module DevTools.Viewer.Latency.System;
 
+import Common.Math.Type;
 import Common.Math.System;
 import Common.State.Type;
 import Engine.Base.Memory.Type;
@@ -8,6 +9,7 @@ import std;
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Common::Math::Type::PoseSource;
     using Common::State::Type::PickKind;
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
@@ -83,7 +85,8 @@ namespace DevTools::Viewer::Latency::System
         const std::uint32_t tick{ input.Clock.Tick };
 
         LatencySample sample{ .Clock = input.Clock, .SceneTick = input.SceneTick, .IsBeforeHud = input.IsBeforeHud,
-            .Pick = input.Pick, .WaitedUs = input.WaitedUs, .IsWaited = input.IsWaited, .IsTimedOut = input.IsTimedOut };
+            .Pick = input.Pick, .WaitedUs = input.WaitedUs, .IsWaited = input.IsWaited, .IsTimedOut = input.IsTimedOut,
+            .Interp = input.Interp };
 
         if (hasClock && input.SceneTick)
         {
@@ -162,6 +165,13 @@ namespace DevTools::Viewer::Latency::System
             if (sample.Pick == PickKind::Exact) ++report.DrawnExact;
             else if (sample.Pick == PickKind::Older) ++report.DrawnOlder;
             else if (sample.Pick == PickKind::Newer) ++report.DrawnNewer;
+
+            if (sample.Pick != PickKind::None)
+            {
+                if (sample.Interp == PoseSource::Exact) ++report.InterpExact;
+                else if (sample.Interp == PoseSource::Extrapolated) ++report.InterpExtrapolated;
+                else ++report.InterpNone;
+            }
 
             if (sample.IsWaited)
             {

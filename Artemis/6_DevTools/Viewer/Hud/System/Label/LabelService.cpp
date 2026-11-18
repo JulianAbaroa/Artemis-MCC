@@ -42,6 +42,7 @@ namespace DevTools::Viewer::Hud::System
         LabelContext context{ *tick, m_Classifications };
         context.Selected = m_SelectionStore.GetSelected();
         context.Hidden = &m_SceneService.GetHiddenHandles();
+        context.Poses = &m_SceneService.GetFramePoses();
 
         // note: The player the camera watches: the followed one, else the primary local player.
         if (const auto* view{ m_SceneService.GetObservedView(*tick) })

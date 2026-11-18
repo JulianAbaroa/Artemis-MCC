@@ -5,6 +5,9 @@ import std;
 
 namespace
 {
+    using Common::Math::Type::Pose;
+    using Common::Math::Type::PoseSource;
+    using Common::Math::Type::RenderPose;
     using Common::Math::Type::Vec3;
     using Common::Math::Type::Vec4;
 
@@ -13,6 +16,18 @@ namespace
 
     constexpr Vec3 k_WorldX{ 1.0f, 0.0f, 0.0f };
     constexpr float k_ParallelEpsilon{ 1e-4f };
+
+    auto IsFinitePose(const Pose& pose) -> bool
+    {
+        return Common::Math::System::IsFinite(pose.Position) && Common::Math::System::IsFinite(pose.Forward) &&
+            Common::Math::System::IsFinite(pose.Up);
+    }
+
+    // Rows of the rotation of a pose: forward, left and up. Left is up x forward, as the engine places its objects (Z up).
+    auto AxesOf(const Pose& pose) -> std::array<Vec3, 3>
+    {
+        return { pose.Forward, Common::Math::System::Cross(pose.Up, pose.Forward), pose.Up };
+    }
 }
 
 namespace Common::Math::System
@@ -119,5 +134,93 @@ namespace Common::Math::System
 
         outRight = Normalize(right, normalizeFallback);
         outUp = Cross(outRight, outForward);
+    }
+
+    auto BlendPose(const Pose& a, const Pose& b, float t) -> Pose
+    {
+        Pose result{};
+        result.Position = Add(a.Position, Scale(Subtract(b.Position, a.Position), t));
+
+        const Vec3 forward{ Add(a.Forward, Scale(Subtract(b.Forward, a.Forward), t)) };
+        const Vec3 up{ Add(a.Up, Scale(Subtract(b.Up, a.Up), t)) };
+
+        // note: The blend of two unit vectors is not a unit vector, and the two blended axes are no longer at right angles.
+        result.Forward = Normalize(forward, a.Forward);
+        result.Up = Normalize(Subtract(up, Scale(result.Forward, Dot(up, result.Forward))), a.Up);
+        return result;
+    }
+
+    auto ResolveRenderPose(const Pose& previous, const std::optional<Pose>& newer, const std::optional<Pose>& older,
+        float fraction, float snapDistance) -> RenderPose
+    {
+        const RenderPose unchanged{ .Value = previous, .Source = PoseSource::None };
+
+        if (!std::isfinite(fraction) || fraction < 0.0f || fraction > 1.0f || !IsFinitePose(previous)) return unchanged;
+
+        if (newer)
+        {
+            if (!IsFinitePose(*newer) || Distance(previous.Position, newer->Position) > snapDistance) return unchanged;
+            return RenderPose{ .Value = BlendPose(previous, *newer, fraction), .Source = PoseSource::Exact };
+        }
+
+        if (older)
+        {
+            if (!IsFinitePose(*older) || Distance(older->Position, previous.Position) > snapDistance) return unchanged;
+            return RenderPose{ .Value = BlendPose(*older, previous, 1.0f + fraction), .Source = PoseSource::Extrapolated };
+        }
+
+        return unchanged;
+    }
+
+    auto MovePose3x4(const Pose& from, const Pose& to) -> std::array<float, 12>
+    {
+        const std::array<Vec3, 3> source{ AxesOf(from) };
+        const std::array<Vec3, 3> target{ AxesOf(to) };
+
+        const auto component = [](const Vec3& v, std::size_t index) -> float
+        {
+            return index == 0 ? v.X : index == 1 ? v.Y : v.Z;
+        };
+
+        std::array<float, 12> matrix{};
+
+        // note: A point has the coordinates c(i) along the axes of 'from' and goes to the same c(i) along the axes of 'to': row j is the sum over i of source(i)[j] * target(i).
+        for (std::size_t row{ 0 }; row < 3; ++row)
+        {
+            for (std::size_t column{ 0 }; column < 3; ++column)
+            {
+                float sum{ 0.0f };
+                for (std::size_t axis{ 0 }; axis < 3; ++axis) sum += component(source[axis], row) * component(target[axis], column);
+                matrix[row * 3 + column] = sum;
+            }
+        }
+
+        // note: The translation is still zero here, so this is the position of 'from' turned by the matrix.
+        const Vec3 moved{ TransformPoint3x4(from.Position, matrix.data()) };
+        matrix[9] = to.Position.X - moved.X;
+        matrix[10] = to.Position.Y - moved.Y;
+        matrix[11] = to.Position.Z - moved.Z;
+        return matrix;
+    }
+
+    auto Compose3x4(const std::array<float, 12>& first, const std::array<float, 12>& second) -> std::array<float, 12>
+    {
+        std::array<float, 12> result{};
+
+        for (std::size_t row{ 0 }; row < 3; ++row)
+        {
+            for (std::size_t column{ 0 }; column < 3; ++column)
+            {
+                float sum{ 0.0f };
+                for (std::size_t k{ 0 }; k < 3; ++k) sum += first[row * 3 + k] * second[k * 3 + column];
+                result[row * 3 + column] = sum;
+            }
+        }
+
+        const Vec3 moved{ TransformPoint3x4(Vec3{ first[9], first[10], first[11] }, second.data()) };
+        result[9] = moved.X;
+        result[10] = moved.Y;
+        result[11] = moved.Z;
+        return result;
     }
 }
