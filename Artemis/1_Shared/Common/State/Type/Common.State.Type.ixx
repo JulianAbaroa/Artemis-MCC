@@ -39,6 +39,195 @@ export namespace Common::State::Type
         std::atomic<std::shared_ptr<const T>> m_Value{};
     };
 
+    // How a keyed snapshot relates to the key it was picked for.
+    enum class PickKind : std::uint8_t
+    {
+        // Nothing keyed to pick from.
+        None,
+        // The key is the target.
+        Exact,
+        // The nearest key before the target.
+        Older,
+        // No key at or before the target: the newest one.
+        Newer,
+    };
+
+    struct PickResult
+    {
+        PickKind Kind{};
+        // Index in the keys given to PickByKey.
+        std::size_t Index{};
+    };
+
+    // return: The entry whose key is the target, else the one with the greatest key below it, else the one with the greatest key.
+    // note: Pure. Entries without a key are ignored. Ties go to the last one.
+    inline auto PickByKey(std::span<const std::optional<std::uint32_t>> keys, std::uint32_t target) -> PickResult
+    {
+        std::optional<std::size_t> older{};
+        std::optional<std::size_t> newest{};
+
+        for (std::size_t index{ 0 }; index < keys.size(); ++index)
+        {
+            if (!keys[index]) continue;
+
+            if (*keys[index] <= target && (!older || *keys[index] >= *keys[*older])) older = index;
+            if (!newest || *keys[index] >= *keys[*newest]) newest = index;
+        }
+
+        if (older) return PickResult{ .Kind = *keys[*older] == target ? PickKind::Exact : PickKind::Older, .Index = *older };
+        if (newest) return PickResult{ .Kind = PickKind::Newer, .Index = *newest };
+        return PickResult{};
+    }
+
+    // return: True if the entry with the greatest key has a sibling whose key is one less, so the entries arrive one key at a time.
+    // note: Pure. Entries without a key are ignored.
+    inline auto IsConsecutiveByKey(std::span<const std::optional<std::uint32_t>> keys) -> bool
+    {
+        std::optional<std::uint32_t> newest{};
+        for (const auto& key : keys)
+        {
+            if (key && (!newest || *key > *newest)) newest = key;
+        }
+
+        if (!newest || *newest == 0) return false;
+
+        return std::ranges::any_of(keys, [&](const std::optional<std::uint32_t>& key) { return key && *key == *newest - 1; });
+    }
+
+    // The last Capacity values published, each with a key (a tick), handed out as immutable snapshots.
+    // param KeyOf: Default-constructible functor, KeyOf{}(const T&) -> std::optional<std::uint32_t>.
+    // note: One mutex held only to move pointers (a dropped value is released after the unlock), never while waiting. WaitForKey waits on a condition variable that Publish and Cleanup
+    // notify, always with a timeout, so a writer never waits for a reader and a reader never waits without a limit.
+    template <typename T, std::size_t Capacity, typename KeyOf>
+    class SnapshotHistory
+    {
+    public:
+        struct Pick
+        {
+            std::shared_ptr<const T> Snapshot{};
+            PickKind Kind{};
+        };
+
+        SnapshotHistory() = default;
+        ~SnapshotHistory() = default;
+
+        SnapshotHistory(const SnapshotHistory&) = delete;
+        auto operator=(const SnapshotHistory&) -> SnapshotHistory& = delete;
+
+        // Adds the value as the newest and drops the oldest beyond Capacity.
+        auto Publish(T value) -> void
+        {
+            auto snapshot = std::make_shared<const T>(std::move(value));
+            const std::optional<std::uint32_t> key{ KeyOf{}(*snapshot) };
+
+            // The dropped entry may hold the last reference to a large value: it dies after the unlock, never while a reader waits on the mutex.
+            Entry dropped{};
+
+            {
+                std::lock_guard<std::mutex> lock(m_Mutex);
+                m_Entries.push_back(Entry{ .Snapshot = std::move(snapshot), .Key = key });
+                if (m_Entries.size() > Capacity)
+                {
+                    dropped = std::move(m_Entries.front());
+                    m_Entries.pop_front();
+                }
+            }
+
+            m_Changed.notify_all();
+        }
+
+        // return: The last published, or null if nothing was published or it was cleaned up.
+        auto Acquire() const -> std::shared_ptr<const T>
+        {
+            std::lock_guard<std::mutex> lock(m_Mutex);
+            return m_Entries.empty() ? nullptr : m_Entries.back().Snapshot;
+        }
+
+        // return: The snapshot PickByKey chooses for the target. Without any key, the last published with Kind None.
+        auto PickFor(std::uint32_t target) const -> Pick
+        {
+            std::lock_guard<std::mutex> lock(m_Mutex);
+            if (m_Entries.empty()) return Pick{};
+
+            const auto keys{ this->KeysLocked() };
+            const PickResult result{ PickByKey(keys, target) };
+            if (result.Kind == PickKind::None) return Pick{ .Snapshot = m_Entries.back().Snapshot, .Kind = PickKind::None };
+
+            return Pick{ .Snapshot = m_Entries[result.Index].Snapshot, .Kind = result.Kind };
+        }
+
+        // return: The snapshot whose key is exactly this one, or null.
+        auto FindKey(std::uint32_t key) const -> std::shared_ptr<const T>
+        {
+            std::lock_guard<std::mutex> lock(m_Mutex);
+            for (const Entry& entry : m_Entries)
+            {
+                if (entry.Key && *entry.Key == key) return entry.Snapshot;
+            }
+            return nullptr;
+        }
+
+        // return: Whether the history arrives one key at a time (see IsConsecutiveByKey).
+        auto IsConsecutive() const -> bool
+        {
+            std::lock_guard<std::mutex> lock(m_Mutex);
+            const auto keys{ this->KeysLocked() };
+            return IsConsecutiveByKey(keys);
+        }
+
+        // Waits until a snapshot with a key of at least the target is published, or the timeout, or Cleanup.
+        // return: True if such a snapshot is there.
+        auto WaitForKey(std::uint32_t target, std::chrono::microseconds timeout) -> bool
+        {
+            std::unique_lock<std::mutex> lock(m_Mutex);
+            const std::uint64_t generation{ m_Generation };
+
+            return m_Changed.wait_for(lock, timeout, [&] { return m_Generation != generation || this->HasKeyAtLeastLocked(target); })
+                && this->HasKeyAtLeastLocked(target);
+        }
+
+        // Drops every snapshot and wakes the waiters. Readers that already acquired one keep their copy.
+        auto Cleanup() -> void
+        {
+            // Same as Publish: the values are released after the unlock.
+            std::deque<Entry> dropped{};
+
+            {
+                std::lock_guard<std::mutex> lock(m_Mutex);
+                dropped.swap(m_Entries);
+                ++m_Generation;
+            }
+
+            m_Changed.notify_all();
+        }
+
+    private:
+        struct Entry
+        {
+            std::shared_ptr<const T> Snapshot{};
+            std::optional<std::uint32_t> Key{};
+        };
+
+        // note: The caller holds the mutex.
+        auto KeysLocked() const -> std::array<std::optional<std::uint32_t>, Capacity>
+        {
+            std::array<std::optional<std::uint32_t>, Capacity> keys{};
+            for (std::size_t index{ 0 }; index < m_Entries.size(); ++index) keys[index] = m_Entries[index].Key;
+            return keys;
+        }
+
+        // note: The caller holds the mutex.
+        auto HasKeyAtLeastLocked(std::uint32_t target) const -> bool
+        {
+            return std::ranges::any_of(m_Entries, [&](const Entry& entry) { return entry.Key && *entry.Key >= target; });
+        }
+
+        mutable std::mutex m_Mutex{};
+        std::condition_variable m_Changed{};
+        std::deque<Entry> m_Entries{};
+        std::uint64_t m_Generation{ 0 };
+    };
+
     // A FIFO queue between two threads bounded by the bytes its entries keep alive, not by their count.
     // The producer waits while the next entry does not fit, so nothing is lost. An entry alone larger than the cap still goes in
     // (the queue is empty then), so the producer never hangs. The queue starts closed: Push does nothing until SetOpen(true).

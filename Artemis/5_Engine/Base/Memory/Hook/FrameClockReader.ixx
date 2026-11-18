@@ -7,7 +7,7 @@ import std;
 export namespace Engine::Base::Memory::Hook
 {
     // Reads the time of the engine (tick, tick fraction, interpolation) without calling any engine function (VW.5c).
-    // note: One reading thread (the render thread of the Viewer): it keeps the TLS slot it resolved for the module that is loaded. Memory reads
+    // note: One reading thread at a time (the Viewer calls it from the thread that draws, serialized by the mutex of MapService): it keeps the TLS slot it resolved for the module that is loaded. Memory reads
     // never fault. It takes no lock and never waits for the game thread.
     class FrameClockReader
     {

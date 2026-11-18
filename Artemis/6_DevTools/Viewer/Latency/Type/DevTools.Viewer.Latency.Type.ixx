@@ -1,12 +1,14 @@
 export module DevTools.Viewer.Latency.Type;
 
 import Common.Math.Type;
+import Common.State.Type;
 import Engine.Base.Memory.Type;
 import std;
 
 namespace
 {
     using Common::Math::Type::Vec3;
+    using Common::State::Type::PickKind;
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
 }
 
@@ -38,6 +40,12 @@ export namespace DevTools::Viewer::Latency::Type
         std::optional<Vec3> Eye{};
         // The frame was drawn under the HUD of the game (the game render thread), not at Present.
         bool IsBeforeHud{};
+        // How the scene was picked for the tick T - 1 (VW.5d), None when it was not picked for a target (the newest was taken).
+        PickKind Pick{};
+        // Microseconds the draw waited for the scene to be published, and whether that wait ended by the limit.
+        std::uint32_t WaitedUs{};
+        bool IsWaited{};
+        bool IsTimedOut{};
     };
 
     // Eye of the local player in the scene of one tick.
@@ -73,6 +81,10 @@ export namespace DevTools::Viewer::Latency::Type
         FrameClock Clock{};
         std::optional<std::uint32_t> SceneTick{};
         bool IsBeforeHud{};
+        PickKind Pick{};
+        std::uint32_t WaitedUs{};
+        bool IsWaited{};
+        bool IsTimedOut{};
 
         // Lag in ticks: the tick of the game minus the tick of the scene.
         bool HasLag{};
@@ -120,5 +132,37 @@ export namespace DevTools::Viewer::Latency::Type
         Percentiles ToCurrent{};
         Percentiles ToPrevious{};
         Percentiles ToLerp{};
+
+        // Frames by how the scene was picked for T - 1 (exact, an older one, a newer one), frames that waited, frames whose wait ended by the
+        // limit, and the 99th percentile of the waits in microseconds (nearest rank, over the frames that waited).
+        std::uint32_t DrawnExact{};
+        std::uint32_t DrawnOlder{};
+        std::uint32_t DrawnNewer{};
+        std::uint32_t Waits{};
+        std::uint32_t Timeouts{};
+        std::uint32_t WaitP99Us{};
+    };
+
+    // One line of the frame clock CSV: a frame drawn over the game (VW.5d).
+    struct FrameClockRow
+    {
+        // Microseconds of the steady clock (QueryPerformanceCounter on Windows) when the frame was recorded.
+        std::int64_t QpcUs{};
+        // "game" (the game camera) or "drive" (the free camera driving it).
+        std::string_view Mode{};
+        FrameClock Clock{};
+        // Game tick of the newest published scene and of the one drawn, none without a Match.
+        std::optional<std::uint32_t> SceneNewest{};
+        std::optional<std::uint32_t> SceneDrawn{};
+        std::uint32_t WaitedUs{};
+        bool IsTimedOut{};
+        // Game camera position and forward, none when it is not valid.
+        std::optional<Vec3> Camera{};
+        std::optional<Vec3> Forward{};
+        // Eye of the View of the local player in the scene drawn, and in the scene one tick before it when that one is in the history.
+        std::optional<Vec3> Eye{};
+        std::optional<Vec3> EyePrevious{};
+        // Position of the vehicle the local player is in, in the scene drawn.
+        std::optional<Vec3> Vehicle{};
     };
 }

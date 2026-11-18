@@ -237,6 +237,9 @@
     <ClCompile Include="Common\ByteBoundedQueueTests.cpp">
       <Filter>Common</Filter>
     </ClCompile>
+    <ClCompile Include="Common\SnapshotHistoryTests.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
     <ClCompile Include="Common\SnapshotTests.cpp">
       <Filter>Common</Filter>
     </ClCompile>

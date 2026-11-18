@@ -128,6 +128,7 @@
     <ClCompile Include="Common\ZoneShapeTests.cpp" />
     <ClCompile Include="Common\BoundedQueueTests.cpp" />
     <ClCompile Include="Common\ByteBoundedQueueTests.cpp" />
+    <ClCompile Include="Common\SnapshotHistoryTests.cpp" />
     <ClCompile Include="Common\SnapshotTests.cpp" />
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Control\ActionTests.cpp" />

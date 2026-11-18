@@ -6,6 +6,7 @@ import Perception.ObjectGraph.Type;
 import Perception.Players.Type;
 import Views.View.System;
 import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Selection.State;
 import std;
 
@@ -18,6 +19,8 @@ namespace
 
     using Views::View::System::FindObservedView;
     using Views::View::System::ViewPositionOf;
+
+    using DevTools::Viewer::Collidable::Type::ShareObjects;
 
     using Common::Engine::Type::k_NoHandle;
 
@@ -57,6 +60,20 @@ namespace DevTools::Viewer::Scene::System
         if (!view || !view->Head.HasBody) return std::nullopt;
 
         return ViewPositionOf(*view);
+    }
+
+    auto SceneService::GetLocalVehiclePosition(const Tick& tick) const -> std::optional<Vec3>
+    {
+        const View* view{ tick.Views ? FindObservedView(*tick.Views, k_NoHandle) : nullptr };
+        if (!view || view->Head.BipedHandle == k_NoHandle || !tick.ObjectGraph || !tick.ObjectTable) return std::nullopt;
+
+        const ObjectNode* node{ tick.ObjectGraph->Find(view->Head.BipedHandle) };
+        if (!node || node->ParentHandle == k_NoHandle) return std::nullopt;
+
+        const auto parent{ tick.ObjectTable->find(node->ParentHandle) };
+        if (parent == tick.ObjectTable->end()) return std::nullopt;
+
+        return parent->second.WorldOrigin;
     }
 
     auto SceneService::IsGameMode() const -> bool
@@ -130,7 +147,7 @@ namespace DevTools::Viewer::Scene::System
 
         m_PaletteService.Build(tick);
 
-        m_SelectionService.Update(m_CameraService.GetCenterRay());
+        m_SelectionService.Update(m_CameraService.GetCenterRay(), ShareObjects(scene));
     }
 
     auto SceneService::ClearSelection() -> void

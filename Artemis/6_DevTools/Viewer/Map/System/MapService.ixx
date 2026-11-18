@@ -14,11 +14,16 @@ import :AimPass;
 import :ViewPass;
 
 import Common.Log.System;
+import Engine.Base.Lifecycle.State;
+import Engine.Base.Memory.Type;
 import Engine.Render.Type;
 import Engine.Render.System;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Latency.System;
+import DevTools.Viewer.Map.Type;
+import DevTools.Viewer.Recorder.System;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Scene.System;
 import DevTools.Viewer.Options.State;
@@ -52,6 +57,9 @@ export namespace DevTools::Viewer::Map::System
     private:
         using Log = Common::Log::System::Log;
 
+        using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
+        using FrameClock = Engine::Base::Memory::Type::FrameClock::FrameClock;
+
         using FrameContext = Engine::Render::Type::FrameContext;
         using GpuPipeline = Engine::Render::System::GpuPipeline;
         using GpuStateGuard = Engine::Render::System::GpuStateGuard;
@@ -59,18 +67,25 @@ export namespace DevTools::Viewer::Map::System
         using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
 
+        using FrameScenePick = DevTools::Viewer::Map::Type::FrameScenePick;
+
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
+        using FrameClockRecorder = DevTools::Viewer::Recorder::System::FrameClockRecorder;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         // param collidableStore: The scene drawn, with the Tick it belongs to (D294).
         // param latencyService: Told, once per frame, what the overlay draws against the clock of the game (VW.5c).
+        // param frameClockRecorder: Gets one row per frame drawn over the game while the option is on (VW.5d).
+        // param lifecycleStore: Read to not wait for a scene while the pipeline is being torn down.
         MapService(Log& log, CollidableStore& collidableStore,
-            SceneService& sceneService, OptionsStore& optionsStore, LatencyService& latencyService) :
+            SceneService& sceneService, OptionsStore& optionsStore, LatencyService& latencyService,
+            FrameClockRecorder& frameClockRecorder, LifecycleStore& lifecycleStore) :
             m_Log(log), m_CollidableStore(collidableStore),
             m_SceneService(sceneService), m_OptionsStore(optionsStore), m_LatencyService(latencyService),
+            m_FrameClockRecorder(frameClockRecorder), m_LifecycleStore(lifecycleStore),
             m_GpuPipeline(log), m_MapPass(log),
             m_DynamicPass(log), m_ZonePass(log),
             m_RaycastPass(log), m_ViewPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
@@ -102,6 +117,8 @@ export namespace DevTools::Viewer::Map::System
         SceneService& m_SceneService;
         OptionsStore& m_OptionsStore;
         LatencyService& m_LatencyService;
+        FrameClockRecorder& m_FrameClockRecorder;
+        LifecycleStore& m_LifecycleStore;
 
         GpuPipeline m_GpuPipeline;
         MapPass m_MapPass;
@@ -118,6 +135,10 @@ export namespace DevTools::Viewer::Map::System
         bool m_IsSuspended{ false };
         bool m_IsMapResetPending{ false };
 
+        // Engine tick of the previous frame, to not wait for a scene while the game is paused (the tick does not advance).
+        bool m_IsLastClockTickKnown{ false };
+        std::uint32_t m_LastClockTick{ 0 };
+
         // Device the resources were created on. Compared only, never used.
         const ID3D11Device* m_Device{ nullptr };
 
@@ -130,8 +151,18 @@ export namespace DevTools::Viewer::Map::System
         // return: Whether the game camera and the overlay option are on, so what is drawn goes over the game frame.
         auto IsOverlayActive() const -> bool;
 
+        // Chooses the scene of the frame (D294, VW.5d): over the game frame the one of the tick the game drew (T - 1 of the clock), else the newest.
+        // The game draws the state of the tick before the one its clock says (measured in VW.5c at 60 fps). If that scene is not published yet and
+        // the scenes arrive one tick at a time, it waits up to k_FrameSceneWaitLimit for it, then takes the nearest one not newer than the target.
+        // param isOverlay: The frame goes over the game frame. Without it, or without a clock, the newest scene is taken and nothing waits.
+        // note: The caller holds the mutex of this service, which the AI thread never takes, and the wait holds no lock of the store.
+        auto AcquireFrameScene(const FrameClock& clock, bool isOverlay) -> FrameScenePick;
+
         // Records the frame for the latency measurement, after the scene update. The caller holds the mutex.
-        auto RecordLatency(const CollidableScene& scene, bool isBeforeHud) -> void;
+        auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick, bool isBeforeHud) -> void;
+
+        // Adds the row of the frame to the CSV of the frame clock when the option is on, after the scene update. The caller holds the mutex.
+        auto RecordFrameClock(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
         auto Draw(const FrameContext& frame, bool isBeforeHud) -> void;
 

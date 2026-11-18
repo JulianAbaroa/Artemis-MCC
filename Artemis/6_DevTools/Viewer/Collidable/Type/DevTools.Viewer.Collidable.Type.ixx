@@ -21,6 +21,19 @@ export namespace DevTools::Viewer::Collidable::Type
         Collidables Objects{};
     };
 
+    // Scenes the store keeps, the last published ones. The overlay draws the one of the tick the game drew, up to four ticks behind the newest (VW.5d).
+    inline constexpr std::size_t k_SceneHistory{ 4 };
+
+    // Key of a scene in the history: the game tick of its Match, none without a Match.
+    struct SceneTickOf
+    {
+        auto operator()(const CollidableScene& scene) const -> std::optional<std::uint32_t>
+        {
+            if (!scene.Tick || !scene.Tick->Match) return std::nullopt;
+            return scene.Tick->Match->GameTick;
+        }
+    };
+
     // return: The collidables of the scene, sharing its lifetime, or null without a scene.
     inline auto ShareObjects(const std::shared_ptr<const CollidableScene>& scene) -> std::shared_ptr<const Collidables>
     {

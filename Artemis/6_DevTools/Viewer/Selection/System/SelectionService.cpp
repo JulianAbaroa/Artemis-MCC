@@ -1,21 +1,19 @@
 module DevTools.Viewer.Selection.System;
 
 import Common.Engine.Type;
-import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
-    using DevTools::Viewer::Collidable::Type::ShareObjects;
 }
 
 namespace DevTools::Viewer::Selection::System
 {
-    auto SelectionService::Update(const Ray& ray) -> void
+    auto SelectionService::Update(const Ray& ray, const std::shared_ptr<const Collidables>& collidables) -> void
     {
-        this->Rebuild(ShareObjects(m_CollidableStore.Acquire()));
+        this->Rebuild(collidables);
 
         this->Pick(ray);
     }

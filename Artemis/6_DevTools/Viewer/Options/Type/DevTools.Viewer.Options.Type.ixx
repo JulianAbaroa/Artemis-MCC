@@ -95,6 +95,8 @@ export namespace DevTools::Viewer::Options::Type
         OverlayWireframe,
         HideGameHud,
         DriveGameCamera,
+        WaitFrameScene,
+        RecordFrameClock,
 
         Count
     };
@@ -362,6 +364,12 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::DriveGameCamera, Group::Camera, "DriveGameCamera", "Drive game camera",
             "Moves the game's camera with the free camera of the Viewer.", false },
+
+        { Flag::WaitFrameScene, Group::Camera, "WaitFrameScene", "Wait for game frame scene",
+            "With the overlay, draws the scene of the tick the game drew (one before its clock). If it is not published yet, waits up to 2 ms for it, then draws the nearest older one.", true },
+
+        { Flag::RecordFrameClock, Group::Camera, "RecordFrameClock", "Record frame clock",
+            "Writes one CSV line per frame drawn over the game (clock, scene ticks, camera, eyes) to FrameClock in the storage folder. A new file each time it is turned on.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

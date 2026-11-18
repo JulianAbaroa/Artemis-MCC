@@ -80,6 +80,10 @@ export namespace DevTools::Viewer::Scene::System
         // return: The eye of the View of the local player in the tick, or nothing without a View body.
         auto GetLocalEye(const Tick& tick) const -> std::optional<Vec3>;
 
+        // return: The world position of the vehicle the local player is in (the parent of its biped in the object graph), or nothing on foot or
+        // without a View body.
+        auto GetLocalVehiclePosition(const Tick& tick) const -> std::optional<Vec3>;
+
         // return: True if the camera mode is Game, the free camera driving the game camera not included (IsGameCamera counts both).
         auto IsGameMode() const -> bool;
 

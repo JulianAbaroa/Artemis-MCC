@@ -457,6 +457,15 @@ namespace DevTools::Viewer::Hud::System
         ImGui::TextColored(report.Lag[0] == report.Frames ? k_Green : k_Orange, "0:%u 1:%u 2:%u 3:%u 4+:%u neg:%u max:%d",
             report.Lag[0], report.Lag[1], report.Lag[2], report.Lag[3], report.Lag[4], report.Negative, report.MaxLag);
 
+        if (report.DrawnExact + report.DrawnOlder + report.DrawnNewer > 0)
+        {
+            ImGui::Text("Drawn scene (%u f):", static_cast<unsigned>(report.Frames));
+            ImGui::SameLine();
+            ImGui::TextColored(report.DrawnExact == report.Frames ? k_Green : k_Orange,
+                "exact %u  older %u  newer %u  | waits %u  timeouts %u  wait p99 %u us",
+                report.DrawnExact, report.DrawnOlder, report.DrawnNewer, report.Waits, report.Timeouts, report.WaitP99Us);
+        }
+
         ImGui::Text("Camera moved within a tick:");
         ImGui::SameLine();
         ImGui::TextColored(k_Info, "%u / %u", report.CameraMovedFrames, report.SameTickFrames);

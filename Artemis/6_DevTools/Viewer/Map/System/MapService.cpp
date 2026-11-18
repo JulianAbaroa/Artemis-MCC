@@ -6,6 +6,7 @@ module DevTools.Viewer.Map.System;
 import :MapService;
 
 import Common.Semantic.Type;
+import Common.State.Type;
 import Engine.Base.Memory.Type;
 import Views.Raycast.Type;
 import Views.View.System;
@@ -22,10 +23,15 @@ import std;
 
 namespace
 {
+    using Common::State::Type::PickKind;
+    using Engine::Base::Memory::Type::FrameClock::ClockSource;
+    using Engine::Base::Memory::Type::FrameClock::FrameClock;
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
 
     using DevTools::Viewer::Camera::Type::Viewport;
+    using DevTools::Viewer::Collidable::Type::SceneTickOf;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Latency::Type::FrameClockRow;
     using DevTools::Viewer::Latency::Type::LatencyInput;
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Scalar;
@@ -35,11 +41,13 @@ namespace
     using DevTools::Viewer::Profiler::System::CpuTimer;
     using DevTools::Viewer::Profiler::System::FrameProfiler;
     using DevTools::Viewer::Map::Type::FixturePassOptions;
+    using DevTools::Viewer::Map::Type::FrameScenePick;
     using DevTools::Viewer::Map::Type::LimitsPassOptions;
     using Common::Semantic::Type::Function;
     using Views::Raycast::Type::Raycasts;
     using Views::View::System::RaycastsOf;
 
+    using DevTools::Viewer::Map::Type::k_FrameSceneWaitLimit;
     using DevTools::Viewer::Style::Type::k_Background;
 
     // Ends the GPU timing of the frame when it goes out of scope.
@@ -79,6 +87,9 @@ namespace DevTools::Viewer::Map::System
 
     auto MapService::RenderFrame(const FrameContext& frame, bool isBeforeHud) -> bool
     {
+        // note: Every frame, so the file closes when the option goes off, the viewer deactivates or the map is suspended.
+        m_FrameClockRecorder.Update(m_OptionsStore.IsEnabled(Flag::RecordFrameClock) && !m_IsSuspended && m_SceneService.IsActive());
+
         if (m_IsSuspended) return false;
 
         if (!frame.Device || !frame.Context ||
@@ -102,8 +113,11 @@ namespace DevTools::Viewer::Map::System
             return false;
         }
 
-        // note: One acquire for the whole frame. The camera, the passes and the meshes all come from the same tick (D294).
-        const auto scene = m_CollidableStore.Acquire();
+        // note: One choice for the whole frame. The camera, the passes, the labels, the selection and the meshes all come from the same scene (D294).
+        // The clock is read before it, so the scene is chosen for the very tick that is measured.
+        const FrameClock clock{ m_SceneService.IsGameCamera() ? m_LatencyService.ReadClock() : FrameClock{} };
+        const FrameScenePick pick{ this->AcquireFrameScene(clock, this->IsOverlayActive()) };
+        const auto& scene = pick.Scene;
         if (!scene || !scene->Tick) return false;
         const auto& tick = scene->Tick;
 
@@ -130,7 +144,8 @@ namespace DevTools::Viewer::Map::System
                 m_SceneService.Update(scene, viewport);
             }
 
-            this->RecordLatency(*scene, isBeforeHud);
+            this->RecordLatency(*scene, clock, pick, isBeforeHud);
+            this->RecordFrameClock(*scene, clock, pick);
 
             // note: The mode may have changed since RenderBeforeHud decided. The frame still counts as handled (the scene was updated once),
             // but nothing is drawn over the game frame that is not an overlay.
@@ -225,13 +240,105 @@ namespace DevTools::Viewer::Map::System
         return m_SceneService.IsGameCamera() && m_OptionsStore.IsEnabled(Flag::Overlay);
     }
 
-    auto MapService::RecordLatency(const CollidableScene& scene, bool isBeforeHud) -> void
+    auto MapService::AcquireFrameScene(const FrameClock& clock, bool isOverlay) -> FrameScenePick
+    {
+        FrameScenePick result{};
+
+        const bool hasClock{ clock.Source != ClockSource::None };
+        const bool isAdvanced{ !m_IsLastClockTickKnown || m_LastClockTick != clock.Tick };
+        if (hasClock)
+        {
+            m_IsLastClockTickKnown = true;
+            m_LastClockTick = clock.Tick;
+        }
+
+        const auto keyOf = [](const std::shared_ptr<const CollidableScene>& scene) -> std::optional<std::uint32_t>
+        {
+            return scene ? SceneTickOf{}(*scene) : std::nullopt;
+        };
+
+        if (!isOverlay || !hasClock || clock.Tick == 0)
+        {
+            result.Scene = m_CollidableStore.Acquire();
+            result.Newest = keyOf(result.Scene);
+            return result;
+        }
+
+        // note: The game frame shows the state of the tick before the one its clock reads (VW.5c, on foot, 60 fps).
+        const std::uint32_t target{ clock.Tick - 1 };
+
+        const std::optional<std::uint32_t> newest{ keyOf(m_CollidableStore.Acquire()) };
+
+        // note: Not while paused (the tick does not advance, nothing new will come), nor while the pipeline stops, nor in sparse mode (scenes only
+        // on decision ticks: the history does not arrive one tick at a time and waiting would never help).
+        const bool shouldWait{ m_OptionsStore.IsEnabled(Flag::WaitFrameScene) && isAdvanced && newest && *newest < target &&
+            m_LifecycleStore.CanPublish() && m_CollidableStore.IsConsecutive() };
+
+        if (shouldWait)
+        {
+            const auto start{ std::chrono::steady_clock::now() };
+            const bool isReached{ m_CollidableStore.WaitForKey(target, k_FrameSceneWaitLimit) };
+            const auto waited{ std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start) };
+
+            result.IsWaited = true;
+            result.IsTimedOut = !isReached;
+            result.WaitedUs = static_cast<std::uint32_t>(waited.count());
+        }
+
+        const auto picked{ m_CollidableStore.PickFor(target) };
+        result.Scene = picked.Snapshot;
+        result.Kind = picked.Kind;
+        result.Newest = keyOf(m_CollidableStore.Acquire());
+        return result;
+    }
+
+    auto MapService::RecordFrameClock(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void
+    {
+        if (!m_OptionsStore.IsEnabled(Flag::RecordFrameClock) || !this->IsOverlayActive()) return;
+
+        const auto& tick{ *scene.Tick };
+        const std::optional<GameCamera>& camera{ m_SceneService.GetGameCamera() };
+        const std::optional<std::uint32_t> drawn{ SceneTickOf{}(scene) };
+
+        FrameClockRow row{};
+        row.QpcUs = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+        row.Mode = m_SceneService.IsGameMode() ? "game" : "drive";
+        row.Clock = clock;
+        row.SceneNewest = pick.Newest;
+        row.SceneDrawn = drawn;
+        row.WaitedUs = pick.WaitedUs;
+        row.IsTimedOut = pick.IsTimedOut;
+        if (camera)
+        {
+            row.Camera = camera->Position;
+            row.Forward = camera->Forward;
+        }
+        row.Eye = m_SceneService.GetLocalEye(tick);
+        row.Vehicle = m_SceneService.GetLocalVehiclePosition(tick);
+
+        if (drawn && *drawn > 0)
+        {
+            if (const auto previous{ m_CollidableStore.FindKey(*drawn - 1) }; previous && previous->Tick)
+            {
+                row.EyePrevious = m_SceneService.GetLocalEye(*previous->Tick);
+            }
+        }
+
+        m_FrameClockRecorder.Record(row);
+    }
+
+    auto MapService::RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick, bool isBeforeHud) -> void
     {
         if (!m_SceneService.IsGameCamera()) return;
 
         const std::optional<GameCamera>& camera{ m_SceneService.GetGameCamera() };
 
         LatencyInput input{};
+        input.Clock = clock;
+        input.Pick = pick.Kind;
+        input.WaitedUs = pick.WaitedUs;
+        input.IsWaited = pick.IsWaited;
+        input.IsTimedOut = pick.IsTimedOut;
         input.IsBeforeHud = isBeforeHud;
         input.IsGameMode = m_SceneService.IsGameMode();
         if (camera) input.Camera = camera->Position;
@@ -322,6 +429,7 @@ namespace DevTools::Viewer::Map::System
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
 
+        m_FrameClockRecorder.Update(false);
         this->ReleaseAll();
         m_Device = nullptr;
     }
