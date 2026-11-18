@@ -114,8 +114,11 @@
     <ClCompile Include="Memory\Engine.Base.Memory.Type.ixx" />
     <ClCompile Include="Memory\System\AOB\AOBService.cpp" />
     <ClCompile Include="Memory\System\AOB\AOBService.ixx" />
+    <ClCompile Include="Memory\System\Camera\GameCameraService.cpp" />
+    <ClCompile Include="Memory\System\Camera\GameCameraService.ixx" />
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.cpp" />
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.ixx" />
+    <ClCompile Include="Memory\Type\GameCamera.ixx" />
     <ClCompile Include="Memory\Type\MemorySignature.ixx" />
   </ItemGroup>
   <ItemGroup>

@@ -182,7 +182,11 @@ namespace DevTools::Viewer::Map::System
 
         m_Profiler.BeginGpu(context);
 
-        context->ClearRenderTargetView(frame.RenderTarget, k_Background);
+        // note: With the overlay the frame of the game stays under what the Viewer draws, so the color is not cleared. The depth is the
+        // Viewer's own and is always cleared.
+        const bool isOverlay{ m_SceneService.IsGameCamera() && m_OptionsStore.IsEnabled(Flag::Overlay) };
+
+        if (!isOverlay) context->ClearRenderTargetView(frame.RenderTarget, k_Background);
         context->ClearDepthStencilView(frame.DepthStencil,
             D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
@@ -199,7 +203,8 @@ namespace DevTools::Viewer::Map::System
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 
-        m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::MapCollision));
+        if (isOverlay) m_MapPass.DrawOverlay(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::OverlayWireframe));
+        else m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::MapCollision));
         m_Profiler.MarkGpu(context, Gpu::Map);
 
         m_DynamicPass.Draw(context, m_GpuPipeline);

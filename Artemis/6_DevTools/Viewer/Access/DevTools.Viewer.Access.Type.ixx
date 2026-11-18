@@ -36,6 +36,7 @@ namespace
     using Engine::Control::Input::State::PlayerActionStore;
     using Engine::Render::Window::System::InputService;
     using Engine::Control::Simulation::State::BotStore;
+    using Engine::Base::Memory::System::GameCameraService;
     using Engine::Base::Memory::System::MemoryReaderService;
     using Engine::Capture::State::CaptureStore;
     using Engine::Capture::Oracle::State::OracleStore;
@@ -56,6 +57,7 @@ export namespace DevTools::Viewer::Access::Type
         CaptureStore& m_CaptureStore;
         OracleStore& m_OracleStore;
         MemoryReaderService& m_MemoryReaderService;
+        GameCameraService& m_GameCameraService;
         LifecycleService& m_LifecycleService;
         LifecycleStore& m_LifecycleStore;
         MatchConfigStore& m_MatchConfigStore;

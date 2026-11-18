@@ -57,7 +57,7 @@ export namespace DevTools::Viewer
         Layer(Services::Layer& service, DevTools::Viewer::Access::Type::EngineAccess& engine, Perception::Layer& environment,
             DevTools::Gui::Layer& gui,
             PreferencesService& preferences) :
-            m_CameraService(m_CameraStore, m_OptionsStore),
+            m_CameraService(m_CameraStore, m_OptionsStore, engine.m_GameCameraService),
             m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
             m_SelectionService(m_CollidableStore, m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),

@@ -76,10 +76,12 @@ export namespace Engine::Render::System
         ComPtr<ID3D11Buffer> m_CameraBuffer{};
 
         ComPtr<ID3D11RasterizerState> m_Rasterizer{};
+        ComPtr<ID3D11RasterizerState> m_WireframeRasterizer{};
         ComPtr<ID3D11DepthStencilState> m_DepthState{};
         ComPtr<ID3D11DepthStencilState> m_OverlayDepthState{};
         ComPtr<ID3D11BlendState> m_BlendState{};
         ComPtr<ID3D11BlendState> m_TranslucentBlendState{};
+        ComPtr<ID3D11BlendState> m_NoColorBlendState{};
 
         auto CompileShaders(ID3D11Device* device) -> bool;
         auto CreateBuffers(ID3D11Device* device) -> bool;

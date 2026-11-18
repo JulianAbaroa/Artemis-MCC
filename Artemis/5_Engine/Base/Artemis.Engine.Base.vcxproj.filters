@@ -100,6 +100,9 @@
     <Filter Include="Memory\System\AOB">
       <UniqueIdentifier>{c5dce3ab-4bc7-5962-8a49-d80b69f30ca8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Memory\System\Camera">
+      <UniqueIdentifier>{5b0c1a64-7d1e-5c3f-9a52-0e6f3d8b2c71}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Memory\System\Reader">
       <UniqueIdentifier>{64dad8c2-0668-5d95-8dd7-8bfdbaac5816}</UniqueIdentifier>
     </Filter>
@@ -289,11 +292,20 @@
     <ClCompile Include="Memory\System\AOB\AOBService.ixx">
       <Filter>Memory\System\AOB</Filter>
     </ClCompile>
+    <ClCompile Include="Memory\System\Camera\GameCameraService.cpp">
+      <Filter>Memory\System\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\System\Camera\GameCameraService.ixx">
+      <Filter>Memory\System\Camera</Filter>
+    </ClCompile>
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.cpp">
       <Filter>Memory\System\Reader</Filter>
     </ClCompile>
     <ClCompile Include="Memory\System\Reader\MemoryReaderService.ixx">
       <Filter>Memory\System\Reader</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Type\GameCamera.ixx">
+      <Filter>Memory\Type</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Type\MemorySignature.ixx">
       <Filter>Memory\Type</Filter>

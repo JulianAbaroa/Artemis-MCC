@@ -3,12 +3,14 @@ module DevTools.Viewer.Scene.System;
 import Common.Engine.Type;
 import Perception.Players.Type;
 import Views.View.System;
+import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Selection.State;
 import std;
 
 namespace
 {
     using DevTools::Viewer::Camera::Type::Follow;
+    using DevTools::Viewer::Camera::Type::Mode;
     using Perception::Players::Type::Player;
 
     using Views::View::System::FindObservedView;
@@ -74,6 +76,16 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::GetViewProjection() const -> const Matrix&
     {
         return m_CameraService.GetViewProjection();
+    }
+
+    auto SceneService::IsGameCamera() const -> bool
+    {
+        return m_CameraStore.GetMode() == Mode::Game;
+    }
+
+    auto SceneService::GetGameCamera() const -> const std::optional<GameCamera>&
+    {
+        return m_CameraService.GetGameCamera();
     }
 
     auto SceneService::GetSelected() const -> std::uint32_t

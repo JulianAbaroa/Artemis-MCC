@@ -90,6 +90,9 @@ export namespace DevTools::Viewer::Options::Type
 
         MapCollision,
 
+        Overlay,
+        OverlayWireframe,
+
         Count
     };
 
@@ -341,6 +344,12 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::MapCollision, Group::Map, "MapCollision", "Collision",
             "Draws the collision surfaces the rays hit (structure and instanced geometry) instead of the render geometry. Orange is invisible, purple is two sided.", true },
+
+        { Flag::Overlay, Group::Camera, "Overlay", "Overlay on the game frame",
+            "With the game camera, draws over the frame of the game instead of clearing it. The Viewer takes the camera the game rendered the frame with, and the map collision goes in depth only so it hides what comes after it.", false },
+
+        { Flag::OverlayWireframe, Group::Camera, "OverlayWireframe", "Overlay: collision wireframe",
+            "With the overlay on, also draws the map collision as a visible wireframe, to check that it lines up with the walls of the game frame.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

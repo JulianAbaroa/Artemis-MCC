@@ -76,5 +76,9 @@ export namespace DevTools::Viewer::Hud::System
 
         auto DrawFramerate() -> void;
         auto DrawTelemetry() -> void;
+
+        // Draws the camera of the game: validity, position, fields of view, aspect against the back buffer and the distance to the View of the
+        // local player. It answers whether the overlay lines up (D323).
+        auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
     };
 }

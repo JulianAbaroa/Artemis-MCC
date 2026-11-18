@@ -3,6 +3,7 @@ export module DevTools.Viewer.Scene.System;
 import Common.Math.Type;
 import Services.Observed.State;
 import Services.Settings.State;
+import Engine.Base.Memory.Type;
 import Views.View.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
@@ -27,6 +28,7 @@ export namespace DevTools::Viewer::Scene::System
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
         using Viewport = DevTools::Viewer::Camera::Type::Viewport;
         using Matrix = Common::Math::Type::Matrix;
+        using GameCamera = Engine::Base::Memory::Type::GameCamera::GameCamera;
         using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
         using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
@@ -62,6 +64,12 @@ export namespace DevTools::Viewer::Scene::System
         auto Reset() -> void;
 
         auto GetViewProjection() const -> const Matrix&;
+
+        // return: True if the camera mode is Game (the camera of the game, or the View of the local player when the game one is not valid).
+        auto IsGameCamera() const -> bool;
+
+        // return: The camera of the game this frame, or nothing when the mode is not Game or that camera is not valid.
+        auto GetGameCamera() const -> const std::optional<GameCamera>&;
 
         // return: The selected handle, or k_NoHandle.
         auto GetSelected() const -> std::uint32_t;

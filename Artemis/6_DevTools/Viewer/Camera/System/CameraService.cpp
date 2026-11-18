@@ -87,9 +87,14 @@ namespace DevTools::Viewer::Camera::System
         m_IsOrbiting = false;
 
         Vec3 targetPosition{}, targetForward{};
+        m_GameCamera.reset();
+
         if (m_CameraStore.GetMode() == Mode::Game)
         {
-            this->FollowSelf(tick);
+            m_GameCamera = m_GameCameraService.Read();
+
+            if (m_GameCamera) this->SeatOnGameCamera(*m_GameCamera);
+            else this->FollowSelf(tick);
         }
         else if (const Follow follow{ m_CameraStore.GetFollow() }; followHandle && follow == Follow::FirstPerson &&
             this->FindFollowTarget(tick, *followHandle, targetPosition, targetForward))
@@ -162,6 +167,12 @@ namespace DevTools::Viewer::Camera::System
 
         m_Eye = ViewPositionOf(*view);
         this->AimAlong(AimDirectionOf(*view));
+    }
+
+    auto CameraService::SeatOnGameCamera(const GameCamera& camera) -> void
+    {
+        m_Eye = camera.Position;
+        this->AimAlong(camera.Forward);
     }
 
     auto CameraService::FindFollowTarget(const std::shared_ptr<const Tick>& tick,
@@ -306,11 +317,21 @@ namespace DevTools::Viewer::Camera::System
         const float cosPitch = std::cos(m_Pitch);
         const float sinPitch = std::sin(m_Pitch);
 
-        m_Forward = VecMath::Normalize(Vec3{
-            cosPitch * std::cos(m_Yaw), cosPitch * std::sin(m_Yaw), sinPitch });
+        if (m_GameCamera)
+        {
+            // note: The axes of the game, not rebuilt from yaw and pitch, so the roll and the exact aim of the frame are kept.
+            m_Forward = m_GameCamera->Forward;
+            m_Right = m_GameCamera->Right;
+            m_Up = m_GameCamera->Up;
+        }
+        else
+        {
+            m_Forward = VecMath::Normalize(Vec3{
+                cosPitch * std::cos(m_Yaw), cosPitch * std::sin(m_Yaw), sinPitch });
 
-        m_Right = VecMath::Normalize(VecMath::Cross(m_Forward, k_WorldUp));
-        m_Up = VecMath::Cross(m_Right, m_Forward);
+            m_Right = VecMath::Normalize(VecMath::Cross(m_Forward, k_WorldUp));
+            m_Up = VecMath::Cross(m_Right, m_Forward);
+        }
 
         const Vec3& f = m_Forward;
         const Vec3& r = m_Right;
@@ -326,13 +347,19 @@ namespace DevTools::Viewer::Camera::System
         const float aspect = m_Viewport.Size.Y > 0.0f ?
             m_Viewport.Size.X / m_Viewport.Size.Y : 1.0f;
 
+        // note: With the game camera x and y are the projection of the game as it is. The depth is the Viewer's own (D325).
         const float focal = 1.0f / std::tan(m_Lens.FovY * 0.5f);
+        m_FocalX = m_GameCamera ? m_GameCamera->M00 : focal / aspect;
+        m_FocalY = m_GameCamera ? m_GameCamera->M11 : focal;
+        m_CenterX = m_GameCamera ? m_GameCamera->M20 : 0.0f;
+        m_CenterY = m_GameCamera ? m_GameCamera->M21 : 0.0f;
+
         const float range = m_Lens.Near - m_Lens.Far;
 
         const Matrix projection = {
-            focal / aspect, 0.0f, 0.0f, 0.0f,
-            0.0f, focal, 0.0f, 0.0f,
-            0.0f, 0.0f, m_Lens.Far / range, -1.0f,
+            m_FocalX, 0.0f, 0.0f, 0.0f,
+            0.0f, m_FocalY, 0.0f, 0.0f,
+            m_CenterX, m_CenterY, m_Lens.Far / range, -1.0f,
             0.0f, 0.0f, m_Lens.Near * m_Lens.Far / range, 0.0f,
         };
 
@@ -387,6 +414,11 @@ namespace DevTools::Viewer::Camera::System
         return m_Viewport;
     }
 
+    auto CameraService::GetGameCamera() const -> const std::optional<GameCamera>&
+    {
+        return m_GameCamera;
+    }
+
     auto CameraService::GetViewProjection() const -> const Matrix&
     {
         return m_ViewProjection;
@@ -424,12 +456,10 @@ namespace DevTools::Viewer::Camera::System
         const float ndcX = u * 2.0f - 1.0f;
         const float ndcY = (1.0f - v) * 2.0f - 1.0f;
 
-        const float tanHalf = std::tan(m_Lens.FovY * 0.5f);
-        const float aspect = m_Viewport.Size.X / m_Viewport.Size.Y;
-
+        // note: The inverse of the x and y of the projection at unit depth, with the off-center terms.
         const Vec3 direction = VecMath::Add(m_Forward,
-            VecMath::Add(VecMath::Scale(m_Right, ndcX * tanHalf * aspect),
-                VecMath::Scale(m_Up, ndcY * tanHalf)));
+            VecMath::Add(VecMath::Scale(m_Right, (ndcX + m_CenterX) / m_FocalX),
+                VecMath::Scale(m_Up, (ndcY + m_CenterY) / m_FocalY)));
 
         return Ray{ m_Eye, VecMath::Normalize(direction, m_Forward) };
     }

@@ -14,6 +14,7 @@ namespace
 {
     using Engine::Render::Type::VertexLayout;
 
+    using Engine::Render::Type::SurfaceMode;
     using Engine::Render::Type::Vertex;
 
     using DevTools::Viewer::Style::Type::Color;
@@ -155,6 +156,25 @@ namespace DevTools::Viewer::Map::System
 
         Engine::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
             m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    }
+
+    auto MapPass::DrawOverlay(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isWireframe) -> void
+    {
+        if (!context || !this->HasBuffer()) return;
+
+        const bool hasCollision = m_CollisionBuffer != nullptr && m_CollisionCount > 0;
+        ID3D11Buffer* buffer{ hasCollision ? m_CollisionBuffer.Get() : m_VertexBuffer.Get() };
+        const UINT count{ hasCollision ? m_CollisionCount : m_VertexCount };
+
+        if (!buffer || count == 0) return;
+
+        pipeline.Bind(context, VertexLayout::Colored, SurfaceMode::DepthOnly);
+        Engine::Render::System::DrawVertexBuffer(context, buffer, count, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+        if (!isWireframe) return;
+
+        pipeline.Bind(context, VertexLayout::Colored, SurfaceMode::Wireframe);
+        Engine::Render::System::DrawVertexBuffer(context, buffer, count, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     }
 
     auto MapPass::Release() -> void

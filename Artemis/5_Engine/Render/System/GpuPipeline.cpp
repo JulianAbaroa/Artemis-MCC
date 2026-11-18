@@ -16,6 +16,11 @@ namespace
 
     using Common::Log::System::Log;
 
+    // Depth bias of the Wireframe surface, in units of the depth buffer and per slope. Negative terms pull the lines toward the camera, so a
+    // wireframe drawn over the same surface in depth does not fight with it.
+    constexpr int k_WireframeDepthBias{ 1000 };
+    constexpr float k_WireframeSlopeBias{ 1.5f };
+
     // HLSL source of the map pipeline, shared by every pass.
     // Vertex shaders: VSMain (Vertex), VSInstanced (SphereInstance) and VSInstancedMesh (MeshInstance).
     // Pixel shader: PSMain, flat shading from the screen-space derivatives and two fixed lights.
@@ -286,6 +291,17 @@ namespace Engine::Render::System
             return false;
         }
 
+        D3D11_RASTERIZER_DESC wireframe{ raster };
+        wireframe.FillMode = D3D11_FILL_WIREFRAME;
+        wireframe.DepthBias = -k_WireframeDepthBias;
+        wireframe.SlopeScaledDepthBias = -k_WireframeSlopeBias;
+
+        if (FAILED(device->CreateRasterizerState(&wireframe, m_WireframeRasterizer.GetAddressOf())))
+        {
+            m_Log.Message("[GpuPipeline] ERROR: Wireframe rasterizer state failed.");
+            return false;
+        }
+
         D3D11_DEPTH_STENCIL_DESC depth{};
         depth.DepthEnable = TRUE;
         depth.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
@@ -334,6 +350,16 @@ namespace Engine::Render::System
             return false;
         }
 
+        D3D11_BLEND_DESC noColor{};
+        noColor.RenderTarget[0].BlendEnable = FALSE;
+        noColor.RenderTarget[0].RenderTargetWriteMask = 0;
+
+        if (FAILED(device->CreateBlendState(&noColor, m_NoColorBlendState.GetAddressOf())))
+        {
+            m_Log.Message("[GpuPipeline] ERROR: No color blend state failed.");
+            return false;
+        }
+
         return true;
     }
 
@@ -359,12 +385,15 @@ namespace Engine::Render::System
         const bool isTranslucent = surface == SurfaceMode::Translucent;
         const float blendFactor[4]{ alpha, alpha, alpha, alpha };
 
-        context->OMSetBlendState(
-            isTranslucent ? m_TranslucentBlendState.Get() : m_BlendState.Get(),
-            blendFactor, 0xffffffff);
-        context->OMSetDepthStencilState(
-            surface == SurfaceMode::Opaque ? m_DepthState.Get() : m_OverlayDepthState.Get(), 0);
-        context->RSSetState(m_Rasterizer.Get());
+        ID3D11BlendState* blendState = m_BlendState.Get();
+        if (isTranslucent) blendState = m_TranslucentBlendState.Get();
+        else if (surface == SurfaceMode::DepthOnly) blendState = m_NoColorBlendState.Get();
+
+        const bool writesDepth = surface == SurfaceMode::Opaque || surface == SurfaceMode::DepthOnly;
+
+        context->OMSetBlendState(blendState, blendFactor, 0xffffffff);
+        context->OMSetDepthStencilState(writesDepth ? m_DepthState.Get() : m_OverlayDepthState.Get(), 0);
+        context->RSSetState(surface == SurfaceMode::Wireframe ? m_WireframeRasterizer.Get() : m_Rasterizer.Get());
 
         ID3D11InputLayout* inputLayout = m_InputLayout.Get();
         ID3D11VertexShader* vertexShader = m_VertexShader.Get();
@@ -406,10 +435,12 @@ namespace Engine::Render::System
         m_InstancedInputLayout.Reset();
         m_InstancedVertexShader.Reset();
         m_InputLayout.Reset();
+        m_NoColorBlendState.Reset();
         m_TranslucentBlendState.Reset();
         m_BlendState.Reset();
         m_OverlayDepthState.Reset();
         m_DepthState.Reset();
+        m_WireframeRasterizer.Reset();
         m_Rasterizer.Reset();
         m_PixelShader.Reset();
         m_VertexShader.Reset();

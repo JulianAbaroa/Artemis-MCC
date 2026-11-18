@@ -253,6 +253,10 @@ export namespace Engine::Base::Memory::Type::Signature
 
     inline constexpr std::uint32_t k_CollisionTestVectorRva{ 0x12969C };
 
+    // s_render_projection (A21 sec. 3): a global of haloreach.dll, not TLS. The game rebuilds it for each view before it draws it, so the
+    // Present of the frame finds the projection of the last view. 0x30 floats, read only.
+    inline constexpr std::uint32_t k_RenderProjectionRva{ 0xC9FB70 };
+
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
     inline constexpr std::uint32_t k_CollisionTestVectorWindow{ 0 };
 }

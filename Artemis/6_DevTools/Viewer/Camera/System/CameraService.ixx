@@ -1,6 +1,8 @@
 export module DevTools.Viewer.Camera.System;
 
 import Common.Math.Type;
+import Engine.Base.Memory.Type;
+import Engine.Base.Memory.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Camera.State;
@@ -19,6 +21,8 @@ export namespace DevTools::Viewer::Camera::System
         using Vec2 = Common::Math::Type::Vec2;
         using Vec3 = Common::Math::Type::Vec3;
         using Matrix = Common::Math::Type::Matrix;
+        using GameCamera = Engine::Base::Memory::Type::GameCamera::GameCamera;
+        using GameCameraService = Engine::Base::Memory::System::GameCameraService;
         using Lens = DevTools::Viewer::Camera::Type::Lens;
         using Viewport = DevTools::Viewer::Camera::Type::Viewport;
         using Ray = DevTools::Viewer::Camera::Type::Ray;
@@ -26,15 +30,16 @@ export namespace DevTools::Viewer::Camera::System
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
-        CameraService(CameraStore& cameraStore, OptionsStore& optionsStore) :
-            m_CameraStore(cameraStore), m_OptionsStore(optionsStore) {}
+        CameraService(CameraStore& cameraStore, OptionsStore& optionsStore, GameCameraService& gameCameraService) :
+            m_CameraStore(cameraStore), m_OptionsStore(optionsStore), m_GameCameraService(gameCameraService) {}
         ~CameraService() = default;
 
         CameraService(const CameraService&) = delete;
         auto operator=(const CameraService&) -> CameraService& = delete;
 
         // Advances the camera and rebuilds the matrices.
-        // note: In Game mode the camera sits on the local player view and keeps its last pose while the player is dead.
+        // note: In Game mode the camera is the one the game rendered the frame with (D323), read at the render thread. Without a valid one it
+        // sits on the local player view and keeps its last pose while the player is dead.
         // param acceptInput: If false, the pressed keys are released and the camera does not fly.
         // param followHandle: Object to follow or orbit. Used only if the follow mode of the store asks for it and the object is in the tick.
         // note: The first update after Deactivate places the camera on the local player.
@@ -54,6 +59,9 @@ export namespace DevTools::Viewer::Camera::System
 
         auto GetViewport() const -> const Viewport&;
 
+        // return: The camera of the game this frame, or nothing when the mode is not Game or the game camera is not valid.
+        auto GetGameCamera() const -> const std::optional<GameCamera>&;
+
         // return: The view matrix multiplied by the projection matrix.
         auto GetViewProjection() const -> const Matrix&;
 
@@ -70,6 +78,15 @@ export namespace DevTools::Viewer::Camera::System
     private:
         CameraStore& m_CameraStore;
         OptionsStore& m_OptionsStore;
+        GameCameraService& m_GameCameraService;
+
+        std::optional<GameCamera> m_GameCamera{};
+
+        // Projection terms of the last Build: the focal values and the off-center terms of x and y.
+        float m_FocalX{ 1.0f };
+        float m_FocalY{ 1.0f };
+        float m_CenterX{ 0.0f };
+        float m_CenterY{ 0.0f };
 
         Vec3 m_Eye{};
         float m_Yaw{ 0.0f };
@@ -113,6 +130,9 @@ export namespace DevTools::Viewer::Camera::System
 
         // Places the camera on the local player view. Keeps the last pose if there is no living local player.
         auto FollowSelf(const std::shared_ptr<const Tick>& tick) -> void;
+
+        // Sits the camera on the game camera and takes its axes. Its projection is used by Build.
+        auto SeatOnGameCamera(const GameCamera& camera) -> void;
 
         // return: False if the object is neither a player biped nor a collidable of the tick.
         auto FindFollowTarget(const std::shared_ptr<const Tick>& tick,

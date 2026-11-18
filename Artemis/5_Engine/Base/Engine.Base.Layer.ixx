@@ -39,6 +39,7 @@ export namespace Engine::Base
 
         using AOBService = Engine::Base::Memory::System::AOBService;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
+        using GameCameraService = Engine::Base::Memory::System::GameCameraService;
 
         using MapVariantStore = Engine::Base::MapVariant::State::MapVariantStore;
         using MatchSetupStore = Engine::Base::MatchSetup::State::MatchSetupStore;
@@ -53,6 +54,7 @@ export namespace Engine::Base
             m_LifecycleService(service.m_Log, m_LifecycleStore),
             m_AOBService(service.m_Log),
             m_HostService(service.m_Log, m_AOBService),
+            m_GameCameraService(m_MemoryReaderService),
             m_PresetService(service.m_Log, service.m_SettingsStore, m_PresetStore),
             m_MapVariantService(service.m_Log, m_MapVariantStore),
             m_MapVariantDecodeService(service.m_Log, m_AOBService),
@@ -83,6 +85,7 @@ export namespace Engine::Base
         AOBService m_AOBService;
         HostService m_HostService;
         MemoryReaderService m_MemoryReaderService{};
+        GameCameraService m_GameCameraService;
         PresetService m_PresetService;
         MapVariantService m_MapVariantService;
         MapVariantDecodeService m_MapVariantDecodeService;

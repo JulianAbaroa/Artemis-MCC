@@ -29,7 +29,9 @@ export namespace Engine::Render::Type
     {
         Opaque,         // depth test and depth write
         Overlay,        // depth test without depth write
-        Translucent     // depth test without depth write, blended by alpha
+        Translucent,    // depth test without depth write, blended by alpha
+        DepthOnly,      // depth test and depth write, no color written
+        Wireframe       // depth test without depth write, wireframe lines pulled toward the camera so they win over the same surface
     };
 
     struct Vertex

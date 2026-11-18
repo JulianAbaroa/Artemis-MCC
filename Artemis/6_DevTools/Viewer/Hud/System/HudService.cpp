@@ -5,6 +5,9 @@ module;
 module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
+import Common.Math.System;
+import Engine.Base.Memory.Type;
+import Views.View.System;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Overlay.Type;
 import std;
@@ -13,8 +16,14 @@ namespace
 {
     using DevTools::Viewer::Overlay::Type::Mode;
 
+    using Engine::Base::Memory::Type::GameCamera::GameCamera;
+
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using Views::View::System::FindObservedView;
+    using Views::View::System::ViewPositionOf;
+
+    constexpr float k_DegreesPerRadian{ 180.0f / std::numbers::pi_v<float> };
 
 
     const ImVec4 k_Green{ 0.0f, 1.0f, 0.0f, 1.0f };
@@ -97,6 +106,9 @@ namespace DevTools::Viewer::Hud::System
     {
         this->DrawFramerate();
         this->DrawTelemetry();
+
+        const auto scene = m_CollidableStore.Acquire();
+        this->DrawGameCamera(scene ? scene->Tick : nullptr);
     }
 
     auto HudService::DrawViewPanel(const std::shared_ptr<const Tick>& tick) -> void
@@ -190,6 +202,69 @@ namespace DevTools::Viewer::Hud::System
         ImGui::Text("Framerate:");
         ImGui::SameLine();
         ImGui::TextColored(color, "%d", fps);
+    }
+
+    auto HudService::DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void
+    {
+        ImGui::Separator();
+
+        if (!m_SceneService.IsGameCamera())
+        {
+            ImGui::Text("Game camera:");
+            ImGui::SameLine();
+            ImGui::TextDisabled("n/a (free camera)");
+            return;
+        }
+
+        const std::optional<GameCamera>& camera{ m_SceneService.GetGameCamera() };
+
+        ImGui::Text("Game camera:");
+        ImGui::SameLine();
+        ImGui::TextColored(camera ? k_Green : k_Red, "%s", camera ? "valid" : "not valid (the View of the local player is used)");
+
+        if (!camera) return;
+
+        ImGui::Text("Position:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.2f %.2f %.2f", camera->Position.X, camera->Position.Y, camera->Position.Z);
+
+        const float fovHorizontal{ 2.0f * std::atan(1.0f / camera->M00) * k_DegreesPerRadian };
+        const float fovVertical{ 2.0f * std::atan(1.0f / camera->M11) * k_DegreesPerRadian };
+
+        ImGui::Text("FOV:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.1f h  %.1f v deg", fovHorizontal, fovVertical);
+
+        const float width{ static_cast<float>(m_RenderStore.GetWidth()) };
+        const float height{ static_cast<float>(m_RenderStore.GetHeight()) };
+        const float cameraAspect{ camera->M11 / camera->M00 };
+        const float bufferAspect{ height > 0.0f ? width / height : 0.0f };
+
+        // note: A matrix aspect that is not the one of the back buffer means the game draws the view in a part of it, or with its own aspect.
+        const bool isAspectEqual{ std::abs(cameraAspect - bufferAspect) < 0.01f };
+
+        ImGui::Text("Aspect:");
+        ImGui::SameLine();
+        ImGui::TextColored(isAspectEqual ? k_Green : k_Orange, "%.3f (back buffer %.0fx%.0f = %.3f)",
+            cameraAspect, width, height, bufferAspect);
+
+        ImGui::Text("Off-center:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "%.4f %.4f", camera->M20, camera->M21);
+
+        const auto* view{ (tick && tick->Views) ? FindObservedView(*tick->Views, k_NoHandle) : nullptr };
+
+        ImGui::Text("Distance to View eye:");
+        ImGui::SameLine();
+
+        if (view && view->Head.HasBody)
+        {
+            ImGui::TextColored(k_Info, "%.3f wu", Common::Math::System::Distance(camera->Position, ViewPositionOf(*view)));
+        }
+        else
+        {
+            ImGui::TextDisabled("n/a (no View)");
+        }
     }
 
     auto HudService::DrawTelemetry() -> void
