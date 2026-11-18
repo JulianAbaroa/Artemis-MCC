@@ -50,10 +50,17 @@ export namespace DevTools::Viewer::Camera::System
         // Makes the next Update place the camera on the local player again and gives the game camera back to the game.
         auto Deactivate() -> void;
 
+        // The render pose: the one the overlay is drawn with. It is the camera of the game read this frame (Game mode, and while driving), or the
+        // free pose when there is no valid game camera or the camera is not driven. While driving it is NOT the free pose: the game draws one
+        // frame behind the request, so the overlay must use what the game drew (D323). Everything that draws or measures against the frame
+        // (view-projection, labels, rays, picking) reads these.
         auto GetEye() const -> Vec3;
         auto GetForward() const -> Vec3;
         auto GetRight() const -> Vec3;
         auto GetUp() const -> Vec3;
+
+        // The requested pose: the free camera (yaw and pitch from the mouse). It is what SetOverride asks of the game and never follows the game
+        // camera while driving.
         auto GetYaw() const -> float;
         auto GetPitch() const -> float;
 
@@ -104,7 +111,11 @@ export namespace DevTools::Viewer::Camera::System
         float m_CenterX{ 0.0f };
         float m_CenterY{ 0.0f };
 
+        // Requested pose: m_Eye, m_Yaw and m_Pitch, with the axes they give. Render pose: m_RenderEye and m_Forward, m_Right and m_Up (see GetEye).
         Vec3 m_Eye{};
+        Vec3 m_RenderEye{};
+        Vec3 m_RequestedForward{ 1.0f, 0.0f, 0.0f };
+        Vec3 m_RequestedUp{ 0.0f, 0.0f, 1.0f };
         float m_Yaw{ 0.0f };
         float m_Pitch{ 0.0f };
         Lens m_Lens{};

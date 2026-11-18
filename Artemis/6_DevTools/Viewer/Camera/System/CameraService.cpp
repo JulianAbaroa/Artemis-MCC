@@ -134,7 +134,9 @@ namespace DevTools::Viewer::Camera::System
         this->UpdateLens(deltaTime);
         this->Build();
 
-        if (m_IsDriving) m_GameCameraService.SetOverride(m_Eye, m_Forward, m_Up);
+        // note: The requested pose (the free one), never the render pose: the game draws one frame behind the request, and the free camera must
+        // keep flying from where it is, not from the frame the game happened to draw.
+        if (m_IsDriving) m_GameCameraService.SetOverride(m_Eye, m_RequestedForward, m_RequestedUp);
     }
 
     auto CameraService::Deactivate() -> void
@@ -341,20 +343,28 @@ namespace DevTools::Viewer::Camera::System
         const float cosPitch = std::cos(m_Pitch);
         const float sinPitch = std::sin(m_Pitch);
 
-        if (m_GameCamera && !m_IsDriving)
+        // note: The requested pose: the axes of yaw and pitch. It is what SetOverride asks of the game and what the free camera flies with.
+        m_RequestedForward = VecMath::Normalize(Vec3{
+            cosPitch * std::cos(m_Yaw), cosPitch * std::sin(m_Yaw), sinPitch });
+
+        const Vec3 requestedRight{ VecMath::Normalize(VecMath::Cross(m_RequestedForward, k_WorldUp)) };
+        m_RequestedUp = VecMath::Cross(requestedRight, m_RequestedForward);
+
+        if (m_GameCamera)
         {
-            // note: The axes of the game, not rebuilt from yaw and pitch, so the roll and the exact aim of the frame are kept.
+            // note: The render pose is the camera the game drew this frame (in Game mode and while driving, where it comes from the request
+            // of a frame before), with its own axes, not rebuilt from yaw and pitch, so the roll and the exact aim are kept.
+            m_RenderEye = m_GameCamera->Position;
             m_Forward = m_GameCamera->Forward;
             m_Right = m_GameCamera->Right;
             m_Up = m_GameCamera->Up;
         }
         else
         {
-            m_Forward = VecMath::Normalize(Vec3{
-                cosPitch * std::cos(m_Yaw), cosPitch * std::sin(m_Yaw), sinPitch });
-
-            m_Right = VecMath::Normalize(VecMath::Cross(m_Forward, k_WorldUp));
-            m_Up = VecMath::Cross(m_Right, m_Forward);
+            m_RenderEye = m_Eye;
+            m_Forward = m_RequestedForward;
+            m_Right = requestedRight;
+            m_Up = m_RequestedUp;
         }
 
         const Vec3& f = m_Forward;
@@ -365,7 +375,7 @@ namespace DevTools::Viewer::Camera::System
             r.X, u.X, -f.X, 0.0f,
             r.Y, u.Y, -f.Y, 0.0f,
             r.Z, u.Z, -f.Z, 0.0f,
-            -VecMath::Dot(r, m_Eye), -VecMath::Dot(u, m_Eye), VecMath::Dot(f, m_Eye), 1.0f,
+            -VecMath::Dot(r, m_RenderEye), -VecMath::Dot(u, m_RenderEye), VecMath::Dot(f, m_RenderEye), 1.0f,
         };
 
         const float aspect = m_Viewport.Size.Y > 0.0f ?
@@ -406,7 +416,7 @@ namespace DevTools::Viewer::Camera::System
 
     auto CameraService::GetEye() const -> Vec3
     {
-        return m_Eye;
+        return m_RenderEye;
     }
 
     auto CameraService::GetForward() const -> Vec3
@@ -492,7 +502,7 @@ namespace DevTools::Viewer::Camera::System
     {
         if (m_Viewport.Size.X <= 0.0f || m_Viewport.Size.Y <= 0.0f)
         {
-            return Ray{ m_Eye, m_Forward };
+            return Ray{ m_RenderEye, m_Forward };
         }
 
         const float u = (pixel.X - m_Viewport.Position.X) / m_Viewport.Size.X;
@@ -506,11 +516,11 @@ namespace DevTools::Viewer::Camera::System
             VecMath::Add(VecMath::Scale(m_Right, (ndcX + m_CenterX) / m_FocalX),
                 VecMath::Scale(m_Up, (ndcY + m_CenterY) / m_FocalY)));
 
-        return Ray{ m_Eye, VecMath::Normalize(direction, m_Forward) };
+        return Ray{ m_RenderEye, VecMath::Normalize(direction, m_Forward) };
     }
 
     auto CameraService::GetCenterRay() const -> Ray
     {
-        return Ray{ m_Eye, m_Forward };
+        return Ray{ m_RenderEye, m_Forward };
     }
 }
