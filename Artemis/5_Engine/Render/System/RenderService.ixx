@@ -101,24 +101,21 @@ export namespace Engine::Render::System
         // thread of Present with the targets ready, on another thread the sample only says so. COM calls only, no allocation, no log.
         auto MeasureFirstPerson(FirstPersonCaller caller, std::uint32_t callerRva, std::uint8_t pass) -> void;
 
-        // Runs for each call of the model into the G-buffer (callers 0x26DA08 and 0x26E2A0) for user 0 while the probe is armed and the depth
-        // pairs exist (VW.6.y.2 A3): copies the bound depth stencil to the before texture of the next pair and notes the call.
-        // param pass: The uint8 argument of the model pass.
+        // Runs at the entry of each call of the first person G-buffer pass (0x26E2A0) while the probe is armed and the depth pairs exist
+        // (VW.6.y.2 A4): copies the bound depth stencil to the before texture of the next pair and notes the call. When no depth stencil is
+        // bound it copies the resource captured from the model draw and notes that.
         // return: The pair to give to EndDepthPair after the original returns, nothing when no copy was made (probe not armed, other
-        // caller, other thread, resizing, copies not ready, pairs taken, or a depth stencil that does not match the copies).
+        // thread, resizing, copies not ready, pairs taken, or a resource that does not match the copies).
         // note: Called by the first person detour. The immediate context is only touched on the thread of Present. COM calls only, no
         // allocation, no log.
-        auto BeginDepthPair(FirstPersonCaller caller, std::uint8_t pass) -> std::optional<std::size_t>;
+        auto BeginDepthPair() -> std::optional<std::size_t>;
 
         // Copies the same resource to the after texture of the pair, once the original returned. Same rules as BeginDepthPair.
         auto EndDepthPair(std::size_t pair) -> void;
 
-        // Notes a call of the model that was not made (hidden or Drive), in call order with the copied ones. Same rules as BeginDepthPair.
-        auto NoteDepthPairSkipped(FirstPersonCaller caller, std::uint8_t pass) -> void;
-
         // Compares the depth (float in bytes 0..3 of each 8 byte texel) of two R32G8X24 textures of the same size, rows pitch bytes apart
         // (VW.6.y.2 A3). A texel counts as changed when the 4 bytes differ.
-        // return: Count, box, depth range of the later texture and weapon count, or nothing when a pointer is null, a size is 0 or a pitch
+        // return: Count, box, depth range of the later texture, weapon count and right half count, or nothing when a pointer is null, a size is 0 or a pitch
         // is smaller than a row.
         static auto CompareDepth(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after, std::uint32_t afterPitch,
             std::uint32_t width, std::uint32_t height) -> std::optional<DepthDiff>;
@@ -180,7 +177,7 @@ export namespace Engine::Render::System
         auto PrepareDepthPairs() -> void;
 
         // return: The immediate context when the detour may copy depth for this caller now, null otherwise.
-        auto GetDepthPairContext(FirstPersonCaller caller) -> ID3D11DeviceContext*;
+        auto GetDepthPairContext() -> ID3D11DeviceContext*;
 
         // Reads the pairs one texture at a time through the staging and reduces them. A step that fails is kept as status and HRESULT.
         // note: Allocates and blocks until the GPU finishes, once per probe, at Present.

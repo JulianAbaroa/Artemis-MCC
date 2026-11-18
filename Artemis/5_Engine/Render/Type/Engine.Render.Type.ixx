@@ -21,6 +21,7 @@ export namespace Engine::Render::Type
 
     // The first person model pass of the game: void(void* camera, uint32 user, uint8 pass).
     using FirstPersonModelFunction = auto(__fastcall*)(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
+    using FirstPersonPassFunction = auto(__fastcall*)(void* view) -> void;
 
     // The game's test of a first person unit: bool(uint32 user, uint32 objectHandle).
     using IsFirstPersonUnitFunction = auto(__fastcall*)(std::uint32_t user, std::uint32_t objectHandle) -> bool;
@@ -238,25 +239,23 @@ export namespace Engine::Render::Type
         std::array<StencilRegionStats, k_StencilRegionCount> Regions{};
     };
 
-    // How many calls of the model into the G-buffer the probe copies the depth of, before and after (VW.6.y.2 A3). Two textures each.
+    // How many calls of the first person G-buffer pass (0x26E2A0) the probe copies the depth of, before and after (VW.6.y.2 A4). Two textures each.
     inline constexpr std::size_t k_DepthPairCount{ 4 };
     inline constexpr std::size_t k_DepthCopyCount{ k_DepthPairCount * 2 };
 
-    // What the detour did with a call of the model while the depth pairs were ready.
+    // What the detour did with a call of the pass while the depth pairs were ready.
     enum class DepthPairState : std::uint8_t
     {
         Free,
-        Skipped,    // the model was hidden or Drive was active, the original was not called and nothing was copied
         Mismatch,   // the bound depth stencil is not a texture of the description of the copies, nothing was copied
         Copied      // the depth before the call was copied, and the depth after it when the call returned
     };
 
-    // One call of the model seen while the depth pairs were ready, in call order.
+    // One call of the pass seen while the depth pairs were ready, in call order.
     struct DepthPairNote
     {
         DepthPairState State{ DepthPairState::Free };
-        FirstPersonCaller Caller{ FirstPersonCaller::Other };
-        std::uint32_t Pass{ 0 };
+        bool IsCaptured{ false };   // no depth stencil was bound at the entry, the resource captured from the model draw was copied instead
     };
 
     // How the creation of the depth copy textures went (once per probe, at Present).
@@ -267,8 +266,8 @@ export namespace Engine::Render::Type
         std::int32_t Result{ 0 };       // HRESULT of the step that failed
     };
 
-    // Texels whose depth changed between two copies: count, box (inclusive), depth range of the later copy, and how many are in the
-    // weapon region. With Changed 0 the box and the range are 0.
+    // Texels whose depth changed between two copies: count, box (inclusive), depth range of the later copy, how many are in the
+    // weapon region and how many in the right half of the screen (x from width / 2). With Changed 0 the box and the range are 0.
     struct DepthDiff
     {
         std::uint32_t Changed{ 0 };
@@ -279,6 +278,7 @@ export namespace Engine::Render::Type
         float MinDepth{ 0.0f };
         float MaxDepth{ 0.0f };
         std::uint32_t Weapon{ 0 };
+        std::uint32_t Right{ 0 };
     };
 
     // The reduction of one pair: what the call changed and, when the previous pair was read too, what changed between the two calls.

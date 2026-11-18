@@ -317,7 +317,17 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 83 EC 28 44 8B CA 45 33 D2 48 63 D1 41 83 F9 FF"
     };
 
+    // The first person pass of the G-buffer (A21 sec. 8, D331): void(void* view). It sets the first person camera, queues the model (the
+    // arms and weapon, 0x286EBC only queues it), draws the list, restores the normal camera, draws the second layer and pops. It does not draw
+    // the world. The depth it changes is the depth of the first person model, which the overlay mask of VW.6.y.2 uses.
+    inline constexpr Signature k_FirstPersonPassPrologue
+    {
+        "FirstPersonPassPrologue",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 7C 24 18 41 56 48 83 EC 30"
+    };
+
     inline constexpr std::uint32_t k_FirstPersonModelRva{ 0x286EBC };
+    inline constexpr std::uint32_t k_FirstPersonPassRva{ 0x26E2A0 };
     inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
 
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).

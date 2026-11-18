@@ -99,9 +99,10 @@ export namespace Engine::Render::State
         auto IsFirstPersonHidden() const -> bool;
         auto SetFirstPersonHidden(bool isHidden) -> void;
 
-        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked) -> void;
+        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked) -> void;
         auto IsFirstPersonModelHooked() const -> bool;
         auto IsFirstPersonUnitHooked() const -> bool;
+        auto IsFirstPersonPassHooked() const -> bool;
 
         // Counts one answer of the first person test turned to false by Drive. Any thread, no allocation.
         auto CountThirdPerson() -> void;
@@ -161,7 +162,7 @@ export namespace Engine::Render::State
         auto SetFirstPersonDriveActive(bool isActive) -> void;
         auto IsFirstPersonDriveActive() const -> bool;
 
-        // Depth pairs of the probe (VW.6.y.2 A3): textures that hold the depth before and after each call of the model into the G-buffer.
+        // Depth pairs of the probe (VW.6.y.2 A3): textures that hold the depth before and after each call of the first person G-buffer pass.
         // note: All of this is touched on the thread of Present only (the detour copies there too), no lock.
 
         // Keeps the 2 * k_DepthPairCount copy textures (pair k is 2k before, 2k + 1 after), the staging texture to read them and the
@@ -183,8 +184,8 @@ export namespace Engine::Render::State
         auto GetDepthCopy(std::size_t index) const -> ID3D11Texture2D*;
         auto GetDepthStaging() const -> ID3D11Texture2D*;
 
-        // Appends a call of the model to the list and keeps a reference to the resource it copied from, so the after copy uses the same one.
-        // param source: The resource of the depth stencil, null for a call that copied nothing.
+        // Appends a call of the pass to the list and keeps a reference to the resource it copied from, so the after copy uses the same one.
+        // param source: The resource that was copied, null for a call that copied nothing.
         // return: Its position, or nothing when the k_DepthPairCount are taken. No allocation.
         auto NoteDepthPair(const DepthPairNote& note, ID3D11Resource* source) -> std::optional<std::size_t>;
         auto GetDepthPairNote(std::size_t index) const -> DepthPairNote;
@@ -259,6 +260,7 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonHidden{ false };
         std::atomic<bool> m_IsFirstPersonModelHooked{ false };
         std::atomic<bool> m_IsFirstPersonUnitHooked{ false };
+        std::atomic<bool> m_IsFirstPersonPassHooked{ false };
         std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
         std::atomic<std::uint32_t> m_PresentThread{ 0 };

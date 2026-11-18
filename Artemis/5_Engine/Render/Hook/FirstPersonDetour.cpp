@@ -17,6 +17,8 @@ namespace
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelRva;
+    using Engine::Base::Memory::Type::Signature::k_FirstPersonPassPrologue;
+    using Engine::Base::Memory::Type::Signature::k_FirstPersonPassRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitPrologue;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitRva;
@@ -40,7 +42,7 @@ namespace Engine::Render::Hook
         return FirstPersonCaller::Other;
     }
 
-    auto FirstPersonDetour::NoteModelCall(const void* returnAddress, std::uint8_t pass) -> FirstPersonCaller
+    auto FirstPersonDetour::NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void
     {
         const std::uintptr_t base{ m_ModuleBase.load() };
         const std::uintptr_t address{ reinterpret_cast<std::uintptr_t>(returnAddress) };
@@ -49,11 +51,10 @@ namespace Engine::Render::Hook
 
         m_RenderStore.CountFirstPersonCall(caller);
 
-        if (!m_RenderStore.IsFirstPersonProbeArmed()) return caller;
+        if (!m_RenderStore.IsFirstPersonProbeArmed()) return;
 
         m_RenderStore.SetFirstPersonDriveActive(this->IsDriveActive());
         m_RenderService.MeasureFirstPerson(caller, rva, pass);
-        return caller;
     }
 
     auto FirstPersonDetour::IsFirstPersonModelSkipped(std::uint32_t user, bool isHidden, bool isDriveActive) -> bool
@@ -84,19 +85,30 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        FirstPersonCaller caller{ FirstPersonCaller::Other };
-        if (user == k_LocalUser) caller = self->NoteModelCall(_ReturnAddress(), pass);
+        if (user == k_LocalUser) self->NoteModelCall(_ReturnAddress(), pass);
 
-        if (FirstPersonDetour::IsFirstPersonModelSkipped(user, self->m_RenderStore.IsFirstPersonHidden(), self->IsDriveActive()))
+        if (FirstPersonDetour::IsFirstPersonModelSkipped(user, self->m_RenderStore.IsFirstPersonHidden(), self->IsDriveActive())) return;
+
+        if (s_OriginalModel != nullptr) s_OriginalModel(camera, user, pass);
+    }
+
+    // note: The probe copies the depth at the entry and at the exit of the pass (VW.6.y.2 A4), the service decides if this call is copied.
+    // Without an armed probe it only reads atomics. The scope spans the original, as in the other hooks.
+    auto __fastcall FirstPersonDetour::HookedPass(void* view) -> void
+    {
+        FirstPersonDetour* self{ s_Instance.load() };
+
+        if (self == nullptr)
         {
-            if (user == k_LocalUser) self->m_RenderService.NoteDepthPairSkipped(caller, pass);
+            if (s_OriginalPass != nullptr) s_OriginalPass(view);
             return;
         }
 
-        // The probe copies the depth around the original (VW.6.y.2 A3), the service decides if this call is one it copies.
-        const std::optional<std::size_t> pair{ user == k_LocalUser ? self->m_RenderService.BeginDepthPair(caller, pass) : std::nullopt };
+        RenderStore::HookScope scope{ self->m_RenderStore };
 
-        if (s_OriginalModel != nullptr) s_OriginalModel(camera, user, pass);
+        const std::optional<std::size_t> pair{ self->m_RenderService.BeginDepthPair() };
+
+        if (s_OriginalPass != nullptr) s_OriginalPass(view);
 
         if (pair) self->m_RenderService.EndDepthPair(*pair);
     }
@@ -150,7 +162,7 @@ namespace Engine::Render::Hook
     {
         const std::lock_guard<std::mutex> lock{ m_Mutex };
 
-        if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr;
+        if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr || m_PassAddress.load() != nullptr;
         s_Instance.store(this);
 
         const bool isModelHooked{ this->InstallOne("first person model", k_FirstPersonModelPrologue, k_FirstPersonModelRva,
@@ -158,7 +170,10 @@ namespace Engine::Render::Hook
         const bool isUnitHooked{ this->InstallOne("is first person unit", k_IsFirstPersonUnitPrologue, k_IsFirstPersonUnitRva,
             reinterpret_cast<void*>(&HookedUnit), reinterpret_cast<void**>(&s_OriginalUnit), m_UnitAddress) };
 
-        if (!isModelHooked && !isUnitHooked)
+        const bool isPassHooked{ this->InstallOne("first person pass", k_FirstPersonPassPrologue, k_FirstPersonPassRva,
+            reinterpret_cast<void*>(&HookedPass), reinterpret_cast<void**>(&s_OriginalPass), m_PassAddress) };
+
+        if (!isModelHooked && !isUnitHooked && !isPassHooked)
         {
             s_Instance.store(nullptr);
             return false;
@@ -171,7 +186,7 @@ namespace Engine::Render::Hook
         }
 
         m_IsInstalled.store(true);
-        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked);
+        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isPassHooked);
         return true;
     }
 
@@ -198,10 +213,11 @@ namespace Engine::Render::Hook
 
         if (!m_IsInstalled.load()) return;
 
-        m_RenderStore.SetFirstPersonHooksInstalled(false, false);
+        m_RenderStore.SetFirstPersonHooksInstalled(false, false, false);
 
         this->Disable(m_ModelAddress);
         this->Disable(m_UnitAddress);
+        this->Disable(m_PassAddress);
 
         // note: A thread can be past the jump of the hook but not yet inside its HookScope, where WaitForIdle does not see it.
         // 0x266104 runs per object and per frame, maybe on several threads, so that window is real: the grace lets those threads
@@ -215,9 +231,11 @@ namespace Engine::Render::Hook
 
         this->Remove(m_ModelAddress, "first person model");
         this->Remove(m_UnitAddress, "is first person unit");
+        this->Remove(m_PassAddress, "first person pass");
 
         s_OriginalModel = nullptr;
         s_OriginalUnit = nullptr;
+        s_OriginalPass = nullptr;
 
         m_ModuleBase.store(0);
         m_IsInstalled.store(false);

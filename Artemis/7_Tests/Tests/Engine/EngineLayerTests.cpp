@@ -164,10 +164,11 @@ TEST(EngineLayerTests, FirstPersonDetourWithoutTheGameInstallsNothing)
     Engine::Base::Layer base{ service };
     Engine::Render::Layer render{ service, base };
 
-    // No haloreach.dll in the process: neither function is found, nothing is hooked and the store says so.
+    // No haloreach.dll in the process: no function is found, nothing is hooked and the store says so.
     EXPECT_FALSE(render.m_FirstPersonDetour.Install());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonModelHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonUnitHooked());
+    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonPassHooked());
     render.m_FirstPersonDetour.Uninstall();
 }
 
@@ -410,6 +411,7 @@ TEST(EngineLayerTests, CompareDepthRespectsRowPitchBoxAndRange)
     ASSERT_TRUE(same.has_value());
     EXPECT_EQ(same->Changed, 0u);
     EXPECT_EQ(same->Weapon, 0u);
+    EXPECT_EQ(same->Right, 0u);
 
     // A change of the stencil byte only is not a change of depth.
     put(b, pitchB, 1, 1, 0.25f, 0x80);
@@ -427,6 +429,7 @@ TEST(EngineLayerTests, CompareDepthRespectsRowPitchBoxAndRange)
     EXPECT_FLOAT_EQ(one->MinDepth, 0.5f);
     EXPECT_FLOAT_EQ(one->MaxDepth, 0.5f);
     EXPECT_EQ(one->Weapon, 0u);
+    EXPECT_EQ(one->Right, 0u);
 
     // A box in the lower right: x 4..6, y 5..7 (9 texels), depths 0.75 and 1.0, and the first one that is outside it.
     for (std::uint32_t y{ 5 }; y <= 7; ++y)
@@ -447,6 +450,9 @@ TEST(EngineLayerTests, CompareDepthRespectsRowPitchBoxAndRange)
     EXPECT_FLOAT_EQ(box->MaxDepth, 1.0f);
     EXPECT_EQ(box->Weapon, 9u);
 
+    // Right half is x >= 4: the box (x 4..6) is all in it, the first texel (x 2) is not.
+    EXPECT_EQ(box->Right, 9u);
+
     // A layout that cannot be read.
     EXPECT_FALSE(RenderService::CompareDepth(a.data(), 32, b.data(), pitchB, width, height).has_value());
     EXPECT_FALSE(RenderService::CompareDepth(a.data(), pitchA, b.data(), 32, width, height).has_value());
@@ -458,7 +464,6 @@ TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
 {
     using Engine::Render::Type::DepthPairNote;
     using Engine::Render::Type::DepthPairState;
-    using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::k_DepthPairCount;
 
     Engine::Render::State::RenderStore store{};
@@ -468,16 +473,17 @@ TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
 
     for (std::size_t i{ 0 }; i < k_DepthPairCount; ++i)
     {
-        const auto index{ store.NoteDepthPair({ .State = i == 1 ? DepthPairState::Skipped : DepthPairState::Copied,
-            .Caller = FirstPersonCaller::Pass1, .Pass = static_cast<std::uint32_t>(i) }, nullptr) };
+        const auto index{ store.NoteDepthPair({ .State = i == 1 ? DepthPairState::Mismatch : DepthPairState::Copied,
+            .IsCaptured = i == 2 }, nullptr) };
         ASSERT_TRUE(index.has_value());
         EXPECT_EQ(*index, i);
     }
 
     EXPECT_FALSE(store.NoteDepthPair({ .State = DepthPairState::Copied }, nullptr).has_value());
     EXPECT_EQ(store.GetDepthPairNoteCount(), static_cast<std::uint32_t>(k_DepthPairCount));
-    EXPECT_EQ(store.GetDepthPairNote(1).State, DepthPairState::Skipped);
-    EXPECT_EQ(store.GetDepthPairNote(2).Pass, 2u);
+    EXPECT_EQ(store.GetDepthPairNote(1).State, DepthPairState::Mismatch);
+    EXPECT_TRUE(store.GetDepthPairNote(2).IsCaptured);
+    EXPECT_FALSE(store.GetDepthPairNote(3).IsCaptured);
 
     store.ReleaseDepthPairs();
     EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);

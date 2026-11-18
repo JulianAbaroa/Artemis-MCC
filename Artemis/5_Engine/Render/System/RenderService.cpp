@@ -44,16 +44,13 @@ namespace
     using std::chrono::steady_clock;
     using std::chrono::microseconds;
 
+    // How the log names the first person G-buffer pass whose depth the pairs measure.
+    constexpr const char* k_PassCallerName{ "26E2A0 pass" };
+
     // Bytes of a texel of R32G8X24: float depth, stencil byte, 3 unused.
     constexpr std::uint32_t k_StencilTexelBytes{ 8 };
     constexpr std::uint32_t k_StencilByteOffset{ 4 };
     constexpr std::size_t k_StencilTopCount{ 8 };
-
-    // The callers of the model into the G-buffer, the only ones whose depth the probe copies.
-    auto IsDepthPairCaller(FirstPersonCaller caller) -> bool
-    {
-        return caller == FirstPersonCaller::Pass1 || caller == FirstPersonCaller::Func26E2A0;
-    }
 
     // Whether a copy made from a can take the content of a texture of description b.
     auto IsSameDepthDesc(const D3D11_TEXTURE2D_DESC& a, const D3D11_TEXTURE2D_DESC& b) -> bool
@@ -862,9 +859,9 @@ namespace Engine::Render::System
         m_RenderStore.SetFirstPersonSample(sample);
     }
 
-    auto RenderService::GetDepthPairContext(FirstPersonCaller caller) -> ID3D11DeviceContext*
+    auto RenderService::GetDepthPairContext() -> ID3D11DeviceContext*
     {
-        if (!IsDepthPairCaller(caller) || !m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.AreDepthPairsReady()) return nullptr;
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.AreDepthPairsReady()) return nullptr;
         if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return nullptr;
 
         const std::uint32_t presentThread{ m_RenderStore.GetPresentThread() };
@@ -873,9 +870,9 @@ namespace Engine::Render::System
         return m_RenderStore.GetContext();
     }
 
-    auto RenderService::BeginDepthPair(FirstPersonCaller caller, std::uint8_t pass) -> std::optional<std::size_t>
+    auto RenderService::BeginDepthPair() -> std::optional<std::size_t>
     {
-        ID3D11DeviceContext* context{ this->GetDepthPairContext(caller) };
+        ID3D11DeviceContext* context{ this->GetDepthPairContext() };
         if (context == nullptr) return std::nullopt;
 
         ComPtr<ID3D11DepthStencilView> view{};
@@ -884,13 +881,17 @@ namespace Engine::Render::System
         ComPtr<ID3D11Resource> resource{};
         if (view != nullptr) view->GetResource(resource.GetAddressOf());
 
+        // The pass may be entered with no depth stencil bound: the game sets its own inside, so fall back to the one captured from the model.
+        const bool isCaptured{ resource == nullptr };
+        if (isCaptured) resource = m_RenderStore.GetFirstPersonDepth();
+
         ComPtr<ID3D11Texture2D> texture{};
         if (resource != nullptr) resource.As(&texture);
 
         D3D11_TEXTURE2D_DESC desc{};
         if (texture != nullptr) texture->GetDesc(&desc);
 
-        const DepthPairNote note{ .Caller = caller, .Pass = pass };
+        const DepthPairNote note{ .IsCaptured = isCaptured };
 
         if (texture == nullptr || !IsSameDepthDesc(desc, m_RenderStore.GetDepthPairDesc()))
         {
@@ -911,19 +912,12 @@ namespace Engine::Render::System
 
     auto RenderService::EndDepthPair(std::size_t pair) -> void
     {
-        ID3D11DeviceContext* context{ this->GetDepthPairContext(m_RenderStore.GetDepthPairNote(pair).Caller) };
+        ID3D11DeviceContext* context{ this->GetDepthPairContext() };
         ID3D11Resource* source{ m_RenderStore.GetDepthPairSource(pair) };
         ID3D11Texture2D* after{ m_RenderStore.GetDepthCopy(pair * 2 + 1) };
         if (context == nullptr || source == nullptr || after == nullptr) return;
 
         context->CopyResource(after, source);
-    }
-
-    auto RenderService::NoteDepthPairSkipped(FirstPersonCaller caller, std::uint8_t pass) -> void
-    {
-        if (this->GetDepthPairContext(caller) == nullptr) return;
-
-        m_RenderStore.NoteDepthPair({ .State = DepthPairState::Skipped, .Caller = caller, .Pass = pass }, nullptr);
     }
 
     auto RenderService::CompareDepth(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after,
@@ -971,6 +965,7 @@ namespace Engine::Render::System
 
                 ++diff.Changed;
                 if (IsInStencilRegion(StencilRegion::Weapon, x, y, width, height)) ++diff.Weapon;
+                if (x >= width / 2) ++diff.Right;
             }
         }
 
@@ -1149,30 +1144,25 @@ namespace Engine::Render::System
         for (std::uint32_t k{ 0 }; k < info.Count && k < k_DepthPairCount; ++k)
         {
             const DepthPairReport& report{ info.Pairs[k] };
-            const std::uint32_t rva{ CallerRvaOf(report.Note.Caller) };
+            const char* source{ report.Note.IsCaptured ? " (no depth stencil bound at the entry, captured resource)" : "" };
 
-            if (report.Note.State == DepthPairState::Skipped)
+            if (report.Note.State == DepthPairState::Mismatch)
             {
-                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} skipped (model hidden or drive on).", k, rva,
-                    report.Note.Pass);
-            }
-            else if (report.Note.State == DepthPairState::Mismatch)
-            {
-                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} not copied (the bound depth stencil is not the "
-                    "texture of the copies).", k, rva, report.Note.Pass);
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} not copied (the depth stencil is not the texture of the "
+                    "copies){}.", k, k_PassCallerName, source);
             }
             else if (report.Status != StencilReadStatus::Read)
             {
-                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} not read: {} hresult {:#010X}.", k, rva,
-                    report.Note.Pass, StencilStatusName(report.Status), static_cast<std::uint32_t>(report.Result));
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} not read: {} hresult {:#010X}{}.", k, k_PassCallerName,
+                    StencilStatusName(report.Status), static_cast<std::uint32_t>(report.Result), source);
             }
             else
             {
                 const DepthDiff& changed{ report.Changed };
 
-                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} changed {} box {},{}..{},{} depth {}..{} weapon {}.",
-                    k, rva, report.Note.Pass, changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.MinDepth,
-                    changed.MaxDepth, changed.Weapon);
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} changed {} box {},{}..{},{} depth {}..{} weapon {} right {} "
+                    "left {}{}.", k, k_PassCallerName, changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.MinDepth,
+                    changed.MaxDepth, changed.Weapon, changed.Right, changed.Changed - changed.Right, source);
             }
 
             if (report.HasBetween)
