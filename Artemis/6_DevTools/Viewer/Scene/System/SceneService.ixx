@@ -9,6 +9,8 @@ import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Camera.State;
 import DevTools.Viewer.Camera.System;
+import DevTools.Viewer.Collidable.Type;
+import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Palette.System;
 import DevTools.Viewer.Selection.System;
 import std;
@@ -29,6 +31,8 @@ export namespace DevTools::Viewer::Scene::System
         using Viewport = DevTools::Viewer::Camera::Type::Viewport;
         using Matrix = Common::Math::Type::Matrix;
         using GameCamera = Engine::Base::Memory::Type::GameCamera::GameCamera;
+        using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
+        using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
         using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
@@ -51,7 +55,12 @@ export namespace DevTools::Viewer::Scene::System
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
         // note: Follows or orbits the selected object according to the follow mode of the camera. When it follows the biped of a player, that
         // player is the observed one of the Services (the AI thread gives it a View).
-        auto Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport) -> void;
+        // param scene: The scene acquired once for the frame (D294). It is kept as the scene of the last update.
+        auto Update(const std::shared_ptr<const CollidableScene>& scene, const Viewport& viewport) -> void;
+
+        // return: The scene of the last update, so the labels and panels of a frame see the same tick as the 3D passes drawn earlier in it
+        // (they may run before the HUD of the game and at Present). While the viewer is inactive, or the map was reset, a fresh acquire.
+        auto GetFrameScene(const CollidableStore& store) const -> std::shared_ptr<const CollidableScene>;
 
         // return: The View of the player the viewer watches (the observed one, else the primary local player), or null when the tick has none.
         // note: Valid as long as the tick is.
@@ -98,6 +107,7 @@ export namespace DevTools::Viewer::Scene::System
 
     private:
         std::unordered_set<std::uint32_t> m_Hidden{};
+        std::shared_ptr<const CollidableScene> m_Scene{};
 
         // Builds the hidden set of GetHiddenHandles.
         auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;

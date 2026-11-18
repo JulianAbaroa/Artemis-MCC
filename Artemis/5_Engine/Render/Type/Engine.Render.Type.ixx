@@ -19,6 +19,22 @@ export namespace Engine::Render::Type
     // A HUD pass of the game (chud): void(uint32 user).
     using ChudDrawFunction = auto(__fastcall*)(std::uint32_t user) -> void;
 
+    // Why the last completed frame did or did not draw before the HUD of the game.
+    enum class BeforeHudStatus : std::uint8_t
+    {
+        NoHudDraw,          // the game did not run the HUD draw for user 0 in the frame
+        Drawn,              // a handler drew before the HUD
+        OtherThread,        // the HUD draw ran on a thread other than Present
+        NotReady,           // no targets, resizing or shutting down
+        TargetMismatch,     // the bound target is not a texture of the size of the back buffer
+        NotBackBuffer,      // the bound target is not the current back buffer of the store
+        OtherDevice,        // the bound target belongs to another device than the store's
+        SplitViewport,      // viewport 0 is not the whole target (split screen)
+        HudHidden,          // the game HUD is hidden (Hide game HUD)
+        Declined,           // the handlers did not draw
+        Failed              // a handler threw: the frame counts as handled, so Present does not draw it again
+    };
+
     // What the HUD detour measured at the last call of the draw for user 0 (VW.6.x). Only reads, never drawn from.
     struct HudHookInfo
     {
@@ -26,7 +42,8 @@ export namespace Engine::Render::Type
         bool HasSample{ false };        // the draw ran at least once
         bool IsSameThread{ false };     // it ran on the thread of Present. When false the next fields are not read
         bool HasTarget{ false };        // a render target was bound in slot 0
-        bool IsBackBuffer{ false };     // that target is the back buffer of the swap chain
+        bool IsBackBuffer{ false };     // that target is the current back buffer of the store
+        bool IsSameDevice{ false };     // that target belongs to the device of the store
         bool HasViewport{ false };
         std::uint32_t CallsPerFrame{ 0 };   // calls for user 0 between the last two Present
         std::uint32_t Width{ 0 };
@@ -95,6 +112,9 @@ export namespace Engine::Render::Type
     };
 
     using FrameHandler = std::function<void(const FrameContext&)>;
+
+    // Handler that draws under the HUD of the game. return: True if it drew, so the Present handlers skip that work in the frame.
+    using BeforeHudHandler = std::function<bool(const FrameContext&)>;
     using ShutdownCallback = std::function<void()>;
 
     // Longest wait of a render hook for the frame in flight when it is removed.

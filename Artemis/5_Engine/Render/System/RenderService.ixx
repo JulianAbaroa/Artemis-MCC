@@ -28,6 +28,9 @@ export namespace Engine::Render::System
 
         using FrameContext = Engine::Render::Type::FrameContext;
         using FrameHandler = Engine::Render::Type::FrameHandler;
+        using BeforeHudHandler = Engine::Render::Type::BeforeHudHandler;
+        using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
+        using HudHookInfo = Engine::Render::Type::HudHookInfo;
         using ShutdownCallback = Engine::Render::Type::ShutdownCallback;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -45,6 +48,10 @@ export namespace Engine::Render::System
         auto OnFrame(FrameHandler handler) -> void;         // every frame
         auto OnPostFrame(FrameHandler handler) -> void;     // every frame, after OnFrame
         auto OnResize(FrameHandler handler) -> void;        // after the targets are recreated
+
+        // Registers a handler that draws under the HUD of the game, called from the HUD draw before the original (VW.6.x B).
+        // note: Runs on the game render thread inside a GpuStateGuard. It returns whether it drew.
+        auto OnBeforeHud(BeforeHudHandler handler) -> void;
 
         // Callbacks are called in reverse registration order.
         auto OnShutdown(ShutdownCallback callback) -> void;
@@ -67,10 +74,18 @@ export namespace Engine::Render::System
         // return: False if the shutdown did not finish before the timeout.
         auto WaitForShutdown(milliseconds timeout) -> bool;
 
-        // Measures what the game draws its HUD with: the thread, the render target bound in slot 0 and viewport 0. The sample goes to the store.
-        // note: Called by the HUD detour. Only on the thread of Present and with the targets ready the immediate context is read (COM calls
-        // only, no allocation). Otherwise the sample says so and no D3D object is touched.
-        auto MeasureHud() -> void;
+        // Runs for each HUD draw of user 0, before the original: counts it, measures what the game draws its HUD with (thread, render target
+        // in slot 0, viewport 0, into the store) and, when nothing blocks it, calls the before-HUD handlers inside a GpuStateGuard.
+        // note: Called by the HUD detour on the game render thread. Nothing escapes: an exception is caught and counted in the store. The immediate context is only touched on the thread of Present with the
+        // targets ready (COM calls only, no allocation in the measure). Each Present frame runs the handlers once and marks the frame in
+        // the store when one drew.
+        auto OnHudDraw() -> void;
+
+        // return: Why the handlers must not run for this HUD draw, or nothing if they can: no thread of Present, no targets (not ready,
+        // resizing or shutting down), a bound target of another device, that is not the current back buffer, of another size, or a
+        // viewport 0 that is not the whole target.
+        static auto FindBeforeHudBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
+            -> std::optional<BeforeHudStatus>;
 
         // Waits for the calls inside the render hooks to finish.
         // return: False if some are still running after the timeout.
@@ -87,6 +102,7 @@ export namespace Engine::Render::System
         std::vector<FrameHandler> m_OnFrame{};
         std::vector<FrameHandler> m_OnPostFrame{};
         std::vector<FrameHandler> m_OnResize{};
+        std::vector<BeforeHudHandler> m_OnBeforeHud{};
         std::vector<ShutdownCallback> m_OnShutdown{};
 
         std::mutex m_ShutdownMutex{};
@@ -102,9 +118,16 @@ export namespace Engine::Render::System
 
         auto MakeContext() const -> FrameContext;
 
+        // The body of OnHudDraw. Exceptions are caught by the caller.
+        auto HandleHudDraw() -> void;
+
+        // Reads the render target bound in slot 0 and the viewport into a sample, and stores it.
+        auto MeasureHud() -> HudHookInfo;
+
         auto Raise(const std::vector<FrameHandler>& handlers, const char* stage) -> void;
 
         // Logs the first 5 handler errors only.
-        auto ReportHandlerError(const char* stage) -> void;
+        // note: Never throws.
+        auto ReportHandlerError(const char* stage) noexcept -> void;
     };
 }

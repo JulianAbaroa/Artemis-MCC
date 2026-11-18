@@ -10,6 +10,7 @@ import std;
 
 namespace
 {
+    using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::HudHookInfo;
 }
 
@@ -97,6 +98,26 @@ export namespace Engine::Render::State
         // Closes the frame at Present: the count becomes the calls of the last frame and starts again.
         auto EndHudFrame() -> void;
 
+        // Counts an exception that the HUD draw handling caught. note: No allocation, safe in a catch.
+        auto CountHudFailure() -> void;
+        auto GetHudFailures() const -> std::uint32_t;
+
+        // Ends the Present frame in progress: the next one gets the next index and the status of this one becomes the last completed.
+        // note: Called by the Present hook after the frame handlers.
+        auto NextPresentFrame() -> void;
+
+        // Records that something was drawn before the HUD in the Present frame in progress.
+        auto MarkBeforeHud() -> void;
+
+        // return: Whether something was drawn before the HUD in the Present frame in progress. The Present handlers skip that work then.
+        auto IsBeforeHudMarked() const -> bool;
+
+        // Keeps why the frame in progress did or did not draw before the HUD. A later call in the same frame replaces it.
+        auto SetBeforeHudStatus(BeforeHudStatus status) -> void;
+
+        // return: The status of the last completed Present frame.
+        auto GetBeforeHudStatus() const -> BeforeHudStatus;
+
         // Keeps the measure of the last HUD draw. note: A short lock, no allocation. CallsPerFrame and IsHooked are ignored here.
         auto SetHudSample(const HudHookInfo& sample) -> void;
 
@@ -130,6 +151,13 @@ export namespace Engine::Render::State
         std::atomic<std::uint32_t> m_PresentThread{ 0 };
         std::atomic<std::uint32_t> m_HudCalls{ 0 };
         std::atomic<std::uint32_t> m_HudCallsLastFrame{ 0 };
+        std::atomic<std::uint32_t> m_HudFailures{ 0 };
+
+        // Number of Present frames completed, which is the index of the one in progress. The mark holds that index plus one (0 = never).
+        std::atomic<std::uint64_t> m_PresentIndex{ 0 };
+        std::atomic<std::uint64_t> m_BeforeHudMark{ 0 };
+        std::atomic<BeforeHudStatus> m_BeforeHudStatus{ BeforeHudStatus::NoHudDraw };
+        std::atomic<BeforeHudStatus> m_BeforeHudLastStatus{ BeforeHudStatus::NoHudDraw };
 
         mutable std::mutex m_HudSampleMutex{};
         HudHookInfo m_HudSample{};

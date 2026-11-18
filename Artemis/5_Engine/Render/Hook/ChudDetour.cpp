@@ -36,11 +36,7 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        if (user == k_MeasuredUser)
-        {
-            self->m_RenderStore.CountHudCall();
-            self->m_RenderService.MeasureHud();
-        }
+        if (user == k_MeasuredUser) self->m_RenderService.OnHudDraw();
 
         if (self->m_RenderStore.IsGameHudHidden()) return;
 

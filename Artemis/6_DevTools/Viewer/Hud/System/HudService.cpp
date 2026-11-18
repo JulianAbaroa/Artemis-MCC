@@ -18,6 +18,7 @@ namespace
     using DevTools::Viewer::Overlay::Type::Mode;
 
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
+    using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::HudHookInfo;
 
     using Common::Engine::Type::k_NoHandle;
@@ -97,12 +98,12 @@ namespace DevTools::Viewer::Hud::System
             }
             else if (m_OverlayStore.GetMode() == Mode::View)
             {
-                const auto scene = m_CollidableStore.Acquire();
+                const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
                 this->DrawViewPanel(scene ? scene->Tick : nullptr);
             }
             else
             {
-                const auto scene = m_CollidableStore.Acquire();
+                const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
                 this->DrawSelectedPanel(scene ? scene->Tick : nullptr);
             }
         }
@@ -125,7 +126,7 @@ namespace DevTools::Viewer::Hud::System
         this->DrawFramerate();
         this->DrawTelemetry();
 
-        const auto scene = m_CollidableStore.Acquire();
+        const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
         this->DrawGameCamera(scene ? scene->Tick : nullptr);
     }
 
@@ -190,7 +191,7 @@ namespace DevTools::Viewer::Hud::System
         switch (m_OverlayStore.GetMode())
         {
         case Mode::Collidable:
-            CollidablesHud::Draw(ShareObjects(m_CollidableStore.Acquire()), handle);
+            CollidablesHud::Draw(ShareObjects(m_SceneService.GetFrameScene(m_CollidableStore)), handle);
             break;
 
         case Mode::Health:
@@ -314,9 +315,50 @@ namespace DevTools::Viewer::Hud::System
         ImGui::TextColored(k_Info, "%.3f wu (asked eye to game camera)", *distance);
     }
 
+    auto HudService::DrawOverlayPoint(bool isHooked) -> void
+    {
+        ImGui::Text("Overlay drawn:");
+        ImGui::SameLine();
+
+        const BeforeHudStatus status{ m_RenderStore.GetBeforeHudStatus() };
+
+        if (!isHooked)
+        {
+            ImGui::TextColored(k_Orange, "at Present (HUD hook not installed)");
+            return;
+        }
+
+        if (status == BeforeHudStatus::Drawn)
+        {
+            ImGui::TextColored(k_Green, "before HUD");
+            return;
+        }
+
+        const char* reason{ "?" };
+
+        switch (status)
+        {
+        case BeforeHudStatus::NoHudDraw:       reason = "no HUD draw in the frame"; break;
+        case BeforeHudStatus::OtherThread:     reason = "HUD draws on another thread"; break;
+        case BeforeHudStatus::NotReady:        reason = "render target not ready"; break;
+        case BeforeHudStatus::TargetMismatch:  reason = "HUD target is not the size of the back buffer"; break;
+        case BeforeHudStatus::NotBackBuffer:   reason = "HUD target is not the back buffer"; break;
+        case BeforeHudStatus::OtherDevice:     reason = "HUD target is of another device"; break;
+        case BeforeHudStatus::SplitViewport:   reason = "viewport is not the whole target (split screen)"; break;
+        case BeforeHudStatus::HudHidden:       reason = "game HUD hidden"; break;
+        case BeforeHudStatus::Declined:        reason = "Viewer declined (overlay off, no game camera or nothing to draw)"; break;
+        case BeforeHudStatus::Failed:          reason = "a handler failed, the frame was not redrawn"; break;
+        default:                               break;
+        }
+
+        ImGui::TextColored(k_Info, "at Present (%s)", reason);
+    }
+
     auto HudService::DrawHudHook() -> void
     {
         const HudHookInfo info{ m_RenderStore.GetHudHook() };
+
+        this->DrawOverlayPoint(info.IsHooked);
 
         ImGui::Text("HUD hook:");
         ImGui::SameLine();

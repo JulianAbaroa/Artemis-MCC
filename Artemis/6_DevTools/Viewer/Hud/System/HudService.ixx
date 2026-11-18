@@ -39,6 +39,7 @@ export namespace DevTools::Viewer::Hud::System
         using Tick = Bridge::Codec::Tick::Type::Tick;
 
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
+        using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
         using HudHookInfo = Engine::Render::Type::HudHookInfo;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -84,6 +85,7 @@ export namespace DevTools::Viewer::Hud::System
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawHudHook() -> void;
+        auto DrawOverlayPoint(bool isHooked) -> void;
         auto DrawOverride() -> void;
     };
 }

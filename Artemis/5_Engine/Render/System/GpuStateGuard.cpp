@@ -32,10 +32,21 @@ namespace Engine::Render::System
         m_Context->PSGetShader(m_PixelShader.GetAddressOf(), nullptr, nullptr);
 
         m_Context->RSGetState(m_Rasterizer.GetAddressOf());
+        m_Context->GetPredication(m_Predicate.GetAddressOf(), &m_PredicateValue);
+        m_Context->SetPredication(nullptr, FALSE);
+
+        // The counts are asked first, so exactly the bound ones are saved and put back.
+        m_Context->RSGetViewports(&m_ViewportCount, nullptr);
+        m_ViewportCount = (std::min)(m_ViewportCount, static_cast<UINT>(m_Viewports.size()));
         m_Context->RSGetViewports(&m_ViewportCount, m_Viewports.data());
 
-        m_Context->OMGetRenderTargets(1, m_RenderTarget.GetAddressOf(),
-            m_DepthStencil.GetAddressOf());
+        m_Context->RSGetScissorRects(&m_ScissorCount, nullptr);
+        m_ScissorCount = (std::min)(m_ScissorCount, static_cast<UINT>(m_Scissors.size()));
+        m_Context->RSGetScissorRects(&m_ScissorCount, m_Scissors.data());
+
+        ID3D11RenderTargetView* renderTargets[k_TargetSlots]{};
+        m_Context->OMGetRenderTargets(k_TargetSlots, renderTargets, m_DepthStencil.GetAddressOf());
+        for (UINT i = 0; i < k_TargetSlots; ++i) m_RenderTargets[i].Attach(renderTargets[i]);
         m_Context->OMGetDepthStencilState(m_DepthState.GetAddressOf(), &m_StencilRef);
         m_Context->OMGetBlendState(m_BlendState.GetAddressOf(),
             m_BlendFactor.data(), &m_SampleMask);
@@ -66,8 +77,17 @@ namespace Engine::Render::System
         m_Context->RSSetViewports(m_ViewportCount,
             m_ViewportCount > 0 ? m_Viewports.data() : nullptr);
 
-        ID3D11RenderTargetView* renderTarget = m_RenderTarget.Get();
-        m_Context->OMSetRenderTargets(1, &renderTarget, m_DepthStencil.Get());
+        m_Context->RSSetScissorRects(m_ScissorCount, m_ScissorCount > 0 ? m_Scissors.data() : nullptr);
+
+        ID3D11RenderTargetView* renderTargets[k_TargetSlots]{};
+        UINT targetCount{ 0 };
+        for (UINT i = 0; i < k_TargetSlots; ++i)
+        {
+            renderTargets[i] = m_RenderTargets[i].Get();
+            if (renderTargets[i] != nullptr) targetCount = i + 1;
+        }
+        m_Context->OMSetRenderTargets(targetCount, renderTargets, m_DepthStencil.Get());
+        m_Context->SetPredication(m_Predicate.Get(), m_PredicateValue);
         m_Context->OMSetDepthStencilState(m_DepthState.Get(), m_StencilRef);
         m_Context->OMSetBlendState(m_BlendState.Get(), m_BlendFactor.data(), m_SampleMask);
     }

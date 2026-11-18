@@ -78,6 +78,11 @@ export namespace DevTools::Viewer::Map::System
         // note: Releases the GPU resources first if the device changed.
         auto Render(const FrameContext& frame) -> void;
 
+        // Draws one frame under the HUD of the game: the same frame as Render, but only with the overlay active (game camera and option).
+        // note: Called from the before-HUD event of Engine.Render. The Present handler calls Render only if this one did not draw.
+        // return: True if it drew. When false nothing was updated, so Render does the whole frame.
+        auto RenderBeforeHud(const FrameContext& frame) -> bool;
+
         // Releases every GPU resource. Call it before the device goes away.
         auto Release() -> void;
 
@@ -110,7 +115,16 @@ export namespace DevTools::Viewer::Map::System
         // Device the resources were created on. Compared only, never used.
         const ID3D11Device* m_Device{ nullptr };
 
-        auto Draw(const FrameContext& frame) -> void;
+        // The frame of Render and RenderBeforeHud. The caller holds the mutex.
+        // param isBeforeHud: Under the HUD of the game: never clears the color, and if the overlay is no longer active after the scene update
+        // it draws nothing but still counts as handled.
+        // return: True if the frame was handled (the scene was updated once), false if nothing was updated.
+        auto RenderFrame(const FrameContext& frame, bool isBeforeHud) -> bool;
+
+        // return: Whether the game camera and the overlay option are on, so what is drawn goes over the game frame.
+        auto IsOverlayActive() const -> bool;
+
+        auto Draw(const FrameContext& frame, bool isBeforeHud) -> void;
 
         // Releases what depends on the map and resets the scene.
         auto ReleaseMap() -> void;

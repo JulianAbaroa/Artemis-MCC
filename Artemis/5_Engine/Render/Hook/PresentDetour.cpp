@@ -32,6 +32,7 @@ namespace Engine::Render::Hook
             self->m_RenderStore.SetPresentThread(GetCurrentThreadId());
             self->m_RenderStore.EndHudFrame();
             self->m_RenderService.PresentFrame(swapChain);
+            self->m_RenderStore.NextPresentFrame();
         }
 
         return s_OriginalFunction(swapChain, syncInterval, flags);

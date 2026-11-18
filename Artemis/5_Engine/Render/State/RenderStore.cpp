@@ -7,6 +7,7 @@ module Engine.Render.State;
 
 namespace
 {
+    using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::HudHookInfo;
 }
 
@@ -146,6 +147,42 @@ namespace Engine::Render::State
     auto RenderStore::EndHudFrame() -> void
     {
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+    }
+
+    auto RenderStore::CountHudFailure() -> void
+    {
+        m_HudFailures.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetHudFailures() const -> std::uint32_t
+    {
+        return m_HudFailures.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::NextPresentFrame() -> void
+    {
+        m_BeforeHudLastStatus.store(m_BeforeHudStatus.exchange(BeforeHudStatus::NoHudDraw, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_PresentIndex.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::MarkBeforeHud() -> void
+    {
+        m_BeforeHudMark.store(m_PresentIndex.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsBeforeHudMarked() const -> bool
+    {
+        return m_BeforeHudMark.load(std::memory_order_relaxed) == m_PresentIndex.load(std::memory_order_relaxed) + 1;
+    }
+
+    auto RenderStore::SetBeforeHudStatus(BeforeHudStatus status) -> void
+    {
+        m_BeforeHudStatus.store(status, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetBeforeHudStatus() const -> BeforeHudStatus
+    {
+        return m_BeforeHudLastStatus.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::SetHudSample(const HudHookInfo& sample) -> void

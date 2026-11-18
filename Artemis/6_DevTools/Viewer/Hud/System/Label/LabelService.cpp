@@ -26,7 +26,7 @@ namespace DevTools::Viewer::Hud::System
         if (!m_SceneService.IsActive()) return;
         if (!m_OptionsStore.IsEnabled(Flag::Labels)) return;
 
-        const auto scene = m_CollidableStore.Acquire();
+        const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
         if (!scene || !scene->Tick) return;
         const auto& tick = scene->Tick;
 

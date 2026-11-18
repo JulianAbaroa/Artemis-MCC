@@ -80,12 +80,21 @@ namespace DevTools::Viewer::Scene::System
 
     auto SceneService::Deactivate() -> void
     {
+        m_Scene.reset();
         m_ObservedStore.Set(k_NoHandle);
         m_CameraService.Deactivate();
     }
 
-    auto SceneService::Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport) -> void
+    auto SceneService::GetFrameScene(const CollidableStore& store) const -> std::shared_ptr<const CollidableScene>
     {
+        return m_Scene ? m_Scene : store.Acquire();
+    }
+
+    auto SceneService::Update(const std::shared_ptr<const CollidableScene>& scene, const Viewport& viewport) -> void
+    {
+        m_Scene = scene;
+        const std::shared_ptr<const Tick> tick{ scene ? scene->Tick : nullptr };
+
         const bool acceptInput = !m_SettingsStore.IsMenuVisible();
         const std::uint32_t selected = m_SelectionService.GetSelected();
         const std::optional<std::uint32_t> followHandle =
@@ -118,6 +127,7 @@ namespace DevTools::Viewer::Scene::System
 
     auto SceneService::Reset() -> void
     {
+        m_Scene.reset();
         m_ObservedStore.Set(k_NoHandle);
         m_PaletteService.Reset();
         m_SelectionService.Reset();

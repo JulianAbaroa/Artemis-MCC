@@ -77,12 +77,17 @@ export namespace DevTools::Viewer
             engine.m_RenderService.OnFrame([this, &gui, &engine](const FrameContext& frame) {
                 engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
 
-                m_MapService.Render(frame);
+                // The 3D passes ran under the HUD of the game when the event marked the frame. Otherwise they run here, once.
+                if (!engine.m_RenderStore.IsBeforeHudMarked()) m_MapService.Render(frame);
 
                 if (!gui.m_BackendGuiService.IsReady()) return;
 
                 m_LabelService.Draw();
                 m_HudService.Draw();
+            });
+
+            engine.m_RenderService.OnBeforeHud([this](const FrameContext& frame) {
+                return m_MapService.RenderBeforeHud(frame);
             });
 
             engine.m_RenderService.OnShutdown([this] {

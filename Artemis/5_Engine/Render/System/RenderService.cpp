@@ -6,6 +6,7 @@ module;
 
 module Engine.Render.System;
 import :RenderService;
+import :GpuStateGuard;
 import std;
 
 namespace
@@ -38,6 +39,11 @@ namespace Engine::Render::System
     auto RenderService::OnResize(FrameHandler handler) -> void
     {
         m_OnResize.push_back(std::move(handler));
+    }
+
+    auto RenderService::OnBeforeHud(BeforeHudHandler handler) -> void
+    {
+        m_OnBeforeHud.push_back(std::move(handler));
     }
 
     auto RenderService::OnShutdown(ShutdownCallback callback) -> void
@@ -219,11 +225,17 @@ namespace Engine::Render::System
         }
     }
 
-    auto RenderService::ReportHandlerError(const char* stage) -> void
+    auto RenderService::ReportHandlerError(const char* stage) noexcept -> void
     {
         if (m_HandlerErrors.fetch_add(1) >= 5) return;
 
-        m_Log.Message("[RenderService] ERROR: A {} handler threw an exception.", stage);
+        try
+        {
+            m_Log.Message("[RenderService] ERROR: A {} handler threw an exception.", stage);
+        }
+        catch (...)
+        {
+        }
     }
 
     auto RenderService::RequestShutdown() -> void
@@ -244,7 +256,100 @@ namespace Engine::Render::System
         return true;
     }
 
-    auto RenderService::MeasureHud() -> void
+    auto RenderService::FindBeforeHudBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
+        -> std::optional<BeforeHudStatus>
+    {
+        if (!sample.IsSameThread) return BeforeHudStatus::OtherThread;
+        if (!isReady) return BeforeHudStatus::NotReady;
+        if (!sample.HasTarget || width == 0 || height == 0) return BeforeHudStatus::TargetMismatch;
+        if (!sample.IsSameDevice) return BeforeHudStatus::OtherDevice;
+        if (!sample.IsBackBuffer) return BeforeHudStatus::NotBackBuffer;
+        if (sample.Width != width || sample.Height != height) return BeforeHudStatus::TargetMismatch;
+
+        const bool isWholeTarget{ sample.HasViewport && sample.ViewportX == 0.0f && sample.ViewportY == 0.0f &&
+            sample.ViewportWidth == static_cast<float>(width) && sample.ViewportHeight == static_cast<float>(height) };
+        if (!isWholeTarget) return BeforeHudStatus::SplitViewport;
+
+        return std::nullopt;
+    }
+
+    auto RenderService::OnHudDraw() -> void
+    {
+        try
+        {
+            this->HandleHudDraw();
+        }
+        catch (...)
+        {
+            m_RenderStore.CountHudFailure();
+        }
+    }
+
+    auto RenderService::HandleHudDraw() -> void
+    {
+        m_RenderStore.CountHudCall();
+
+        const HudHookInfo sample{ this->MeasureHud() };
+
+        if (m_RenderStore.IsGameHudHidden())
+        {
+            m_RenderStore.SetBeforeHudStatus(BeforeHudStatus::HudHidden);
+            return;
+        }
+
+        // The handlers run once per Present frame, whatever the number of HUD draws.
+        if (m_RenderStore.IsBeforeHudMarked()) return;
+
+        const bool isReady{ m_RenderStore.IsReady() && !m_RenderStore.IsResizing() && !m_RenderStore.IsShutdownRequested() };
+
+        if (const auto blocker{ this->FindBeforeHudBlocker(sample, isReady, m_RenderStore.GetWidth(), m_RenderStore.GetHeight()) })
+        {
+            m_RenderStore.SetBeforeHudStatus(*blocker);
+            return;
+        }
+
+        ID3D11DeviceContext* context{ m_RenderStore.GetContext() };
+
+        ComPtr<ID3D11RenderTargetView> target{};
+        if (context != nullptr) context->OMGetRenderTargets(1, target.GetAddressOf(), nullptr);
+
+        if (context == nullptr || target == nullptr)
+        {
+            m_RenderStore.SetBeforeHudStatus(BeforeHudStatus::NotReady);
+            return;
+        }
+
+        FrameContext frame{ this->MakeContext() };
+        frame.RenderTarget = target.Get();
+        frame.Width = sample.Width;
+        frame.Height = sample.Height;
+
+        bool isDrawn{ false };
+        bool isFailed{ false };
+
+        {
+            GpuStateGuard guard{ context };
+
+            for (const auto& handler : m_OnBeforeHud)
+            {
+                try
+                {
+                    if (handler(frame)) isDrawn = true;
+                }
+                catch (...)
+                {
+                    // The handler may have drawn part of the frame: it counts as handled, so Present does not draw it again.
+                    isFailed = true;
+                    this->ReportHandlerError("OnBeforeHud");
+                }
+            }
+        }
+
+        if (isDrawn || isFailed) m_RenderStore.MarkBeforeHud();
+        m_RenderStore.SetBeforeHudStatus(isFailed ? BeforeHudStatus::Failed : isDrawn ? BeforeHudStatus::Drawn : BeforeHudStatus::Declined);
+    }
+
+    auto RenderService::MeasureHud() -> HudHookInfo
     {
         HudHookInfo sample{};
         sample.HasSample = true;
@@ -255,7 +360,7 @@ namespace Engine::Render::System
         if (!sample.IsSameThread || m_RenderStore.IsResizing() || !m_RenderStore.IsReady())
         {
             m_RenderStore.SetHudSample(sample);
-            return;
+            return sample;
         }
 
         ID3D11DeviceContext* context{ m_RenderStore.GetContext() };
@@ -263,7 +368,7 @@ namespace Engine::Render::System
         if (context == nullptr)
         {
             m_RenderStore.SetHudSample(sample);
-            return;
+            return sample;
         }
 
         ComPtr<ID3D11RenderTargetView> target{};
@@ -295,6 +400,10 @@ namespace Engine::Render::System
                 }
 
                 sample.IsBackBuffer = backBuffer != nullptr && backBuffer.Get() == resource.Get();
+
+                ComPtr<ID3D11Device> targetDevice{};
+                target->GetDevice(targetDevice.GetAddressOf());
+                sample.IsSameDevice = targetDevice != nullptr && targetDevice.Get() == m_RenderStore.GetDevice();
             }
         }
 
@@ -312,6 +421,7 @@ namespace Engine::Render::System
         }
 
         m_RenderStore.SetHudSample(sample);
+        return sample;
     }
 
     auto RenderService::WaitForIdle(milliseconds timeout) -> bool
