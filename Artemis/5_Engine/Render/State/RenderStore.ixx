@@ -11,11 +11,15 @@ import std;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::DepthPairNote;
+    using Engine::Render::Type::DepthPairSetup;
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::StencilProbeInfo;
 
+    using Engine::Render::Type::k_DepthCopyCount;
+    using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
 }
 
@@ -157,6 +161,39 @@ export namespace Engine::Render::State
         auto SetFirstPersonDriveActive(bool isActive) -> void;
         auto IsFirstPersonDriveActive() const -> bool;
 
+        // Depth pairs of the probe (VW.6.y.2 A3): textures that hold the depth before and after each call of the model into the G-buffer.
+        // note: All of this is touched on the thread of Present only (the detour copies there too), no lock.
+
+        // Keeps the 2 * k_DepthPairCount copy textures (pair k is 2k before, 2k + 1 after), the staging texture to read them and the
+        // description they were made from.
+        auto SetDepthPairs(std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> copies, ComPtr<ID3D11Texture2D> staging,
+            const D3D11_TEXTURE2D_DESC& desc) -> void;
+
+        // return: Whether the copies exist.
+        auto AreDepthPairsReady() const -> bool;
+
+        // How the creation went. Kept even when it failed, so the probe tries once.
+        auto SetDepthPairSetup(const DepthPairSetup& setup) -> void;
+        auto GetDepthPairSetup() const -> DepthPairSetup;
+
+        // return: The description of the original depth texture the copies were made from.
+        auto GetDepthPairDesc() const -> D3D11_TEXTURE2D_DESC;
+
+        // return: Copy texture i (not owned), null when i is out of range or none exist.
+        auto GetDepthCopy(std::size_t index) const -> ID3D11Texture2D*;
+        auto GetDepthStaging() const -> ID3D11Texture2D*;
+
+        // Appends a call of the model to the list and keeps a reference to the resource it copied from, so the after copy uses the same one.
+        // param source: The resource of the depth stencil, null for a call that copied nothing.
+        // return: Its position, or nothing when the k_DepthPairCount are taken. No allocation.
+        auto NoteDepthPair(const DepthPairNote& note, ID3D11Resource* source) -> std::optional<std::size_t>;
+        auto GetDepthPairNote(std::size_t index) const -> DepthPairNote;
+        auto GetDepthPairNoteCount() const -> std::uint32_t;
+        auto GetDepthPairSource(std::size_t index) const -> ID3D11Resource*;
+
+        // Drops the copies, the staging, the notes and the setup. Also done when a probe is armed, the targets are released and at cleanup.
+        auto ReleaseDepthPairs() -> void;
+
         // Thread of Present, noted at every Present. 0 until the first one.
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
@@ -250,5 +287,13 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonDriveActive{ false };
         mutable std::mutex m_StencilMutex{};
         StencilProbeInfo m_StencilProbe{};
+
+        std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> m_DepthCopies{};  // Thread of Present only
+        ComPtr<ID3D11Texture2D> m_DepthStaging{};
+        D3D11_TEXTURE2D_DESC m_DepthPairDesc{};
+        DepthPairSetup m_DepthPairSetup{};
+        std::array<DepthPairNote, k_DepthPairCount> m_DepthNotes{};
+        std::array<ComPtr<ID3D11Resource>, k_DepthPairCount> m_DepthSources{};
+        std::uint32_t m_DepthNoteCount{ 0 };
     };
 }

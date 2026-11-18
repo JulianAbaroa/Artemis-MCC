@@ -14,6 +14,12 @@ namespace
     using Microsoft::WRL::ComPtr;
 
     using Engine::Render::Type::ColorTargetInfo;
+    using Engine::Render::Type::DepthDiff;
+    using Engine::Render::Type::DepthPairNote;
+    using Engine::Render::Type::DepthPairReport;
+    using Engine::Render::Type::DepthPairSetup;
+    using Engine::Render::Type::DepthPairState;
+    using Engine::Render::Type::DepthProbeInfo;
     using Engine::Render::Type::DepthStencilStateInfo;
     using Engine::Render::Type::DepthTargetInfo;
     using Engine::Render::Type::FirstPersonCaller;
@@ -27,6 +33,8 @@ namespace
     using Engine::Render::Type::StencilRegionStats;
     using Engine::Render::Type::ViewportInfo;
 
+    using Engine::Render::Type::k_DepthCopyCount;
+    using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_StencilBitCount;
@@ -40,6 +48,52 @@ namespace
     constexpr std::uint32_t k_StencilTexelBytes{ 8 };
     constexpr std::uint32_t k_StencilByteOffset{ 4 };
     constexpr std::size_t k_StencilTopCount{ 8 };
+
+    // The callers of the model into the G-buffer, the only ones whose depth the probe copies.
+    auto IsDepthPairCaller(FirstPersonCaller caller) -> bool
+    {
+        return caller == FirstPersonCaller::Pass1 || caller == FirstPersonCaller::Func26E2A0;
+    }
+
+    // Whether a copy made from a can take the content of a texture of description b.
+    auto IsSameDepthDesc(const D3D11_TEXTURE2D_DESC& a, const D3D11_TEXTURE2D_DESC& b) -> bool
+    {
+        return a.Width == b.Width && a.Height == b.Height && a.MipLevels == b.MipLevels && a.ArraySize == b.ArraySize &&
+            a.Format == b.Format && a.SampleDesc.Count == b.SampleDesc.Count && a.SampleDesc.Quality == b.SampleDesc.Quality;
+    }
+
+    // Copies a depth texture to the CPU through the staging, rows packed (width * 8 bytes). Blocks until the GPU finishes the copy.
+    // return: S_OK, or the HRESULT of the Map (E_INVALIDARG when the pitch is smaller than a row).
+    auto CopyDepthToCpu(ID3D11DeviceContext* context, ID3D11Texture2D* staging, ID3D11Texture2D* source, std::uint32_t width,
+        std::uint32_t height, std::vector<std::uint8_t>& out) -> HRESULT
+    {
+        context->CopyResource(staging, source);
+
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        const HRESULT result{ context->Map(staging, 0, D3D11_MAP_READ, 0, &mapped) };
+        if (FAILED(result)) return result;
+
+        const std::size_t rowBytes{ static_cast<std::size_t>(width) * k_StencilTexelBytes };
+        HRESULT copyResult{ S_OK };
+
+        if (mapped.RowPitch < rowBytes)
+        {
+            copyResult = E_INVALIDARG;
+        }
+        else
+        {
+            out.resize(rowBytes * height);
+
+            for (std::uint32_t y{ 0 }; y < height; ++y)
+            {
+                std::memcpy(out.data() + y * rowBytes, static_cast<const std::uint8_t*>(mapped.pData) + static_cast<std::size_t>(y) * mapped.RowPitch,
+                    rowBytes);
+            }
+        }
+
+        context->Unmap(staging, 0);
+        return copyResult;
+    }
 
     auto IsInStencilRegion(StencilRegion region, std::uint32_t x, std::uint32_t y, std::uint32_t width, std::uint32_t height) -> bool
     {
@@ -355,6 +409,7 @@ namespace Engine::Render::System
         }
 
         if (m_RenderStore.StepFirstPersonProbe()) this->ReportFirstPersonProbe();
+        else this->PrepareDepthPairs();
 
         // A different swap chain than the bound one means the game created a new one.
         const bool isAnotherSwapChain = m_RenderStore.GetSwapChain() != swapChain;
@@ -807,6 +862,328 @@ namespace Engine::Render::System
         m_RenderStore.SetFirstPersonSample(sample);
     }
 
+    auto RenderService::GetDepthPairContext(FirstPersonCaller caller) -> ID3D11DeviceContext*
+    {
+        if (!IsDepthPairCaller(caller) || !m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.AreDepthPairsReady()) return nullptr;
+        if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return nullptr;
+
+        const std::uint32_t presentThread{ m_RenderStore.GetPresentThread() };
+        if (presentThread == 0 || presentThread != GetCurrentThreadId()) return nullptr;
+
+        return m_RenderStore.GetContext();
+    }
+
+    auto RenderService::BeginDepthPair(FirstPersonCaller caller, std::uint8_t pass) -> std::optional<std::size_t>
+    {
+        ID3D11DeviceContext* context{ this->GetDepthPairContext(caller) };
+        if (context == nullptr) return std::nullopt;
+
+        ComPtr<ID3D11DepthStencilView> view{};
+        context->OMGetRenderTargets(0, nullptr, view.GetAddressOf());
+
+        ComPtr<ID3D11Resource> resource{};
+        if (view != nullptr) view->GetResource(resource.GetAddressOf());
+
+        ComPtr<ID3D11Texture2D> texture{};
+        if (resource != nullptr) resource.As(&texture);
+
+        D3D11_TEXTURE2D_DESC desc{};
+        if (texture != nullptr) texture->GetDesc(&desc);
+
+        const DepthPairNote note{ .Caller = caller, .Pass = pass };
+
+        if (texture == nullptr || !IsSameDepthDesc(desc, m_RenderStore.GetDepthPairDesc()))
+        {
+            DepthPairNote mismatch{ note };
+            mismatch.State = DepthPairState::Mismatch;
+            m_RenderStore.NoteDepthPair(mismatch, nullptr);
+            return std::nullopt;
+        }
+
+        DepthPairNote copied{ note };
+        copied.State = DepthPairState::Copied;
+        const std::optional<std::size_t> pair{ m_RenderStore.NoteDepthPair(copied, resource.Get()) };
+        if (!pair) return std::nullopt;
+
+        context->CopyResource(m_RenderStore.GetDepthCopy(*pair * 2), resource.Get());
+        return pair;
+    }
+
+    auto RenderService::EndDepthPair(std::size_t pair) -> void
+    {
+        ID3D11DeviceContext* context{ this->GetDepthPairContext(m_RenderStore.GetDepthPairNote(pair).Caller) };
+        ID3D11Resource* source{ m_RenderStore.GetDepthPairSource(pair) };
+        ID3D11Texture2D* after{ m_RenderStore.GetDepthCopy(pair * 2 + 1) };
+        if (context == nullptr || source == nullptr || after == nullptr) return;
+
+        context->CopyResource(after, source);
+    }
+
+    auto RenderService::NoteDepthPairSkipped(FirstPersonCaller caller, std::uint8_t pass) -> void
+    {
+        if (this->GetDepthPairContext(caller) == nullptr) return;
+
+        m_RenderStore.NoteDepthPair({ .State = DepthPairState::Skipped, .Caller = caller, .Pass = pass }, nullptr);
+    }
+
+    auto RenderService::CompareDepth(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after,
+        std::uint32_t afterPitch, std::uint32_t width, std::uint32_t height) -> std::optional<DepthDiff>
+    {
+        const std::uint64_t rowBytes{ static_cast<std::uint64_t>(width) * k_StencilTexelBytes };
+
+        if (before == nullptr || after == nullptr || width == 0 || height == 0 || beforePitch < rowBytes || afterPitch < rowBytes)
+        {
+            return std::nullopt;
+        }
+
+        DepthDiff diff{};
+
+        for (std::uint32_t y{ 0 }; y < height; ++y)
+        {
+            const std::uint8_t* beforeRow{ before + static_cast<std::size_t>(y) * beforePitch };
+            const std::uint8_t* afterRow{ after + static_cast<std::size_t>(y) * afterPitch };
+
+            for (std::uint32_t x{ 0 }; x < width; ++x)
+            {
+                const std::uint8_t* beforeTexel{ beforeRow + static_cast<std::size_t>(x) * k_StencilTexelBytes };
+                const std::uint8_t* afterTexel{ afterRow + static_cast<std::size_t>(x) * k_StencilTexelBytes };
+
+                if (std::memcmp(beforeTexel, afterTexel, sizeof(float)) == 0) continue;
+
+                float depth{ 0.0f };
+                std::memcpy(&depth, afterTexel, sizeof(depth));
+
+                if (diff.Changed == 0)
+                {
+                    diff.X0 = diff.X1 = x;
+                    diff.Y0 = diff.Y1 = y;
+                    diff.MinDepth = diff.MaxDepth = depth;
+                }
+                else
+                {
+                    diff.X0 = (std::min)(diff.X0, x);
+                    diff.X1 = (std::max)(diff.X1, x);
+                    diff.Y0 = (std::min)(diff.Y0, y);
+                    diff.Y1 = (std::max)(diff.Y1, y);
+                    diff.MinDepth = (std::min)(diff.MinDepth, depth);
+                    diff.MaxDepth = (std::max)(diff.MaxDepth, depth);
+                }
+
+                ++diff.Changed;
+                if (IsInStencilRegion(StencilRegion::Weapon, x, y, width, height)) ++diff.Weapon;
+            }
+        }
+
+        return diff;
+    }
+
+    auto RenderService::PrepareDepthPairs() -> void
+    {
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || m_RenderStore.GetDepthPairSetup().IsAttempted) return;
+        if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return;
+
+        ID3D11Resource* resource{ m_RenderStore.GetFirstPersonDepth() };
+        if (resource == nullptr) return;
+
+        DepthPairSetup setup{ .IsAttempted = true };
+
+        ComPtr<ID3D11Texture2D> texture{};
+
+        if (FAILED(resource->QueryInterface(IID_PPV_ARGS(texture.GetAddressOf()))))
+        {
+            setup.Status = StencilReadStatus::NotTexture;
+            m_RenderStore.SetDepthPairSetup(setup);
+            return;
+        }
+
+        D3D11_TEXTURE2D_DESC desc{};
+        texture->GetDesc(&desc);
+
+        if (desc.Format != DXGI_FORMAT_R32G8X24_TYPELESS && desc.Format != DXGI_FORMAT_D32_FLOAT_S8X24_UINT)
+        {
+            setup.Status = StencilReadStatus::UnsupportedFormat;
+            m_RenderStore.SetDepthPairSetup(setup);
+            return;
+        }
+
+        ComPtr<ID3D11Device> device{};
+        resource->GetDevice(device.GetAddressOf());
+
+        D3D11_TEXTURE2D_DESC copyDesc{ desc };
+        copyDesc.Usage = D3D11_USAGE_DEFAULT;
+        copyDesc.BindFlags = 0;
+        copyDesc.CPUAccessFlags = 0;
+        copyDesc.MiscFlags = 0;
+
+        D3D11_TEXTURE2D_DESC stagingDesc{ copyDesc };
+        stagingDesc.Usage = D3D11_USAGE_STAGING;
+        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+        std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> copies{};
+        ComPtr<ID3D11Texture2D> staging{};
+        HRESULT result{ device != nullptr ? S_OK : E_POINTER };
+
+        for (std::size_t i{ 0 }; i < copies.size() && SUCCEEDED(result); ++i)
+        {
+            result = device->CreateTexture2D(&copyDesc, nullptr, copies[i].GetAddressOf());
+        }
+
+        if (SUCCEEDED(result)) result = device->CreateTexture2D(&stagingDesc, nullptr, staging.GetAddressOf());
+
+        if (FAILED(result) || staging == nullptr)
+        {
+            setup.Status = StencilReadStatus::CreateFailed;
+            setup.Result = static_cast<std::int32_t>(result);
+            m_RenderStore.SetDepthPairSetup(setup);
+            return;
+        }
+
+        setup.Status = StencilReadStatus::Read;
+        m_RenderStore.SetDepthPairs(std::move(copies), std::move(staging), desc);
+        m_RenderStore.SetDepthPairSetup(setup);
+    }
+
+    auto RenderService::ReadDepthPairs() -> DepthProbeInfo
+    {
+        DepthProbeInfo info{ .Count = m_RenderStore.GetDepthPairNoteCount() };
+
+        ID3D11Texture2D* staging{ m_RenderStore.GetDepthStaging() };
+        if (staging == nullptr) return info;
+
+        const D3D11_TEXTURE2D_DESC desc{ m_RenderStore.GetDepthPairDesc() };
+        const std::uint32_t pitch{ desc.Width * k_StencilTexelBytes };
+
+        ComPtr<ID3D11Device> device{};
+        staging->GetDevice(device.GetAddressOf());
+
+        ComPtr<ID3D11DeviceContext> context{};
+        if (device != nullptr) device->GetImmediateContext(context.GetAddressOf());
+        if (context == nullptr) return info;
+
+        // One staging only: the before texture is copied to the CPU, then the after one. The after of the last pair stays for the between.
+        std::vector<std::uint8_t> before{};
+        std::vector<std::uint8_t> after{};
+        std::vector<std::uint8_t> previousAfter{};
+        bool hasPreviousAfter{ false };
+
+        for (std::uint32_t k{ 0 }; k < info.Count && k < k_DepthPairCount; ++k)
+        {
+            DepthPairReport& report{ info.Pairs[k] };
+            report.Note = m_RenderStore.GetDepthPairNote(k);
+
+            if (report.Note.State != DepthPairState::Copied)
+            {
+                hasPreviousAfter = false;
+                continue;
+            }
+
+            HRESULT result{ CopyDepthToCpu(context.Get(), staging, m_RenderStore.GetDepthCopy(k * 2ull), desc.Width, desc.Height, before) };
+
+            if (SUCCEEDED(result) && hasPreviousAfter)
+            {
+                const std::optional<DepthDiff> between{ RenderService::CompareDepth(previousAfter.data(), pitch, before.data(), pitch, desc.Width,
+                    desc.Height) };
+
+                if (between)
+                {
+                    report.HasBetween = true;
+                    report.Between = *between;
+                }
+            }
+
+            hasPreviousAfter = false;
+
+            if (SUCCEEDED(result))
+            {
+                result = CopyDepthToCpu(context.Get(), staging, m_RenderStore.GetDepthCopy(k * 2ull + 1), desc.Width, desc.Height, after);
+            }
+
+            if (FAILED(result))
+            {
+                report.Status = StencilReadStatus::MapFailed;
+                report.Result = static_cast<std::int32_t>(result);
+                continue;
+            }
+
+            const std::optional<DepthDiff> changed{ RenderService::CompareDepth(before.data(), pitch, after.data(), pitch, desc.Width, desc.Height) };
+
+            if (!changed)
+            {
+                report.Status = StencilReadStatus::BadLayout;
+                continue;
+            }
+
+            report.Status = StencilReadStatus::Read;
+            report.Changed = *changed;
+            previousAfter.swap(after);
+            hasPreviousAfter = true;
+        }
+
+        return info;
+    }
+
+    auto RenderService::ReportDepthPairs() -> void
+    {
+        const DepthPairSetup setup{ m_RenderStore.GetDepthPairSetup() };
+
+        if (!m_RenderStore.AreDepthPairsReady())
+        {
+            if (!setup.IsAttempted)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: depth pairs not made (no depth stencil captured from the model draw).");
+            }
+            else
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: depth pairs not made: {} hresult {:#010X}.", StencilStatusName(setup.Status),
+                    static_cast<std::uint32_t>(setup.Result));
+            }
+
+            m_RenderStore.ReleaseDepthPairs();
+            return;
+        }
+
+        const DepthProbeInfo info{ this->ReadDepthPairs() };
+
+        if (info.Count == 0) m_Log.Message("[FirstPersonProbe] INFO: depth pairs made but no call of the model was seen.");
+
+        for (std::uint32_t k{ 0 }; k < info.Count && k < k_DepthPairCount; ++k)
+        {
+            const DepthPairReport& report{ info.Pairs[k] };
+            const std::uint32_t rva{ CallerRvaOf(report.Note.Caller) };
+
+            if (report.Note.State == DepthPairState::Skipped)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} skipped (model hidden or drive on).", k, rva,
+                    report.Note.Pass);
+            }
+            else if (report.Note.State == DepthPairState::Mismatch)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} not copied (the bound depth stencil is not the "
+                    "texture of the copies).", k, rva, report.Note.Pass);
+            }
+            else if (report.Status != StencilReadStatus::Read)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} not read: {} hresult {:#010X}.", k, rva,
+                    report.Note.Pass, StencilStatusName(report.Status), static_cast<std::uint32_t>(report.Result));
+            }
+            else
+            {
+                const DepthDiff& changed{ report.Changed };
+
+                m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {:X} pass {} changed {} box {},{}..{},{} depth {}..{} weapon {}.",
+                    k, rva, report.Note.Pass, changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.MinDepth,
+                    changed.MaxDepth, changed.Weapon);
+            }
+
+            if (report.HasBetween)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: depth between {} and {} changed {}.", k - 1, k, report.Between.Changed);
+            }
+        }
+
+        m_RenderStore.ReleaseDepthPairs();
+    }
+
     auto RenderService::ReduceStencil(const std::uint8_t* data, std::uint32_t rowPitch, std::uint32_t width, std::uint32_t height)
         -> StencilProbeInfo
     {
@@ -968,6 +1345,7 @@ namespace Engine::Render::System
         {
             m_Log.Message("[FirstPersonProbe] INFO: stencil not read (no depth stencil captured from the model draw or no HUD draw on the thread "
                 "of Present) | {}.", state);
+            this->ReportDepthPairs();
             return;
         }
 
@@ -976,6 +1354,7 @@ namespace Engine::Render::System
             m_Log.Message("[FirstPersonProbe] INFO: stencil not read: {} hresult {:#010X} texture {}x{} res {} | {}.",
                 StencilStatusName(stencil.Status), static_cast<std::uint32_t>(stencil.Result), stencil.Width, stencil.Height,
                 FormatText(stencil.ResourceFormat), state);
+            this->ReportDepthPairs();
             return;
         }
 
@@ -984,6 +1363,8 @@ namespace Engine::Render::System
             m_Log.Message("[FirstPersonProbe] INFO: {} | {}.", RenderService::DescribeStencilRegion(static_cast<StencilRegion>(i), stencil.Regions[i]),
                 state);
         }
+
+        this->ReportDepthPairs();
     }
 
     auto RenderService::WaitForIdle(milliseconds timeout) -> bool

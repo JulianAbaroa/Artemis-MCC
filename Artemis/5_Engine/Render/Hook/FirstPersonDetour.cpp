@@ -40,7 +40,7 @@ namespace Engine::Render::Hook
         return FirstPersonCaller::Other;
     }
 
-    auto FirstPersonDetour::NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void
+    auto FirstPersonDetour::NoteModelCall(const void* returnAddress, std::uint8_t pass) -> FirstPersonCaller
     {
         const std::uintptr_t base{ m_ModuleBase.load() };
         const std::uintptr_t address{ reinterpret_cast<std::uintptr_t>(returnAddress) };
@@ -49,10 +49,11 @@ namespace Engine::Render::Hook
 
         m_RenderStore.CountFirstPersonCall(caller);
 
-        if (!m_RenderStore.IsFirstPersonProbeArmed()) return;
+        if (!m_RenderStore.IsFirstPersonProbeArmed()) return caller;
 
         m_RenderStore.SetFirstPersonDriveActive(this->IsDriveActive());
         m_RenderService.MeasureFirstPerson(caller, rva, pass);
+        return caller;
     }
 
     auto FirstPersonDetour::IsFirstPersonModelSkipped(std::uint32_t user, bool isHidden, bool isDriveActive) -> bool
@@ -83,11 +84,21 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        if (user == k_LocalUser) self->NoteModelCall(_ReturnAddress(), pass);
+        FirstPersonCaller caller{ FirstPersonCaller::Other };
+        if (user == k_LocalUser) caller = self->NoteModelCall(_ReturnAddress(), pass);
 
-        if (FirstPersonDetour::IsFirstPersonModelSkipped(user, self->m_RenderStore.IsFirstPersonHidden(), self->IsDriveActive())) return;
+        if (FirstPersonDetour::IsFirstPersonModelSkipped(user, self->m_RenderStore.IsFirstPersonHidden(), self->IsDriveActive()))
+        {
+            if (user == k_LocalUser) self->m_RenderService.NoteDepthPairSkipped(caller, pass);
+            return;
+        }
+
+        // The probe copies the depth around the original (VW.6.y.2 A3), the service decides if this call is one it copies.
+        const std::optional<std::size_t> pair{ user == k_LocalUser ? self->m_RenderService.BeginDepthPair(caller, pass) : std::nullopt };
 
         if (s_OriginalModel != nullptr) s_OriginalModel(camera, user, pass);
+
+        if (pair) self->m_RenderService.EndDepthPair(*pair);
     }
 
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool

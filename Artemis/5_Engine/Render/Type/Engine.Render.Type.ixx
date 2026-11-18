@@ -238,6 +238,66 @@ export namespace Engine::Render::Type
         std::array<StencilRegionStats, k_StencilRegionCount> Regions{};
     };
 
+    // How many calls of the model into the G-buffer the probe copies the depth of, before and after (VW.6.y.2 A3). Two textures each.
+    inline constexpr std::size_t k_DepthPairCount{ 4 };
+    inline constexpr std::size_t k_DepthCopyCount{ k_DepthPairCount * 2 };
+
+    // What the detour did with a call of the model while the depth pairs were ready.
+    enum class DepthPairState : std::uint8_t
+    {
+        Free,
+        Skipped,    // the model was hidden or Drive was active, the original was not called and nothing was copied
+        Mismatch,   // the bound depth stencil is not a texture of the description of the copies, nothing was copied
+        Copied      // the depth before the call was copied, and the depth after it when the call returned
+    };
+
+    // One call of the model seen while the depth pairs were ready, in call order.
+    struct DepthPairNote
+    {
+        DepthPairState State{ DepthPairState::Free };
+        FirstPersonCaller Caller{ FirstPersonCaller::Other };
+        std::uint32_t Pass{ 0 };
+    };
+
+    // How the creation of the depth copy textures went (once per probe, at Present).
+    struct DepthPairSetup
+    {
+        bool IsAttempted{ false };
+        StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when created
+        std::int32_t Result{ 0 };       // HRESULT of the step that failed
+    };
+
+    // Texels whose depth changed between two copies: count, box (inclusive), depth range of the later copy, and how many are in the
+    // weapon region. With Changed 0 the box and the range are 0.
+    struct DepthDiff
+    {
+        std::uint32_t Changed{ 0 };
+        std::uint32_t X0{ 0 };
+        std::uint32_t Y0{ 0 };
+        std::uint32_t X1{ 0 };
+        std::uint32_t Y1{ 0 };
+        float MinDepth{ 0.0f };
+        float MaxDepth{ 0.0f };
+        std::uint32_t Weapon{ 0 };
+    };
+
+    // The reduction of one pair: what the call changed and, when the previous pair was read too, what changed between the two calls.
+    struct DepthPairReport
+    {
+        DepthPairNote Note{};
+        StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when Changed is valid
+        std::int32_t Result{ 0 };
+        DepthDiff Changed{};
+        bool HasBetween{ false };
+        DepthDiff Between{};            // previous pair after the call against this pair before it
+    };
+
+    struct DepthProbeInfo
+    {
+        std::uint32_t Count{ 0 };
+        std::array<DepthPairReport, k_DepthPairCount> Pairs{};
+    };
+
     // Layout of the vertex data of a draw. Each one has its own input layout and vertex shader.
     enum class VertexLayout : std::uint8_t
     {

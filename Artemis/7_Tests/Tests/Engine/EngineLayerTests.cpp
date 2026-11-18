@@ -376,6 +376,121 @@ TEST(EngineLayerTests, ReduceStencilRespectsRowPitchAndRegions)
     EXPECT_EQ(RenderService::ReduceStencil(nullptr, pitch, width, height).Status, StencilReadStatus::BadLayout);
 }
 
+TEST(EngineLayerTests, CompareDepthRespectsRowPitchBoxAndRange)
+{
+    using Engine::Render::System::RenderService;
+
+    // Two textures of 8x8 texels of 8 bytes, row pitch 80 for the first and 96 for the second (padding 0xFF, must not be read).
+    constexpr std::uint32_t width{ 8 };
+    constexpr std::uint32_t height{ 8 };
+    constexpr std::uint32_t pitchA{ 80 };
+    constexpr std::uint32_t pitchB{ 96 };
+    std::vector<std::uint8_t> a(static_cast<std::size_t>(pitchA) * height, 0xFF);
+    std::vector<std::uint8_t> b(static_cast<std::size_t>(pitchB) * height, 0xFF);
+
+    const auto put = [](std::vector<std::uint8_t>& data, std::uint32_t pitch, std::uint32_t x, std::uint32_t y, float depth, std::uint8_t stencil)
+    {
+        std::uint8_t* texel{ data.data() + static_cast<std::size_t>(y) * pitch + static_cast<std::size_t>(x) * 8 };
+        std::memcpy(texel, &depth, sizeof(depth));
+        texel[4] = stencil;
+        texel[5] = texel[6] = texel[7] = 0;
+    };
+
+    for (std::uint32_t y{ 0 }; y < height; ++y)
+    {
+        for (std::uint32_t x{ 0 }; x < width; ++x)
+        {
+            put(a, pitchA, x, y, 0.25f, 0);
+            put(b, pitchB, x, y, 0.25f, 0);
+        }
+    }
+
+    // Nothing changed.
+    const auto same{ RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, width, height) };
+    ASSERT_TRUE(same.has_value());
+    EXPECT_EQ(same->Changed, 0u);
+    EXPECT_EQ(same->Weapon, 0u);
+
+    // A change of the stencil byte only is not a change of depth.
+    put(b, pitchB, 1, 1, 0.25f, 0x80);
+    EXPECT_EQ(RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, width, height)->Changed, 0u);
+
+    // One texel outside the weapon region (the lower right quadrant).
+    put(b, pitchB, 2, 3, 0.5f, 0);
+    const auto one{ RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, width, height) };
+    ASSERT_TRUE(one.has_value());
+    EXPECT_EQ(one->Changed, 1u);
+    EXPECT_EQ(one->X0, 2u);
+    EXPECT_EQ(one->Y0, 3u);
+    EXPECT_EQ(one->X1, 2u);
+    EXPECT_EQ(one->Y1, 3u);
+    EXPECT_FLOAT_EQ(one->MinDepth, 0.5f);
+    EXPECT_FLOAT_EQ(one->MaxDepth, 0.5f);
+    EXPECT_EQ(one->Weapon, 0u);
+
+    // A box in the lower right: x 4..6, y 5..7 (9 texels), depths 0.75 and 1.0, and the first one that is outside it.
+    for (std::uint32_t y{ 5 }; y <= 7; ++y)
+    {
+        for (std::uint32_t x{ 4 }; x <= 6; ++x) put(b, pitchB, x, y, 0.75f, 0);
+    }
+
+    put(b, pitchB, 6, 7, 1.0f, 0);
+
+    const auto box{ RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, width, height) };
+    ASSERT_TRUE(box.has_value());
+    EXPECT_EQ(box->Changed, 10u);
+    EXPECT_EQ(box->X0, 2u);
+    EXPECT_EQ(box->Y0, 3u);
+    EXPECT_EQ(box->X1, 6u);
+    EXPECT_EQ(box->Y1, 7u);
+    EXPECT_FLOAT_EQ(box->MinDepth, 0.5f);
+    EXPECT_FLOAT_EQ(box->MaxDepth, 1.0f);
+    EXPECT_EQ(box->Weapon, 9u);
+
+    // A layout that cannot be read.
+    EXPECT_FALSE(RenderService::CompareDepth(a.data(), 32, b.data(), pitchB, width, height).has_value());
+    EXPECT_FALSE(RenderService::CompareDepth(a.data(), pitchA, b.data(), 32, width, height).has_value());
+    EXPECT_FALSE(RenderService::CompareDepth(nullptr, pitchA, b.data(), pitchB, width, height).has_value());
+    EXPECT_FALSE(RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, 0, height).has_value());
+}
+
+TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
+{
+    using Engine::Render::Type::DepthPairNote;
+    using Engine::Render::Type::DepthPairState;
+    using Engine::Render::Type::FirstPersonCaller;
+    using Engine::Render::Type::k_DepthPairCount;
+
+    Engine::Render::State::RenderStore store{};
+    EXPECT_FALSE(store.AreDepthPairsReady());
+    EXPECT_EQ(store.GetDepthCopy(0), nullptr);
+    EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);
+
+    for (std::size_t i{ 0 }; i < k_DepthPairCount; ++i)
+    {
+        const auto index{ store.NoteDepthPair({ .State = i == 1 ? DepthPairState::Skipped : DepthPairState::Copied,
+            .Caller = FirstPersonCaller::Pass1, .Pass = static_cast<std::uint32_t>(i) }, nullptr) };
+        ASSERT_TRUE(index.has_value());
+        EXPECT_EQ(*index, i);
+    }
+
+    EXPECT_FALSE(store.NoteDepthPair({ .State = DepthPairState::Copied }, nullptr).has_value());
+    EXPECT_EQ(store.GetDepthPairNoteCount(), static_cast<std::uint32_t>(k_DepthPairCount));
+    EXPECT_EQ(store.GetDepthPairNote(1).State, DepthPairState::Skipped);
+    EXPECT_EQ(store.GetDepthPairNote(2).Pass, 2u);
+
+    store.ReleaseDepthPairs();
+    EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);
+    EXPECT_EQ(store.GetDepthPairNote(0).State, DepthPairState::Free);
+    EXPECT_FALSE(store.GetDepthPairSetup().IsAttempted);
+
+    // Arming a probe also drops the notes of the old one.
+    EXPECT_TRUE(store.NoteDepthPair({ .State = DepthPairState::Copied }, nullptr).has_value());
+    store.RequestFirstPersonProbe();
+    EXPECT_FALSE(store.StepFirstPersonProbe());
+    EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);
+}
+
 TEST(EngineLayerTests, RenderStoreStencilProbeIsClearedWhenArmed)
 {
     using Engine::Render::Type::FirstPersonCaller;

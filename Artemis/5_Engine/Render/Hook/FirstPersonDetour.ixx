@@ -93,7 +93,8 @@ export namespace Engine::Render::Hook
 
         // Counts the call for its caller and, while the probe is armed, measures the D3D state. User 0 only.
         // param returnAddress: The return address of the detour.
-        auto NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void;
+        // return: The caller of the call.
+        auto NoteModelCall(const void* returnAddress, std::uint8_t pass) -> FirstPersonCaller;
 
         // return: Whether a valid and fresh pose is published, the same rule the observer camera hook applies.
         auto IsDriveActive() const -> bool;
