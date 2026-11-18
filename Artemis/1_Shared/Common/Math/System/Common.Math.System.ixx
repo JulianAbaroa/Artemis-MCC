@@ -81,6 +81,8 @@ export namespace Common::Math::System
     // note: A rigid move: the rotation that takes the axes of 'from' to the axes of 'to' around the position of 'from', then the new position.
     auto MovePose3x4(const Pose& from, const Pose& to) -> std::array<float, 12>;
 
-    // Returns the 3x4 matrix that does 'first' and then 'second'.
-    auto Compose3x4(const std::array<float, 12>& first, const std::array<float, 12>& second) -> std::array<float, 12>;
+    // Returns the row-major 3x4 [R | t] (p' = R p + t, translation at 3, 7 and 11: the layout of the mesh instances) that does 'rowMajor' and
+    // then 'move' (a matrix in the layout of TransformPoint3x4 and MovePose3x4, translation at 9, 10 and 11).
+    // note: The two layouts differ. Composing them as if they were one sheared every part of a moving object (VW.5e, seen in game).
+    auto MoveRowMajor3x4(const std::array<float, 12>& rowMajor, const std::array<float, 12>& move) -> std::array<float, 12>;
 }

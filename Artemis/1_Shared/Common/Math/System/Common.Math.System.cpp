@@ -203,24 +203,23 @@ namespace Common::Math::System
         return matrix;
     }
 
-    auto Compose3x4(const std::array<float, 12>& first, const std::array<float, 12>& second) -> std::array<float, 12>
+    auto MoveRowMajor3x4(const std::array<float, 12>& rowMajor, const std::array<float, 12>& move) -> std::array<float, 12>
     {
         std::array<float, 12> result{};
 
-        for (std::size_t row{ 0 }; row < 3; ++row)
+        // note: Output c of 'move' is the sum over i of input(i) * move[i * 3 + c] plus move[9 + c]. Input(i) is row i of 'rowMajor'.
+        for (std::size_t c{ 0 }; c < 3; ++c)
         {
-            for (std::size_t column{ 0 }; column < 3; ++column)
+            for (std::size_t k{ 0 }; k < 4; ++k)
             {
                 float sum{ 0.0f };
-                for (std::size_t k{ 0 }; k < 3; ++k) sum += first[row * 3 + k] * second[k * 3 + column];
-                result[row * 3 + column] = sum;
+                for (std::size_t i{ 0 }; i < 3; ++i) sum += move[i * 3 + c] * rowMajor[i * 4 + k];
+                result[c * 4 + k] = sum;
             }
+
+            result[c * 4 + 3] += move[9 + c];
         }
 
-        const Vec3 moved{ TransformPoint3x4(Vec3{ first[9], first[10], first[11] }, second.data()) };
-        result[9] = moved.X;
-        result[10] = moved.Y;
-        result[11] = moved.Z;
         return result;
     }
 }

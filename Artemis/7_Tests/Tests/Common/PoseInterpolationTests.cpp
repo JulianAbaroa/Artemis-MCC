@@ -7,11 +7,11 @@ import std;
 namespace
 {
     using Common::Math::System::BlendPose;
-    using Common::Math::System::Compose3x4;
     using Common::Math::System::Cross;
     using Common::Math::System::Dot;
     using Common::Math::System::Length;
     using Common::Math::System::MovePose3x4;
+    using Common::Math::System::MoveRowMajor3x4;
     using Common::Math::System::ResolveRenderPose;
     using Common::Math::System::TransformPoint3x4;
     using Common::Math::Type::Pose;
@@ -203,17 +203,28 @@ TEST(PoseInterpolationTests, MoveBetweenEqualPosesChangesNothing)
     ExpectNear(TransformPoint3x4(point, matrix.data()), point);
 }
 
-TEST(PoseInterpolationTests, ComposeDoesTheFirstMoveAndThenTheSecond)
+// The mesh instances keep a row-major [R | t]; the move of a pose is in the layout of TransformPoint3x4. The result must be the part moved.
+TEST(PoseInterpolationTests, MoveRowMajorKeepsThePartRigid)
 {
-    const Pose a{ PoseAt(0.0f, 0.0f, 0.0f, 0.0f) };
-    const Pose b{ PoseAt(3.0f, 1.0f, 0.0f, 0.8f) };
-    const Pose c{ PoseAt(-2.0f, 5.0f, 1.0f, 2.0f) };
+    const float c{ std::cos(0.7f) };
+    const float s{ std::sin(0.7f) };
+    const std::array<float, 12> part{
+        c, -s, 0.0f, 10.0f,
+        s, c, 0.0f, -4.0f,
+        0.0f, 0.0f, 1.0f, 3.0f };
 
-    const auto first{ MovePose3x4(a, b) };
-    const auto second{ MovePose3x4(b, c) };
-    const auto both{ Compose3x4(first, second) };
+    const auto move{ MovePose3x4(PoseAt(100.0f, 50.0f, 2.0f, 0.3f), PoseAt(100.4f, 50.1f, 2.05f, 0.35f)) };
+    const auto moved{ MoveRowMajor3x4(part, move) };
 
-    const Vec3 point{ 0.7f, -1.3f, 2.2f };
-    const Vec3 stepwise{ TransformPoint3x4(TransformPoint3x4(point, first.data()), second.data()) };
-    ExpectNear(TransformPoint3x4(point, both.data()), stepwise, 1e-3f);
+    const auto applyRowMajor = [](const std::array<float, 12>& m, const Vec3& p) -> Vec3
+    {
+        return { m[0] * p.X + m[1] * p.Y + m[2] * p.Z + m[3], m[4] * p.X + m[5] * p.Y + m[6] * p.Z + m[7],
+            m[8] * p.X + m[9] * p.Y + m[10] * p.Z + m[11] };
+    };
+
+    for (const Vec3 point : { Vec3{ 0.0f, 0.0f, 0.0f }, Vec3{ 1.5f, -2.0f, 0.5f }, Vec3{ -3.0f, 0.25f, 4.0f } })
+    {
+        const Vec3 stepwise{ TransformPoint3x4(applyRowMajor(part, point), move.data()) };
+        ExpectNear(applyRowMajor(moved, point), stepwise, 1e-3f);
+    }
 }

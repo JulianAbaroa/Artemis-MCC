@@ -123,7 +123,7 @@ namespace DevTools::Viewer::Map::System
                 if (index == k_Invalid) continue;
 
                 MeshInstance instance{};
-                instance.Transform = delta ? Common::Math::System::Compose3x4(part.Transform, delta->Transform) : part.Transform;
+                instance.Transform = delta ? Common::Math::System::MoveRowMajor3x4(part.Transform, delta->Transform) : part.Transform;
                 instance.R = color.R;
                 instance.G = color.G;
                 instance.B = color.B;
