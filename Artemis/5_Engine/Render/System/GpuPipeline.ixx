@@ -76,6 +76,7 @@ export namespace Engine::Render::System
         ComPtr<ID3D11Buffer> m_CameraBuffer{};
 
         ComPtr<ID3D11RasterizerState> m_Rasterizer{};
+        ComPtr<ID3D11RasterizerState> m_DepthOnlyRasterizer{};
         ComPtr<ID3D11RasterizerState> m_WireframeRasterizer{};
         ComPtr<ID3D11DepthStencilState> m_DepthState{};
         ComPtr<ID3D11DepthStencilState> m_OverlayDepthState{};

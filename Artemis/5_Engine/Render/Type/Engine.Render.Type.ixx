@@ -27,11 +27,11 @@ export namespace Engine::Render::Type
     // How a draw is blended and depth tested.
     enum class SurfaceMode : std::uint8_t
     {
-        Opaque,         // depth test and depth write
+        Opaque,         // depth test and depth write (the depth is reversed: near 1, far 0, the test is greater or equal)
         Overlay,        // depth test without depth write
         Translucent,    // depth test without depth write, blended by alpha
-        DepthOnly,      // depth test and depth write, no color written
-        Wireframe       // depth test without depth write, wireframe lines pulled toward the camera so they win over the same surface
+        DepthOnly,      // depth test and depth write, no color written, pushed away from the camera so the wireframe of the same mesh wins
+        Wireframe       // depth test without depth write, wireframe lines with no bias
     };
 
     struct Vertex

@@ -21,7 +21,7 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Engine.Render.Layer` | The facade: store, services, locator and detours. Owner only. |
-| `Engine.Render.Type`, `Engine.Render.State`, `Engine.Render.System`, `Engine.Render.Hook` | Frame types and handlers, `RenderStore` (D3D11 objects, render flags), `RenderService`, the present and resize detours, and the `GpuPipeline` of the debug passes with its `SurfaceMode` (opaque, overlay, translucent, depth only with the color write mask at 0, wireframe with a depth bias toward the camera and no depth write; D325). |
+| `Engine.Render.Type`, `Engine.Render.State`, `Engine.Render.System`, `Engine.Render.Hook` | Frame types and handlers, `RenderStore` (D3D11 objects, render flags), `RenderService`, the present and resize detours, and the `GpuPipeline` of the debug passes with its `SurfaceMode` (opaque, overlay, translucent, depth only with the color write mask at 0 and a depth bias away from the camera, wireframe with no bias and no depth write; D325). The depth is reversed (near 1, far 0, test greater or equal; the caller clears it to 0). |
 | `Engine.Render.Window.Type`, `Engine.Render.Window.System`, `Engine.Render.Window.Hook` | Window messages, raw mouse, `InputService` and the window detours. |
 
 ## Depends on

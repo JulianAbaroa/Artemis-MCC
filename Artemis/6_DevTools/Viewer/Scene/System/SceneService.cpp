@@ -1,6 +1,7 @@
 module DevTools.Viewer.Scene.System;
 
 import Common.Engine.Type;
+import Perception.ObjectGraph.Type;
 import Perception.Players.Type;
 import Views.View.System;
 import DevTools.Viewer.Camera.Type;
@@ -11,6 +12,7 @@ namespace
 {
     using DevTools::Viewer::Camera::Type::Follow;
     using DevTools::Viewer::Camera::Type::Mode;
+    using Perception::ObjectGraph::Type::ObjectNode;
     using Perception::Players::Type::Player;
 
     using Views::View::System::FindObservedView;
@@ -28,6 +30,28 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::GetObservedView(const Tick& tick) const -> const View*
     {
         return tick.Views ? FindObservedView(*tick.Views, m_ObservedStore.Get()) : nullptr;
+    }
+
+    auto SceneService::HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>
+    {
+        std::unordered_set<std::uint32_t> hidden{};
+        if (!tick.Views) return hidden;
+
+        const View* view{ nullptr };
+        if (m_CameraStore.GetMode() == Mode::Game) view = FindObservedView(*tick.Views, k_NoHandle);
+        else if (m_CameraStore.GetFollow() == Follow::FirstPerson && m_ObservedStore.Get() != k_NoHandle) view = this->GetObservedView(tick);
+
+        if (!view || view->Head.BipedHandle == k_NoHandle) return hidden;
+
+        hidden.insert(view->Head.BipedHandle);
+
+        const ObjectNode* node{ tick.ObjectGraph ? tick.ObjectGraph->Find(view->Head.BipedHandle) : nullptr };
+        if (node)
+        {
+            for (const std::uint32_t child : tick.ObjectGraph->ChildrenOf(*node)) hidden.insert(child);
+        }
+
+        return hidden;
     }
 
     auto SceneService::Deactivate() -> void

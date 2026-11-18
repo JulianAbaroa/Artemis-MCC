@@ -112,7 +112,7 @@ namespace DevTools::Viewer::Map::System
 
                 // note: The debug collidables are not part of the Tick. They come with it in the scene.
                 m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
-                    palette, selected, translucentHandles);
+                    palette, selected, translucentHandles, m_SceneService.HiddenHandlesOf(*tick));
             }
 
             {
@@ -183,12 +183,12 @@ namespace DevTools::Viewer::Map::System
         m_Profiler.BeginGpu(context);
 
         // note: With the overlay the frame of the game stays under what the Viewer draws, so the color is not cleared. The depth is the
-        // Viewer's own and is always cleared.
+        // Viewer's own and is always cleared to 0, the far value of the reversed depth.
         const bool isOverlay{ m_SceneService.IsGameCamera() && m_OptionsStore.IsEnabled(Flag::Overlay) };
 
         if (!isOverlay) context->ClearRenderTargetView(frame.RenderTarget, k_Background);
         context->ClearDepthStencilView(frame.DepthStencil,
-            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+            D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 0.0f, 0);
 
         D3D11_VIEWPORT viewport{};
         viewport.Width = static_cast<float>(frame.Width);

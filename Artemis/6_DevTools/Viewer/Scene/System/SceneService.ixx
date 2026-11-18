@@ -57,6 +57,12 @@ export namespace DevTools::Viewer::Scene::System
         // note: Valid as long as the tick is.
         auto GetObservedView(const Tick& tick) const -> const View*;
 
+        // return: The handles of the biped of the player whose eyes the camera is in, and of the objects hanging from it (weapons in hand).
+        // Empty with the Orbit follow, the free camera that follows nothing, or a View without a biped.
+        // note: The camera is in the eyes of the primary local player in Game mode, and of the followed player with the FirstPerson follow.
+        // Drawn, that biped covers the scene.
+        auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;
+
         auto ClearSelection() -> void;
 
         // Drops the palette and the selection boxes.

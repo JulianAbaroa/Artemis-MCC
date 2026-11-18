@@ -44,12 +44,14 @@ export namespace DevTools::Viewer::Map::System
 
         // Rebuilds the instances when a new scene is published or the selection or the translucent set change.
         // param translucentHandles: Objects drawn by DrawTranslucent instead of Draw.
+        // param hiddenHandles: Objects not drawn at all, translucent pass included.
         // note: The scene is published after the Tick (D223), so it is compared by snapshot and not by the Tick generation. A gate on
         // the generation drew the previous scene for a whole tick whenever the frame saw the Tick first (D294).
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
             const std::shared_ptr<const Collidables>& collidables,
             const PaletteService& palette, std::uint32_t selectedHandle,
-            const std::unordered_set<std::uint32_t>& translucentHandles) -> void;
+            const std::unordered_set<std::uint32_t>& translucentHandles,
+            const std::unordered_set<std::uint32_t>& hiddenHandles) -> void;
 
         // return: Instances uploaded in the last rebuild, translucent ones included.
         auto GetInstanceCount() const -> UINT;

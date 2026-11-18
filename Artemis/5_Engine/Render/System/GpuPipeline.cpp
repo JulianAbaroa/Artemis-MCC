@@ -16,10 +16,11 @@ namespace
 
     using Common::Log::System::Log;
 
-    // Depth bias of the Wireframe surface, in units of the depth buffer and per slope. Negative terms pull the lines toward the camera, so a
-    // wireframe drawn over the same surface in depth does not fight with it.
-    constexpr int k_WireframeDepthBias{ 1000 };
-    constexpr float k_WireframeSlopeBias{ 1.5f };
+    // Depth bias of the DepthOnly surface. The depth is reversed (near is 1, far is 0), so negative terms push the surface away from the camera.
+    // The wireframe of the same mesh then wins the depth test without being pulled through nearby walls. The bias is in units of the float
+    // depth buffer (scaled by the exponent of the depth of the triangle, so it holds near and far), and the slope term covers grazing angles.
+    constexpr int k_DepthOnlyDepthBias{ 128 };
+    constexpr float k_DepthOnlySlopeBias{ 2.0f };
 
     // HLSL source of the map pipeline, shared by every pass.
     // Vertex shaders: VSMain (Vertex), VSInstanced (SphereInstance) and VSInstancedMesh (MeshInstance).
@@ -291,10 +292,18 @@ namespace Engine::Render::System
             return false;
         }
 
+        D3D11_RASTERIZER_DESC depthOnly{ raster };
+        depthOnly.DepthBias = -k_DepthOnlyDepthBias;
+        depthOnly.SlopeScaledDepthBias = -k_DepthOnlySlopeBias;
+
+        if (FAILED(device->CreateRasterizerState(&depthOnly, m_DepthOnlyRasterizer.GetAddressOf())))
+        {
+            m_Log.Message("[GpuPipeline] ERROR: Depth only rasterizer state failed.");
+            return false;
+        }
+
         D3D11_RASTERIZER_DESC wireframe{ raster };
         wireframe.FillMode = D3D11_FILL_WIREFRAME;
-        wireframe.DepthBias = -k_WireframeDepthBias;
-        wireframe.SlopeScaledDepthBias = -k_WireframeSlopeBias;
 
         if (FAILED(device->CreateRasterizerState(&wireframe, m_WireframeRasterizer.GetAddressOf())))
         {
@@ -305,7 +314,7 @@ namespace Engine::Render::System
         D3D11_DEPTH_STENCIL_DESC depth{};
         depth.DepthEnable = TRUE;
         depth.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-        depth.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
+        depth.DepthFunc = D3D11_COMPARISON_GREATER_EQUAL;
         depth.StencilEnable = FALSE;
 
         if (FAILED(device->CreateDepthStencilState(&depth, m_DepthState.GetAddressOf())))
@@ -393,7 +402,11 @@ namespace Engine::Render::System
 
         context->OMSetBlendState(blendState, blendFactor, 0xffffffff);
         context->OMSetDepthStencilState(writesDepth ? m_DepthState.Get() : m_OverlayDepthState.Get(), 0);
-        context->RSSetState(surface == SurfaceMode::Wireframe ? m_WireframeRasterizer.Get() : m_Rasterizer.Get());
+
+        ID3D11RasterizerState* rasterizer = m_Rasterizer.Get();
+        if (surface == SurfaceMode::Wireframe) rasterizer = m_WireframeRasterizer.Get();
+        else if (surface == SurfaceMode::DepthOnly) rasterizer = m_DepthOnlyRasterizer.Get();
+        context->RSSetState(rasterizer);
 
         ID3D11InputLayout* inputLayout = m_InputLayout.Get();
         ID3D11VertexShader* vertexShader = m_VertexShader.Get();
@@ -441,6 +454,7 @@ namespace Engine::Render::System
         m_OverlayDepthState.Reset();
         m_DepthState.Reset();
         m_WireframeRasterizer.Reset();
+        m_DepthOnlyRasterizer.Reset();
         m_Rasterizer.Reset();
         m_PixelShader.Reset();
         m_VertexShader.Reset();

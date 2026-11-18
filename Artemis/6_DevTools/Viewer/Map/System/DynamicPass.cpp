@@ -25,6 +25,7 @@ namespace
 
     constexpr UINT k_InitialGeometryVertices{ 1u << 16 };
     constexpr UINT k_InitialInstances{ 512 };
+    constexpr std::uint32_t k_HandleHash{ 0x9E3779B1u };
     constexpr std::uint32_t k_Invalid{ (std::numeric_limits<std::uint32_t>::max)() };
 }
 
@@ -33,11 +34,16 @@ namespace DevTools::Viewer::Map::System
     auto DynamicPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
         const std::shared_ptr<const Collidables>& collidables,
         const PaletteService& palette, std::uint32_t selectedHandle,
-        const std::unordered_set<std::uint32_t>& translucentHandles) -> void
+        const std::unordered_set<std::uint32_t>& translucentHandles,
+        const std::unordered_set<std::uint32_t>& hiddenHandles) -> void
     {
         if (!device || !context) return;
 
-        const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au);
+        // note: The hidden set is part of the gate: it changes with the camera mode and with the respawn of the followed player.
+        std::uint32_t hiddenKey{ static_cast<std::uint32_t>(hiddenHandles.size()) };
+        for (const std::uint32_t handle : hiddenHandles) hiddenKey += handle * k_HandleHash;
+
+        const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au) ^ hiddenKey;
 
         if (m_IsUploaded && collidables == m_UploadedScene && gateKey == m_UploadedKey) return;
 
@@ -95,7 +101,7 @@ namespace DevTools::Viewer::Map::System
 
         for (const auto& collidable : *collidables)
         {
-            if (collidable.Parts.empty()) continue;
+            if (collidable.Parts.empty() || hiddenHandles.contains(collidable.Handle)) continue;
 
             const bool isSelected = selectedHandle != k_NoHandle &&
                 collidable.Handle == selectedHandle;

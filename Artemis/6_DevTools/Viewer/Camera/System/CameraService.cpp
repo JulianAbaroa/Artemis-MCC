@@ -354,12 +354,13 @@ namespace DevTools::Viewer::Camera::System
         m_CenterX = m_GameCamera ? m_GameCamera->M20 : 0.0f;
         m_CenterY = m_GameCamera ? m_GameCamera->M21 : 0.0f;
 
-        const float range = m_Lens.Near - m_Lens.Far;
+        // note: Reversed depth (D325): a point at Near gives z/w = 1 and one at Far gives 0, so the float depth buffer keeps its precision.
+        const float range = m_Lens.Far - m_Lens.Near;
 
         const Matrix projection = {
             m_FocalX, 0.0f, 0.0f, 0.0f,
             0.0f, m_FocalY, 0.0f, 0.0f,
-            m_CenterX, m_CenterY, m_Lens.Far / range, -1.0f,
+            m_CenterX, m_CenterY, m_Lens.Near / range, -1.0f,
             0.0f, 0.0f, m_Lens.Near * m_Lens.Far / range, 0.0f,
         };
 
