@@ -85,6 +85,8 @@
     <ClCompile Include="Widget\System\Status\StatusGuiService.ixx" />
     <ClCompile Include="Widget\System\DisabledScope\DisabledScope.cpp" />
     <ClCompile Include="Widget\System\DisabledScope\DisabledScope.ixx" />
+    <ClCompile Include="Widget\System\Row\RowGuiService.cpp" />
+    <ClCompile Include="Widget\System\Row\RowGuiService.ixx" />
     <ClCompile Include="Widget\System\SectionBox\SectionBox.cpp" />
     <ClCompile Include="Widget\System\SectionBox\SectionBox.ixx" />
     <ClCompile Include="$(ArtemisRoot)External\imgui\imgui.cpp" />

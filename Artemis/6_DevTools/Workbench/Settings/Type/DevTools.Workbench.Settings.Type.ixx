@@ -8,7 +8,6 @@ export namespace DevTools::Workbench::Settings::Type
     enum class SettingsSection : std::uint8_t
     {
         Data = 0,
-        Viewer,
         Interface,
         Hotkeys,
         Folders,
@@ -22,7 +21,6 @@ export namespace DevTools::Workbench::Settings::Type
     inline constexpr std::array<const char*, k_SettingsSectionCount> k_SettingsSectionTitles
     {
         "Data",
-        "Viewer",
         "Interface",
         "Hotkeys",
         "Folders",
@@ -32,7 +30,6 @@ export namespace DevTools::Workbench::Settings::Type
     inline constexpr std::array<std::string_view, k_SettingsSectionCount> k_SettingsSectionKeys
     {
         "Data",
-        "Viewer",
         "Interface",
         "Hotkeys",
         "Folders",

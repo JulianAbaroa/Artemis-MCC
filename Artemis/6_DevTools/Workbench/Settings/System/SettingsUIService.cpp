@@ -6,26 +6,15 @@ module DevTools.Workbench.Settings.System;
 
 import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
-import DevTools.Viewer.Options.Type;
-import DevTools.Viewer.Camera.Type;
 import DevTools.Workbench.Hotkey.Type;
 import DevTools.Workbench.Settings.Type;
 import std;
 
 namespace
 {
-    using DevTools::Viewer::Options::Type::Flag;
-    using DevTools::Viewer::Options::Type::GroupInfo;
-    using DevTools::Viewer::Options::Type::FlagInfo;
-    using DevTools::Viewer::Options::Type::ScalarInfo;
-    using DevTools::Viewer::Camera::Type::Mode;
-
     using DevTools::Workbench::Hotkey::Type::Binding;
     using DevTools::Workbench::Settings::Type::SettingsSection;
 
-    using DevTools::Viewer::Options::Type::k_Groups;
-    using DevTools::Viewer::Options::Type::k_Flags;
-    using DevTools::Viewer::Options::Type::k_Scalars;
     using DevTools::Gui::Style::Type::StatusKind;
     using DevTools::Workbench::Settings::Type::k_SettingsSectionTitles;
     using DevTools::Gui::Style::Type::k_MinimumAlpha;
@@ -34,37 +23,15 @@ namespace
     using DevTools::Gui::Style::Type::k_AnimationDuration;
     using DevTools::Gui::Widget::System::DisabledScope;
     using DevTools::Gui::Widget::System::ResponsiveCardGuiService;
+    using DevTools::Gui::Widget::System::RowGuiService;
     using DevTools::Gui::Widget::System::SectionBox;
     using DevTools::Gui::Widget::System::StatusGuiService;
-
-    constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
-
-    // Share of a row the label takes before its item, and the narrowest an item may get (in font sizes) before it goes under its label.
-    constexpr float k_LabelColumnFraction{ 0.4f };
-    constexpr float k_MinimumItemEms{ 6.0f };
 
     // Seconds the save and load buttons show their confirmation.
     constexpr double k_FeedbackSeconds{ 2.0 };
 
     constexpr const char* k_DisablePopup{ "Confirm Disable AppData" };
     constexpr const char* k_DeletePopup{ "Delete AppData" };
-
-    // Draws the label at the left of a row and sizes the next item to fill the rest of it, so the row follows the width of the window.
-    // A row with too little room puts the item on the line below its label.
-    // param tooltip: Shown while the label is hovered. Null for none.
-    auto LabelBeforeItem(const char* label, const char* tooltip) -> void
-    {
-        const float startX{ ImGui::GetCursorPosX() };
-        const float available{ ImGui::GetContentRegionAvail().x };
-        const float column{ (std::max)(available * k_LabelColumnFraction, ImGui::CalcTextSize(label).x + ImGui::GetStyle().ItemSpacing.x) };
-
-        ImGui::AlignTextToFramePadding();
-        ImGui::TextUnformatted(label);
-        if (tooltip != nullptr) StatusGuiService::ShowTooltip(tooltip);
-
-        if (available - column >= ImGui::GetFontSize() * k_MinimumItemEms) ImGui::SameLine(startX + column);
-        ImGui::SetNextItemWidth(-(std::numeric_limits<float>::min)());
-    }
 
     // Moves the cursor so the next buttons are centered.
     auto CenterNextButtons(float buttonWidth, int count) -> void
@@ -96,14 +63,6 @@ namespace DevTools::Workbench::Settings::System
             {
                 ImGui::Indent(10.0f);
                 this->DrawData();
-                ImGui::Unindent(10.0f);
-                ImGui::Spacing();
-            }
-
-            if (this->BeginSection(SettingsSection::Viewer))
-            {
-                ImGui::Indent(10.0f);
-                this->DrawViewerOptions();
                 ImGui::Unindent(10.0f);
                 ImGui::Spacing();
             }
@@ -157,7 +116,7 @@ namespace DevTools::Workbench::Settings::System
 
         SectionBox box{};
 
-        LabelBeforeItem("Menu opacity", "Transparency of the Artemis windows.");
+        RowGuiService::LabelBeforeItem("Menu opacity", "Transparency of the Artemis windows.");
 
         float menuAlpha{ m_SettingsStore.GetMenuAlpha() };
         if (ImGui::SliderFloat("##GlobalOpacity", &menuAlpha, k_MinimumAlpha, 1.0f, "%.2f"))
@@ -169,7 +128,7 @@ namespace DevTools::Workbench::Settings::System
 
         ImGui::Spacing();
 
-        LabelBeforeItem("UI scale", "Size of the Artemis windows and their text. Applied when you release the slider.");
+        RowGuiService::LabelBeforeItem("UI scale", "Size of the Artemis windows and their text. Applied when you release the slider.");
 
         ImGui::SliderFloat("##GlobalScale", &m_UIScalePreview, k_MinimumScale, k_MaximumScale, "%.2f");
         StatusGuiService::ShowTooltip("Size of the Artemis windows and their text. Applied when you release the slider.");
@@ -204,131 +163,6 @@ namespace DevTools::Workbench::Settings::System
         }
 
         noStorage.Tooltip("Opens the Artemis control panel when MCC starts.");
-    }
-
-    auto SettingsUIService::DrawViewerOptions() -> void
-    {
-        for (const GroupInfo& group : k_Groups)
-        {
-            ImGuiTreeNodeFlags flags{ ImGuiTreeNodeFlags_Framed };
-            if (group.IsOpenByDefault) flags |= ImGuiTreeNodeFlags_DefaultOpen;
-
-            if (!ImGui::TreeNodeEx(group.Label, flags)) continue;
-
-            this->DrawViewerGroup(group.Id);
-
-            ImGui::TreePop();
-            ImGui::Spacing();
-        }
-
-        if (ImGui::Button("Reset viewer options"))
-        {
-            m_OptionsStore.ResetToDefaults();
-        }
-
-        StatusGuiService::ShowTooltip("Sets every viewer option back to its default.");
-    }
-
-    auto SettingsUIService::DrawCameraControls() -> void
-    {
-        bool isActive{ m_CameraStore.IsActive() };
-        if (ImGui::Checkbox("Viewer active", &isActive))
-        {
-            m_CameraStore.SetActive(isActive);
-            if (!isActive) m_CameraStore.ResetKeys();
-        }
-
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::SetTooltip("Shows or hides the Viewer. Same as the F4 hotkey.");
-        }
-
-        LabelBeforeItem("Mode", "Free camera: the Viewer takes the keyboard and the mouse and flies on its own, and the game draws from that camera.\n"
-            "Game camera: the game keeps its controls and the Viewer draws from the camera of the game.");
-
-        const int current{ static_cast<int>(m_CameraStore.GetMode()) };
-        if (ImGui::BeginCombo("##ViewerMode", k_ModeLabels[current]))
-        {
-            for (int i{ 0 }; i < static_cast<int>(k_ModeLabels.size()); ++i)
-            {
-                const bool isSelected{ i == current };
-                if (ImGui::Selectable(k_ModeLabels[i], isSelected))
-                {
-                    m_CameraStore.SetMode(static_cast<Mode>(i));
-                }
-
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-
-            ImGui::EndCombo();
-        }
-
-        bool isZoomActive{ m_CameraStore.IsZoomActive() };
-        if (ImGui::Checkbox("Zoom active", &isZoomActive))
-        {
-            m_CameraStore.SetZoomActive(isZoomActive);
-        }
-
-        if (ImGui::IsItemHovered())
-        {
-            ImGui::SetTooltip("Narrows the field of view of the free camera. Same as the right click.");
-        }
-    }
-
-    auto SettingsUIService::DrawViewerGroup(Group group) -> void
-    {
-        const bool areLabelsEnabled{ m_OptionsStore.IsEnabled(Flag::Labels) };
-
-        SectionBox box{};
-
-        if (group == Group::Camera) this->DrawCameraControls();
-
-        for (const FlagInfo& info : k_Flags)
-        {
-            if (info.Group != group) continue;
-
-            const bool isMaster{ info.Id == Flag::Labels };
-            const bool isDisabled{ !isMaster && !areLabelsEnabled };
-
-            if (isDisabled) ImGui::BeginDisabled();
-
-            bool value{ m_OptionsStore.IsEnabled(info.Id) };
-            if (ImGui::Checkbox(info.Label, &value))
-            {
-                m_OptionsStore.SetEnabled(info.Id, value);
-            }
-
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-            {
-                ImGui::SetTooltip("%s", info.Tooltip);
-            }
-
-            if (isDisabled) ImGui::EndDisabled();
-        }
-
-        for (const ScalarInfo& info : k_Scalars)
-        {
-            if (info.Group != group) continue;
-
-            LabelBeforeItem(info.Label, info.Tooltip);
-            ImGui::PushID(info.Key);
-
-            float value{ m_OptionsStore.GetScalar(info.Id) };
-            const ImGuiSliderFlags sliderFlags{ info.IsLogarithmic ? ImGuiSliderFlags_Logarithmic : ImGuiSliderFlags_None };
-            if (ImGui::SliderFloat("##value", &value, info.Min, info.Max, info.Format, sliderFlags))
-            {
-                m_OptionsStore.SetScalar(info.Id, value);
-            }
-
-            if (info.IsLogarithmic)
-            {
-                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) m_OptionsStore.SetScalar(info.Id, info.Default);
-
-                ImGui::TextDisabled("log2 %.2f", std::log2(m_OptionsStore.GetScalar(info.Id)));
-            }
-
-            ImGui::PopID();
-            }
     }
 
     auto SettingsUIService::DrawHotkeysTable() -> void

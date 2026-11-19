@@ -22,6 +22,7 @@ import DevTools.Workbench.Settings.State;
 import DevTools.Workbench.Settings.System;
 import DevTools.Workbench.Simulation.State;
 import DevTools.Workbench.Simulation.System;
+import DevTools.Workbench.Viewer.System;
 import DevTools.Workbench.TickDump.State;
 import DevTools.Workbench.TickDump.System;
 import DevTools.Workbench.Bench.State;
@@ -60,6 +61,7 @@ export namespace DevTools::Workbench
         using DefinitionsInspectorUIService = DevTools::Workbench::DefinitionsInspector::System::DefinitionsInspectorUIService;
         using SettingsUIService = DevTools::Workbench::Settings::System::SettingsUIService;
         using SimulationUIService = DevTools::Workbench::Simulation::System::SimulationUIService;
+        using ViewerUIService = DevTools::Workbench::Viewer::System::ViewerUIService;
         using TickDumpUIService = DevTools::Workbench::TickDump::System::TickDumpUIService;
         using BenchUIService = DevTools::Workbench::Bench::System::BenchUIService;
         using LogsUIService = DevTools::Workbench::Logs::System::LogsUIService;
@@ -73,7 +75,8 @@ export namespace DevTools::Workbench
             m_HotkeyUIService(service.m_SettingsStore, m_HotkeyUIStore, m_LauncherUIStore, viewer.m_OverlayStore),
             m_LauncherUIService(service.m_SettingsStore, m_LauncherUIStore),
             m_DefinitionsInspectorUIService(exportLayer.m_TickStore, resolved.m_DefinitionsStore, viewer.m_SelectionStore, service.m_SettingsStore),
-            m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, viewer.m_OptionsStore, preferences, viewer.m_CameraStore, m_SettingsUIStore),
+            m_SettingsUIService(service.m_SettingsStore, service.m_SettingsService, service.m_Log, m_HotkeyUIStore, preferences, m_SettingsUIStore),
+            m_ViewerUIService(viewer.m_OptionsStore, viewer.m_CameraStore, service.m_ObservedPlayerStore, exportLayer.m_TickStore),
             m_SimulationUIService(service.m_Log, service.m_TelemetryStore, engine.m_LifecycleStore, engine.m_MatchConfigStore,
                 engine.m_MatchConfigService, engine.m_MapVariantCatalogService, engine.m_MapVariantDecodeStore, engine.m_LocalUserStore,
                 engine.m_VirtualInputStore, engine.m_PlayerActionStore,
@@ -147,6 +150,7 @@ export namespace DevTools::Workbench
         LauncherUIService m_LauncherUIService;
         DefinitionsInspectorUIService m_DefinitionsInspectorUIService;
         SettingsUIService m_SettingsUIService;
+        ViewerUIService m_ViewerUIService;
         SimulationUIService m_SimulationUIService;
         TickDumpUIService m_TickDumpUIService;
         LogsUIService m_LogsUIService;

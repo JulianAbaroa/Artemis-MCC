@@ -4,5 +4,6 @@ export import :DisabledScope;
 export import :Inspector;
 export import :Panel;
 export import :ResponsiveCard;
+export import :Row;
 export import :SectionBox;
 export import :Status;

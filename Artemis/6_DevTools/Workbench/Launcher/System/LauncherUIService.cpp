@@ -22,9 +22,10 @@ namespace
     // Tabs in the order of the launcher buttons.
     constexpr std::array<Tab, k_TabCount> k_Tabs
     {
+        Tab::Simulation,
+        Tab::Viewer,
         Tab::DefinitionsInspector,
         Tab::Settings,
-        Tab::Simulation,
         Tab::Logs,
     };
 
@@ -38,7 +39,7 @@ namespace
     };
 
     // Returns the texts and the icon of a tab.
-    // note: The definitions inspector and the simulation have no icon, their buttons show the short label.
+    // note: The simulation, the viewer and the definitions inspector have no icon, their buttons show the short label.
     auto GetTabInfo(Tab tab) -> TabInfo
     {
         namespace Data = ::Icons::Data;
@@ -48,6 +49,7 @@ namespace
         case Tab::DefinitionsInspector: return { "Definitions", "Definitions Inspector", nullptr, 0 };
         case Tab::Settings: return { "Settings", "Settings", Data::Settings, Data::SettingsSize };
         case Tab::Simulation: return { "Simulation", "Simulation", nullptr, 0 };
+        case Tab::Viewer: return { "Viewer", "Viewer", nullptr, 0 };
         case Tab::Logs: return { "Logs", "Logs", Data::Logs, Data::LogsSize };
         default: return { "?", "?", nullptr, 0 };
         }

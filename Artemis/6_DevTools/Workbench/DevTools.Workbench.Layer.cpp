@@ -29,12 +29,6 @@ namespace DevTools::Workbench
 
         if (isMenuVisible) m_LauncherUIService.DrawDockSpace();
 
-        m_LauncherUIService.DrawTab(Tab::DefinitionsInspector, "Definitions Inspector", [this] {
-            m_DefinitionsInspectorUIService.Draw();
-        });
-        m_LauncherUIService.DrawTab(Tab::Settings, "Settings", [this] {
-            m_SettingsUIService.Draw();
-        });
         m_LauncherUIService.DrawTab(Tab::Simulation, "Simulation", [this] {
             m_SimulationUIService.Draw([this] {
                 m_TickDumpUIService.Draw();
@@ -44,6 +38,15 @@ namespace DevTools::Workbench
             });
         });
         m_SimulationUIService.DrawWindows();
+        m_LauncherUIService.DrawTab(Tab::Viewer, "Viewer", [this] {
+            m_ViewerUIService.Draw();
+        });
+        m_LauncherUIService.DrawTab(Tab::DefinitionsInspector, "Definitions Inspector", [this] {
+            m_DefinitionsInspectorUIService.Draw();
+        });
+        m_LauncherUIService.DrawTab(Tab::Settings, "Settings", [this] {
+            m_SettingsUIService.Draw();
+        });
         m_LauncherUIService.DrawTab(Tab::Logs, "Logs", [this] {
             m_LogsUIService.Draw();
         });

@@ -28,7 +28,7 @@ export namespace DevTools::Workbench::Settings::State
         SettingsUIStore(const SettingsUIStore&) = delete;
         auto operator=(const SettingsUIStore&) -> SettingsUIStore& = delete;
 
-        // Whether a section of the tab is unfolded. Data and Viewer start unfolded.
+        // Whether a section of the tab is unfolded. Data starts unfolded.
         auto IsSectionOpen(SettingsSection section) const -> bool;
         auto SetSectionOpen(SettingsSection section, bool isOpen) -> void;
 
@@ -39,6 +39,6 @@ export namespace DevTools::Workbench::Settings::State
         auto Load(std::string_view key, std::string_view value) -> void;
 
     private:
-        std::array<bool, k_SettingsSectionCount> m_OpenSections{ true, true, false, false, false };
+        std::array<bool, k_SettingsSectionCount> m_OpenSections{ true, false, false, false };
     };
 }

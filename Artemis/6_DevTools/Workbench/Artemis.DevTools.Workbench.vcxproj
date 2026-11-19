@@ -143,6 +143,8 @@
     <ClCompile Include="Settings\Type\DevTools.Workbench.Settings.Type.ixx" />
     <ClCompile Include="Simulation\State\SimulationUIStore.cpp" />
     <ClCompile Include="Simulation\State\SimulationUIStore.ixx" />
+    <ClCompile Include="Viewer\System\ViewerUIService.cpp" />
+    <ClCompile Include="Viewer\System\ViewerUIService.ixx" />
     <ClCompile Include="Simulation\System\SimulationUIService.cpp" />
     <ClCompile Include="Simulation\System\SimulationUIService.ixx" />
     <ClCompile Include="Simulation\Type\DevTools.Workbench.Simulation.Type.ixx" />

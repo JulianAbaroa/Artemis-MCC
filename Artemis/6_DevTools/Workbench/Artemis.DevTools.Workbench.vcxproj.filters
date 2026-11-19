@@ -97,6 +97,9 @@
     <Filter Include="Settings\State">
       <UniqueIdentifier>{177b4c9f-03ed-4687-b947-914a50925932}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Viewer\System">
+      <UniqueIdentifier>{8a41d7e3-2b6c-4c59-a0f2-7e3d95b1c604}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Settings\System">
       <UniqueIdentifier>{5d2cfb69-8381-5c7c-8da2-e251d45568dc}</UniqueIdentifier>
     </Filter>
@@ -232,6 +235,12 @@
     </ClCompile>
     <ClCompile Include="Settings\State\SettingsUIStore.ixx">
       <Filter>Settings\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Viewer\System\ViewerUIService.cpp">
+      <Filter>Viewer\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Viewer\System\ViewerUIService.ixx">
+      <Filter>Viewer\System</Filter>
     </ClCompile>
     <ClCompile Include="Settings\System\SettingsUIService.cpp">
       <Filter>Settings\System</Filter>

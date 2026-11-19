@@ -70,6 +70,9 @@
     <Filter Include="Widget\System\DisabledScope">
       <UniqueIdentifier>{c7853754-3a2c-4d43-8931-389654668555}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Widget\System\Row">
+      <UniqueIdentifier>{3b0e7c52-5d3a-4f0e-9d5c-6a1f2b8c4e17}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Widget\System\SectionBox">
       <UniqueIdentifier>{6f7ed28d-a082-4a40-b278-aea1e86f0692}</UniqueIdentifier>
     </Filter>
@@ -159,6 +162,12 @@
     </ClCompile>
     <ClCompile Include="Widget\System\DisabledScope\DisabledScope.ixx">
       <Filter>Widget\System\DisabledScope</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Row\RowGuiService.cpp">
+      <Filter>Widget\System\Row</Filter>
+    </ClCompile>
+    <ClCompile Include="Widget\System\Row\RowGuiService.ixx">
+      <Filter>Widget\System\Row</Filter>
     </ClCompile>
     <ClCompile Include="Widget\System\SectionBox\SectionBox.cpp">
       <Filter>Widget\System\SectionBox</Filter>
