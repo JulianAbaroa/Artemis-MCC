@@ -78,7 +78,7 @@ export namespace DevTools::Viewer
             m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SceneService,
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
-            m_InspectorService(m_SceneService, m_CollidableStore, m_SelectionStore)
+            m_InspectorService(m_SceneService, m_CollidableStore, m_SelectionStore, engine.m_PlayerActionStore, engine.m_BotStore)
         {
             auto& lifecycle = engine.m_LifecycleService;
 

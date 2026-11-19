@@ -131,6 +131,15 @@ export namespace Engine::Control::Input::Type
 
     static_assert(sizeof(PlayerAction) == k_PlayerActionSize);
 
+    // return: The value of type T at the offset of the action.
+    template<typename T>
+    auto ReadAction(const PlayerAction& action, std::uintptr_t offset) -> T
+    {
+        T value{};
+        std::memcpy(&value, action.Data.data() + offset, sizeof(T));
+        return value;
+    }
+
     // Actions of every player in one tick.
     struct PlayerActions
     {

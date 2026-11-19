@@ -46,6 +46,9 @@
     <Filter Include="Format\System\Interaction">
       <UniqueIdentifier>{d99a49bb-e180-5723-aa42-1d860a6ecd98}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Format\System\Player">
+      <UniqueIdentifier>{335d46c2-35fd-4b32-ae03-f6e95b07f7c2}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Geometry">
       <UniqueIdentifier>{ccc640ec-27d8-58be-9f35-61d245e9f9b4}</UniqueIdentifier>
     </Filter>
@@ -369,6 +372,42 @@
     </ClCompile>
     <ClCompile Include="Format\System\Interaction\InteractionFormater.ixx">
       <Filter>Format\System\Interaction</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Player\PlayerFormater.cpp">
+      <Filter>Format\System\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Format\System\Player\PlayerFormater.ixx">
+      <Filter>Format\System\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\ObjectName.cpp">
+      <Filter>Inspector\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\ObjectName.ixx">
+      <Filter>Inspector\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\ActionSection.cpp">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\ActionSection.ixx">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\BodySection.cpp">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\BodySection.ixx">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\LoadoutSection.cpp">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\LoadoutSection.ixx">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\PlayerSection.cpp">
+      <Filter>Inspector\System\Section</Filter>
+    </ClCompile>
+    <ClCompile Include="Inspector\System\Section\PlayerSection.ixx">
+      <Filter>Inspector\System\Section</Filter>
     </ClCompile>
     <ClCompile Include="Hud\System\Label\FixtureLabels.cpp">
       <Filter>Hud\System\Label</Filter>

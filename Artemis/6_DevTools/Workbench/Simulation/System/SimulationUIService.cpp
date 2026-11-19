@@ -24,6 +24,7 @@ namespace
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerAction;
     using Engine::Control::Input::Type::PlayerActions;
+    using Engine::Control::Input::Type::ReadAction;
     using Control::Action::Type::ActionOverride;
     using Control::Action::Type::ClientRequests;
     using Engine::Control::Input::Type::ShadowCount;
@@ -291,15 +292,6 @@ namespace
     // Test action: full throttle forward and one degree of yaw per tick.
     constexpr float k_TestThrottle{ 1.0f };
     constexpr float k_TestYawPerTick{ 0.0174532925f };
-
-    // return: The value of type T at the offset of the action.
-    template<typename T>
-    auto ReadAction(const PlayerAction& action, std::uintptr_t offset) -> T
-    {
-        T value{};
-        std::memcpy(&value, action.Data.data() + offset, sizeof(T));
-        return value;
-    }
 
     // return: The player the engine maps to the local index, or null.
     auto FindLocalPlayer(const Players* players, std::size_t localIndex) -> const Player*

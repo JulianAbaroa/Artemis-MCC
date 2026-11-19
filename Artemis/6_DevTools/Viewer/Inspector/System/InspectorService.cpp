@@ -5,7 +5,6 @@ module;
 module DevTools.Viewer.Inspector.System;
 
 import Common.Engine.Type;
-import Common.Semantic.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
 import Views.View.Type;
@@ -20,6 +19,7 @@ namespace
     using Perception::Entities::Type::Entity;
     using Perception::Players::Type::Player;
     using Views::View::Type::View;
+    using DevTools::Viewer::Inspector::System::ObjectName;
 
     using Views::View::System::FindObservedView;
     using Views::View::System::ObservedPlayerOf;
@@ -30,28 +30,10 @@ namespace
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_PrimaryLocalUser;
 
-    namespace SemanticType = Common::Semantic::Type;
-
-    // return: The name of the selected object: the gamertag of a player, else its tag, else the function of its entity.
-    auto NameOf(const Tick& tick, std::uint32_t handle, const Entity* entity, const Player* player) -> std::string
-    {
-        if (player) return player->Name;
-
-        if (tick.ObjectTable)
-        {
-            const auto it{ tick.ObjectTable->find(handle) };
-            if (it != tick.ObjectTable->end() && !it->second.TagName.empty()) return it->second.TagName;
-        }
-
-        if (entity) return std::string{ SemanticType::NameOf(entity->Function) };
-
-        return "Unknown";
-    }
-
     // Draws the always visible lines: name, handle, team, vitality and shield.
     auto DrawSummary(const Tick& tick, std::uint32_t handle, const Entity* entity, const Player* player) -> void
     {
-        ImGui::TextWrapped("%s", NameOf(tick, handle, entity, player).c_str());
+        ImGui::TextWrapped("%s", (player ? player->Name : ObjectName::Of(tick, handle)).c_str());
         ImGui::TextDisabled("%s", HexFormater::Hex32(handle).c_str());
 
         std::string line{};
@@ -91,6 +73,7 @@ namespace DevTools::Viewer::Inspector::System
 
         const std::uint32_t playerHandle{ tick.Players ? ObservedPlayerOf(*tick.Players, handle) : k_NoHandle };
         const Player* player{ playerHandle != k_NoHandle ? tick.Players->Find(playerHandle) : nullptr };
+        const Perception::Players::Type::Body* body{ player && player->Body ? &*player->Body : nullptr };
         const bool isLocalBiped{ player && player->LocalIndex == k_PrimaryLocalUser };
 
         // note: FindObservedView falls back to the local player, so the View counts only when it is the one of that player.
@@ -117,6 +100,10 @@ namespace DevTools::Viewer::Inspector::System
         };
 
         if (view) drawSection("View", [&] { ViewSection::Draw(view); });
+        if (player) drawSection("Player", [&] { PlayerSection::Draw(tick, *player); });
+        if (body) drawSection("Body", [&] { BodySection::Draw(tick, *body); });
+        if (body) drawSection("Loadout", [&] { LoadoutSection::Draw(tick, body->Loadout); });
+        if (player) drawSection("Action", [&] { ActionSection::Draw(*player, m_PlayerActionStore, m_BotStore); });
         if (affordance || isLocalBiped) drawSection("Interaction", [&] { InteractionSection::Draw(tick, affordance); });
         if (vitality) drawSection("Vitality", [&] { VitalitySection::Draw(tick, handle, *vitality); });
         if (entity) drawSection("Entity", [&] { EntitySection::Draw(*entity); });
