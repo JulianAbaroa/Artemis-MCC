@@ -613,47 +613,175 @@ TEST(EngineLayerTests, ScaleToMaskIsTheIdentityForEqualSizesAndStaysInsideTheMas
     EXPECT_EQ(RenderService::ScaleToMask(5, 1920, 0), 0u);
 }
 
-TEST(EngineLayerTests, RenderStoreMaskCopyIsTakenOncePerFrameAndReportedForTheLastFrame)
+TEST(EngineLayerTests, RenderStoreMaskCopyIsTakenOncePerFrameAndPairAndReportedForTheLastFrame)
 {
+    using Engine::Render::Type::MaskPairKind;
+
     Engine::Render::State::RenderStore store{};
 
     EXPECT_FALSE(store.IsFirstPersonMaskRequested());
     store.SetFirstPersonMaskRequested(true);
     EXPECT_TRUE(store.IsFirstPersonMaskRequested());
 
-    // Only the first caller of a frame takes the copy.
-    EXPECT_TRUE(store.TakeMaskCopy());
-    EXPECT_FALSE(store.TakeMaskCopy());
-    EXPECT_FALSE(store.IsMaskCopied());
+    // Only the first caller of a frame takes the copy of a pair, and the pairs are independent.
+    EXPECT_TRUE(store.TakeMaskCopy(MaskPairKind::DepthB));
+    EXPECT_FALSE(store.TakeMaskCopy(MaskPairKind::DepthB));
+    EXPECT_TRUE(store.TakeMaskCopy(MaskPairKind::DepthZero));
+    EXPECT_FALSE(store.IsMaskCopied(MaskPairKind::DepthB));
 
-    store.MarkMaskCopied();
-    EXPECT_TRUE(store.IsMaskCopied());
-    EXPECT_FALSE(store.WasMaskCopiedLastFrame());
+    store.MarkMaskCopied(MaskPairKind::DepthZero);
+    EXPECT_TRUE(store.IsMaskCopied(MaskPairKind::DepthZero));
+    EXPECT_FALSE(store.IsMaskCopied(MaskPairKind::DepthB));
+    EXPECT_FALSE(store.IsMaskCopied(MaskPairKind::Color));
+    EXPECT_FALSE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthZero));
 
-    // Closing the frame moves the mark to the last frame and frees the copy for the next one.
+    // Closing the frame moves the marks to the last frame and frees the copies for the next one.
     store.EndHudFrame();
-    EXPECT_FALSE(store.IsMaskCopied());
-    EXPECT_TRUE(store.WasMaskCopiedLastFrame());
-    EXPECT_TRUE(store.TakeMaskCopy());
+    EXPECT_FALSE(store.IsMaskCopied(MaskPairKind::DepthZero));
+    EXPECT_TRUE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthZero));
+    EXPECT_FALSE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthB));
+    EXPECT_TRUE(store.TakeMaskCopy(MaskPairKind::DepthB));
+    EXPECT_TRUE(store.TakeMaskCopy(MaskPairKind::Color));
 
     // A frame with no copy leaves no mask for the one after.
     store.EndHudFrame();
-    EXPECT_FALSE(store.WasMaskCopiedLastFrame());
+    EXPECT_FALSE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthZero));
 
     // Without a device nothing is ready, and releasing is harmless.
-    EXPECT_FALSE(store.AreMaskTexturesReady());
-    EXPECT_FALSE(store.IsMaskAttempted());
+    EXPECT_FALSE(store.AreMaskTexturesReady(MaskPairKind::DepthB));
+    EXPECT_FALSE(store.IsMaskAttempted(MaskPairKind::Color));
     D3D11_TEXTURE2D_DESC desc{};
     desc.Width = 64;
-    store.NoteMaskDepthDesc(desc);
-    ASSERT_TRUE(store.GetMaskDepthDesc().has_value());
-    EXPECT_EQ(store.GetMaskDepthDesc()->Width, 64u);
-    store.SetMaskTextures({}, {}, {}, {}, desc);
-    EXPECT_TRUE(store.IsMaskAttempted());
-    EXPECT_FALSE(store.AreMaskTexturesReady());
+    store.NoteMaskDesc(MaskPairKind::Color, desc);
+    ASSERT_TRUE(store.GetMaskWantedDesc(MaskPairKind::Color).has_value());
+    EXPECT_EQ(store.GetMaskWantedDesc(MaskPairKind::Color)->Width, 64u);
+    EXPECT_FALSE(store.GetMaskWantedDesc(MaskPairKind::DepthB).has_value());
+    store.SetMaskTextures(MaskPairKind::Color, {}, {}, {}, {}, desc);
+    EXPECT_TRUE(store.IsMaskAttempted(MaskPairKind::Color));
+    EXPECT_FALSE(store.IsMaskAttempted(MaskPairKind::DepthB));
+    EXPECT_FALSE(store.AreMaskTexturesReady(MaskPairKind::Color));
     store.ReleaseMaskTextures();
-    EXPECT_FALSE(store.IsMaskAttempted());
-    EXPECT_FALSE(store.GetMaskDepthDesc().has_value());
+    EXPECT_FALSE(store.IsMaskAttempted(MaskPairKind::Color));
+    EXPECT_FALSE(store.GetMaskWantedDesc(MaskPairKind::Color).has_value());
+}
+
+TEST(EngineLayerTests, ZeroPassMaskSourceIsTheBoundDepthThenTheSavedOneThenNone)
+{
+    using Engine::Render::Type::ChooseZeroMaskSource;
+    using Engine::Render::Type::MaskSource;
+
+    EXPECT_EQ(ChooseZeroMaskSource(true, true), MaskSource::Bound);
+    EXPECT_EQ(ChooseZeroMaskSource(true, false), MaskSource::Bound);
+    EXPECT_EQ(ChooseZeroMaskSource(false, true), MaskSource::Saved);
+    EXPECT_EQ(ChooseZeroMaskSource(false, false), MaskSource::None);
+}
+
+TEST(EngineLayerTests, ColorMaskPlanUsesTheDescriptionOfTheRenderTargetAndOnlySupportedFormatsGetAView)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::ColorMaskViewFormat;
+    using Engine::Render::Type::MaskPlan;
+
+    D3D11_TEXTURE2D_DESC desc{};
+    desc.Width = 1920;
+    desc.Height = 1080;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+    desc.SampleDesc.Count = 1;
+
+    D3D11_TEXTURE2D_DESC other{ desc };
+    other.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
+
+    const std::optional<D3D11_TEXTURE2D_DESC> wanted{ desc };
+
+    // Created from the noted description once, replaced when the format changes, kept for the same one, released with the option.
+    EXPECT_EQ(RenderService::PlanMask(true, wanted, false, {}), MaskPlan::Create);
+    EXPECT_EQ(RenderService::PlanMask(true, wanted, true, desc), MaskPlan::Keep);
+    EXPECT_EQ(RenderService::PlanMask(true, wanted, true, other), MaskPlan::Create);
+    EXPECT_EQ(RenderService::PlanMask(false, wanted, true, desc), MaskPlan::Release);
+    EXPECT_EQ(RenderService::PlanMask(true, std::optional<D3D11_TEXTURE2D_DESC>{}, false, {}), MaskPlan::Keep);
+
+    // The view has the format of the texture, a typeless 8 bit one is viewed as UNORM, anything else is not compared.
+    EXPECT_EQ(ColorMaskViewFormat(DXGI_FORMAT_R11G11B10_FLOAT), DXGI_FORMAT_R11G11B10_FLOAT);
+    EXPECT_EQ(ColorMaskViewFormat(DXGI_FORMAT_R8G8B8A8_UNORM_SRGB), DXGI_FORMAT_R8G8B8A8_UNORM_SRGB);
+    EXPECT_EQ(ColorMaskViewFormat(DXGI_FORMAT_R8G8B8A8_TYPELESS), DXGI_FORMAT_R8G8B8A8_UNORM);
+    EXPECT_FALSE(ColorMaskViewFormat(DXGI_FORMAT_R16G16B16A16_FLOAT).has_value());
+    EXPECT_FALSE(ColorMaskViewFormat(DXGI_FORMAT_R32G8X24_TYPELESS).has_value());
+}
+
+TEST(EngineLayerTests, MaskConstantsFlagOnlyTheUsablePairsAndTakeTheirSizes)
+{
+    using Engine::Render::Type::MakeMaskConstants;
+    using Engine::Render::Type::MaskContext;
+    using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::MaskPairView;
+
+    // The views are never dereferenced: any non null pointer will do.
+    auto* const view{ reinterpret_cast<ID3D11ShaderResourceView*>(static_cast<std::uintptr_t>(0x10)) };
+    const auto pairIndex = [](MaskPairKind kind) { return static_cast<std::size_t>(kind); };
+
+    // Nothing usable: no flags, the size 1 so a division never fails, and the debug paint stays off.
+    MaskContext none{};
+    const auto off{ MakeMaskConstants(none, true, 1920, 1080) };
+    EXPECT_EQ(off.ValidFlags, 0u);
+    EXPECT_EQ(off.MaskShown, 0u);
+    EXPECT_EQ(off.DepthBWidth, 1u);
+    EXPECT_EQ(off.TargetWidth, 1u);
+
+    // Pair 0 and the color pair, the depth 0 pair not copied this frame.
+    MaskContext mask{};
+    mask.Pairs[pairIndex(MaskPairKind::DepthB)] = MaskPairView{ true, view, view, 1920, 1080 };
+    mask.Pairs[pairIndex(MaskPairKind::DepthZero)] = MaskPairView{ false, view, view, 1920, 1080 };
+    mask.Pairs[pairIndex(MaskPairKind::Color)] = MaskPairView{ true, view, view, 960, 540 };
+
+    const auto constants{ MakeMaskConstants(mask, true, 1280, 720) };
+    EXPECT_EQ(constants.ValidFlags, 0b101u);
+    EXPECT_EQ(constants.MaskShown, 1u);
+    EXPECT_EQ(constants.DepthBWidth, 1920u);
+    EXPECT_EQ(constants.DepthBHeight, 1080u);
+    EXPECT_EQ(constants.DepthZeroWidth, 1u);
+    EXPECT_EQ(constants.ColorWidth, 960u);
+    EXPECT_EQ(constants.ColorHeight, 540u);
+    EXPECT_EQ(constants.TargetWidth, 1280u);
+    EXPECT_EQ(constants.TargetHeight, 720u);
+    EXPECT_EQ(MakeMaskConstants(mask, false, 1280, 720).MaskShown, 0u);
+
+    // A missing view, a size of 0 or a target of 0 leaves the pair out.
+    mask.Pairs[pairIndex(MaskPairKind::DepthZero)] = MaskPairView{ true, view, nullptr, 1920, 1080 };
+    EXPECT_EQ(MakeMaskConstants(mask, false, 1280, 720).ValidFlags, 0b101u);
+    mask.Pairs[pairIndex(MaskPairKind::DepthZero)] = MaskPairView{ true, view, view, 1920, 1080 };
+    EXPECT_EQ(MakeMaskConstants(mask, false, 1280, 720).ValidFlags, 0b111u);
+    mask.Pairs[pairIndex(MaskPairKind::Color)].Width = 0;
+    EXPECT_EQ(MakeMaskConstants(mask, false, 1280, 720).ValidFlags, 0b011u);
+    EXPECT_EQ(MakeMaskConstants(mask, false, 0, 720).ValidFlags, 0u);
+}
+
+TEST(EngineLayerTests, UnionChangedMapMergesTheTexelsOfTheSameSizeAndKeepsTheTargetOtherwise)
+{
+    using Engine::Render::Type::ChangedMap;
+    using Engine::Render::Type::UnionChangedMap;
+
+    const auto make = [](std::uint32_t width, std::uint32_t height, std::initializer_list<std::size_t> changed)
+    {
+        ChangedMap map{ .Width = width, .Height = height, .Texels = std::vector<std::uint8_t>(static_cast<std::size_t>(width) * height, 0) };
+        for (const std::size_t index : changed) map.Texels[index] = 1;
+        return map;
+    };
+
+    ChangedMap target{};
+    EXPECT_TRUE(UnionChangedMap(target, ChangedMap{}));
+    EXPECT_TRUE(target.Texels.empty());
+
+    // An empty target takes the first map, then the union adds the texels of the second.
+    EXPECT_TRUE(UnionChangedMap(target, make(4, 2, { 1, 2 })));
+    EXPECT_TRUE(UnionChangedMap(target, make(4, 2, { 2, 5 })));
+    EXPECT_EQ(target.Texels, make(4, 2, { 1, 2, 5 }).Texels);
+
+    // An empty source changes nothing, a map of another size is refused.
+    EXPECT_TRUE(UnionChangedMap(target, ChangedMap{}));
+    EXPECT_FALSE(UnionChangedMap(target, make(2, 4, { 0 })));
+    EXPECT_EQ(target.Texels, make(4, 2, { 1, 2, 5 }).Texels);
 }
 
 TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
@@ -893,7 +1021,7 @@ TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)
     EXPECT_EQ(error->Message, "no action source, hook not installed.");
 }
 
-TEST(EngineLayerTests, MaskWindowCountsFramesWithoutCopyAndTheMostPassCallsAndPublishesEvery120Frames)
+TEST(EngineLayerTests, MaskWindowCountsFramesWithoutCopyPerPairAndTheMostPassCallsAndPublishesEvery120Frames)
 {
     using Engine::Render::Type::AdvanceMaskWindow;
     using Engine::Render::Type::MaskWindow;
@@ -902,36 +1030,42 @@ TEST(EngineLayerTests, MaskWindowCountsFramesWithoutCopyAndTheMostPassCallsAndPu
     MaskWindow window{};
     EXPECT_EQ(k_MaskWindowFrames, 120u);
 
-    // 119 frames publish nothing. Every 10th has no copy and the calls go 1, 2 or 3.
+    // 119 frames publish nothing. Pair 0 misses every 10th frame, pair 1 never copies and the color pair always does. The calls go 1, 2 or 3.
     for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames - 1; ++i)
     {
         const bool isCopied{ i % 10 != 0 };
-        EXPECT_FALSE(AdvanceMaskWindow(window, isCopied, i == 50 ? 3u : 1u).has_value());
+        EXPECT_FALSE(AdvanceMaskWindow(window, { isCopied, false, true }, i == 50 ? 3u : 1u).has_value());
     }
     EXPECT_EQ(window.Frames, 119u);
-    EXPECT_EQ(window.NoCopyFrames, 12u);
+    EXPECT_EQ(window.NoCopyFrames[0], 12u);
+    EXPECT_EQ(window.NoCopyFrames[1], 119u);
+    EXPECT_EQ(window.NoCopyFrames[2], 0u);
     EXPECT_EQ(window.MaxPassCalls, 3u);
 
     // The 120th publishes the window and starts a new one.
-    const auto report{ AdvanceMaskWindow(window, false, 2) };
+    const auto report{ AdvanceMaskWindow(window, { false, false, true }, 2) };
     ASSERT_TRUE(report.has_value());
     EXPECT_EQ(report->Frames, 120u);
-    EXPECT_EQ(report->NoCopyFrames, 13u);
+    EXPECT_EQ(report->NoCopyFrames[0], 13u);
+    EXPECT_EQ(report->NoCopyFrames[1], 120u);
+    EXPECT_EQ(report->NoCopyFrames[2], 0u);
     EXPECT_EQ(report->MaxPassCalls, 3u);
     EXPECT_EQ(window.Frames, 0u);
-    EXPECT_EQ(window.NoCopyFrames, 0u);
+    EXPECT_EQ(window.NoCopyFrames[0], 0u);
     EXPECT_EQ(window.MaxPassCalls, 0u);
 
     // The next window does not keep the maximum of the last one.
-    for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames - 1; ++i) EXPECT_FALSE(AdvanceMaskWindow(window, true, 1).has_value());
-    const auto second{ AdvanceMaskWindow(window, true, 1) };
+    for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames - 1; ++i) EXPECT_FALSE(AdvanceMaskWindow(window, { true, true, true }, 1).has_value());
+    const auto second{ AdvanceMaskWindow(window, { true, true, true }, 1) };
     ASSERT_TRUE(second.has_value());
-    EXPECT_EQ(second->NoCopyFrames, 0u);
+    EXPECT_EQ(second->NoCopyFrames[0], 0u);
+    EXPECT_EQ(second->NoCopyFrames[1], 0u);
     EXPECT_EQ(second->MaxPassCalls, 1u);
 }
 
 TEST(EngineLayerTests, RenderStoreMaskWindowOnlyCountsFramesWithTheMaskRequested)
 {
+    using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::k_MaskWindowFrames;
 
     Engine::Render::State::RenderStore store{};
@@ -941,11 +1075,12 @@ TEST(EngineLayerTests, RenderStoreMaskWindowOnlyCountsFramesWithTheMaskRequested
     for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames; ++i) store.EndHudFrame();
     EXPECT_FALSE(store.GetMaskWindowReport().has_value());
 
-    // Requested: 120 frames, the first one copied after two 0xB calls, the others without copy.
+    // Requested: 120 frames, the first one copied the pair 0 and the color pair after two 0xB calls, the others without copy.
     store.SetFirstPersonMaskRequested(true);
     store.CountMaskPassCall();
     store.CountMaskPassCall();
-    store.MarkMaskCopied();
+    store.MarkMaskCopied(MaskPairKind::DepthB);
+    store.MarkMaskCopied(MaskPairKind::Color);
     store.EndHudFrame();
     for (std::uint32_t i{ 1 }; i < k_MaskWindowFrames; ++i)
     {
@@ -956,7 +1091,9 @@ TEST(EngineLayerTests, RenderStoreMaskWindowOnlyCountsFramesWithTheMaskRequested
     const auto report{ store.GetMaskWindowReport() };
     ASSERT_TRUE(report.has_value());
     EXPECT_EQ(report->Frames, k_MaskWindowFrames);
-    EXPECT_EQ(report->NoCopyFrames, k_MaskWindowFrames - 1);
+    EXPECT_EQ(report->NoCopyFrames[0], k_MaskWindowFrames - 1);
+    EXPECT_EQ(report->NoCopyFrames[1], k_MaskWindowFrames);
+    EXPECT_EQ(report->NoCopyFrames[2], k_MaskWindowFrames - 1);
     EXPECT_EQ(report->MaxPassCalls, 2u);
 
     // Turning the mask off drops the report.

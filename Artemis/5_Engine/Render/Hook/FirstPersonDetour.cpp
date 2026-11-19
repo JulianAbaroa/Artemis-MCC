@@ -11,6 +11,7 @@ import std;
 namespace
 {
     using Engine::Render::State::RenderStore;
+    using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_IdleTimeout;
 
@@ -94,7 +95,7 @@ namespace Engine::Render::Hook
         if (s_OriginalModel != nullptr) s_OriginalModel(camera, user, pass);
     }
 
-    // note: The service decides if this call is copied: for the overlay mask (VW.6.y.2 B, the first call with pass 0xB of the frame) and for
+    // note: The service decides if this call is copied: for the overlay mask (VW.6.y.2 B, E: the first call with pass 0xB of the frame and the first with pass 0, the game draws the arms in one or the other) and for
     // the probe pairs (A5, the pair keeps the pass argument, 0xB from 0x26C6DC and 0 from 0x26D740). Without a mask request or a probe it
     // only reads atomics. The scope spans the original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedDepthPass(void* view, std::int32_t pass) -> void
@@ -109,17 +110,18 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        const bool isMaskCopied{ self->m_RenderService.BeginMaskCopy(pass) };
+        const std::optional<MaskPairKind> maskPair{ self->m_RenderService.BeginMaskCopy(pass) };
         const std::optional<std::size_t> pair{ self->m_RenderService.BeginDepthPair(FirstPersonCaller::Pass1, pass) };
 
         if (s_OriginalDepthPass != nullptr) s_OriginalDepthPass(view, pass);
 
         if (pair) self->m_RenderService.EndDepthPair(*pair);
-        if (isMaskCopied) self->m_RenderService.EndMaskCopy();
+        if (maskPair) self->m_RenderService.EndMaskCopy(*maskPair);
     }
 
-    // note: Only measures. Without a probe armed the render service reads one atomic and returns, so the original runs as if unhooked. The
-    // scope spans the original, as in the other hooks.
+    // note: Measures for the probe and copies the render target 0 for the overlay mask (VW.6.y.2 E, the first call with a phase other than 0).
+    // Without a probe armed or a mask requested the render service reads atomics and returns, so the original runs as if unhooked. The scope
+    // spans the original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedForward(void* view, std::uint8_t phase) -> void
     {
         FirstPersonDetour* self{ s_Instance.load() };
@@ -132,11 +134,13 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
+        const bool isMaskCopied{ self->m_RenderService.BeginColorMaskCopy(phase) };
         const std::optional<std::size_t> pair{ self->m_RenderService.BeginColorPair(phase) };
 
         if (s_OriginalForward != nullptr) s_OriginalForward(view, phase);
 
         if (pair) self->m_RenderService.EndColorPair(*pair);
+        if (isMaskCopied) self->m_RenderService.EndColorMaskCopy();
     }
 
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool

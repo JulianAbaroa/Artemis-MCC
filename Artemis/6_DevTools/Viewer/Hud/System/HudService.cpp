@@ -23,6 +23,7 @@ namespace
     using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::MaskPairKind;
 
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
@@ -443,23 +444,35 @@ namespace DevTools::Viewer::Hud::System
         }
 
         // note: A frame without copy shows in the window below, so this line does not flicker when only some frames miss it.
-        if (!m_RenderStore.AreMaskTexturesReady())
+        const bool isAnyReady{ m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthB) || m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthZero) ||
+            m_RenderStore.AreMaskTexturesReady(MaskPairKind::Color) };
+
+        if (!isAnyReady)
         {
             ImGui::TextColored(k_Orange, "on, no copy this frame");
             return;
         }
 
-        const auto desc{ m_RenderStore.GetMaskDesc() };
+        const auto yesNo = [this](MaskPairKind kind) { return m_RenderStore.WasMaskCopiedLastFrame(kind) ? "yes" : "no"; };
         const auto window{ m_RenderStore.GetMaskWindowReport() };
+        const auto desc{ m_RenderStore.GetMaskDesc(m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthB) ? MaskPairKind::DepthB : MaskPairKind::DepthZero) };
+
+        const bool isAnyCopied{ m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthB) || m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthZero) ||
+            m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::Color) };
+
+        ImGui::TextColored(isAnyCopied ? k_Green : k_Orange, "0xB %s / 0 %s / color %s", yesNo(MaskPairKind::DepthB), yesNo(MaskPairKind::DepthZero),
+            yesNo(MaskPairKind::Color));
+        ImGui::SameLine();
 
         if (!window)
         {
-            ImGui::TextColored(k_Green, "on, size %ux%u, measuring", desc.Width, desc.Height);
+            ImGui::TextColored(k_Info, "size %ux%u, measuring", desc.Width, desc.Height);
             return;
         }
 
-        ImGui::TextColored(window->NoCopyFrames == 0 ? k_Green : k_Orange, "on, size %ux%u, no copy %u / %u frames, 0xB calls max %u",
-            desc.Width, desc.Height, window->NoCopyFrames, window->Frames, window->MaxPassCalls);
+        ImGui::TextColored(k_Info, "size %ux%u, no copy in %u frames: 0xB %u, 0 %u, color %u, 0xB calls max %u", desc.Width, desc.Height, window->Frames,
+            window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthB)], window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthZero)],
+            window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::Color)], window->MaxPassCalls);
     }
 
     auto HudService::DrawLatency() -> void

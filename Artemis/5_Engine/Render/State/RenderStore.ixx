@@ -17,6 +17,8 @@ namespace
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::MaskTextures;
     using Engine::Render::Type::MaskWindow;
     using Engine::Render::Type::MaskWindowReport;
     using Engine::Render::Type::StencilProbeInfo;
@@ -24,6 +26,7 @@ namespace
     using Engine::Render::Type::k_ColorPairCount;
     using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
+    using Engine::Render::Type::k_MaskPairCount;
 }
 
 export namespace Engine::Render::State
@@ -299,17 +302,17 @@ export namespace Engine::Render::State
         auto IsFirstPersonMaskRequested() const -> bool;
         auto SetFirstPersonMaskRequested(bool isRequested) -> void;
 
-        // Takes the one mask copy of the frame in progress. Any thread, no allocation.
-        // return: True for the first caller of the frame, false for the others (the frame is closed by EndHudFrame).
-        auto TakeMaskCopy() -> bool;
+        // Takes the one copy of a pair in the frame in progress. Any thread, no allocation.
+        // return: True for the first caller of the frame for that pair, false for the others (the frame is closed by EndHudFrame).
+        auto TakeMaskCopy(MaskPairKind kind) -> bool;
 
-        // Notes that both copies of the frame in progress were made. Any thread.
-        auto MarkMaskCopied() -> void;
+        // Notes that both copies of the pair in the frame in progress were made. Any thread.
+        auto MarkMaskCopied(MaskPairKind kind) -> void;
 
-        // return: Whether the copies were made in the frame in progress (the overlay drawn before the HUD) or in the last completed one
-        // (the overlay drawn at Present).
-        auto IsMaskCopied() const -> bool;
-        auto WasMaskCopiedLastFrame() const -> bool;
+        // return: Whether the copies of the pair were made in the frame in progress (the overlay drawn before the HUD) or in the last completed
+        // one (the overlay drawn at Present).
+        auto IsMaskCopied(MaskPairKind kind) const -> bool;
+        auto WasMaskCopiedLastFrame(MaskPairKind kind) const -> bool;
 
         // Counts a call of the first person pass 0xB that asked for the mask, whether or not it copied (VW.6.y.2 C). Any thread, no allocation.
         auto CountMaskPassCall() -> void;
@@ -318,39 +321,44 @@ export namespace Engine::Render::State
         // note: The window closes in EndHudFrame every k_MaskWindowFrames frames with the mask requested.
         auto GetMaskWindowReport() const -> std::optional<MaskWindowReport>;
 
-        // Keeps the description of the depth texture the first person pass wrote to when the copies could not be taken (no copies yet or a
-        // different texture), so Present makes them from it. note: Thread of Present only.
-        auto NoteMaskDepthDesc(const D3D11_TEXTURE2D_DESC& desc) -> void;
+        // Keeps the description of the texture a pair needs when its copies could not be taken (no copies yet or a different texture), so Present
+        // makes them from it. note: Thread of Present only.
+        auto NoteMaskDesc(MaskPairKind kind, const D3D11_TEXTURE2D_DESC& desc) -> void;
 
-        // return: The last noted description, nothing when none was noted since the textures were released.
-        auto GetMaskDepthDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>;
+        // return: The last noted description of the pair, nothing when none was noted since the textures were released.
+        auto GetMaskWantedDesc(MaskPairKind kind) const -> std::optional<D3D11_TEXTURE2D_DESC>;
 
-        // Keeps the two mask textures (null when the creation failed) with their shader resource views and the description they were
+        // Keeps the two textures of a pair (null when the creation failed) with their shader resource views and the description they were
         // attempted from, so the creation is not tried again for the same description. note: Thread of Present only.
-        auto SetMaskTextures(ComPtr<ID3D11Texture2D> pre, ComPtr<ID3D11Texture2D> post, ComPtr<ID3D11ShaderResourceView> preView,
+        auto SetMaskTextures(MaskPairKind kind, ComPtr<ID3D11Texture2D> pre, ComPtr<ID3D11Texture2D> post, ComPtr<ID3D11ShaderResourceView> preView,
             ComPtr<ID3D11ShaderResourceView> postView, const D3D11_TEXTURE2D_DESC& desc) -> void;
 
-        // return: Whether a creation was attempted and the textures not released since.
-        auto IsMaskAttempted() const -> bool;
+        // return: Whether a creation was attempted for the pair and the textures not released since.
+        auto IsMaskAttempted(MaskPairKind kind) const -> bool;
 
-        // return: Whether both textures and both views exist.
-        auto AreMaskTexturesReady() const -> bool;
+        // return: Whether both textures and both views of the pair exist.
+        auto AreMaskTexturesReady(MaskPairKind kind) const -> bool;
 
-        // return: The description of the last attempt.
-        auto GetMaskDesc() const -> D3D11_TEXTURE2D_DESC;
+        // return: The description of the last attempt of the pair.
+        auto GetMaskDesc(MaskPairKind kind) const -> D3D11_TEXTURE2D_DESC;
 
         // return: Not owned. Null when the textures do not exist.
-        auto GetMaskPre() const -> ID3D11Texture2D*;
-        auto GetMaskPost() const -> ID3D11Texture2D*;
-        auto GetMaskPreView() const -> ID3D11ShaderResourceView*;
-        auto GetMaskPostView() const -> ID3D11ShaderResourceView*;
+        auto GetMaskPre(MaskPairKind kind) const -> ID3D11Texture2D*;
+        auto GetMaskPost(MaskPairKind kind) const -> ID3D11Texture2D*;
+        auto GetMaskPreView(MaskPairKind kind) const -> ID3D11ShaderResourceView*;
+        auto GetMaskPostView(MaskPairKind kind) const -> ID3D11ShaderResourceView*;
 
-        // Keeps a reference to the resource copied at the entry of the pass, so the exit copies the same one. Releases it when null.
-        auto SetMaskSource(ID3D11Resource* source) -> void;
-        auto GetMaskSource() const -> ID3D11Resource*;
+        // Keeps a reference to the resource copied at the entry of the call, so the exit copies the same one. Releases it when null.
+        auto SetMaskSource(MaskPairKind kind, ID3D11Resource* source) -> void;
+        auto GetMaskSource(MaskPairKind kind) const -> ID3D11Resource*;
 
-        // Drops the textures, the views, the source and the noted description. Also done when the option goes off, the targets are
-        // released and at cleanup.
+        // Keeps a reference to the depth stencil resource of the first call with pass 0xB of the frame, for the call with pass 0 when it has none
+        // bound (VW.6.y.2 E). Released when the frame closes. Releases it when null.
+        auto SetMaskFrameDepth(ID3D11Resource* resource) -> void;
+        auto GetMaskFrameDepth() const -> ID3D11Resource*;
+
+        // Drops the textures, the views, the sources and the noted descriptions of every pair. Also done when the option goes off, the targets
+        // are released and at cleanup.
         auto ReleaseMaskTextures() -> void;
 
         // Thread of Present, noted at every Present. 0 until the first one.
@@ -452,25 +460,19 @@ export namespace Engine::Render::State
         StencilProbeInfo m_StencilProbe{};
 
         std::atomic<bool> m_IsMaskRequested{ false };
-        std::atomic<bool> m_IsMaskCallTaken{ false };
-        std::atomic<bool> m_IsMaskCopied{ false };
-        std::atomic<bool> m_IsMaskCopiedLastFrame{ false };
+        std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskTaken{};
+        std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskCopied{};
+        std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskCopiedLastFrame{};
         std::atomic<std::uint32_t> m_MaskPassCalls{ 0 };
         MaskWindow m_MaskWindow{};      // thread of Present only (EndHudFrame)
         std::atomic<bool> m_IsMaskWindowPublished{ false };
         std::atomic<std::uint32_t> m_MaskWindowFrames{ 0 };
-        std::atomic<std::uint32_t> m_MaskWindowNoCopy{ 0 };
+        std::array<std::atomic<std::uint32_t>, k_MaskPairCount> m_MaskWindowNoCopy{};
         std::atomic<std::uint32_t> m_MaskWindowMaxCalls{ 0 };
 
         // Thread of Present only
-        ComPtr<ID3D11Texture2D> m_MaskPre{};
-        ComPtr<ID3D11Texture2D> m_MaskPost{};
-        ComPtr<ID3D11ShaderResourceView> m_MaskPreView{};
-        ComPtr<ID3D11ShaderResourceView> m_MaskPostView{};
-        ComPtr<ID3D11Resource> m_MaskSource{};
-        D3D11_TEXTURE2D_DESC m_MaskDesc{};
-        std::optional<D3D11_TEXTURE2D_DESC> m_MaskDepthDesc{};
-        bool m_IsMaskAttempted{ false };
+        std::array<MaskTextures, k_MaskPairCount> m_Masks{};
+        ComPtr<ID3D11Resource> m_MaskFrameDepth{};
 
         CopyPairs<DepthPairNote, k_DepthPairCount> m_DepthPairs{};  // Thread of Present only
         CopyPairs<ColorPairNote, k_ColorPairCount> m_ColorPairs{};

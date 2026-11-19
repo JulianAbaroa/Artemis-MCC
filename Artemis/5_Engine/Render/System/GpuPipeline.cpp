@@ -16,12 +16,18 @@ namespace
 
     using Common::Log::System::Log;
 
-    using Engine::Render::Type::k_MaskBufferSlot;
-    using Engine::Render::Type::k_MaskPostSlot;
-    using Engine::Render::Type::k_MaskPreSlot;
+    using Engine::Render::Type::MaskConstants;
+    using Engine::Render::Type::MakeMaskConstants;
+    using Engine::Render::Type::MaskPairKind;
 
-    // The two depth copies are bound together from slot 0.
-    static_assert(k_MaskPreSlot == 0 && k_MaskPostSlot == 1);
+    using Engine::Render::Type::k_MaskBufferSlot;
+    using Engine::Render::Type::k_MaskSlotCount;
+    using Engine::Render::Type::MaskPostSlot;
+    using Engine::Render::Type::MaskPreSlot;
+
+    // The copies of the pairs are bound together from slot 0, before and after of each pair in the order of MaskPairKind.
+    static_assert(MaskPreSlot(MaskPairKind::DepthB) == 0 && MaskPostSlot(MaskPairKind::DepthB) == 1 &&
+        MaskPostSlot(MaskPairKind::Color) == k_MaskSlotCount - 1);
 
     // Depth bias of the DepthOnly surface. The depth is reversed (near is 1, far is 0), so negative terms push the surface away from the camera.
     // The wireframe of the same mesh then wins the depth test without being pulled through nearby walls. The bias is in units of the float
@@ -29,24 +35,11 @@ namespace
     constexpr int k_DepthOnlyDepthBias{ 128 };
     constexpr float k_DepthOnlySlopeBias{ 2.0f };
 
-    // The constant buffer b1 of the pixel shader, 32 bytes as the shader declares it.
-    struct MaskConstants
-    {
-        std::uint32_t MaskWidth{ 1 };
-        std::uint32_t MaskHeight{ 1 };
-        std::uint32_t TargetWidth{ 1 };
-        std::uint32_t TargetHeight{ 1 };
-        std::uint32_t MaskOn{ 0 };
-        std::uint32_t MaskShown{ 0 };
-        std::uint32_t Padding[2]{};
-    };
-    static_assert(sizeof(MaskConstants) == 32);
-
     // HLSL source of the map pipeline, shared by every pass.
     // Vertex shaders: VSMain (Vertex), VSInstanced (SphereInstance) and VSInstancedMesh (MeshInstance).
     // Pixel shader: PSMain, flat shading from the screen-space derivatives and two fixed lights. It first skips the pixels of the
-    // first person arms of the game (IsFirstPersonPixel): the texels whose depth differs between the two copies taken around the pass
-    // that draws them. The copies are t0 and t1 and the sizes b1, bound by UpdateMask.
+    // first person arms of the game (IsFirstPersonPixel): the texels whose depth or color differs between the two copies of any pair taken
+    // around the passes that draw them. The copies are t0 to t5 (depth 0xB, depth 0, color) and the sizes and flags b1, bound by UpdateMask.
     constexpr const char* k_MapSource = R"(
 cbuffer Camera : register(b0)
 {
@@ -55,25 +48,55 @@ cbuffer Camera : register(b0)
 
 cbuffer Mask : register(b1)
 {
-    uint2 MaskSize;
+    uint2 DepthBSize;
+    uint2 DepthZeroSize;
+    uint2 ColorSize;
     uint2 TargetSize;
-    uint  MaskOn;
+    uint  ValidFlags;
     uint  MaskShown;
     uint2 MaskPadding;
 };
 
-Texture2D<float> MaskPre  : register(t0);
-Texture2D<float> MaskPost : register(t1);
+Texture2D<float>  DepthBPre    : register(t0);
+Texture2D<float>  DepthBPost   : register(t1);
+Texture2D<float>  DepthZeroPre : register(t2);
+Texture2D<float>  DepthZeroPost: register(t3);
+Texture2D<float4> ColorPre     : register(t4);
+Texture2D<float4> ColorPost    : register(t5);
 
-// Whether the pixel is one the game draws its first person arms on. The pixel is scaled to the texel of the copies, as ScaleToMask does.
+// The texel of a copy of the given size that covers the pixel, as ScaleToMask does.
+int3 MaskTexel(uint2 pixel, uint2 size)
+{
+    return int3(min(pixel * size / TargetSize, size - 1), 0);
+}
+
+// Whether the pixel is one the game draws its first person arms on: the depth changed in the pass 0xB or in the pass 0, or the color
+// changed in the forward pass, comparing the three channels bit by bit. The flags say which pairs were copied in the frame.
 bool IsFirstPersonPixel(float4 screenPos)
 {
-    if (MaskOn == 0) return false;
+    if (ValidFlags == 0) return false;
 
     uint2 pixel = uint2(screenPos.xy);
-    uint2 texel = min(pixel * MaskSize / TargetSize, MaskSize - 1);
-    int3 location = int3(texel, 0);
-    return MaskPre.Load(location) != MaskPost.Load(location);
+
+    if ((ValidFlags & 1) != 0)
+    {
+        int3 location = MaskTexel(pixel, DepthBSize);
+        if (DepthBPre.Load(location) != DepthBPost.Load(location)) return true;
+    }
+
+    if ((ValidFlags & 2) != 0)
+    {
+        int3 location = MaskTexel(pixel, DepthZeroSize);
+        if (DepthZeroPre.Load(location) != DepthZeroPost.Load(location)) return true;
+    }
+
+    if ((ValidFlags & 4) != 0)
+    {
+        int3 location = MaskTexel(pixel, ColorSize);
+        if (any(asuint(ColorPre.Load(location).rgb) != asuint(ColorPost.Load(location).rgb))) return true;
+    }
+
+    return false;
 }
 
 struct VSIn  { float3 pos : POSITION; float3 color : COLOR; };
@@ -456,21 +479,7 @@ namespace Engine::Render::System
     {
         if (!context || !m_MaskBuffer) return;
 
-        // A size of 0 would divide by zero in the shader: the mask is off then.
-        const bool isOn{ mask.IsValid && mask.Pre != nullptr && mask.Post != nullptr && mask.Width != 0 && mask.Height != 0 &&
-            targetWidth != 0 && targetHeight != 0 };
-
-        MaskConstants constants{};
-        constants.MaskOn = isOn ? 1u : 0u;
-        constants.MaskShown = isOn && isMaskShown ? 1u : 0u;
-
-        if (isOn)
-        {
-            constants.MaskWidth = mask.Width;
-            constants.MaskHeight = mask.Height;
-            constants.TargetWidth = targetWidth;
-            constants.TargetHeight = targetHeight;
-        }
+        const MaskConstants constants{ MakeMaskConstants(mask, isMaskShown, targetWidth, targetHeight) };
 
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (FAILED(context->Map(m_MaskBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) return;
@@ -481,18 +490,27 @@ namespace Engine::Render::System
         ID3D11Buffer* buffer{ m_MaskBuffer.Get() };
         context->PSSetConstantBuffers(k_MaskBufferSlot, 1, &buffer);
 
-        ID3D11ShaderResourceView* views[2]{};
-        views[k_MaskPreSlot] = isOn ? mask.Pre : nullptr;
-        views[k_MaskPostSlot] = isOn ? mask.Post : nullptr;
-        context->PSSetShaderResources(0, 2, views);
+        // A pair that is not used binds nothing, so the shader never reads a stale copy.
+        ID3D11ShaderResourceView* views[k_MaskSlotCount]{};
+
+        for (std::size_t i{ 0 }; i < mask.Pairs.size(); ++i)
+        {
+            if ((constants.ValidFlags & (1u << i)) == 0) continue;
+
+            const MaskPairKind kind{ static_cast<MaskPairKind>(i) };
+            views[MaskPreSlot(kind)] = mask.Pairs[i].Pre;
+            views[MaskPostSlot(kind)] = mask.Pairs[i].Post;
+        }
+
+        context->PSSetShaderResources(0, k_MaskSlotCount, views);
     }
 
     auto GpuPipeline::ClearMask(ID3D11DeviceContext* context) -> void
     {
         if (!context || !m_MaskBuffer) return;
 
-        ID3D11ShaderResourceView* views[2]{};
-        context->PSSetShaderResources(0, 2, views);
+        ID3D11ShaderResourceView* views[k_MaskSlotCount]{};
+        context->PSSetShaderResources(0, k_MaskSlotCount, views);
     }
 
     auto GpuPipeline::Bind(ID3D11DeviceContext* context, VertexLayout layout,

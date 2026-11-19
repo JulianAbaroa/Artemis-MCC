@@ -2,6 +2,7 @@ module;
 
 #include <d3d11.h>
 #include <dxgi.h>
+#include <wrl/client.h>
 
 export module Engine.Render.Type;
 
@@ -404,17 +405,44 @@ export namespace Engine::Render::Type
         void* ResizeBuffers{ nullptr };
     };
 
-    // The pass argument of 0x26DA08 that draws the first person arms and weapon in the view (VW.6.y.2 A5, B). Its first call of the frame
-    // is the one the overlay mask is made around.
+    // The passes of 0x26DA08 that draw the first person arms and weapon in the depth of the view (VW.6.y.2 A5, A6, E). The game draws them in
+    // the first call with pass 0xB, or, when a mesh of the previous frame sets a flag of its shader (a Ghost, a Revenant, the fuel rod), in the
+    // first call with pass 0 after the scene. The overlay mask is made around both.
     inline constexpr std::int32_t k_FirstPersonMaskPass{ 0xB };
+    inline constexpr std::int32_t k_FirstPersonZeroPass{ 0 };
 
-    // Fixed slots of the overlay mask in the pixel stage of the map shaders (VW.6.y.2 B): the depth before and after the first person pass
-    // (shader resources) and the constant buffer with the sizes.
-    inline constexpr UINT k_MaskPreSlot{ 0 };
-    inline constexpr UINT k_MaskPostSlot{ 1 };
+    // The first phase of the forward pass 0x26EA78 is the depth mask. The phases after it draw the emissive parts that write no depth, such as
+    // the blade of the sword (VW.6.y.2 A6).
+    inline constexpr std::uint8_t k_ForwardDepthPhase{ 0 };
+
+    // The copies of the overlay mask: the depth around the call with pass 0xB, the depth around the call with pass 0 and the color of the
+    // forward pass 0x26EA78. Each one is a pair of textures taken before and after the call.
+    enum class MaskPairKind : std::uint8_t
+    {
+        DepthB,
+        DepthZero,
+        Color
+    };
+
+    inline constexpr std::size_t k_MaskPairCount{ 3 };
+
+    // Fixed slots of the overlay mask in the pixel stage of the map shaders (VW.6.y.2 B, E): the before and after copy of each pair
+    // (shader resources, consecutive from slot 0 in the order of MaskPairKind) and the constant buffer with the sizes and flags.
+    inline constexpr UINT k_MaskSlotCount{ static_cast<UINT>(k_MaskPairCount) * 2 };
     inline constexpr UINT k_MaskBufferSlot{ 1 };
 
-    // What to do with the mask textures at Present (RenderService::PlanMask).
+    // return: The shader resource slot of the copy before (PreSlot) or after (PostSlot) the call of the pair.
+    constexpr auto MaskPreSlot(MaskPairKind kind) -> UINT
+    {
+        return static_cast<UINT>(kind) * 2;
+    }
+
+    constexpr auto MaskPostSlot(MaskPairKind kind) -> UINT
+    {
+        return static_cast<UINT>(kind) * 2 + 1;
+    }
+
+    // What to do with the mask textures of a pair at Present (RenderService::PlanMask).
     enum class MaskPlan : std::uint8_t
     {
         Keep,       // nothing to do
@@ -422,44 +450,176 @@ export namespace Engine::Render::Type
         Release     // the mask is not requested any more
     };
 
-    // The depth of the first person arms as two copies taken around the pass that draws them (VW.6.y.2 B). The overlay skips the texels
-    // where the two differ. Without IsValid nothing is skipped.
-    struct MaskContext
+    // Where the pass 0 copy takes its resource from (VW.6.y.2 E).
+    enum class MaskSource : std::uint8_t
+    {
+        Bound,      // the depth stencil bound at the entry of the call
+        Saved,      // none bound: the one of the call with pass 0xB of the same frame (the same resource in the whole view)
+        None        // neither: the pair is not copied in this call
+    };
+
+    // return: The resource the pass 0 copy uses. The bound one wins, as the game writes there when it binds one.
+    constexpr auto ChooseZeroMaskSource(bool isBound, bool isSaved) -> MaskSource
+    {
+        if (isBound) return MaskSource::Bound;
+        return isSaved ? MaskSource::Saved : MaskSource::None;
+    }
+
+    // One pair of copies of the mask for the overlay. Without IsValid the pair is not used.
+    struct MaskPairView
     {
         bool IsValid{ false };                                  // the copies were taken in the frame this context is for
-        ID3D11ShaderResourceView* Pre{ nullptr };               // depth at the entry of the pass
-        ID3D11ShaderResourceView* Post{ nullptr };              // depth at the exit of the pass
+        ID3D11ShaderResourceView* Pre{ nullptr };               // the texture at the entry of the call
+        ID3D11ShaderResourceView* Post{ nullptr };              // the texture at the exit of the call
         std::uint32_t Width{ 0 };                               // size of the copies, which may differ from the target
         std::uint32_t Height{ 0 };
     };
 
-    // Frames of a telemetry window of the overlay mask, counted only while the mask is requested (VW.6.y.2 C).
+    // The textures of one pair of the overlay mask (VW.6.y.2 B, E): the copy before and after the call, their shader resource views, the
+    // description of the resource the pair is made from, the description wanted and whether a creation was attempted for it.
+    // note: Touched on the thread of Present only (the detours copy there too), no lock.
+    struct MaskTextures
+    {
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> Pre{};
+        Microsoft::WRL::ComPtr<ID3D11Texture2D> Post{};
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> PreView{};
+        Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> PostView{};
+        Microsoft::WRL::ComPtr<ID3D11Resource> Source{};        // the resource of the call in flight, so the exit copies the same one
+        D3D11_TEXTURE2D_DESC Desc{};                            // the description of the last attempt
+        std::optional<D3D11_TEXTURE2D_DESC> Wanted{};           // the description noted when the copies could not be taken
+        bool IsAttempted{ false };
+    };
+
+    // The first person arms as pairs of copies taken around the passes that draw them (VW.6.y.2 B, E). The overlay skips the texels where any
+    // valid pair differs between its two copies.
+    struct MaskContext
+    {
+        std::array<MaskPairView, k_MaskPairCount> Pairs{};
+    };
+
+    // The constant buffer b1 of the pixel shader, 48 bytes as the shader declares it.
+    struct MaskConstants
+    {
+        std::uint32_t DepthBWidth{ 1 };
+        std::uint32_t DepthBHeight{ 1 };
+        std::uint32_t DepthZeroWidth{ 1 };
+        std::uint32_t DepthZeroHeight{ 1 };
+        std::uint32_t ColorWidth{ 1 };
+        std::uint32_t ColorHeight{ 1 };
+        std::uint32_t TargetWidth{ 1 };
+        std::uint32_t TargetHeight{ 1 };
+        std::uint32_t ValidFlags{ 0 };      // bit i: the pair of MaskPairKind i is used
+        std::uint32_t MaskShown{ 0 };
+        std::uint32_t Padding[2]{};
+    };
+    static_assert(sizeof(MaskConstants) == 48);
+
+    // return: Whether the pair can be sampled: valid, both views, a size and a target size, so the shader never divides by zero.
+    constexpr auto IsMaskPairUsable(const MaskPairView& pair, std::uint32_t targetWidth, std::uint32_t targetHeight) -> bool
+    {
+        return pair.IsValid && pair.Pre != nullptr && pair.Post != nullptr && pair.Width != 0 && pair.Height != 0 && targetWidth != 0 &&
+            targetHeight != 0;
+    }
+
+    // Makes the constants of the pixel shader of a mask.
+    // param isMaskShown: Debug. The pixels of the mask are painted instead of skipped. Ignored when no pair is usable.
+    // return: The flags hold the usable pairs only, and the sizes of a pair that is not usable stay 1.
+    inline auto MakeMaskConstants(const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth, std::uint32_t targetHeight)
+        -> MaskConstants
+    {
+        MaskConstants constants{};
+
+        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
+        {
+            const MaskPairView& pair{ mask.Pairs[i] };
+            if (!IsMaskPairUsable(pair, targetWidth, targetHeight)) continue;
+
+            constants.ValidFlags |= 1u << i;
+
+            switch (static_cast<MaskPairKind>(i))
+            {
+            case MaskPairKind::DepthB:
+                constants.DepthBWidth = pair.Width;
+                constants.DepthBHeight = pair.Height;
+                break;
+
+            case MaskPairKind::DepthZero:
+                constants.DepthZeroWidth = pair.Width;
+                constants.DepthZeroHeight = pair.Height;
+                break;
+
+            case MaskPairKind::Color:
+                constants.ColorWidth = pair.Width;
+                constants.ColorHeight = pair.Height;
+                break;
+            }
+        }
+
+        if (constants.ValidFlags != 0)
+        {
+            constants.TargetWidth = targetWidth;
+            constants.TargetHeight = targetHeight;
+            constants.MaskShown = isMaskShown ? 1u : 0u;
+        }
+
+        return constants;
+    }
+
+    // return: The format a shader resource view of a color texture of the mask uses, nothing when the format is not one the mask compares.
+    // A typeless 8 bit format is viewed as UNORM.
+    inline auto ColorMaskViewFormat(DXGI_FORMAT format) -> std::optional<DXGI_FORMAT>
+    {
+        switch (format)
+        {
+        case DXGI_FORMAT_R11G11B10_FLOAT:
+        case DXGI_FORMAT_R10G10B10A2_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        case DXGI_FORMAT_B8G8R8A8_UNORM:
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+            return format;
+
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+            return DXGI_FORMAT_R8G8B8A8_UNORM;
+
+        default:
+            return std::nullopt;
+        }
+    }
+
+    // Frames of a telemetry window of the overlay mask, counted only while the mask is requested (VW.6.y.2 C, E).
     inline constexpr std::uint32_t k_MaskWindowFrames{ 120 };
 
     // Counters of the window in progress.
     struct MaskWindow
     {
-        std::uint32_t Frames{ 0 };          // frames with the mask requested
-        std::uint32_t NoCopyFrames{ 0 };    // of those, frames that took no copy
-        std::uint32_t MaxPassCalls{ 0 };    // most 0xB calls seen in one frame
+        std::uint32_t Frames{ 0 };                                          // frames with the mask requested
+        std::array<std::uint32_t, k_MaskPairCount> NoCopyFrames{};          // of those, frames in which each pair took no copy
+        std::uint32_t MaxPassCalls{ 0 };                                    // most 0xB calls seen in one frame
     };
 
     // A closed window, published for the telemetry.
     struct MaskWindowReport
     {
         std::uint32_t Frames{ 0 };
-        std::uint32_t NoCopyFrames{ 0 };
+        std::array<std::uint32_t, k_MaskPairCount> NoCopyFrames{};
         std::uint32_t MaxPassCalls{ 0 };
     };
 
     // Adds one frame with the mask requested to the window.
-    // param isCopied: Whether the frame took its copies.
+    // param isCopied: Whether each pair took its copies in the frame.
     // param passCalls: Calls of 0xB that asked for the mask in the frame, including those that did not copy.
     // return: The window when it reached k_MaskWindowFrames, which is then reset. Empty otherwise.
-    inline auto AdvanceMaskWindow(MaskWindow& window, bool isCopied, std::uint32_t passCalls) -> std::optional<MaskWindowReport>
+    inline auto AdvanceMaskWindow(MaskWindow& window, const std::array<bool, k_MaskPairCount>& isCopied, std::uint32_t passCalls)
+        -> std::optional<MaskWindowReport>
     {
         ++window.Frames;
-        if (!isCopied) ++window.NoCopyFrames;
+
+        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
+        {
+            if (!isCopied[i]) ++window.NoCopyFrames[i];
+        }
+
         window.MaxPassCalls = (std::max)(window.MaxPassCalls, passCalls);
 
         if (window.Frames < k_MaskWindowFrames) return std::nullopt;
@@ -467,6 +627,24 @@ export namespace Engine::Render::Type
         const MaskWindowReport report{ window.Frames, window.NoCopyFrames, window.MaxPassCalls };
         window = MaskWindow{};
         return report;
+    }
+
+    // Adds the texels of a changed map to another, for the union of the depth the first person passes wrote (VW.6.y.2 E).
+    // return: False when the sizes differ and nothing was added. An empty target takes the size of the source.
+    inline auto UnionChangedMap(ChangedMap& target, const ChangedMap& source) -> bool
+    {
+        if (source.Texels.empty()) return true;
+
+        if (target.Texels.empty())
+        {
+            target = source;
+            return true;
+        }
+
+        if (target.Width != source.Width || target.Height != source.Height || target.Texels.size() != source.Texels.size()) return false;
+
+        for (std::size_t i{ 0 }; i < target.Texels.size(); ++i) target.Texels[i] |= source.Texels[i];
+        return true;
     }
 
     // What the handlers receive on each render event.

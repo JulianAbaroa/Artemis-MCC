@@ -13,6 +13,8 @@ namespace
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::MaskTextures;
     using Engine::Render::Type::MaskWindow;
     using Engine::Render::Type::MaskWindowReport;
     using Engine::Render::Type::StencilProbeInfo;
@@ -20,11 +22,17 @@ namespace
     using Engine::Render::Type::k_ColorPairCount;
     using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
+    using Engine::Render::Type::k_MaskPairCount;
 
     // States of the first person probe.
     constexpr std::uint8_t k_ProbeIdle{ 0 };
     constexpr std::uint8_t k_ProbeRequested{ 1 };
     constexpr std::uint8_t k_ProbeArmed{ 2 };
+
+    auto MaskSlotOf(MaskPairKind kind) -> std::size_t
+    {
+        return (std::min)(static_cast<std::size_t>(kind), k_MaskPairCount - 1);
+    }
 
     auto SlotOf(FirstPersonCaller caller) -> std::size_t
     {
@@ -228,9 +236,16 @@ namespace Engine::Render::State
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_FirstPersonUnitLastFrame.store(m_FirstPersonUnitCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
-        const bool isCopied{ m_IsMaskCopied.exchange(false, std::memory_order_acq_rel) };
-        m_IsMaskCopiedLastFrame.store(isCopied, std::memory_order_release);
-        m_IsMaskCallTaken.store(false, std::memory_order_release);
+        std::array<bool, k_MaskPairCount> isCopied{};
+
+        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
+        {
+            isCopied[i] = m_IsMaskCopied[i].exchange(false, std::memory_order_acq_rel);
+            m_IsMaskCopiedLastFrame[i].store(isCopied[i], std::memory_order_release);
+            m_IsMaskTaken[i].store(false, std::memory_order_release);
+        }
+
+        m_MaskFrameDepth.Reset();
 
         const std::uint32_t passCalls{ m_MaskPassCalls.exchange(0, std::memory_order_relaxed) };
 
@@ -243,7 +258,9 @@ namespace Engine::Render::State
         else if (const auto report{ Engine::Render::Type::AdvanceMaskWindow(m_MaskWindow, isCopied, passCalls) })
         {
             m_MaskWindowFrames.store(report->Frames, std::memory_order_relaxed);
-            m_MaskWindowNoCopy.store(report->NoCopyFrames, std::memory_order_relaxed);
+
+            for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i) m_MaskWindowNoCopy[i].store(report->NoCopyFrames[i], std::memory_order_relaxed);
+
             m_MaskWindowMaxCalls.store(report->MaxPassCalls, std::memory_order_relaxed);
             m_IsMaskWindowPublished.store(true, std::memory_order_release);
         }
@@ -504,24 +521,24 @@ namespace Engine::Render::State
         m_IsMaskRequested.store(isRequested, std::memory_order_relaxed);
     }
 
-    auto RenderStore::TakeMaskCopy() -> bool
+    auto RenderStore::TakeMaskCopy(MaskPairKind kind) -> bool
     {
-        return !m_IsMaskCallTaken.exchange(true, std::memory_order_acq_rel);
+        return !m_IsMaskTaken[MaskSlotOf(kind)].exchange(true, std::memory_order_acq_rel);
     }
 
-    auto RenderStore::MarkMaskCopied() -> void
+    auto RenderStore::MarkMaskCopied(MaskPairKind kind) -> void
     {
-        m_IsMaskCopied.store(true, std::memory_order_release);
+        m_IsMaskCopied[MaskSlotOf(kind)].store(true, std::memory_order_release);
     }
 
-    auto RenderStore::IsMaskCopied() const -> bool
+    auto RenderStore::IsMaskCopied(MaskPairKind kind) const -> bool
     {
-        return m_IsMaskCopied.load(std::memory_order_acquire);
+        return m_IsMaskCopied[MaskSlotOf(kind)].load(std::memory_order_acquire);
     }
 
-    auto RenderStore::WasMaskCopiedLastFrame() const -> bool
+    auto RenderStore::WasMaskCopiedLastFrame(MaskPairKind kind) const -> bool
     {
-        return m_IsMaskCopiedLastFrame.load(std::memory_order_acquire);
+        return m_IsMaskCopiedLastFrame[MaskSlotOf(kind)].load(std::memory_order_acquire);
     }
 
     auto RenderStore::CountMaskPassCall() -> void
@@ -533,86 +550,98 @@ namespace Engine::Render::State
     {
         if (!m_IsMaskWindowPublished.load(std::memory_order_acquire)) return std::nullopt;
 
-        return MaskWindowReport{ m_MaskWindowFrames.load(std::memory_order_relaxed), m_MaskWindowNoCopy.load(std::memory_order_relaxed),
-            m_MaskWindowMaxCalls.load(std::memory_order_relaxed) };
+        MaskWindowReport report{ .Frames = m_MaskWindowFrames.load(std::memory_order_relaxed),
+            .MaxPassCalls = m_MaskWindowMaxCalls.load(std::memory_order_relaxed) };
+
+        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i) report.NoCopyFrames[i] = m_MaskWindowNoCopy[i].load(std::memory_order_relaxed);
+
+        return report;
     }
 
-    auto RenderStore::NoteMaskDepthDesc(const D3D11_TEXTURE2D_DESC& desc) -> void
+    auto RenderStore::NoteMaskDesc(MaskPairKind kind, const D3D11_TEXTURE2D_DESC& desc) -> void
     {
-        m_MaskDepthDesc = desc;
+        m_Masks[MaskSlotOf(kind)].Wanted = desc;
     }
 
-    auto RenderStore::GetMaskDepthDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>
+    auto RenderStore::GetMaskWantedDesc(MaskPairKind kind) const -> std::optional<D3D11_TEXTURE2D_DESC>
     {
-        return m_MaskDepthDesc;
+        return m_Masks[MaskSlotOf(kind)].Wanted;
     }
 
-    auto RenderStore::SetMaskTextures(ComPtr<ID3D11Texture2D> pre, ComPtr<ID3D11Texture2D> post, ComPtr<ID3D11ShaderResourceView> preView,
-        ComPtr<ID3D11ShaderResourceView> postView, const D3D11_TEXTURE2D_DESC& desc) -> void
+    auto RenderStore::SetMaskTextures(MaskPairKind kind, ComPtr<ID3D11Texture2D> pre, ComPtr<ID3D11Texture2D> post,
+        ComPtr<ID3D11ShaderResourceView> preView, ComPtr<ID3D11ShaderResourceView> postView, const D3D11_TEXTURE2D_DESC& desc) -> void
     {
-        m_MaskPre = std::move(pre);
-        m_MaskPost = std::move(post);
-        m_MaskPreView = std::move(preView);
-        m_MaskPostView = std::move(postView);
-        m_MaskDesc = desc;
-        m_IsMaskAttempted = true;
+        MaskTextures& mask{ m_Masks[MaskSlotOf(kind)] };
+
+        mask.Pre = std::move(pre);
+        mask.Post = std::move(post);
+        mask.PreView = std::move(preView);
+        mask.PostView = std::move(postView);
+        mask.Desc = desc;
+        mask.IsAttempted = true;
     }
 
-    auto RenderStore::IsMaskAttempted() const -> bool
+    auto RenderStore::IsMaskAttempted(MaskPairKind kind) const -> bool
     {
-        return m_IsMaskAttempted;
+        return m_Masks[MaskSlotOf(kind)].IsAttempted;
     }
 
-    auto RenderStore::AreMaskTexturesReady() const -> bool
+    auto RenderStore::AreMaskTexturesReady(MaskPairKind kind) const -> bool
     {
-        return m_MaskPre != nullptr && m_MaskPost != nullptr && m_MaskPreView != nullptr && m_MaskPostView != nullptr;
+        const MaskTextures& mask{ m_Masks[MaskSlotOf(kind)] };
+        return mask.Pre != nullptr && mask.Post != nullptr && mask.PreView != nullptr && mask.PostView != nullptr;
     }
 
-    auto RenderStore::GetMaskDesc() const -> D3D11_TEXTURE2D_DESC
+    auto RenderStore::GetMaskDesc(MaskPairKind kind) const -> D3D11_TEXTURE2D_DESC
     {
-        return m_MaskDesc;
+        return m_Masks[MaskSlotOf(kind)].Desc;
     }
 
-    auto RenderStore::GetMaskPre() const -> ID3D11Texture2D*
+    auto RenderStore::GetMaskPre(MaskPairKind kind) const -> ID3D11Texture2D*
     {
-        return m_MaskPre.Get();
+        return m_Masks[MaskSlotOf(kind)].Pre.Get();
     }
 
-    auto RenderStore::GetMaskPost() const -> ID3D11Texture2D*
+    auto RenderStore::GetMaskPost(MaskPairKind kind) const -> ID3D11Texture2D*
     {
-        return m_MaskPost.Get();
+        return m_Masks[MaskSlotOf(kind)].Post.Get();
     }
 
-    auto RenderStore::GetMaskPreView() const -> ID3D11ShaderResourceView*
+    auto RenderStore::GetMaskPreView(MaskPairKind kind) const -> ID3D11ShaderResourceView*
     {
-        return m_MaskPreView.Get();
+        return m_Masks[MaskSlotOf(kind)].PreView.Get();
     }
 
-    auto RenderStore::GetMaskPostView() const -> ID3D11ShaderResourceView*
+    auto RenderStore::GetMaskPostView(MaskPairKind kind) const -> ID3D11ShaderResourceView*
     {
-        return m_MaskPostView.Get();
+        return m_Masks[MaskSlotOf(kind)].PostView.Get();
     }
 
-    auto RenderStore::SetMaskSource(ID3D11Resource* source) -> void
+    auto RenderStore::SetMaskSource(MaskPairKind kind, ID3D11Resource* source) -> void
     {
-        m_MaskSource = source;
+        m_Masks[MaskSlotOf(kind)].Source = source;
     }
 
-    auto RenderStore::GetMaskSource() const -> ID3D11Resource*
+    auto RenderStore::GetMaskSource(MaskPairKind kind) const -> ID3D11Resource*
     {
-        return m_MaskSource.Get();
+        return m_Masks[MaskSlotOf(kind)].Source.Get();
+    }
+
+    auto RenderStore::SetMaskFrameDepth(ID3D11Resource* resource) -> void
+    {
+        m_MaskFrameDepth = resource;
+    }
+
+    auto RenderStore::GetMaskFrameDepth() const -> ID3D11Resource*
+    {
+        return m_MaskFrameDepth.Get();
     }
 
     auto RenderStore::ReleaseMaskTextures() -> void
     {
-        m_MaskPre.Reset();
-        m_MaskPost.Reset();
-        m_MaskPreView.Reset();
-        m_MaskPostView.Reset();
-        m_MaskSource.Reset();
-        m_MaskDesc = {};
-        m_MaskDepthDesc.reset();
-        m_IsMaskAttempted = false;
+        for (MaskTextures& mask : m_Masks) mask = MaskTextures{};
+
+        m_MaskFrameDepth.Reset();
     }
 
     auto RenderStore::ReleaseTargets() -> void

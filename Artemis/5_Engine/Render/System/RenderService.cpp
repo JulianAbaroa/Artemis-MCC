@@ -31,7 +31,10 @@ namespace
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskContext;
+    using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::MaskPairView;
     using Engine::Render::Type::MaskPlan;
+    using Engine::Render::Type::MaskSource;
     using Engine::Render::Type::PairState;
     using Engine::Render::Type::RasterizerStateInfo;
     using Engine::Render::Type::StencilProbeInfo;
@@ -42,6 +45,10 @@ namespace
     using Engine::Render::Type::TexelLayout;
     using Engine::Render::Type::ViewportInfo;
 
+    using Engine::Render::Type::ChooseZeroMaskSource;
+    using Engine::Render::Type::ColorMaskViewFormat;
+    using Engine::Render::Type::UnionChangedMap;
+
     using Engine::Render::Type::k_ColorPairCount;
     using Engine::Render::Type::k_ColorTexelLayout;
     using Engine::Render::Type::k_DepthPairCount;
@@ -49,6 +56,9 @@ namespace
     using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_FirstPersonMaskPass;
+    using Engine::Render::Type::k_FirstPersonZeroPass;
+    using Engine::Render::Type::k_ForwardDepthPhase;
+    using Engine::Render::Type::k_MaskPairCount;
     using Engine::Render::Type::k_StencilBitCount;
     using Engine::Render::Type::k_StencilRegionCount;
     using Engine::Render::Type::k_StencilValueCount;
@@ -94,6 +104,57 @@ namespace
     {
         return a.Width == b.Width && a.Height == b.Height && a.MipLevels == b.MipLevels && a.ArraySize == b.ArraySize &&
             a.Format == b.Format && a.SampleDesc.Count == b.SampleDesc.Count && a.SampleDesc.Quality == b.SampleDesc.Quality;
+    }
+
+    // return: How the log names a pair of the overlay mask.
+    auto MaskPairName(MaskPairKind kind) -> const char*
+    {
+        switch (kind)
+        {
+        case MaskPairKind::DepthB: return "depth 0xB";
+        case MaskPairKind::DepthZero: return "depth 0";
+        case MaskPairKind::Color: return "color";
+        }
+
+        return "?";
+    }
+
+    // The textures of a pair of the overlay mask as the creation left them.
+    struct MaskCreation
+    {
+        std::array<ComPtr<ID3D11Texture2D>, 2> Textures{};
+        std::array<ComPtr<ID3D11ShaderResourceView>, 2> Views{};
+        HRESULT Result{ S_OK };
+    };
+
+    // Makes the before and after textures of a pair, DEFAULT with only the shader resource bind, and a view of each with the format.
+    auto CreateMaskTextures(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& wanted, DXGI_FORMAT viewFormat) -> MaskCreation
+    {
+        D3D11_TEXTURE2D_DESC copyDesc{ wanted };
+        copyDesc.Usage = D3D11_USAGE_DEFAULT;
+        copyDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        copyDesc.CPUAccessFlags = 0;
+        copyDesc.MiscFlags = 0;
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
+        viewDesc.Format = viewFormat;
+        viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        viewDesc.Texture2D.MostDetailedMip = 0;
+        viewDesc.Texture2D.MipLevels = 1;
+
+        MaskCreation creation{ .Result = device != nullptr ? S_OK : E_POINTER };
+
+        for (std::size_t i{ 0 }; i < creation.Textures.size() && SUCCEEDED(creation.Result); ++i)
+        {
+            creation.Result = device->CreateTexture2D(&copyDesc, nullptr, creation.Textures[i].GetAddressOf());
+
+            if (SUCCEEDED(creation.Result))
+            {
+                creation.Result = device->CreateShaderResourceView(creation.Textures[i].Get(), &viewDesc, creation.Views[i].GetAddressOf());
+            }
+        }
+
+        return creation;
     }
 
     // return: The bytes of a texel of a color format the color pairs compare, 0 for any other.
@@ -682,15 +743,23 @@ namespace Engine::Render::System
     {
         MaskContext mask{};
 
-        if (!m_RenderStore.IsFirstPersonMaskRequested() || !m_RenderStore.AreMaskTexturesReady()) return mask;
+        if (!m_RenderStore.IsFirstPersonMaskRequested()) return mask;
 
-        const D3D11_TEXTURE2D_DESC desc{ m_RenderStore.GetMaskDesc() };
+        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
+        {
+            const MaskPairKind kind{ static_cast<MaskPairKind>(i) };
+            if (!m_RenderStore.AreMaskTexturesReady(kind)) continue;
 
-        mask.IsValid = isInFrame ? m_RenderStore.IsMaskCopied() : m_RenderStore.WasMaskCopiedLastFrame();
-        mask.Pre = m_RenderStore.GetMaskPreView();
-        mask.Post = m_RenderStore.GetMaskPostView();
-        mask.Width = desc.Width;
-        mask.Height = desc.Height;
+            const D3D11_TEXTURE2D_DESC desc{ m_RenderStore.GetMaskDesc(kind) };
+            MaskPairView& pair{ mask.Pairs[i] };
+
+            pair.IsValid = isInFrame ? m_RenderStore.IsMaskCopied(kind) : m_RenderStore.WasMaskCopiedLastFrame(kind);
+            pair.Pre = m_RenderStore.GetMaskPreView(kind);
+            pair.Post = m_RenderStore.GetMaskPostView(kind);
+            pair.Width = desc.Width;
+            pair.Height = desc.Height;
+        }
+
         return mask;
     }
 
@@ -1048,63 +1117,122 @@ namespace Engine::Render::System
         return static_cast<std::uint32_t>((std::min)(texel, static_cast<std::uint64_t>(maskSize - 1)));
     }
 
-    auto RenderService::BeginMaskCopy(std::int32_t pass) -> bool
+    auto RenderService::BeginMaskPairCopy(MaskPairKind kind, ID3D11DeviceContext* context, ID3D11Resource* resource, bool canNote) -> bool
     {
-        if (pass != k_FirstPersonMaskPass || !m_RenderStore.IsFirstPersonMaskRequested()) return false;
-
-        // Counted before any check that can leave without copying, so the telemetry sees every call.
-        m_RenderStore.CountMaskPassCall();
-
-        ID3D11DeviceContext* context{ this->GetPresentContext() };
-        if (context == nullptr) return false;
-
-        ComPtr<ID3D11Resource> resource{ BoundDepthResource(context) };
-
         ComPtr<ID3D11Texture2D> texture{};
-        if (resource != nullptr) resource.As(&texture);
+        if (resource != nullptr) resource->QueryInterface(IID_PPV_ARGS(texture.GetAddressOf()));
         if (texture == nullptr) return false;
 
         D3D11_TEXTURE2D_DESC desc{};
         texture->GetDesc(&desc);
 
-        if (!m_RenderStore.AreMaskTexturesReady() || !IsSameTextureDesc(desc, m_RenderStore.GetMaskDesc()))
+        if (!m_RenderStore.AreMaskTexturesReady(kind) || !IsSameTextureDesc(desc, m_RenderStore.GetMaskDesc(kind)))
         {
-            m_RenderStore.NoteMaskDepthDesc(desc);
+            if (canNote) m_RenderStore.NoteMaskDesc(kind, desc);
             return false;
         }
 
-        // The copy of the frame is taken only once a depth of the expected description is bound, so a 0xB call without one (another
-        // view) leaves it to the next 0xB call of the same frame.
-        if (!m_RenderStore.TakeMaskCopy()) return false;
+        // The copy of the frame is taken only once a resource of the expected description is bound, so a call without one (another view) leaves
+        // it to the next call of the same frame.
+        if (!m_RenderStore.TakeMaskCopy(kind)) return false;
 
-        m_RenderStore.SetMaskSource(resource.Get());
-        context->CopyResource(m_RenderStore.GetMaskPre(), resource.Get());
+        m_RenderStore.SetMaskSource(kind, resource);
+        context->CopyResource(m_RenderStore.GetMaskPre(kind), resource);
         return true;
     }
 
-    auto RenderService::EndMaskCopy() -> void
+    auto RenderService::BeginMaskCopy(std::int32_t pass) -> std::optional<MaskPairKind>
+    {
+        if (!m_RenderStore.IsFirstPersonMaskRequested()) return std::nullopt;
+
+        MaskPairKind kind{ MaskPairKind::DepthB };
+
+        if (pass == k_FirstPersonMaskPass)
+        {
+            // Counted before any check that can leave without copying, so the telemetry sees every call.
+            m_RenderStore.CountMaskPassCall();
+        }
+        else if (pass == k_FirstPersonZeroPass) kind = MaskPairKind::DepthZero;
+        else return std::nullopt;
+
+        ID3D11DeviceContext* context{ this->GetPresentContext() };
+        if (context == nullptr) return std::nullopt;
+
+        ComPtr<ID3D11Resource> resource{ BoundDepthResource(context) };
+
+        // The pass 0 call can run with no depth stencil bound (the game binds its own inside): the one of the pass 0xB call of the frame is the
+        // same resource for the whole view.
+        if (kind == MaskPairKind::DepthZero)
+        {
+            ComPtr<ID3D11Resource> saved{ m_RenderStore.GetMaskFrameDepth() };
+
+            switch (ChooseZeroMaskSource(resource != nullptr, saved != nullptr))
+            {
+            case MaskSource::Bound:
+                break;
+
+            case MaskSource::Saved:
+                resource = std::move(saved);
+                break;
+
+            case MaskSource::None:
+                return std::nullopt;
+            }
+        }
+
+        // The pass 0 pair is made from the description of the pass 0xB pair, so it never notes one.
+        if (!this->BeginMaskPairCopy(kind, context, resource.Get(), kind == MaskPairKind::DepthB)) return std::nullopt;
+
+        if (kind == MaskPairKind::DepthB) m_RenderStore.SetMaskFrameDepth(resource.Get());
+
+        return kind;
+    }
+
+    auto RenderService::EndMaskCopy(MaskPairKind kind) -> void
     {
         ID3D11DeviceContext* context{ this->GetPresentContext() };
-        ID3D11Resource* source{ m_RenderStore.GetMaskSource() };
-        ID3D11Texture2D* post{ m_RenderStore.GetMaskPost() };
+        ID3D11Resource* source{ m_RenderStore.GetMaskSource(kind) };
+        ID3D11Texture2D* post{ m_RenderStore.GetMaskPost(kind) };
 
         if (context != nullptr && source != nullptr && post != nullptr)
         {
             context->CopyResource(post, source);
-            m_RenderStore.MarkMaskCopied();
+            m_RenderStore.MarkMaskCopied(kind);
         }
 
-        m_RenderStore.SetMaskSource(nullptr);
+        m_RenderStore.SetMaskSource(kind, nullptr);
+    }
+
+    auto RenderService::BeginColorMaskCopy(std::uint8_t phase) -> bool
+    {
+        if (phase == k_ForwardDepthPhase || !m_RenderStore.IsFirstPersonMaskRequested()) return false;
+
+        ID3D11DeviceContext* context{ this->GetPresentContext() };
+        if (context == nullptr) return false;
+
+        ComPtr<ID3D11Resource> resource{ BoundColorResource(context) };
+        return this->BeginMaskPairCopy(MaskPairKind::Color, context, resource.Get(), true);
+    }
+
+    auto RenderService::EndColorMaskCopy() -> void
+    {
+        this->EndMaskCopy(MaskPairKind::Color);
     }
 
     auto RenderService::PrepareMask() -> void
     {
         if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return;
 
-        const std::optional<D3D11_TEXTURE2D_DESC> wanted{ m_RenderStore.GetMaskDepthDesc() };
+        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i) this->PrepareMaskPair(static_cast<MaskPairKind>(i));
+    }
 
-        switch (RenderService::PlanMask(m_RenderStore.IsFirstPersonMaskRequested(), wanted, m_RenderStore.IsMaskAttempted(),
-            m_RenderStore.GetMaskDesc()))
+    auto RenderService::PrepareMaskPair(MaskPairKind kind) -> void
+    {
+        const bool isDepth{ kind != MaskPairKind::Color };
+        const std::optional<D3D11_TEXTURE2D_DESC> wanted{ m_RenderStore.GetMaskWantedDesc(kind == MaskPairKind::DepthZero ? MaskPairKind::DepthB : kind) };
+
+        switch (RenderService::PlanMask(m_RenderStore.IsFirstPersonMaskRequested(), wanted, m_RenderStore.IsMaskAttempted(kind),
+            m_RenderStore.GetMaskDesc(kind)))
         {
         case MaskPlan::Keep:
             return;
@@ -1114,51 +1242,39 @@ namespace Engine::Render::System
             return;
 
         case MaskPlan::Create:
+            // A pair copied in the last frame keeps its textures: another call of the frame with a different target (another view or phase)
+            // notes its description too, and recreating from it would flip the textures every frame and never copy.
+            if (m_RenderStore.WasMaskCopiedLastFrame(kind)) return;
             break;
         }
 
-        // The mask is read as R32_FLOAT_X8X24 without multisampling: another depth texture is attempted once and logged.
-        if (wanted->Format != DXGI_FORMAT_R32G8X24_TYPELESS || wanted->SampleDesc.Count != 1)
+        // The depth is read as R32_FLOAT_X8X24 and the color in its own format, both without multisampling: another texture is attempted once
+        // and logged.
+        const std::optional<DXGI_FORMAT> viewFormat{ isDepth ? std::optional<DXGI_FORMAT>{ DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS }
+            : ColorMaskViewFormat(wanted->Format) };
+        const bool isSupported{ isDepth ? wanted->Format == DXGI_FORMAT_R32G8X24_TYPELESS : viewFormat.has_value() };
+
+        if (!isSupported || wanted->SampleDesc.Count != 1)
         {
-            m_RenderStore.SetMaskTextures({}, {}, {}, {}, *wanted);
-            m_Log.Message("[RenderService] WARNING: The depth texture of the first person pass cannot be a mask source (format {}, samples {}).",
-                static_cast<std::uint32_t>(wanted->Format), wanted->SampleDesc.Count);
+            m_RenderStore.SetMaskTextures(kind, {}, {}, {}, {}, *wanted);
+            m_Log.Message("[RenderService] WARNING: The {} texture of the first person mask cannot be a source (format {}, samples {}).",
+                MaskPairName(kind), static_cast<std::uint32_t>(wanted->Format), wanted->SampleDesc.Count);
             return;
         }
 
-        D3D11_TEXTURE2D_DESC copyDesc{ *wanted };
-        copyDesc.Usage = D3D11_USAGE_DEFAULT;
-        copyDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-        copyDesc.CPUAccessFlags = 0;
-        copyDesc.MiscFlags = 0;
+        MaskCreation creation{ CreateMaskTextures(m_RenderStore.GetDevice(), *wanted, *viewFormat) };
 
-        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
-        viewDesc.Format = DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
-        viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        viewDesc.Texture2D.MostDetailedMip = 0;
-        viewDesc.Texture2D.MipLevels = 1;
-
-        ID3D11Device* device{ m_RenderStore.GetDevice() };
-        std::array<ComPtr<ID3D11Texture2D>, 2> textures{};
-        std::array<ComPtr<ID3D11ShaderResourceView>, 2> views{};
-        HRESULT result{ device != nullptr ? S_OK : E_POINTER };
-
-        for (std::size_t i{ 0 }; i < textures.size() && SUCCEEDED(result); ++i)
+        if (FAILED(creation.Result))
         {
-            result = device->CreateTexture2D(&copyDesc, nullptr, textures[i].GetAddressOf());
-            if (SUCCEEDED(result)) result = device->CreateShaderResourceView(textures[i].Get(), &viewDesc, views[i].GetAddressOf());
-        }
-
-        if (FAILED(result))
-        {
-            m_RenderStore.SetMaskTextures({}, {}, {}, {}, *wanted);
-            m_Log.Message("[RenderService] ERROR: Failed to create the first person mask textures, hresult {:#010X}.",
-                static_cast<std::uint32_t>(result));
+            m_RenderStore.SetMaskTextures(kind, {}, {}, {}, {}, *wanted);
+            m_Log.Message("[RenderService] ERROR: Failed to create the first person mask textures ({}), hresult {:#010X}.", MaskPairName(kind),
+                static_cast<std::uint32_t>(creation.Result));
             return;
         }
 
-        m_RenderStore.SetMaskTextures(std::move(textures[0]), std::move(textures[1]), std::move(views[0]), std::move(views[1]), *wanted);
-        m_Log.Message("[RenderService] INFO: First person mask textures made, {}x{}.", wanted->Width, wanted->Height);
+        m_RenderStore.SetMaskTextures(kind, std::move(creation.Textures[0]), std::move(creation.Textures[1]), std::move(creation.Views[0]),
+            std::move(creation.Views[1]), *wanted);
+        m_Log.Message("[RenderService] INFO: First person mask textures made ({}), {}x{}.", MaskPairName(kind), wanted->Width, wanted->Height);
     }
 
     auto RenderService::BeginDepthPair(FirstPersonCaller caller, std::int32_t pass) -> std::optional<std::size_t>
@@ -1431,10 +1547,13 @@ namespace Engine::Render::System
                 continue;
             }
 
-            // The first pair of the mask pass keeps which texels changed: the color pairs count their texels outside of it.
-            const bool isMaskPair{ report.Note.Pass == k_FirstPersonMaskPass && mask.Texels.empty() };
+            // The pairs of the passes 0xB and 0 keep which texels changed: the color pairs count their texels outside of the union.
+            const bool isMaskPair{ report.Note.Pass == k_FirstPersonMaskPass || report.Note.Pass == k_FirstPersonZeroPass };
+            ChangedMap pairMap{};
             const std::optional<TexelDiff> changed{ RenderService::CompareTexels(before.data(), pitch, after.data(), pitch, desc.Width, desc.Height,
-                k_DepthTexelLayout, isMaskPair ? &mask : nullptr) };
+                k_DepthTexelLayout, isMaskPair ? &pairMap : nullptr) };
+
+            if (changed && isMaskPair) UnionChangedMap(mask, pairMap);
 
             if (!changed)
             {
@@ -1599,7 +1718,7 @@ namespace Engine::Render::System
         if (info.Count == 0) m_Log.Message("[FirstPersonProbe] INFO: color pairs: none (made but no call of the forward pass was seen).");
 
         const std::string target{ std::format("{} {}x{}", FormatText(info.Format), info.Width, info.Height) };
-        const char* noMask{ depthMask.Texels.empty() ? "n/a (no depth pair 0xB read)" : "n/a (size differs)" };
+        const char* noMask{ depthMask.Texels.empty() ? "n/a (no depth pair 0xB or 0 read)" : "n/a (size differs)" };
 
         for (std::uint32_t k{ 0 }; k < info.Count; ++k)
         {

@@ -33,6 +33,7 @@ export namespace Engine::Render::System
         using ChangedMap = Engine::Render::Type::ChangedMap;
         using ColorProbeInfo = Engine::Render::Type::ColorProbeInfo;
         using MaskContext = Engine::Render::Type::MaskContext;
+        using MaskPairKind = Engine::Render::Type::MaskPairKind;
         using MaskPlan = Engine::Render::Type::MaskPlan;
         using DepthProbeInfo = Engine::Render::Type::DepthProbeInfo;
         using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
@@ -132,17 +133,29 @@ export namespace Engine::Render::System
         // Copies the same resource to the after texture of the pair, once the original returned.
         auto EndColorPair(std::size_t pair) -> void;
 
-        // Runs at the entry of 0x26DA08 (VW.6.y.2 B). For the first call with pass 0xB of the frame, when the mask is requested and the
-        // textures exist, copies the bound depth stencil resource to the before texture and keeps the resource for EndMaskCopy. When the
-        // textures do not exist or do not match the resource it notes the description of the resource, so Present makes them, and the
-        // frame has no mask. A frame with no depth stencil bound has no mask either.
-        // return: True when the before copy was made, so the detour calls EndMaskCopy after the original returns.
+        // Runs at the entry of 0x26DA08 (VW.6.y.2 B, E). For the first call of the frame with pass 0xB (pair DepthB) and the first with pass 0 (pair
+        // DepthZero), when the mask is requested and the textures of the pair exist, copies the depth stencil resource to the before texture and
+        // keeps the resource for EndMaskCopy. The pass 0 call with no depth stencil bound uses the one of the pass 0xB call of the same frame, and
+        // with none of them it copies nothing. When the textures do not exist or do not match the resource, the pass 0xB call notes the description
+        // of the resource, so Present makes them (the pass 0 pair is made from the same description), and the frame has no mask.
+        // return: The pair whose before copy was made, so the detour calls EndMaskCopy with it after the original returns. Nothing otherwise.
         // note: Called by the first person detour. The immediate context is only touched on the thread of Present. COM calls only, no
         // allocation, no log.
-        auto BeginMaskCopy(std::int32_t pass) -> bool;
+        auto BeginMaskCopy(std::int32_t pass) -> std::optional<MaskPairKind>;
 
-        // Copies the resource of BeginMaskCopy to the after texture and marks the frame as masked. Same rules as BeginMaskCopy.
-        auto EndMaskCopy() -> void;
+        // Copies the resource of BeginMaskCopy to the after texture of the pair and marks the pair as copied in the frame. Same rules as
+        // BeginMaskCopy.
+        auto EndMaskCopy(MaskPairKind kind) -> void;
+
+        // Runs at the entry of the forward pass 0x26EA78 (VW.6.y.2 E). For the first call of the frame with a phase other than 0, when the mask is
+        // requested and the color textures exist, copies the render target 0 to the before texture. When they do not exist or do not match it
+        // notes the description of the render target 0, so Present makes them.
+        // return: True when the before copy was made, so the detour calls EndColorMaskCopy after the original returns.
+        // note: Same rules as BeginMaskCopy.
+        auto BeginColorMaskCopy(std::uint8_t phase) -> bool;
+
+        // Copies the render target of BeginColorMaskCopy to the after texture and marks the color pair as copied in the frame.
+        auto EndColorMaskCopy() -> void;
 
         // Decides at Present what to do with the mask textures (VW.6.y.2 B).
         // param wanted: The description of the depth texture of the first person pass, nothing when none was noted.
@@ -215,9 +228,18 @@ export namespace Engine::Render::System
         auto MakeContext(bool isInFrame) const -> FrameContext;
         auto MakeMask(bool isInFrame) const -> MaskContext;
 
-        // At Present: makes, replaces or releases the mask textures as PlanMask says (VW.6.y.2 B). The result, failed or not, is kept in the
-        // store, so a failed creation is logged once for a description. Thread of Present only.
+        // At Present: makes, replaces or releases the mask textures of each pair as PlanMask says (VW.6.y.2 B, E). The result, failed or not, is
+        // kept in the store, so a failed creation is logged once for a description. Thread of Present only.
         auto PrepareMask() -> void;
+
+        // The same for one pair. The pass 0 pair takes the description of the pass 0xB pair.
+        auto PrepareMaskPair(MaskPairKind kind) -> void;
+
+        // Copies the resource to the before texture of the pair when the pair is ready and the resource has its description, and keeps the
+        // resource for the exit copy.
+        // param canNote: Whether a missing or different texture notes the description of the resource for Present.
+        // return: True when the copy was made. False when the pair is not ready, the resource does not match or the frame already has its copy.
+        auto BeginMaskPairCopy(MaskPairKind kind, ID3D11DeviceContext* context, ID3D11Resource* resource, bool canNote) -> bool;
 
         // The body of OnHudDraw. Exceptions are caught by the caller.
         auto HandleHudDraw() -> void;
@@ -246,7 +268,7 @@ export namespace Engine::Render::System
         auto PrepareColorPairs() -> void;
 
         // Reads the pairs one texture at a time through the staging and reduces them. A step that fails is kept as status and HRESULT.
-        // param mask: Receives which texels the first copied pair of the mask pass 0xB changed (left empty when there is none).
+        // param mask: Receives the union of the texels that the copied pairs of the passes 0xB and 0 changed (left empty when there is none).
         // note: Allocates and blocks until the GPU finishes, once per probe, at Present.
         auto ReadDepthPairs(ChangedMap& mask) -> DepthProbeInfo;
 
@@ -259,7 +281,7 @@ export namespace Engine::Render::System
         // The same for the color pairs, one line per pair, or one line that says why there are none.
         auto ReportColorPairs(const ChangedMap& depthMask) -> void;
 
-        // Reports the depth pairs, then the color pairs with the depth mask of the first pair 0xB.
+        // Reports the depth pairs, then the color pairs with the depth mask of the pairs 0xB and 0.
         auto ReportCopyPairs() -> void;
 
         // Logs one INFO line per first person caller that had calls in the last frame and one for the HUD draw (VW.6.y.2).
