@@ -317,18 +317,10 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 83 EC 28 44 8B CA 45 33 D2 48 63 D1 41 83 F9 FF"
     };
 
-    // The first person pass of the G-buffer (A21 sec. 8, D331): void(void* view). It sets the first person camera, queues the model (the
-    // arms and weapon, 0x286EBC only queues it), draws the list, restores the normal camera, draws the second layer and pops. It does not draw
-    // the world. The depth it changes is the depth of the first person model, which the overlay mask of VW.6.y.2 uses.
-    inline constexpr Signature k_FirstPersonPassPrologue
-    {
-        "FirstPersonPassPrologue",
-        "48 89 5C 24 08 48 89 6C 24 10 48 89 7C 24 18 41 56 48 83 EC 30"
-    };
-
     // The pass between the entry and the exit of the first person draw (A21 sec. 8, D331): void(void* view, int32 pass). It queues the model,
-    // sets the first person camera, draws the list, restores the normal camera and pops, like 0x26E2A0 (it is called with 0xB by 0x26C6DC and with 0
-    // twice by 0x26D740). VW.6.y.2 A5 measures whether it is the one that changes the depth of the arms and weapon.
+    // sets the first person camera, draws the list, restores the normal camera and pops (it is called with 0xB by 0x26C6DC and with 0
+    // twice by 0x26D740). Measured in VW.6.y.2 A5: the call with 0xB is the one that writes the depth of the arms and weapon, so the
+    // overlay mask (VW.6.y.2 B) is made around it.
     inline constexpr Signature k_FirstPersonDepthPassPrologue
     {
         "FirstPersonDepthPassPrologue",
@@ -336,7 +328,6 @@ export namespace Engine::Base::Memory::Type::Signature
     };
 
     inline constexpr std::uint32_t k_FirstPersonModelRva{ 0x286EBC };
-    inline constexpr std::uint32_t k_FirstPersonPassRva{ 0x26E2A0 };
     inline constexpr std::uint32_t k_FirstPersonDepthPassRva{ 0x26DA08 };
     inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
 

@@ -9,6 +9,7 @@ import Common.Semantic.Type;
 import Common.Math.Type;
 import Common.State.Type;
 import Engine.Base.Memory.Type;
+import Engine.Render.Type;
 import Views.Raycast.Type;
 import Views.View.System;
 import Bridge.Codec.Tick.Type;
@@ -32,6 +33,7 @@ namespace
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
     using Engine::Base::Memory::Type::FrameClock::InterpolationState;
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
+    using Engine::Render::Type::MaskContext;
 
     using DevTools::Viewer::Camera::Type::Viewport;
     using DevTools::Viewer::Collidable::Type::SceneTickOf;
@@ -417,6 +419,9 @@ namespace DevTools::Viewer::Map::System
 
         m_GpuPipeline.UpdateCamera(context, m_SceneService.GetViewProjection());
 
+        // note: Only the overlay lies over a game frame that has first person arms. The map view draws its own background.
+        m_GpuPipeline.UpdateMask(context, isOverlay ? frame.Mask : MaskContext{}, frame.Width, frame.Height);
+
         m_Profiler.MarkGpu(context, Gpu::Clear);
 
         if (isOverlay) m_MapPass.DrawOverlay(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::OverlayWireframe));
@@ -443,6 +448,8 @@ namespace DevTools::Viewer::Map::System
 
         m_DynamicPass.DrawTranslucent(context, m_GpuPipeline,
             m_OptionsStore.GetScalar(Scalar::ShieldOpacity));
+
+        m_GpuPipeline.ClearMask(context);
 
     }
 

@@ -11,15 +11,15 @@ import std;
 
 export namespace Engine::Render::Hook
 {
-    // Hooks the first person model pass, the game's first person unit test and the first person G-buffer pass (D331). The model pass is skipped for user 0 with the render
+    // Hooks the first person model pass, the game's first person unit test and the first person depth pass (D331). The model pass is skipped for user 0 with the render
     // flag HideFirstPerson or while Drive moves the camera. While Drive moves the camera the unit test answers false for user 0, so the
     // game draws the player's own biped and the third person effects. Render only: the pose of the director is never written.
     // The model pass is also measured (VW.6.y.2): for user 0 each call is counted by its caller (the function that called it, by the
     // return address) and, once a probe is armed in the store, the render targets, depth stencil, viewport, depth stencil state and
     // rasterizer state bound at that moment are copied to the store before the original runs. Nothing changes what is drawn.
-    // The G-buffer pass 0x26E2A0 (void(void* view): first person camera, queue the model, draw the list, normal camera, second layer) is
-    // hooked only to measure: with a probe armed the depth is copied at its entry and at its exit (VW.6.y.2 A4), otherwise it calls the original.
-    // The pass 0x26DA08 (void(void* view, int32 pass)) is hooked the same way (VW.6.y.2 A5) and its pairs note the pass argument.
+    // The pass 0x26DA08 (void(void* view, int32 pass): first person camera, queue the model, draw the list, normal camera, pop) never changes
+    // what is drawn. Its call with pass 0xB is the one that writes the depth of the arms and weapon: at its entry and exit the render service
+    // copies the depth for the overlay mask (VW.6.y.2 B) and, with a probe armed, for the depth pairs (A5, the pairs note the pass argument).
     // note: The unit test is also called by effects and perhaps from another thread than the render. Both detours read only atomics and the
     // CameraOverrideStore without locking, and do not allocate or log.
     class FirstPersonDetour
@@ -35,7 +35,6 @@ export namespace Engine::Render::Hook
 
         using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
         using FirstPersonModelFunction = Engine::Render::Type::FirstPersonModelFunction;
-        using FirstPersonPassFunction = Engine::Render::Type::FirstPersonPassFunction;
         using FirstPersonDepthPassFunction = Engine::Render::Type::FirstPersonDepthPassFunction;
         using IsFirstPersonUnitFunction = Engine::Render::Type::IsFirstPersonUnitFunction;
 
@@ -79,14 +78,12 @@ export namespace Engine::Render::Hook
         static inline std::atomic<FirstPersonDetour*> s_Instance{ nullptr };
         static inline FirstPersonModelFunction s_OriginalModel{ nullptr };
         static inline IsFirstPersonUnitFunction s_OriginalUnit{ nullptr };
-        static inline FirstPersonPassFunction s_OriginalPass{ nullptr };
         static inline FirstPersonDepthPassFunction s_OriginalDepthPass{ nullptr };
 
         // Base of the game module, found when the hooks are installed (the address of a hooked function minus its RVA). 0 when not installed.
         std::atomic<std::uintptr_t> m_ModuleBase{ 0 };
         std::atomic<void*> m_ModelAddress{ nullptr };
         std::atomic<void*> m_UnitAddress{ nullptr };
-        std::atomic<void*> m_PassAddress{ nullptr };
         std::atomic<void*> m_DepthPassAddress{ nullptr };
         std::atomic<bool> m_IsInstalled{ false };
         std::mutex m_Mutex{};
@@ -108,7 +105,6 @@ export namespace Engine::Render::Hook
         auto IsDriveActive() const -> bool;
 
         static auto __fastcall HookedModel(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
-        static auto __fastcall HookedPass(void* view) -> void;
         static auto __fastcall HookedDepthPass(void* view, std::int32_t pass) -> void;
         static auto __fastcall HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool;
     };

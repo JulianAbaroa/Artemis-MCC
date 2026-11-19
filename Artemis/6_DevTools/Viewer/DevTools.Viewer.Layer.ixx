@@ -88,6 +88,10 @@ export namespace DevTools::Viewer
                 engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
                 engine.m_RenderStore.SetFirstPersonHidden(m_OptionsStore.IsEnabled(Flag::HideFirstPerson));
 
+                // note: The mask only matters under the overlay, so the depth copies are not made without it.
+                engine.m_RenderStore.SetFirstPersonMaskRequested(m_OptionsStore.IsEnabled(Flag::FirstPersonOverOverlay) &&
+                    m_OptionsStore.IsEnabled(Flag::Overlay));
+
                 // The 3D passes ran under the HUD of the game when the event marked the frame. Otherwise they run here, once.
                 if (!engine.m_RenderStore.IsBeforeHudMarked()) m_MapService.Render(frame);
 

@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <d3d11.h>
 
 import Common.Log.System;
 import Common.Log.Type;
@@ -168,7 +169,6 @@ TEST(EngineLayerTests, FirstPersonDetourWithoutTheGameInstallsNothing)
     EXPECT_FALSE(render.m_FirstPersonDetour.Install());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonModelHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonUnitHooked());
-    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonPassHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonDepthPassHooked());
     render.m_FirstPersonDetour.Uninstall();
 }
@@ -459,6 +459,108 @@ TEST(EngineLayerTests, CompareDepthRespectsRowPitchBoxAndRange)
     EXPECT_FALSE(RenderService::CompareDepth(a.data(), pitchA, b.data(), 32, width, height).has_value());
     EXPECT_FALSE(RenderService::CompareDepth(nullptr, pitchA, b.data(), pitchB, width, height).has_value());
     EXPECT_FALSE(RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, 0, height).has_value());
+}
+
+TEST(EngineLayerTests, MaskPlanCreatesReplacesAndReleasesTheTexturesOnlyWhenNeeded)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::MaskPlan;
+
+    D3D11_TEXTURE2D_DESC desc{};
+    desc.Width = 1920;
+    desc.Height = 1080;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R32G8X24_TYPELESS;
+    desc.SampleDesc.Count = 1;
+
+    D3D11_TEXTURE2D_DESC other{ desc };
+    other.Width = 1280;
+
+    const std::optional<D3D11_TEXTURE2D_DESC> wanted{ desc };
+    const std::optional<D3D11_TEXTURE2D_DESC> none{};
+
+    // Not requested: nothing to do, or release what was made.
+    EXPECT_EQ(RenderService::PlanMask(false, wanted, false, {}), MaskPlan::Keep);
+    EXPECT_EQ(RenderService::PlanMask(false, wanted, true, desc), MaskPlan::Release);
+
+    // Requested but the resource is not known yet.
+    EXPECT_EQ(RenderService::PlanMask(true, none, false, {}), MaskPlan::Keep);
+
+    // First creation, a change of size, and nothing when the textures are those of the description.
+    EXPECT_EQ(RenderService::PlanMask(true, wanted, false, {}), MaskPlan::Create);
+    EXPECT_EQ(RenderService::PlanMask(true, wanted, true, other), MaskPlan::Create);
+    EXPECT_EQ(RenderService::PlanMask(true, wanted, true, desc), MaskPlan::Keep);
+
+    D3D11_TEXTURE2D_DESC otherFormat{ desc };
+    otherFormat.Format = DXGI_FORMAT_D32_FLOAT_S8X24_UINT;
+    EXPECT_EQ(RenderService::PlanMask(true, std::optional<D3D11_TEXTURE2D_DESC>{ otherFormat }, true, desc), MaskPlan::Create);
+}
+
+TEST(EngineLayerTests, ScaleToMaskIsTheIdentityForEqualSizesAndStaysInsideTheMask)
+{
+    using Engine::Render::System::RenderService;
+
+    EXPECT_EQ(RenderService::ScaleToMask(0, 1920, 1920), 0u);
+    EXPECT_EQ(RenderService::ScaleToMask(1234, 1920, 1920), 1234u);
+    EXPECT_EQ(RenderService::ScaleToMask(1919, 1920, 1920), 1919u);
+
+    // The mask is half the target: two pixels per texel.
+    EXPECT_EQ(RenderService::ScaleToMask(0, 1920, 960), 0u);
+    EXPECT_EQ(RenderService::ScaleToMask(1, 1920, 960), 0u);
+    EXPECT_EQ(RenderService::ScaleToMask(1919, 1920, 960), 959u);
+
+    // The mask is larger than the target.
+    EXPECT_EQ(RenderService::ScaleToMask(10, 100, 200), 20u);
+    EXPECT_EQ(RenderService::ScaleToMask(99, 100, 200), 198u);
+
+    // A pixel past the target stays inside the mask, a size of 0 gives 0.
+    EXPECT_EQ(RenderService::ScaleToMask(5000, 1920, 960), 959u);
+    EXPECT_EQ(RenderService::ScaleToMask(5, 0, 960), 0u);
+    EXPECT_EQ(RenderService::ScaleToMask(5, 1920, 0), 0u);
+}
+
+TEST(EngineLayerTests, RenderStoreMaskCopyIsTakenOncePerFrameAndReportedForTheLastFrame)
+{
+    Engine::Render::State::RenderStore store{};
+
+    EXPECT_FALSE(store.IsFirstPersonMaskRequested());
+    store.SetFirstPersonMaskRequested(true);
+    EXPECT_TRUE(store.IsFirstPersonMaskRequested());
+
+    // Only the first caller of a frame takes the copy.
+    EXPECT_TRUE(store.TakeMaskCopy());
+    EXPECT_FALSE(store.TakeMaskCopy());
+    EXPECT_FALSE(store.IsMaskCopied());
+
+    store.MarkMaskCopied();
+    EXPECT_TRUE(store.IsMaskCopied());
+    EXPECT_FALSE(store.WasMaskCopiedLastFrame());
+
+    // Closing the frame moves the mark to the last frame and frees the copy for the next one.
+    store.EndHudFrame();
+    EXPECT_FALSE(store.IsMaskCopied());
+    EXPECT_TRUE(store.WasMaskCopiedLastFrame());
+    EXPECT_TRUE(store.TakeMaskCopy());
+
+    // A frame with no copy leaves no mask for the one after.
+    store.EndHudFrame();
+    EXPECT_FALSE(store.WasMaskCopiedLastFrame());
+
+    // Without a device nothing is ready, and releasing is harmless.
+    EXPECT_FALSE(store.AreMaskTexturesReady());
+    EXPECT_FALSE(store.IsMaskAttempted());
+    D3D11_TEXTURE2D_DESC desc{};
+    desc.Width = 64;
+    store.NoteMaskDepthDesc(desc);
+    ASSERT_TRUE(store.GetMaskDepthDesc().has_value());
+    EXPECT_EQ(store.GetMaskDepthDesc()->Width, 64u);
+    store.SetMaskTextures({}, {}, {}, {}, desc);
+    EXPECT_TRUE(store.IsMaskAttempted());
+    EXPECT_FALSE(store.AreMaskTexturesReady());
+    store.ReleaseMaskTextures();
+    EXPECT_FALSE(store.IsMaskAttempted());
+    EXPECT_FALSE(store.GetMaskDepthDesc().has_value());
 }
 
 TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)

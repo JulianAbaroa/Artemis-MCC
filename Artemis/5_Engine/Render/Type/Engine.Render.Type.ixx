@@ -21,7 +21,6 @@ export namespace Engine::Render::Type
 
     // The first person model pass of the game: void(void* camera, uint32 user, uint8 pass).
     using FirstPersonModelFunction = auto(__fastcall*)(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
-    using FirstPersonPassFunction = auto(__fastcall*)(void* view) -> void;
 
     // The pass 0x26DA08 between the entry and the exit of the first person draw: void(void* view, int32 pass).
     using FirstPersonDepthPassFunction = auto(__fastcall*)(void* view, std::int32_t pass) -> void;
@@ -242,7 +241,7 @@ export namespace Engine::Render::Type
         std::array<StencilRegionStats, k_StencilRegionCount> Regions{};
     };
 
-    // How many calls of the first person passes (0x26DA08 and 0x26E2A0) the probe copies the depth of, before and after (VW.6.y.2 A4, A5). Two textures each.
+    // How many calls of the first person pass 0x26DA08 the probe copies the depth of, before and after (VW.6.y.2 A4, A5). Two textures each.
     inline constexpr std::size_t k_DepthPairCount{ 6 };
     inline constexpr std::size_t k_DepthCopyCount{ k_DepthPairCount * 2 };
 
@@ -258,8 +257,8 @@ export namespace Engine::Render::Type
     struct DepthPairNote
     {
         DepthPairState State{ DepthPairState::Free };
-        FirstPersonCaller Caller{ FirstPersonCaller::Other };   // Pass1 (0x26DA08) or Func26E2A0
-        std::int32_t Pass{ 0 };                                 // the pass argument of 0x26DA08, 0 for 0x26E2A0 which has none
+        FirstPersonCaller Caller{ FirstPersonCaller::Other };   // Pass1 (0x26DA08)
+        std::int32_t Pass{ 0 };                                 // the pass argument of 0x26DA08
         bool IsCaptured{ false };   // no depth stencil was bound at the entry, the resource captured from the model draw was copied instead
     };
 
@@ -349,6 +348,35 @@ export namespace Engine::Render::Type
         void* ResizeBuffers{ nullptr };
     };
 
+    // The pass argument of 0x26DA08 that draws the first person arms and weapon in the view (VW.6.y.2 A5, B). Its first call of the frame
+    // is the one the overlay mask is made around.
+    inline constexpr std::int32_t k_FirstPersonMaskPass{ 0xB };
+
+    // Fixed slots of the overlay mask in the pixel stage of the map shaders (VW.6.y.2 B): the depth before and after the first person pass
+    // (shader resources) and the constant buffer with the sizes.
+    inline constexpr UINT k_MaskPreSlot{ 0 };
+    inline constexpr UINT k_MaskPostSlot{ 1 };
+    inline constexpr UINT k_MaskBufferSlot{ 1 };
+
+    // What to do with the mask textures at Present (RenderService::PlanMask).
+    enum class MaskPlan : std::uint8_t
+    {
+        Keep,       // nothing to do
+        Create,     // make the textures (again) from the wanted description
+        Release     // the mask is not requested any more
+    };
+
+    // The depth of the first person arms as two copies taken around the pass that draws them (VW.6.y.2 B). The overlay skips the texels
+    // where the two differ. Without IsValid nothing is skipped.
+    struct MaskContext
+    {
+        bool IsValid{ false };                                  // the copies were taken in the frame this context is for
+        ID3D11ShaderResourceView* Pre{ nullptr };               // depth at the entry of the pass
+        ID3D11ShaderResourceView* Post{ nullptr };              // depth at the exit of the pass
+        std::uint32_t Width{ 0 };                               // size of the copies, which may differ from the target
+        std::uint32_t Height{ 0 };
+    };
+
     // What the handlers receive on each render event.
     struct FrameContext
     {
@@ -360,6 +388,8 @@ export namespace Engine::Render::Type
 
         std::uint32_t Width{ 0 };
         std::uint32_t Height{ 0 };
+
+        MaskContext Mask{};     // the first person mask of this frame, used by the overlay passes
     };
 
     using FrameHandler = std::function<void(const FrameContext&)>;

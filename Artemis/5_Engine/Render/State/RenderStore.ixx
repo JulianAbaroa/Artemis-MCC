@@ -99,10 +99,9 @@ export namespace Engine::Render::State
         auto IsFirstPersonHidden() const -> bool;
         auto SetFirstPersonHidden(bool isHidden) -> void;
 
-        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked, bool isDepthPassHooked) -> void;
+        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked) -> void;
         auto IsFirstPersonModelHooked() const -> bool;
         auto IsFirstPersonUnitHooked() const -> bool;
-        auto IsFirstPersonPassHooked() const -> bool;
         auto IsFirstPersonDepthPassHooked() const -> bool;
 
         // Counts one answer of the first person test turned to false by Drive. Any thread, no allocation.
@@ -196,6 +195,57 @@ export namespace Engine::Render::State
         // Drops the copies, the staging, the notes and the setup. Also done when a probe is armed, the targets are released and at cleanup.
         auto ReleaseDepthPairs() -> void;
 
+        // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it with the option Arms over overlay, any thread.
+        auto IsFirstPersonMaskRequested() const -> bool;
+        auto SetFirstPersonMaskRequested(bool isRequested) -> void;
+
+        // Takes the one mask copy of the frame in progress. Any thread, no allocation.
+        // return: True for the first caller of the frame, false for the others (the frame is closed by EndHudFrame).
+        auto TakeMaskCopy() -> bool;
+
+        // Notes that both copies of the frame in progress were made. Any thread.
+        auto MarkMaskCopied() -> void;
+
+        // return: Whether the copies were made in the frame in progress (the overlay drawn before the HUD) or in the last completed one
+        // (the overlay drawn at Present).
+        auto IsMaskCopied() const -> bool;
+        auto WasMaskCopiedLastFrame() const -> bool;
+
+        // Keeps the description of the depth texture the first person pass wrote to when the copies could not be taken (no copies yet or a
+        // different texture), so Present makes them from it. note: Thread of Present only.
+        auto NoteMaskDepthDesc(const D3D11_TEXTURE2D_DESC& desc) -> void;
+
+        // return: The last noted description, nothing when none was noted since the textures were released.
+        auto GetMaskDepthDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>;
+
+        // Keeps the two mask textures (null when the creation failed) with their shader resource views and the description they were
+        // attempted from, so the creation is not tried again for the same description. note: Thread of Present only.
+        auto SetMaskTextures(ComPtr<ID3D11Texture2D> pre, ComPtr<ID3D11Texture2D> post, ComPtr<ID3D11ShaderResourceView> preView,
+            ComPtr<ID3D11ShaderResourceView> postView, const D3D11_TEXTURE2D_DESC& desc) -> void;
+
+        // return: Whether a creation was attempted and the textures not released since.
+        auto IsMaskAttempted() const -> bool;
+
+        // return: Whether both textures and both views exist.
+        auto AreMaskTexturesReady() const -> bool;
+
+        // return: The description of the last attempt.
+        auto GetMaskDesc() const -> D3D11_TEXTURE2D_DESC;
+
+        // return: Not owned. Null when the textures do not exist.
+        auto GetMaskPre() const -> ID3D11Texture2D*;
+        auto GetMaskPost() const -> ID3D11Texture2D*;
+        auto GetMaskPreView() const -> ID3D11ShaderResourceView*;
+        auto GetMaskPostView() const -> ID3D11ShaderResourceView*;
+
+        // Keeps a reference to the resource copied at the entry of the pass, so the exit copies the same one. Releases it when null.
+        auto SetMaskSource(ID3D11Resource* source) -> void;
+        auto GetMaskSource() const -> ID3D11Resource*;
+
+        // Drops the textures, the views, the source and the noted description. Also done when the option goes off, the targets are
+        // released and at cleanup.
+        auto ReleaseMaskTextures() -> void;
+
         // Thread of Present, noted at every Present. 0 until the first one.
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
@@ -205,7 +255,7 @@ export namespace Engine::Render::State
         // Counts one draw of the HUD for user 0 in the frame in progress.
         auto CountHudCall() -> void;
 
-        // Closes the frame at Present: the count becomes the calls of the last frame and starts again.
+        // Closes the frame at Present: the count becomes the calls of the last frame and starts again. The mask copy of the frame is closed too.
         auto EndHudFrame() -> void;
 
         // Counts an exception that the HUD draw handling caught. note: No allocation, safe in a catch.
@@ -261,7 +311,6 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonHidden{ false };
         std::atomic<bool> m_IsFirstPersonModelHooked{ false };
         std::atomic<bool> m_IsFirstPersonUnitHooked{ false };
-        std::atomic<bool> m_IsFirstPersonPassHooked{ false };
         std::atomic<bool> m_IsFirstPersonDepthPassHooked{ false };
         std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
@@ -291,6 +340,21 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonDriveActive{ false };
         mutable std::mutex m_StencilMutex{};
         StencilProbeInfo m_StencilProbe{};
+
+        std::atomic<bool> m_IsMaskRequested{ false };
+        std::atomic<bool> m_IsMaskCallTaken{ false };
+        std::atomic<bool> m_IsMaskCopied{ false };
+        std::atomic<bool> m_IsMaskCopiedLastFrame{ false };
+
+        // Thread of Present only
+        ComPtr<ID3D11Texture2D> m_MaskPre{};
+        ComPtr<ID3D11Texture2D> m_MaskPost{};
+        ComPtr<ID3D11ShaderResourceView> m_MaskPreView{};
+        ComPtr<ID3D11ShaderResourceView> m_MaskPostView{};
+        ComPtr<ID3D11Resource> m_MaskSource{};
+        D3D11_TEXTURE2D_DESC m_MaskDesc{};
+        std::optional<D3D11_TEXTURE2D_DESC> m_MaskDepthDesc{};
+        bool m_IsMaskAttempted{ false };
 
         std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> m_DepthCopies{};  // Thread of Present only
         ComPtr<ID3D11Texture2D> m_DepthStaging{};

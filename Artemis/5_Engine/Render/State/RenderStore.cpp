@@ -153,22 +153,16 @@ namespace Engine::Render::State
         m_IsFirstPersonHidden.store(isHidden, std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isPassHooked, bool isDepthPassHooked) -> void
+    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked) -> void
     {
         m_IsFirstPersonModelHooked.store(isModelHooked, std::memory_order_relaxed);
         m_IsFirstPersonUnitHooked.store(isUnitHooked, std::memory_order_relaxed);
-        m_IsFirstPersonPassHooked.store(isPassHooked, std::memory_order_relaxed);
         m_IsFirstPersonDepthPassHooked.store(isDepthPassHooked, std::memory_order_relaxed);
     }
 
     auto RenderStore::IsFirstPersonDepthPassHooked() const -> bool
     {
         return m_IsFirstPersonDepthPassHooked.load(std::memory_order_relaxed);
-    }
-
-    auto RenderStore::IsFirstPersonPassHooked() const -> bool
-    {
-        return m_IsFirstPersonPassHooked.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::IsFirstPersonModelHooked() const -> bool
@@ -215,6 +209,8 @@ namespace Engine::Render::State
     {
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_IsMaskCopiedLastFrame.store(m_IsMaskCopied.exchange(false, std::memory_order_acq_rel), std::memory_order_release);
+        m_IsMaskCallTaken.store(false, std::memory_order_release);
 
         for (std::size_t i{ 0 }; i < k_FirstPersonCallerCount; ++i)
         {
@@ -497,12 +493,121 @@ namespace Engine::Render::State
         return info;
     }
 
+    auto RenderStore::IsFirstPersonMaskRequested() const -> bool
+    {
+        return m_IsMaskRequested.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetFirstPersonMaskRequested(bool isRequested) -> void
+    {
+        m_IsMaskRequested.store(isRequested, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::TakeMaskCopy() -> bool
+    {
+        return !m_IsMaskCallTaken.exchange(true, std::memory_order_acq_rel);
+    }
+
+    auto RenderStore::MarkMaskCopied() -> void
+    {
+        m_IsMaskCopied.store(true, std::memory_order_release);
+    }
+
+    auto RenderStore::IsMaskCopied() const -> bool
+    {
+        return m_IsMaskCopied.load(std::memory_order_acquire);
+    }
+
+    auto RenderStore::WasMaskCopiedLastFrame() const -> bool
+    {
+        return m_IsMaskCopiedLastFrame.load(std::memory_order_acquire);
+    }
+
+    auto RenderStore::NoteMaskDepthDesc(const D3D11_TEXTURE2D_DESC& desc) -> void
+    {
+        m_MaskDepthDesc = desc;
+    }
+
+    auto RenderStore::GetMaskDepthDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>
+    {
+        return m_MaskDepthDesc;
+    }
+
+    auto RenderStore::SetMaskTextures(ComPtr<ID3D11Texture2D> pre, ComPtr<ID3D11Texture2D> post, ComPtr<ID3D11ShaderResourceView> preView,
+        ComPtr<ID3D11ShaderResourceView> postView, const D3D11_TEXTURE2D_DESC& desc) -> void
+    {
+        m_MaskPre = std::move(pre);
+        m_MaskPost = std::move(post);
+        m_MaskPreView = std::move(preView);
+        m_MaskPostView = std::move(postView);
+        m_MaskDesc = desc;
+        m_IsMaskAttempted = true;
+    }
+
+    auto RenderStore::IsMaskAttempted() const -> bool
+    {
+        return m_IsMaskAttempted;
+    }
+
+    auto RenderStore::AreMaskTexturesReady() const -> bool
+    {
+        return m_MaskPre != nullptr && m_MaskPost != nullptr && m_MaskPreView != nullptr && m_MaskPostView != nullptr;
+    }
+
+    auto RenderStore::GetMaskDesc() const -> D3D11_TEXTURE2D_DESC
+    {
+        return m_MaskDesc;
+    }
+
+    auto RenderStore::GetMaskPre() const -> ID3D11Texture2D*
+    {
+        return m_MaskPre.Get();
+    }
+
+    auto RenderStore::GetMaskPost() const -> ID3D11Texture2D*
+    {
+        return m_MaskPost.Get();
+    }
+
+    auto RenderStore::GetMaskPreView() const -> ID3D11ShaderResourceView*
+    {
+        return m_MaskPreView.Get();
+    }
+
+    auto RenderStore::GetMaskPostView() const -> ID3D11ShaderResourceView*
+    {
+        return m_MaskPostView.Get();
+    }
+
+    auto RenderStore::SetMaskSource(ID3D11Resource* source) -> void
+    {
+        m_MaskSource = source;
+    }
+
+    auto RenderStore::GetMaskSource() const -> ID3D11Resource*
+    {
+        return m_MaskSource.Get();
+    }
+
+    auto RenderStore::ReleaseMaskTextures() -> void
+    {
+        m_MaskPre.Reset();
+        m_MaskPost.Reset();
+        m_MaskPreView.Reset();
+        m_MaskPostView.Reset();
+        m_MaskSource.Reset();
+        m_MaskDesc = {};
+        m_MaskDepthDesc.reset();
+        m_IsMaskAttempted = false;
+    }
+
     auto RenderStore::ReleaseTargets() -> void
     {
         m_RenderTarget.Reset();
         m_DepthStencil.Reset();
         this->ReleaseFirstPersonDepth();
         this->ReleaseDepthPairs();
+        this->ReleaseMaskTextures();
     }
 
     auto RenderStore::Cleanup() -> void

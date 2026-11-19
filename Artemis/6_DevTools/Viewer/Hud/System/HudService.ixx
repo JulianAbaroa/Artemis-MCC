@@ -90,6 +90,9 @@ export namespace DevTools::Viewer::Hud::System
         auto DrawHudHook() -> void;
         auto DrawFirstPersonHook() -> void;
 
+        // Draws the state of the first person mask of the overlay (VW.6.y.2 B).
+        auto DrawFirstPersonMask() -> void;
+
         // Draws the measurement of the lag between the scene of the overlay and the frame of the game (VW.5c), over the last k_WindowFrames.
         auto DrawLatency() -> void;
         auto DrawOverlayPoint(bool isHooked) -> void;

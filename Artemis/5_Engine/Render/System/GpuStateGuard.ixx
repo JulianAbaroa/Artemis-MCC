@@ -5,13 +5,20 @@ module;
 
 export module Engine.Render.System:GpuStateGuard;
 
+import Engine.Render.Type;
 import std;
+
+namespace
+{
+    using Engine::Render::Type::k_MaskBufferSlot;
+    using Engine::Render::Type::k_MaskPostSlot;
+}
 
 export namespace Engine::Render::System
 {
     // Saves the pipeline state of the context when created and restores it when destroyed.
     // note: Saves the render targets 0 to 7 with the depth stencil and every stage Artemis draws with: input assembler, shaders, vertex constant
-    // buffer 0, rasterizer with viewports and scissors, depth stencil, blend and predication (which is off while the guard lives). Shader resources and samplers are not saved: the passes bind none.
+    // buffer 0, rasterizer with viewports and scissors, depth stencil, blend and predication (which is off while the guard lives). Pixel shader resources 0 and 1 and pixel constant buffer 1 are saved, the slots of the overlay mask (VW.6.y.2 B). Other shader resources and samplers are not saved: the passes bind none.
     class GpuStateGuard
     {
     private:
@@ -28,6 +35,7 @@ export namespace Engine::Render::System
     private:
         static constexpr UINT k_VertexSlots{ 2 };
         static constexpr UINT k_TargetSlots{ D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT };
+        static constexpr UINT k_PixelResourceSlots{ k_MaskPostSlot + 1 };
 
         ID3D11DeviceContext* m_Context{ nullptr };
 
@@ -48,6 +56,8 @@ export namespace Engine::Render::System
         ComPtr<ID3D11DomainShader> m_DomainShader{};
         ComPtr<ID3D11GeometryShader> m_GeometryShader{};
         ComPtr<ID3D11PixelShader> m_PixelShader{};
+        ComPtr<ID3D11Buffer> m_PixelConstantBuffer{};
+        std::array<ComPtr<ID3D11ShaderResourceView>, k_PixelResourceSlots> m_PixelResources{};
 
         ComPtr<ID3D11RasterizerState> m_Rasterizer{};
 

@@ -279,6 +279,7 @@ namespace DevTools::Viewer::Hud::System
         this->DrawOverride();
         this->DrawHudHook();
         this->DrawFirstPersonHook();
+        this->DrawFirstPersonMask();
         this->DrawLatency();
     }
 
@@ -407,26 +408,46 @@ namespace DevTools::Viewer::Hud::System
     {
         const bool isModelHooked{ m_RenderStore.IsFirstPersonModelHooked() };
         const bool isUnitHooked{ m_RenderStore.IsFirstPersonUnitHooked() };
-        const bool isPassHooked{ m_RenderStore.IsFirstPersonPassHooked() };
         const bool isDepthPassHooked{ m_RenderStore.IsFirstPersonDepthPassHooked() };
 
         ImGui::Text("First person hook:");
         ImGui::SameLine();
 
-        if (!isModelHooked && !isUnitHooked && !isPassHooked && !isDepthPassHooked)
+        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked)
         {
-            ImGui::TextColored(k_Orange, "not installed (model, unit, pass, depth pass)");
+            ImGui::TextColored(k_Orange, "not installed (model, unit, depth pass)");
             return;
         }
 
-        ImGui::TextColored(isModelHooked && isUnitHooked && isPassHooked && isDepthPassHooked ? k_Green : k_Orange,
-            "installed (model %s, unit %s, pass %s, depth pass %s), third person: %s", isModelHooked ? "yes" : "no",
-            isUnitHooked ? "yes" : "no", isPassHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no");
+        ImGui::TextColored(isModelHooked && isUnitHooked && isDepthPassHooked ? k_Green : k_Orange,
+            "installed (model %s, unit %s, depth pass %s), third person: %s", isModelHooked ? "yes" : "no",
+            isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no");
 
         ImGui::Text("FP probe:");
         ImGui::SameLine();
         ImGui::TextColored(k_Info, "%u callers last frame%s", m_RenderStore.GetFirstPersonCallerCount(),
             m_RenderStore.IsFirstPersonProbePending() ? " (probe pending)" : "");
+    }
+
+    auto HudService::DrawFirstPersonMask() -> void
+    {
+        ImGui::Text("FP mask:");
+        ImGui::SameLine();
+
+        if (!m_RenderStore.IsFirstPersonMaskRequested())
+        {
+            ImGui::TextDisabled("off");
+            return;
+        }
+
+        if (!m_RenderStore.AreMaskTexturesReady() || !m_RenderStore.WasMaskCopiedLastFrame())
+        {
+            ImGui::TextColored(k_Orange, "on, no copy this frame");
+            return;
+        }
+
+        const auto desc{ m_RenderStore.GetMaskDesc() };
+        ImGui::TextColored(k_Green, "on, size %ux%u", desc.Width, desc.Height);
     }
 
     auto HudService::DrawLatency() -> void

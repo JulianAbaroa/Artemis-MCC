@@ -19,8 +19,6 @@ namespace
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelRva;
-    using Engine::Base::Memory::Type::Signature::k_FirstPersonPassPrologue;
-    using Engine::Base::Memory::Type::Signature::k_FirstPersonPassRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitPrologue;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitRva;
@@ -94,28 +92,9 @@ namespace Engine::Render::Hook
         if (s_OriginalModel != nullptr) s_OriginalModel(camera, user, pass);
     }
 
-    // note: The probe copies the depth at the entry and at the exit of the pass (VW.6.y.2 A4), the service decides if this call is copied.
-    // Without an armed probe it only reads atomics. The scope spans the original, as in the other hooks.
-    auto __fastcall FirstPersonDetour::HookedPass(void* view) -> void
-    {
-        FirstPersonDetour* self{ s_Instance.load() };
-
-        if (self == nullptr)
-        {
-            if (s_OriginalPass != nullptr) s_OriginalPass(view);
-            return;
-        }
-
-        RenderStore::HookScope scope{ self->m_RenderStore };
-
-        const std::optional<std::size_t> pair{ self->m_RenderService.BeginDepthPair(FirstPersonCaller::Func26E2A0, 0) };
-
-        if (s_OriginalPass != nullptr) s_OriginalPass(view);
-
-        if (pair) self->m_RenderService.EndDepthPair(*pair);
-    }
-
-    // note: Same as HookedPass for 0x26DA08 (VW.6.y.2 A5), the pair keeps the pass argument (0xB from 0x26C6DC, 0 from 0x26D740).
+    // note: The service decides if this call is copied: for the overlay mask (VW.6.y.2 B, the first call with pass 0xB of the frame) and for
+    // the probe pairs (A5, the pair keeps the pass argument, 0xB from 0x26C6DC and 0 from 0x26D740). Without a mask request or a probe it
+    // only reads atomics. The scope spans the original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedDepthPass(void* view, std::int32_t pass) -> void
     {
         FirstPersonDetour* self{ s_Instance.load() };
@@ -128,11 +107,13 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
+        const bool isMaskCopied{ self->m_RenderService.BeginMaskCopy(pass) };
         const std::optional<std::size_t> pair{ self->m_RenderService.BeginDepthPair(FirstPersonCaller::Pass1, pass) };
 
         if (s_OriginalDepthPass != nullptr) s_OriginalDepthPass(view, pass);
 
         if (pair) self->m_RenderService.EndDepthPair(*pair);
+        if (isMaskCopied) self->m_RenderService.EndMaskCopy();
     }
 
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool
@@ -184,7 +165,7 @@ namespace Engine::Render::Hook
     {
         const std::lock_guard<std::mutex> lock{ m_Mutex };
 
-        if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr || m_PassAddress.load() != nullptr
+        if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr
             || m_DepthPassAddress.load() != nullptr;
         s_Instance.store(this);
 
@@ -193,13 +174,10 @@ namespace Engine::Render::Hook
         const bool isUnitHooked{ this->InstallOne("is first person unit", k_IsFirstPersonUnitPrologue, k_IsFirstPersonUnitRva,
             reinterpret_cast<void*>(&HookedUnit), reinterpret_cast<void**>(&s_OriginalUnit), m_UnitAddress) };
 
-        const bool isPassHooked{ this->InstallOne("first person pass", k_FirstPersonPassPrologue, k_FirstPersonPassRva,
-            reinterpret_cast<void*>(&HookedPass), reinterpret_cast<void**>(&s_OriginalPass), m_PassAddress) };
-
         const bool isDepthPassHooked{ this->InstallOne("first person depth pass", k_FirstPersonDepthPassPrologue, k_FirstPersonDepthPassRva,
             reinterpret_cast<void*>(&HookedDepthPass), reinterpret_cast<void**>(&s_OriginalDepthPass), m_DepthPassAddress) };
 
-        if (!isModelHooked && !isUnitHooked && !isPassHooked && !isDepthPassHooked)
+        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked)
         {
             s_Instance.store(nullptr);
             return false;
@@ -212,7 +190,7 @@ namespace Engine::Render::Hook
         }
 
         m_IsInstalled.store(true);
-        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isPassHooked, isDepthPassHooked);
+        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isDepthPassHooked);
         return true;
     }
 
@@ -239,11 +217,10 @@ namespace Engine::Render::Hook
 
         if (!m_IsInstalled.load()) return;
 
-        m_RenderStore.SetFirstPersonHooksInstalled(false, false, false, false);
+        m_RenderStore.SetFirstPersonHooksInstalled(false, false, false);
 
         this->Disable(m_ModelAddress);
         this->Disable(m_UnitAddress);
-        this->Disable(m_PassAddress);
         this->Disable(m_DepthPassAddress);
 
         // note: A thread can be past the jump of the hook but not yet inside its HookScope, where WaitForIdle does not see it.
@@ -258,12 +235,10 @@ namespace Engine::Render::Hook
 
         this->Remove(m_ModelAddress, "first person model");
         this->Remove(m_UnitAddress, "is first person unit");
-        this->Remove(m_PassAddress, "first person pass");
         this->Remove(m_DepthPassAddress, "first person depth pass");
 
         s_OriginalModel = nullptr;
         s_OriginalUnit = nullptr;
-        s_OriginalPass = nullptr;
         s_OriginalDepthPass = nullptr;
 
         m_ModuleBase.store(0);

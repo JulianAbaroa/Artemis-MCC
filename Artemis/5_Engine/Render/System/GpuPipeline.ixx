@@ -30,6 +30,8 @@ export namespace Engine::Render::System
 
         using Matrix = Common::Math::Type::Matrix;
 
+        using MaskContext = Engine::Render::Type::MaskContext;
+
     public:
         // Strides of the vertex buffers.
         static constexpr UINT k_VertexStride{ sizeof(Vertex) };                 // Colored
@@ -49,6 +51,16 @@ export namespace Engine::Render::System
 
         // Uploads the view projection matrix to the camera constant buffer.
         auto UpdateCamera(ID3D11DeviceContext* context, const Matrix& viewProjection) -> void;
+
+        // Uploads the first person mask to the pixel stage and binds its depth copies (VW.6.y.2 B). The pixel shader skips the pixels
+        // where the two copies differ, which are the pixels the game draws the first person arms on. With a mask that is not valid it
+        // binds "mask off" and the shader skips nothing.
+        // param targetWidth: Size of the render target, the mask is scaled by the ratio of the sizes when they differ.
+        // note: Call it before the draws and ClearMask after them. Does nothing if not ready.
+        auto UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, std::uint32_t targetWidth, std::uint32_t targetHeight) -> void;
+
+        // Unbinds the depth copies of the pixel stage, so the next CopyResource into them finds them free. Does nothing if not ready.
+        auto ClearMask(ID3D11DeviceContext* context) -> void;
 
         // Sets the shaders and the states of the layout and surface for the next draws.
         // param alpha: Opacity of the Translucent surface. Ignored by the others.
@@ -74,6 +86,7 @@ export namespace Engine::Render::System
         ComPtr<ID3D11InputLayout> m_MeshInputLayout{};
 
         ComPtr<ID3D11Buffer> m_CameraBuffer{};
+        ComPtr<ID3D11Buffer> m_MaskBuffer{};
 
         ComPtr<ID3D11RasterizerState> m_Rasterizer{};
         ComPtr<ID3D11RasterizerState> m_DepthOnlyRasterizer{};

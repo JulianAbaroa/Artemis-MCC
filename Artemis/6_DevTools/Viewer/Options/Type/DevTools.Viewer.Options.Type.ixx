@@ -93,6 +93,7 @@ export namespace DevTools::Viewer::Options::Type
 
         Overlay,
         OverlayWireframe,
+        FirstPersonOverOverlay,
         HideGameHud,
         HideFirstPerson,
         DriveGameCamera,
@@ -359,6 +360,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::OverlayWireframe, Group::Camera, "OverlayWireframe", "Overlay: collision wireframe",
             "With the overlay on, also draws the map collision as a visible wireframe, to check that it lines up with the walls of the game frame.", true },
+
+        { Flag::FirstPersonOverOverlay, Group::Camera, "FirstPersonOverOverlay", "Arms over overlay",
+            "The game's first person arms and weapon are drawn over the overlay: the overlay skips the pixels the game writes in its first person depth pass.", true },
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },

@@ -31,6 +31,8 @@ export namespace Engine::Render::System
         using BeforeHudHandler = Engine::Render::Type::BeforeHudHandler;
         using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
         using DepthDiff = Engine::Render::Type::DepthDiff;
+        using MaskContext = Engine::Render::Type::MaskContext;
+        using MaskPlan = Engine::Render::Type::MaskPlan;
         using DepthProbeInfo = Engine::Render::Type::DepthProbeInfo;
         using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
         using HudHookInfo = Engine::Render::Type::HudHookInfo;
@@ -101,11 +103,11 @@ export namespace Engine::Render::System
         // thread of Present with the targets ready, on another thread the sample only says so. COM calls only, no allocation, no log.
         auto MeasureFirstPerson(FirstPersonCaller caller, std::uint32_t callerRva, std::uint8_t pass) -> void;
 
-        // Runs at the entry of each call of the first person passes (0x26E2A0 and 0x26DA08) while the probe is armed and the depth pairs exist
-        // (VW.6.y.2 A4, A5): copies the bound depth stencil to the before texture of the next pair and notes the call. When no depth stencil is
+        // Runs at the entry of each call of the first person pass 0x26DA08 while the probe is armed and the depth pairs exist
+        // (VW.6.y.2 A5): copies the bound depth stencil to the before texture of the next pair and notes the call. When no depth stencil is
         // bound it copies the resource captured from the model draw and notes that.
-        // param caller: Pass1 for 0x26DA08, Func26E2A0 for 0x26E2A0.
-        // param pass: The pass argument of 0x26DA08, 0 for 0x26E2A0.
+        // param caller: Pass1, the note keeps it.
+        // param pass: The pass argument of 0x26DA08.
         // return: The pair to give to EndDepthPair after the original returns, nothing when no copy was made (probe not armed, other
         // thread, resizing, copies not ready, pairs taken, or a resource that does not match the copies).
         // note: Called by the first person detour. The immediate context is only touched on the thread of Present. COM calls only, no
@@ -114,6 +116,30 @@ export namespace Engine::Render::System
 
         // Copies the same resource to the after texture of the pair, once the original returned. Same rules as BeginDepthPair.
         auto EndDepthPair(std::size_t pair) -> void;
+
+        // Runs at the entry of 0x26DA08 (VW.6.y.2 B). For the first call with pass 0xB of the frame, when the mask is requested and the
+        // textures exist, copies the bound depth stencil resource to the before texture and keeps the resource for EndMaskCopy. When the
+        // textures do not exist or do not match the resource it notes the description of the resource, so Present makes them, and the
+        // frame has no mask. A frame with no depth stencil bound has no mask either.
+        // return: True when the before copy was made, so the detour calls EndMaskCopy after the original returns.
+        // note: Called by the first person detour. The immediate context is only touched on the thread of Present. COM calls only, no
+        // allocation, no log.
+        auto BeginMaskCopy(std::int32_t pass) -> bool;
+
+        // Copies the resource of BeginMaskCopy to the after texture and marks the frame as masked. Same rules as BeginMaskCopy.
+        auto EndMaskCopy() -> void;
+
+        // Decides at Present what to do with the mask textures (VW.6.y.2 B).
+        // param wanted: The description of the depth texture of the first person pass, nothing when none was noted.
+        // param attempted: The description the textures were last made from, only read when isAttempted.
+        // return: Release when the mask is not requested and textures were made, Create when it is requested, a description is known and no
+        // attempt was made for it (none yet, or another size, format or samples), Keep otherwise (a failed attempt is not repeated).
+        static auto PlanMask(bool isRequested, const std::optional<D3D11_TEXTURE2D_DESC>& wanted, bool isAttempted,
+            const D3D11_TEXTURE2D_DESC& attempted) -> MaskPlan;
+
+        // return: The texel of a mask of maskSize texels that covers the pixel of a target of targetSize pixels, on one axis. The same
+        // arithmetic as the map shaders. 0 when a size is 0.
+        static auto ScaleToMask(std::uint32_t pixel, std::uint32_t targetSize, std::uint32_t maskSize) -> std::uint32_t;
 
         // Compares the depth (float in bytes 0..3 of each 8 byte texel) of two R32G8X24 textures of the same size, rows pitch bytes apart
         // (VW.6.y.2 A3). A texel counts as changed when the 4 bytes differ.
@@ -160,7 +186,14 @@ export namespace Engine::Render::System
         // return: False if the device or the render target could not be obtained.
         auto Attach(IDXGISwapChain* swapChain) -> bool;
 
-        auto MakeContext() const -> FrameContext;
+        // param isInFrame: Whether the mask is the one of the game frame in progress (drawing before the HUD) or of the last completed
+        // one (drawing at Present).
+        auto MakeContext(bool isInFrame) const -> FrameContext;
+        auto MakeMask(bool isInFrame) const -> MaskContext;
+
+        // At Present: makes, replaces or releases the mask textures as PlanMask says (VW.6.y.2 B). The result, failed or not, is kept in the
+        // store, so a failed creation is logged once for a description. Thread of Present only.
+        auto PrepareMask() -> void;
 
         // The body of OnHudDraw. Exceptions are caught by the caller.
         auto HandleHudDraw() -> void;
@@ -180,6 +213,9 @@ export namespace Engine::Render::System
 
         // return: The immediate context when the detour may copy depth for this caller now, null otherwise.
         auto GetDepthPairContext() -> ID3D11DeviceContext*;
+
+        // return: The immediate context when the call runs on the thread of Present with the store ready, null otherwise.
+        auto GetPresentContext() -> ID3D11DeviceContext*;
 
         // Reads the pairs one texture at a time through the staging and reduces them. A step that fails is kept as status and HRESULT.
         // note: Allocates and blocks until the GPU finishes, once per probe, at Present.

@@ -5,7 +5,13 @@ module;
 
 module Engine.Render.System;
 import :GpuStateGuard;
+import Engine.Render.Type;
 import std;
+
+namespace
+{
+    using Engine::Render::Type::k_MaskBufferSlot;
+}
 
 namespace Engine::Render::System
 {
@@ -30,6 +36,11 @@ namespace Engine::Render::System
         m_Context->DSGetShader(m_DomainShader.GetAddressOf(), nullptr, nullptr);
         m_Context->GSGetShader(m_GeometryShader.GetAddressOf(), nullptr, nullptr);
         m_Context->PSGetShader(m_PixelShader.GetAddressOf(), nullptr, nullptr);
+        m_Context->PSGetConstantBuffers(k_MaskBufferSlot, 1, m_PixelConstantBuffer.GetAddressOf());
+
+        ID3D11ShaderResourceView* pixelResources[k_PixelResourceSlots]{};
+        m_Context->PSGetShaderResources(0, k_PixelResourceSlots, pixelResources);
+        for (UINT i = 0; i < k_PixelResourceSlots; ++i) m_PixelResources[i].Attach(pixelResources[i]);
 
         m_Context->RSGetState(m_Rasterizer.GetAddressOf());
         m_Context->GetPredication(m_Predicate.GetAddressOf(), &m_PredicateValue);
@@ -72,6 +83,13 @@ namespace Engine::Render::System
         m_Context->DSSetShader(m_DomainShader.Get(), nullptr, 0);
         m_Context->GSSetShader(m_GeometryShader.Get(), nullptr, 0);
         m_Context->PSSetShader(m_PixelShader.Get(), nullptr, 0);
+
+        ID3D11Buffer* pixelConstantBuffer = m_PixelConstantBuffer.Get();
+        m_Context->PSSetConstantBuffers(k_MaskBufferSlot, 1, &pixelConstantBuffer);
+
+        ID3D11ShaderResourceView* pixelResources[k_PixelResourceSlots]{};
+        for (UINT i = 0; i < k_PixelResourceSlots; ++i) pixelResources[i] = m_PixelResources[i].Get();
+        m_Context->PSSetShaderResources(0, k_PixelResourceSlots, pixelResources);
 
         m_Context->RSSetState(m_Rasterizer.Get());
         m_Context->RSSetViewports(m_ViewportCount,

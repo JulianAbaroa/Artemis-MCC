@@ -26,6 +26,8 @@ namespace
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::MaskContext;
+    using Engine::Render::Type::MaskPlan;
     using Engine::Render::Type::RasterizerStateInfo;
     using Engine::Render::Type::StencilProbeInfo;
     using Engine::Render::Type::StencilReadStatus;
@@ -37,6 +39,7 @@ namespace
     using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
+    using Engine::Render::Type::k_FirstPersonMaskPass;
     using Engine::Render::Type::k_StencilBitCount;
     using Engine::Render::Type::k_StencilRegionCount;
     using Engine::Render::Type::k_StencilValueCount;
@@ -44,11 +47,21 @@ namespace
     using std::chrono::steady_clock;
     using std::chrono::microseconds;
 
-    // How the log names the first person pass of a depth pair: the function and, for 0x26DA08, its pass argument.
+    // How the log names the first person pass of a depth pair: the function 0x26DA08 and its pass argument.
     auto DepthCallerName(const DepthPairNote& note) -> std::string
     {
-        if (note.Caller == FirstPersonCaller::Pass1) return std::format("26DA08 pass {}", note.Pass);
-        return "26E2A0";
+        return std::format("26DA08 pass {}", note.Pass);
+    }
+
+    // return: The resource of the depth stencil view bound now, null when none.
+    auto BoundDepthResource(ID3D11DeviceContext* context) -> ComPtr<ID3D11Resource>
+    {
+        ComPtr<ID3D11DepthStencilView> view{};
+        context->OMGetRenderTargets(0, nullptr, view.GetAddressOf());
+
+        ComPtr<ID3D11Resource> resource{};
+        if (view != nullptr) view->GetResource(resource.GetAddressOf());
+        return resource;
     }
 
     // Bytes of a texel of R32G8X24: float depth, stencil byte, 3 unused.
@@ -412,6 +425,8 @@ namespace Engine::Render::System
         if (m_RenderStore.StepFirstPersonProbe()) this->ReportFirstPersonProbe();
         else this->PrepareDepthPairs();
 
+        this->PrepareMask();
+
         // A different swap chain than the bound one means the game created a new one.
         const bool isAnotherSwapChain = m_RenderStore.GetSwapChain() != swapChain;
         if (!m_RenderStore.IsReady() || isAnotherSwapChain)
@@ -545,7 +560,23 @@ namespace Engine::Render::System
         return true;
     }
 
-    auto RenderService::MakeContext() const -> FrameContext
+    auto RenderService::MakeMask(bool isInFrame) const -> MaskContext
+    {
+        MaskContext mask{};
+
+        if (!m_RenderStore.IsFirstPersonMaskRequested() || !m_RenderStore.AreMaskTexturesReady()) return mask;
+
+        const D3D11_TEXTURE2D_DESC desc{ m_RenderStore.GetMaskDesc() };
+
+        mask.IsValid = isInFrame ? m_RenderStore.IsMaskCopied() : m_RenderStore.WasMaskCopiedLastFrame();
+        mask.Pre = m_RenderStore.GetMaskPreView();
+        mask.Post = m_RenderStore.GetMaskPostView();
+        mask.Width = desc.Width;
+        mask.Height = desc.Height;
+        return mask;
+    }
+
+    auto RenderService::MakeContext(bool isInFrame) const -> FrameContext
     {
         FrameContext frame{};
         frame.Device = m_RenderStore.GetDevice();
@@ -555,13 +586,14 @@ namespace Engine::Render::System
         frame.Window = m_RenderStore.GetWindow();
         frame.Width = m_RenderStore.GetWidth();
         frame.Height = m_RenderStore.GetHeight();
+        frame.Mask = this->MakeMask(isInFrame);
         return frame;
     }
 
     auto RenderService::Raise(const std::vector<FrameHandler>& handlers,
         const char* stage) -> void
     {
-        const FrameContext frame = this->MakeContext();
+        const FrameContext frame = this->MakeContext(false);
 
         for (const auto& handler : handlers)
         {
@@ -672,7 +704,7 @@ namespace Engine::Render::System
             return;
         }
 
-        FrameContext frame{ this->MakeContext() };
+        FrameContext frame{ this->MakeContext(true) };
         frame.RenderTarget = target.Get();
         frame.Width = sample.Width;
         frame.Height = sample.Height;
@@ -863,9 +895,8 @@ namespace Engine::Render::System
         m_RenderStore.SetFirstPersonSample(sample);
     }
 
-    auto RenderService::GetDepthPairContext() -> ID3D11DeviceContext*
+    auto RenderService::GetPresentContext() -> ID3D11DeviceContext*
     {
-        if (!m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.AreDepthPairsReady()) return nullptr;
         if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return nullptr;
 
         const std::uint32_t presentThread{ m_RenderStore.GetPresentThread() };
@@ -874,16 +905,147 @@ namespace Engine::Render::System
         return m_RenderStore.GetContext();
     }
 
+    auto RenderService::GetDepthPairContext() -> ID3D11DeviceContext*
+    {
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.AreDepthPairsReady()) return nullptr;
+
+        return this->GetPresentContext();
+    }
+
+    auto RenderService::PlanMask(bool isRequested, const std::optional<D3D11_TEXTURE2D_DESC>& wanted, bool isAttempted,
+        const D3D11_TEXTURE2D_DESC& attempted) -> MaskPlan
+    {
+        if (!isRequested) return isAttempted ? MaskPlan::Release : MaskPlan::Keep;
+        if (!wanted) return MaskPlan::Keep;
+        if (!isAttempted || !IsSameDepthDesc(*wanted, attempted)) return MaskPlan::Create;
+
+        return MaskPlan::Keep;
+    }
+
+    auto RenderService::ScaleToMask(std::uint32_t pixel, std::uint32_t targetSize, std::uint32_t maskSize) -> std::uint32_t
+    {
+        if (targetSize == 0 || maskSize == 0) return 0;
+
+        const std::uint64_t texel{ static_cast<std::uint64_t>(pixel) * maskSize / targetSize };
+        return static_cast<std::uint32_t>((std::min)(texel, static_cast<std::uint64_t>(maskSize - 1)));
+    }
+
+    auto RenderService::BeginMaskCopy(std::int32_t pass) -> bool
+    {
+        if (pass != k_FirstPersonMaskPass || !m_RenderStore.IsFirstPersonMaskRequested()) return false;
+
+        ID3D11DeviceContext* context{ this->GetPresentContext() };
+        if (context == nullptr) return false;
+
+        ComPtr<ID3D11Resource> resource{ BoundDepthResource(context) };
+
+        ComPtr<ID3D11Texture2D> texture{};
+        if (resource != nullptr) resource.As(&texture);
+        if (texture == nullptr) return false;
+
+        D3D11_TEXTURE2D_DESC desc{};
+        texture->GetDesc(&desc);
+
+        if (!m_RenderStore.AreMaskTexturesReady() || !IsSameDepthDesc(desc, m_RenderStore.GetMaskDesc()))
+        {
+            m_RenderStore.NoteMaskDepthDesc(desc);
+            return false;
+        }
+
+        // The copy of the frame is taken only once a depth of the expected description is bound, so a 0xB call without one (another
+        // view) leaves it to the next 0xB call of the same frame.
+        if (!m_RenderStore.TakeMaskCopy()) return false;
+
+        m_RenderStore.SetMaskSource(resource.Get());
+        context->CopyResource(m_RenderStore.GetMaskPre(), resource.Get());
+        return true;
+    }
+
+    auto RenderService::EndMaskCopy() -> void
+    {
+        ID3D11DeviceContext* context{ this->GetPresentContext() };
+        ID3D11Resource* source{ m_RenderStore.GetMaskSource() };
+        ID3D11Texture2D* post{ m_RenderStore.GetMaskPost() };
+
+        if (context != nullptr && source != nullptr && post != nullptr)
+        {
+            context->CopyResource(post, source);
+            m_RenderStore.MarkMaskCopied();
+        }
+
+        m_RenderStore.SetMaskSource(nullptr);
+    }
+
+    auto RenderService::PrepareMask() -> void
+    {
+        if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return;
+
+        const std::optional<D3D11_TEXTURE2D_DESC> wanted{ m_RenderStore.GetMaskDepthDesc() };
+
+        switch (RenderService::PlanMask(m_RenderStore.IsFirstPersonMaskRequested(), wanted, m_RenderStore.IsMaskAttempted(),
+            m_RenderStore.GetMaskDesc()))
+        {
+        case MaskPlan::Keep:
+            return;
+
+        case MaskPlan::Release:
+            m_RenderStore.ReleaseMaskTextures();
+            return;
+
+        case MaskPlan::Create:
+            break;
+        }
+
+        // The mask is read as R32_FLOAT_X8X24 without multisampling: another depth texture is attempted once and logged.
+        if (wanted->Format != DXGI_FORMAT_R32G8X24_TYPELESS || wanted->SampleDesc.Count != 1)
+        {
+            m_RenderStore.SetMaskTextures({}, {}, {}, {}, *wanted);
+            m_Log.Message("[RenderService] WARNING: The depth texture of the first person pass cannot be a mask source (format {}, samples {}).",
+                static_cast<std::uint32_t>(wanted->Format), wanted->SampleDesc.Count);
+            return;
+        }
+
+        D3D11_TEXTURE2D_DESC copyDesc{ *wanted };
+        copyDesc.Usage = D3D11_USAGE_DEFAULT;
+        copyDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        copyDesc.CPUAccessFlags = 0;
+        copyDesc.MiscFlags = 0;
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc{};
+        viewDesc.Format = DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+        viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        viewDesc.Texture2D.MostDetailedMip = 0;
+        viewDesc.Texture2D.MipLevels = 1;
+
+        ID3D11Device* device{ m_RenderStore.GetDevice() };
+        std::array<ComPtr<ID3D11Texture2D>, 2> textures{};
+        std::array<ComPtr<ID3D11ShaderResourceView>, 2> views{};
+        HRESULT result{ device != nullptr ? S_OK : E_POINTER };
+
+        for (std::size_t i{ 0 }; i < textures.size() && SUCCEEDED(result); ++i)
+        {
+            result = device->CreateTexture2D(&copyDesc, nullptr, textures[i].GetAddressOf());
+            if (SUCCEEDED(result)) result = device->CreateShaderResourceView(textures[i].Get(), &viewDesc, views[i].GetAddressOf());
+        }
+
+        if (FAILED(result))
+        {
+            m_RenderStore.SetMaskTextures({}, {}, {}, {}, *wanted);
+            m_Log.Message("[RenderService] ERROR: Failed to create the first person mask textures, hresult {:#010X}.",
+                static_cast<std::uint32_t>(result));
+            return;
+        }
+
+        m_RenderStore.SetMaskTextures(std::move(textures[0]), std::move(textures[1]), std::move(views[0]), std::move(views[1]), *wanted);
+        m_Log.Message("[RenderService] INFO: First person mask textures made, {}x{}.", wanted->Width, wanted->Height);
+    }
+
     auto RenderService::BeginDepthPair(FirstPersonCaller caller, std::int32_t pass) -> std::optional<std::size_t>
     {
         ID3D11DeviceContext* context{ this->GetDepthPairContext() };
         if (context == nullptr) return std::nullopt;
 
-        ComPtr<ID3D11DepthStencilView> view{};
-        context->OMGetRenderTargets(0, nullptr, view.GetAddressOf());
-
-        ComPtr<ID3D11Resource> resource{};
-        if (view != nullptr) view->GetResource(resource.GetAddressOf());
+        ComPtr<ID3D11Resource> resource{ BoundDepthResource(context) };
 
         // The pass may be entered with no depth stencil bound: the game sets its own inside, so fall back to the one captured from the model.
         const bool isCaptured{ resource == nullptr };
