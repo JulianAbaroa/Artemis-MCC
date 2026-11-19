@@ -16,6 +16,8 @@ namespace
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::MaskWindow;
+    using Engine::Render::Type::MaskWindowReport;
     using Engine::Render::Type::StencilProbeInfo;
 
     using Engine::Render::Type::k_DepthCopyCount;
@@ -211,6 +213,13 @@ export namespace Engine::Render::State
         auto IsMaskCopied() const -> bool;
         auto WasMaskCopiedLastFrame() const -> bool;
 
+        // Counts a call of the first person pass 0xB that asked for the mask, whether or not it copied (VW.6.y.2 C). Any thread, no allocation.
+        auto CountMaskPassCall() -> void;
+
+        // return: The last closed telemetry window of the mask, empty before the first one or after the mask stops being requested.
+        // note: The window closes in EndHudFrame every k_MaskWindowFrames frames with the mask requested.
+        auto GetMaskWindowReport() const -> std::optional<MaskWindowReport>;
+
         // Keeps the description of the depth texture the first person pass wrote to when the copies could not be taken (no copies yet or a
         // different texture), so Present makes them from it. note: Thread of Present only.
         auto NoteMaskDepthDesc(const D3D11_TEXTURE2D_DESC& desc) -> void;
@@ -345,6 +354,12 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsMaskCallTaken{ false };
         std::atomic<bool> m_IsMaskCopied{ false };
         std::atomic<bool> m_IsMaskCopiedLastFrame{ false };
+        std::atomic<std::uint32_t> m_MaskPassCalls{ 0 };
+        MaskWindow m_MaskWindow{};      // thread of Present only (EndHudFrame)
+        std::atomic<bool> m_IsMaskWindowPublished{ false };
+        std::atomic<std::uint32_t> m_MaskWindowFrames{ 0 };
+        std::atomic<std::uint32_t> m_MaskWindowNoCopy{ 0 };
+        std::atomic<std::uint32_t> m_MaskWindowMaxCalls{ 0 };
 
         // Thread of Present only
         ComPtr<ID3D11Texture2D> m_MaskPre{};

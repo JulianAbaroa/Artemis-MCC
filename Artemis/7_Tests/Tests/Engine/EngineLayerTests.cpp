@@ -758,3 +758,75 @@ TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)
     EXPECT_EQ(error->Tag, "[PlayerActionDetour]");
     EXPECT_EQ(error->Message, "no action source, hook not installed.");
 }
+
+TEST(EngineLayerTests, MaskWindowCountsFramesWithoutCopyAndTheMostPassCallsAndPublishesEvery120Frames)
+{
+    using Engine::Render::Type::AdvanceMaskWindow;
+    using Engine::Render::Type::MaskWindow;
+    using Engine::Render::Type::k_MaskWindowFrames;
+
+    MaskWindow window{};
+    EXPECT_EQ(k_MaskWindowFrames, 120u);
+
+    // 119 frames publish nothing. Every 10th has no copy and the calls go 1, 2 or 3.
+    for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames - 1; ++i)
+    {
+        const bool isCopied{ i % 10 != 0 };
+        EXPECT_FALSE(AdvanceMaskWindow(window, isCopied, i == 50 ? 3u : 1u).has_value());
+    }
+    EXPECT_EQ(window.Frames, 119u);
+    EXPECT_EQ(window.NoCopyFrames, 12u);
+    EXPECT_EQ(window.MaxPassCalls, 3u);
+
+    // The 120th publishes the window and starts a new one.
+    const auto report{ AdvanceMaskWindow(window, false, 2) };
+    ASSERT_TRUE(report.has_value());
+    EXPECT_EQ(report->Frames, 120u);
+    EXPECT_EQ(report->NoCopyFrames, 13u);
+    EXPECT_EQ(report->MaxPassCalls, 3u);
+    EXPECT_EQ(window.Frames, 0u);
+    EXPECT_EQ(window.NoCopyFrames, 0u);
+    EXPECT_EQ(window.MaxPassCalls, 0u);
+
+    // The next window does not keep the maximum of the last one.
+    for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames - 1; ++i) EXPECT_FALSE(AdvanceMaskWindow(window, true, 1).has_value());
+    const auto second{ AdvanceMaskWindow(window, true, 1) };
+    ASSERT_TRUE(second.has_value());
+    EXPECT_EQ(second->NoCopyFrames, 0u);
+    EXPECT_EQ(second->MaxPassCalls, 1u);
+}
+
+TEST(EngineLayerTests, RenderStoreMaskWindowOnlyCountsFramesWithTheMaskRequested)
+{
+    using Engine::Render::Type::k_MaskWindowFrames;
+
+    Engine::Render::State::RenderStore store{};
+
+    // Not requested: the calls and the frames are not counted.
+    store.CountMaskPassCall();
+    for (std::uint32_t i{ 0 }; i < k_MaskWindowFrames; ++i) store.EndHudFrame();
+    EXPECT_FALSE(store.GetMaskWindowReport().has_value());
+
+    // Requested: 120 frames, the first one copied after two 0xB calls, the others without copy.
+    store.SetFirstPersonMaskRequested(true);
+    store.CountMaskPassCall();
+    store.CountMaskPassCall();
+    store.MarkMaskCopied();
+    store.EndHudFrame();
+    for (std::uint32_t i{ 1 }; i < k_MaskWindowFrames; ++i)
+    {
+        EXPECT_FALSE(store.GetMaskWindowReport().has_value());
+        store.EndHudFrame();
+    }
+
+    const auto report{ store.GetMaskWindowReport() };
+    ASSERT_TRUE(report.has_value());
+    EXPECT_EQ(report->Frames, k_MaskWindowFrames);
+    EXPECT_EQ(report->NoCopyFrames, k_MaskWindowFrames - 1);
+    EXPECT_EQ(report->MaxPassCalls, 2u);
+
+    // Turning the mask off drops the report.
+    store.SetFirstPersonMaskRequested(false);
+    store.EndHudFrame();
+    EXPECT_FALSE(store.GetMaskWindowReport().has_value());
+}

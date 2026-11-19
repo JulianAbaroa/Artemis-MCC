@@ -440,14 +440,24 @@ namespace DevTools::Viewer::Hud::System
             return;
         }
 
-        if (!m_RenderStore.AreMaskTexturesReady() || !m_RenderStore.WasMaskCopiedLastFrame())
+        // note: A frame without copy shows in the window below, so this line does not flicker when only some frames miss it.
+        if (!m_RenderStore.AreMaskTexturesReady())
         {
             ImGui::TextColored(k_Orange, "on, no copy this frame");
             return;
         }
 
         const auto desc{ m_RenderStore.GetMaskDesc() };
-        ImGui::TextColored(k_Green, "on, size %ux%u", desc.Width, desc.Height);
+        const auto window{ m_RenderStore.GetMaskWindowReport() };
+
+        if (!window)
+        {
+            ImGui::TextColored(k_Green, "on, size %ux%u, measuring", desc.Width, desc.Height);
+            return;
+        }
+
+        ImGui::TextColored(window->NoCopyFrames == 0 ? k_Green : k_Orange, "on, size %ux%u, no copy %u / %u frames, 0xB calls max %u",
+            desc.Width, desc.Height, window->NoCopyFrames, window->Frames, window->MaxPassCalls);
     }
 
     auto HudService::DrawLatency() -> void

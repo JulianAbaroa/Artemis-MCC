@@ -934,6 +934,9 @@ namespace Engine::Render::System
     {
         if (pass != k_FirstPersonMaskPass || !m_RenderStore.IsFirstPersonMaskRequested()) return false;
 
+        // Counted before any check that can leave without copying, so the telemetry sees every call.
+        m_RenderStore.CountMaskPassCall();
+
         ID3D11DeviceContext* context{ this->GetPresentContext() };
         if (context == nullptr) return false;
 

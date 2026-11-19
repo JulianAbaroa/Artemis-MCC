@@ -94,6 +94,7 @@ export namespace DevTools::Viewer::Options::Type
         Overlay,
         OverlayWireframe,
         FirstPersonOverOverlay,
+        FirstPersonMaskShown,
         HideGameHud,
         HideFirstPerson,
         DriveGameCamera,
@@ -363,6 +364,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::FirstPersonOverOverlay, Group::Camera, "FirstPersonOverOverlay", "Arms over overlay",
             "The game's first person arms and weapon are drawn over the overlay: the overlay skips the pixels the game writes in its first person depth pass.", true },
+
+        { Flag::FirstPersonMaskShown, Group::Camera, "FirstPersonMaskShown", "Arms mask: show",
+            "Debug: paints the pixels of the first person mask in red instead of skipping them, to see if the mask covers the arms. Needs Arms over overlay.", false },
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },

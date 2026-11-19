@@ -377,6 +377,42 @@ export namespace Engine::Render::Type
         std::uint32_t Height{ 0 };
     };
 
+    // Frames of a telemetry window of the overlay mask, counted only while the mask is requested (VW.6.y.2 C).
+    inline constexpr std::uint32_t k_MaskWindowFrames{ 120 };
+
+    // Counters of the window in progress.
+    struct MaskWindow
+    {
+        std::uint32_t Frames{ 0 };          // frames with the mask requested
+        std::uint32_t NoCopyFrames{ 0 };    // of those, frames that took no copy
+        std::uint32_t MaxPassCalls{ 0 };    // most 0xB calls seen in one frame
+    };
+
+    // A closed window, published for the telemetry.
+    struct MaskWindowReport
+    {
+        std::uint32_t Frames{ 0 };
+        std::uint32_t NoCopyFrames{ 0 };
+        std::uint32_t MaxPassCalls{ 0 };
+    };
+
+    // Adds one frame with the mask requested to the window.
+    // param isCopied: Whether the frame took its copies.
+    // param passCalls: Calls of 0xB that asked for the mask in the frame, including those that did not copy.
+    // return: The window when it reached k_MaskWindowFrames, which is then reset. Empty otherwise.
+    inline auto AdvanceMaskWindow(MaskWindow& window, bool isCopied, std::uint32_t passCalls) -> std::optional<MaskWindowReport>
+    {
+        ++window.Frames;
+        if (!isCopied) ++window.NoCopyFrames;
+        window.MaxPassCalls = (std::max)(window.MaxPassCalls, passCalls);
+
+        if (window.Frames < k_MaskWindowFrames) return std::nullopt;
+
+        const MaskWindowReport report{ window.Frames, window.NoCopyFrames, window.MaxPassCalls };
+        window = MaskWindow{};
+        return report;
+    }
+
     // What the handlers receive on each render event.
     struct FrameContext
     {

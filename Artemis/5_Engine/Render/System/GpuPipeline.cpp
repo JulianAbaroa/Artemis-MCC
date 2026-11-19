@@ -37,7 +37,8 @@ namespace
         std::uint32_t TargetWidth{ 1 };
         std::uint32_t TargetHeight{ 1 };
         std::uint32_t MaskOn{ 0 };
-        std::uint32_t Padding[3]{};
+        std::uint32_t MaskShown{ 0 };
+        std::uint32_t Padding[2]{};
     };
     static_assert(sizeof(MaskConstants) == 32);
 
@@ -57,7 +58,8 @@ cbuffer Mask : register(b1)
     uint2 MaskSize;
     uint2 TargetSize;
     uint  MaskOn;
-    uint3 MaskPadding;
+    uint  MaskShown;
+    uint2 MaskPadding;
 };
 
 Texture2D<float> MaskPre  : register(t0);
@@ -131,10 +133,16 @@ VSOut VSInstancedMesh(VSMeshIn input)
 
 float4 PSMain(VSOut input) : SV_TARGET
 {
-    if (IsFirstPersonPixel(input.pos)) discard;
-
+    // The derivatives come first, so the early return below is not between a gradient and the rest of the shader.
     float3 dx = ddx(input.worldPos);
     float3 dy = ddy(input.worldPos);
+
+    if (IsFirstPersonPixel(input.pos))
+    {
+        if (MaskShown != 0) return float4(1.0f, 0.0f, 0.0f, 1.0f);
+        discard;
+    }
+
     float3 n = normalize(cross(dx, dy));
 
     float3 lightDir1 = normalize(float3(0.4f, 0.6f, 0.7f));
@@ -443,7 +451,7 @@ namespace Engine::Render::System
         }
     }
 
-    auto GpuPipeline::UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, std::uint32_t targetWidth,
+    auto GpuPipeline::UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth,
         std::uint32_t targetHeight) -> void
     {
         if (!context || !m_MaskBuffer) return;
@@ -454,6 +462,7 @@ namespace Engine::Render::System
 
         MaskConstants constants{};
         constants.MaskOn = isOn ? 1u : 0u;
+        constants.MaskShown = isOn && isMaskShown ? 1u : 0u;
 
         if (isOn)
         {

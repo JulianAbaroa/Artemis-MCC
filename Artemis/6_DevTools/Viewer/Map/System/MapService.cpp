@@ -420,7 +420,8 @@ namespace DevTools::Viewer::Map::System
         m_GpuPipeline.UpdateCamera(context, m_SceneService.GetViewProjection());
 
         // note: Only the overlay lies over a game frame that has first person arms. The map view draws its own background.
-        m_GpuPipeline.UpdateMask(context, isOverlay ? frame.Mask : MaskContext{}, frame.Width, frame.Height);
+        m_GpuPipeline.UpdateMask(context, isOverlay ? frame.Mask : MaskContext{},
+            isOverlay && m_OptionsStore.IsEnabled(Flag::FirstPersonMaskShown), frame.Width, frame.Height);
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 

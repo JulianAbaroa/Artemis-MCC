@@ -13,6 +13,8 @@ namespace
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::MaskWindow;
+    using Engine::Render::Type::MaskWindowReport;
     using Engine::Render::Type::StencilProbeInfo;
 
     using Engine::Render::Type::k_DepthCopyCount;
@@ -209,8 +211,25 @@ namespace Engine::Render::State
     {
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
-        m_IsMaskCopiedLastFrame.store(m_IsMaskCopied.exchange(false, std::memory_order_acq_rel), std::memory_order_release);
+        const bool isCopied{ m_IsMaskCopied.exchange(false, std::memory_order_acq_rel) };
+        m_IsMaskCopiedLastFrame.store(isCopied, std::memory_order_release);
         m_IsMaskCallTaken.store(false, std::memory_order_release);
+
+        const std::uint32_t passCalls{ m_MaskPassCalls.exchange(0, std::memory_order_relaxed) };
+
+        if (!this->IsFirstPersonMaskRequested())
+        {
+            // A window is only of frames with the mask requested, so a new request starts a new one.
+            m_MaskWindow = MaskWindow{};
+            m_IsMaskWindowPublished.store(false, std::memory_order_release);
+        }
+        else if (const auto report{ Engine::Render::Type::AdvanceMaskWindow(m_MaskWindow, isCopied, passCalls) })
+        {
+            m_MaskWindowFrames.store(report->Frames, std::memory_order_relaxed);
+            m_MaskWindowNoCopy.store(report->NoCopyFrames, std::memory_order_relaxed);
+            m_MaskWindowMaxCalls.store(report->MaxPassCalls, std::memory_order_relaxed);
+            m_IsMaskWindowPublished.store(true, std::memory_order_release);
+        }
 
         for (std::size_t i{ 0 }; i < k_FirstPersonCallerCount; ++i)
         {
@@ -521,6 +540,19 @@ namespace Engine::Render::State
     auto RenderStore::WasMaskCopiedLastFrame() const -> bool
     {
         return m_IsMaskCopiedLastFrame.load(std::memory_order_acquire);
+    }
+
+    auto RenderStore::CountMaskPassCall() -> void
+    {
+        m_MaskPassCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetMaskWindowReport() const -> std::optional<MaskWindowReport>
+    {
+        if (!m_IsMaskWindowPublished.load(std::memory_order_acquire)) return std::nullopt;
+
+        return MaskWindowReport{ m_MaskWindowFrames.load(std::memory_order_relaxed), m_MaskWindowNoCopy.load(std::memory_order_relaxed),
+            m_MaskWindowMaxCalls.load(std::memory_order_relaxed) };
     }
 
     auto RenderStore::NoteMaskDepthDesc(const D3D11_TEXTURE2D_DESC& desc) -> void
