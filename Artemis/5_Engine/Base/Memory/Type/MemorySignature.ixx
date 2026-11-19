@@ -327,8 +327,18 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20"
     };
 
+    // The forward pass of the view (A21 sec. 8, VW.6.y.2 D): void(void* view, uint8 phase), the phase is a char in DL. Phase 0 draws the first
+    // person camera (0x286ebc queues the model, 0x2989e4 with 0xC and 0x14), the others take another branch. It draws the emissive and
+    // transparent parts into the HDR target, so it is only measured, never changed. Read from haloreach.dll on 2026-11-19.
+    inline constexpr Signature k_FirstPersonForwardPrologue
+    {
+        "FirstPersonForwardPrologue",
+        "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 60 20 41 56 48 83 EC 30"
+    };
+
     inline constexpr std::uint32_t k_FirstPersonModelRva{ 0x286EBC };
     inline constexpr std::uint32_t k_FirstPersonDepthPassRva{ 0x26DA08 };
+    inline constexpr std::uint32_t k_FirstPersonForwardRva{ 0x26EA78 };
     inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
 
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
@@ -340,6 +350,6 @@ export namespace Engine::Base::Memory::Type::Signature
     // Same rule for the observer camera.
     inline constexpr std::uint32_t k_ObserverCameraWindow{ 0 };
 
-    // Same rule for the two first person functions.
+    // Same rule for the first person functions.
     inline constexpr std::uint32_t k_FirstPersonWindow{ 0 };
 }

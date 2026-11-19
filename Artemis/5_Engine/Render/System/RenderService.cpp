@@ -13,12 +13,16 @@ namespace
 {
     using Microsoft::WRL::ComPtr;
 
+    using Engine::Render::State::CopyPairs;
+
+    using Engine::Render::Type::ChangedMap;
+    using Engine::Render::Type::ColorPairNote;
+    using Engine::Render::Type::ColorPairReport;
+    using Engine::Render::Type::ColorProbeInfo;
     using Engine::Render::Type::ColorTargetInfo;
-    using Engine::Render::Type::DepthDiff;
+    using Engine::Render::Type::CopyPairSetup;
     using Engine::Render::Type::DepthPairNote;
     using Engine::Render::Type::DepthPairReport;
-    using Engine::Render::Type::DepthPairSetup;
-    using Engine::Render::Type::DepthPairState;
     using Engine::Render::Type::DepthProbeInfo;
     using Engine::Render::Type::DepthStencilStateInfo;
     using Engine::Render::Type::DepthTargetInfo;
@@ -28,15 +32,20 @@ namespace
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskContext;
     using Engine::Render::Type::MaskPlan;
+    using Engine::Render::Type::PairState;
     using Engine::Render::Type::RasterizerStateInfo;
     using Engine::Render::Type::StencilProbeInfo;
     using Engine::Render::Type::StencilReadStatus;
     using Engine::Render::Type::StencilRegion;
     using Engine::Render::Type::StencilRegionStats;
+    using Engine::Render::Type::TexelDiff;
+    using Engine::Render::Type::TexelLayout;
     using Engine::Render::Type::ViewportInfo;
 
-    using Engine::Render::Type::k_DepthCopyCount;
+    using Engine::Render::Type::k_ColorPairCount;
+    using Engine::Render::Type::k_ColorTexelLayout;
     using Engine::Render::Type::k_DepthPairCount;
+    using Engine::Render::Type::k_DepthTexelLayout;
     using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_FirstPersonMaskPass;
@@ -69,17 +78,122 @@ namespace
     constexpr std::uint32_t k_StencilByteOffset{ 4 };
     constexpr std::size_t k_StencilTopCount{ 8 };
 
+    // return: The resource of the render target view bound in slot 0 now, null when none.
+    auto BoundColorResource(ID3D11DeviceContext* context) -> ComPtr<ID3D11Resource>
+    {
+        ComPtr<ID3D11RenderTargetView> view{};
+        context->OMGetRenderTargets(1, view.GetAddressOf(), nullptr);
+
+        ComPtr<ID3D11Resource> resource{};
+        if (view != nullptr) view->GetResource(resource.GetAddressOf());
+        return resource;
+    }
+
     // Whether a copy made from a can take the content of a texture of description b.
-    auto IsSameDepthDesc(const D3D11_TEXTURE2D_DESC& a, const D3D11_TEXTURE2D_DESC& b) -> bool
+    auto IsSameTextureDesc(const D3D11_TEXTURE2D_DESC& a, const D3D11_TEXTURE2D_DESC& b) -> bool
     {
         return a.Width == b.Width && a.Height == b.Height && a.MipLevels == b.MipLevels && a.ArraySize == b.ArraySize &&
             a.Format == b.Format && a.SampleDesc.Count == b.SampleDesc.Count && a.SampleDesc.Quality == b.SampleDesc.Quality;
     }
 
-    // Copies a depth texture to the CPU through the staging, rows packed (width * 8 bytes). Blocks until the GPU finishes the copy.
+    // return: The bytes of a texel of a color format the color pairs compare, 0 for any other.
+    auto ColorTexelBytes(DXGI_FORMAT format) -> std::uint32_t
+    {
+        switch (format)
+        {
+        case DXGI_FORMAT_R11G11B10_FLOAT:
+        case DXGI_FORMAT_R10G10B10A2_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_TYPELESS:
+        case DXGI_FORMAT_R8G8B8A8_UNORM:
+        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
+        case DXGI_FORMAT_B8G8R8A8_UNORM:
+        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
+            return k_ColorTexelLayout.TexelBytes;
+
+        default:
+            return 0;
+        }
+    }
+
+    // Notes a call of a pass and, when the bound resource is a texture of the description of the copies, copies it to the before texture of
+    // the pair. The copy is the same for the depth pairs and the color pairs (VW.6.y.2 A5, D).
+    // param note: State is set here.
+    // return: The pair to give to EndPairCopy, nothing when no copy was made (mismatch, or the pairs are taken).
+    template <typename Note, std::size_t Count>
+    auto BeginPairCopy(ID3D11DeviceContext* context, CopyPairs<Note, Count>& pairs, ID3D11Resource* resource, Note note)
+        -> std::optional<std::size_t>
+    {
+        ComPtr<ID3D11Texture2D> texture{};
+        if (resource != nullptr) resource->QueryInterface(IID_PPV_ARGS(texture.GetAddressOf()));
+
+        D3D11_TEXTURE2D_DESC desc{};
+        if (texture != nullptr) texture->GetDesc(&desc);
+
+        if (texture == nullptr || !IsSameTextureDesc(desc, pairs.GetDesc()))
+        {
+            note.State = PairState::Mismatch;
+            pairs.NoteCall(note, nullptr);
+            return std::nullopt;
+        }
+
+        note.State = PairState::Copied;
+        const std::optional<std::size_t> pair{ pairs.NoteCall(note, resource) };
+        if (!pair) return std::nullopt;
+
+        context->CopyResource(pairs.GetCopy(*pair * 2), resource);
+        return pair;
+    }
+
+    // Copies the resource of the pair to its after texture.
+    template <typename Note, std::size_t Count>
+    auto EndPairCopy(ID3D11DeviceContext* context, const CopyPairs<Note, Count>& pairs, std::size_t pair) -> void
+    {
+        ID3D11Resource* source{ pairs.GetSource(pair) };
+        ID3D11Texture2D* after{ pairs.GetCopy(pair * 2 + 1) };
+        if (context == nullptr || source == nullptr || after == nullptr) return;
+
+        context->CopyResource(after, source);
+    }
+
+    // Makes the 2 * Count DEFAULT copy textures and the STAGING one of the description and keeps them in the pairs.
+    // return: Status Read, or CreateFailed with the HRESULT.
+    template <typename Note, std::size_t Count>
+    auto CreateCopyPairs(ID3D11Device* device, const D3D11_TEXTURE2D_DESC& desc, CopyPairs<Note, Count>& pairs) -> CopyPairSetup
+    {
+        D3D11_TEXTURE2D_DESC copyDesc{ desc };
+        copyDesc.Usage = D3D11_USAGE_DEFAULT;
+        copyDesc.BindFlags = 0;
+        copyDesc.CPUAccessFlags = 0;
+        copyDesc.MiscFlags = 0;
+
+        D3D11_TEXTURE2D_DESC stagingDesc{ copyDesc };
+        stagingDesc.Usage = D3D11_USAGE_STAGING;
+        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+        std::array<ComPtr<ID3D11Texture2D>, Count * 2> copies{};
+        ComPtr<ID3D11Texture2D> staging{};
+        HRESULT result{ device != nullptr ? S_OK : E_POINTER };
+
+        for (std::size_t i{ 0 }; i < copies.size() && SUCCEEDED(result); ++i)
+        {
+            result = device->CreateTexture2D(&copyDesc, nullptr, copies[i].GetAddressOf());
+        }
+
+        if (SUCCEEDED(result)) result = device->CreateTexture2D(&stagingDesc, nullptr, staging.GetAddressOf());
+
+        if (FAILED(result) || staging == nullptr)
+        {
+            return CopyPairSetup{ .IsAttempted = true, .Status = StencilReadStatus::CreateFailed, .Result = static_cast<std::int32_t>(result) };
+        }
+
+        pairs.Set(std::move(copies), std::move(staging), desc);
+        return CopyPairSetup{ .IsAttempted = true, .Status = StencilReadStatus::Read };
+    }
+
+    // Copies a texture to the CPU through the staging, rows packed (width * texelBytes bytes). Blocks until the GPU finishes the copy.
     // return: S_OK, or the HRESULT of the Map (E_INVALIDARG when the pitch is smaller than a row).
-    auto CopyDepthToCpu(ID3D11DeviceContext* context, ID3D11Texture2D* staging, ID3D11Texture2D* source, std::uint32_t width,
-        std::uint32_t height, std::vector<std::uint8_t>& out) -> HRESULT
+    auto CopyTextureToCpu(ID3D11DeviceContext* context, ID3D11Texture2D* staging, ID3D11Texture2D* source, std::uint32_t width,
+        std::uint32_t height, std::uint32_t texelBytes, std::vector<std::uint8_t>& out) -> HRESULT
     {
         context->CopyResource(staging, source);
 
@@ -87,7 +201,7 @@ namespace
         const HRESULT result{ context->Map(staging, 0, D3D11_MAP_READ, 0, &mapped) };
         if (FAILED(result)) return result;
 
-        const std::size_t rowBytes{ static_cast<std::size_t>(width) * k_StencilTexelBytes };
+        const std::size_t rowBytes{ static_cast<std::size_t>(width) * texelBytes };
         HRESULT copyResult{ S_OK };
 
         if (mapped.RowPitch < rowBytes)
@@ -423,7 +537,11 @@ namespace Engine::Render::System
         }
 
         if (m_RenderStore.StepFirstPersonProbe()) this->ReportFirstPersonProbe();
-        else this->PrepareDepthPairs();
+        else
+        {
+            this->PrepareDepthPairs();
+            this->PrepareColorPairs();
+        }
 
         this->PrepareMask();
 
@@ -907,7 +1025,7 @@ namespace Engine::Render::System
 
     auto RenderService::GetDepthPairContext() -> ID3D11DeviceContext*
     {
-        if (!m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.AreDepthPairsReady()) return nullptr;
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || !m_RenderStore.GetDepthPairs().AreReady()) return nullptr;
 
         return this->GetPresentContext();
     }
@@ -917,7 +1035,7 @@ namespace Engine::Render::System
     {
         if (!isRequested) return isAttempted ? MaskPlan::Release : MaskPlan::Keep;
         if (!wanted) return MaskPlan::Keep;
-        if (!isAttempted || !IsSameDepthDesc(*wanted, attempted)) return MaskPlan::Create;
+        if (!isAttempted || !IsSameTextureDesc(*wanted, attempted)) return MaskPlan::Create;
 
         return MaskPlan::Keep;
     }
@@ -949,7 +1067,7 @@ namespace Engine::Render::System
         D3D11_TEXTURE2D_DESC desc{};
         texture->GetDesc(&desc);
 
-        if (!m_RenderStore.AreMaskTexturesReady() || !IsSameDepthDesc(desc, m_RenderStore.GetMaskDesc()))
+        if (!m_RenderStore.AreMaskTexturesReady() || !IsSameTextureDesc(desc, m_RenderStore.GetMaskDesc()))
         {
             m_RenderStore.NoteMaskDepthDesc(desc);
             return false;
@@ -1054,52 +1172,79 @@ namespace Engine::Render::System
         const bool isCaptured{ resource == nullptr };
         if (isCaptured) resource = m_RenderStore.GetFirstPersonDepth();
 
-        ComPtr<ID3D11Texture2D> texture{};
-        if (resource != nullptr) resource.As(&texture);
-
-        D3D11_TEXTURE2D_DESC desc{};
-        if (texture != nullptr) texture->GetDesc(&desc);
-
-        const DepthPairNote note{ .Caller = caller, .Pass = pass, .IsCaptured = isCaptured };
-
-        if (texture == nullptr || !IsSameDepthDesc(desc, m_RenderStore.GetDepthPairDesc()))
-        {
-            DepthPairNote mismatch{ note };
-            mismatch.State = DepthPairState::Mismatch;
-            m_RenderStore.NoteDepthPair(mismatch, nullptr);
-            return std::nullopt;
-        }
-
-        DepthPairNote copied{ note };
-        copied.State = DepthPairState::Copied;
-        const std::optional<std::size_t> pair{ m_RenderStore.NoteDepthPair(copied, resource.Get()) };
-        if (!pair) return std::nullopt;
-
-        context->CopyResource(m_RenderStore.GetDepthCopy(*pair * 2), resource.Get());
-        return pair;
+        return BeginPairCopy(context, m_RenderStore.GetDepthPairs(), resource.Get(),
+            DepthPairNote{ .Caller = caller, .Pass = pass, .IsCaptured = isCaptured });
     }
 
     auto RenderService::EndDepthPair(std::size_t pair) -> void
     {
-        ID3D11DeviceContext* context{ this->GetDepthPairContext() };
-        ID3D11Resource* source{ m_RenderStore.GetDepthPairSource(pair) };
-        ID3D11Texture2D* after{ m_RenderStore.GetDepthCopy(pair * 2 + 1) };
-        if (context == nullptr || source == nullptr || after == nullptr) return;
-
-        context->CopyResource(after, source);
+        EndPairCopy(this->GetDepthPairContext(), m_RenderStore.GetDepthPairs(), pair);
     }
 
-    auto RenderService::CompareDepth(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after,
-        std::uint32_t afterPitch, std::uint32_t width, std::uint32_t height) -> std::optional<DepthDiff>
+    auto RenderService::BeginColorPair(std::uint8_t phase) -> std::optional<std::size_t>
     {
-        const std::uint64_t rowBytes{ static_cast<std::uint64_t>(width) * k_StencilTexelBytes };
+        if (!m_RenderStore.IsFirstPersonProbeArmed()) return std::nullopt;
 
-        if (before == nullptr || after == nullptr || width == 0 || height == 0 || beforePitch < rowBytes || afterPitch < rowBytes)
+        ID3D11DeviceContext* context{ this->GetPresentContext() };
+        if (context == nullptr) return std::nullopt;
+
+        ComPtr<ID3D11Resource> resource{ BoundColorResource(context) };
+        CopyPairs<ColorPairNote, k_ColorPairCount>& pairs{ m_RenderStore.GetColorPairs() };
+
+        if (!pairs.AreReady())
+        {
+            // Frame 1 of the probe: only the description is kept, Present makes the copies for the frame that follows.
+            ComPtr<ID3D11Texture2D> texture{};
+            if (resource != nullptr) resource.As(&texture);
+
+            if (texture != nullptr)
+            {
+                D3D11_TEXTURE2D_DESC desc{};
+                texture->GetDesc(&desc);
+                m_RenderStore.NoteColorDesc(desc);
+            }
+
+            return std::nullopt;
+        }
+
+        ColorPairNote note{ .Phase = phase };
+
+        if (resource == nullptr)
+        {
+            note.State = PairState::NoTarget;
+            pairs.NoteCall(note, nullptr);
+            return std::nullopt;
+        }
+
+        return BeginPairCopy(context, pairs, resource.Get(), note);
+    }
+
+    auto RenderService::EndColorPair(std::size_t pair) -> void
+    {
+        EndPairCopy(this->GetPresentContext(), m_RenderStore.GetColorPairs(), pair);
+    }
+
+    auto RenderService::CompareTexels(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after,
+        std::uint32_t afterPitch, std::uint32_t width, std::uint32_t height, const TexelLayout& layout, ChangedMap* changedMap)
+        -> std::optional<TexelDiff>
+    {
+        const std::uint64_t rowBytes{ static_cast<std::uint64_t>(width) * layout.TexelBytes };
+
+        if (before == nullptr || after == nullptr || width == 0 || height == 0 || layout.TexelBytes == 0 || layout.CompareBytes == 0 ||
+            layout.CompareBytes > layout.TexelBytes || (layout.HasDepthRange && layout.CompareBytes < sizeof(float)) ||
+            beforePitch < rowBytes || afterPitch < rowBytes)
         {
             return std::nullopt;
         }
 
-        DepthDiff diff{};
+        if (changedMap != nullptr)
+        {
+            changedMap->Width = width;
+            changedMap->Height = height;
+            changedMap->Texels.assign(static_cast<std::size_t>(width) * height, 0);
+        }
+
+        TexelDiff diff{};
 
         for (std::uint32_t y{ 0 }; y < height; ++y)
         {
@@ -1108,13 +1253,13 @@ namespace Engine::Render::System
 
             for (std::uint32_t x{ 0 }; x < width; ++x)
             {
-                const std::uint8_t* beforeTexel{ beforeRow + static_cast<std::size_t>(x) * k_StencilTexelBytes };
-                const std::uint8_t* afterTexel{ afterRow + static_cast<std::size_t>(x) * k_StencilTexelBytes };
+                const std::uint8_t* beforeTexel{ beforeRow + static_cast<std::size_t>(x) * layout.TexelBytes };
+                const std::uint8_t* afterTexel{ afterRow + static_cast<std::size_t>(x) * layout.TexelBytes };
 
-                if (std::memcmp(beforeTexel, afterTexel, sizeof(float)) == 0) continue;
+                if (std::memcmp(beforeTexel, afterTexel, layout.CompareBytes) == 0) continue;
 
                 float depth{ 0.0f };
-                std::memcpy(&depth, afterTexel, sizeof(depth));
+                if (layout.HasDepthRange) std::memcpy(&depth, afterTexel, sizeof(depth));
 
                 if (diff.Changed == 0)
                 {
@@ -1135,28 +1280,55 @@ namespace Engine::Render::System
                 ++diff.Changed;
                 if (IsInStencilRegion(StencilRegion::Weapon, x, y, width, height)) ++diff.Weapon;
                 if (x >= width / 2) ++diff.Right;
+                if (changedMap != nullptr) changedMap->Texels[static_cast<std::size_t>(y) * width + x] = 1;
             }
         }
 
         return diff;
     }
 
+    auto RenderService::CompareDepth(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after,
+        std::uint32_t afterPitch, std::uint32_t width, std::uint32_t height) -> std::optional<TexelDiff>
+    {
+        return RenderService::CompareTexels(before, beforePitch, after, afterPitch, width, height, k_DepthTexelLayout, nullptr);
+    }
+
+    auto RenderService::CountOutsideMask(const ChangedMap& depth, const ChangedMap& color) -> std::optional<std::uint32_t>
+    {
+        const std::size_t texels{ static_cast<std::size_t>(color.Width) * color.Height };
+
+        if (texels == 0 || depth.Width != color.Width || depth.Height != color.Height || color.Texels.size() != texels ||
+            depth.Texels.size() != texels)
+        {
+            return std::nullopt;
+        }
+
+        std::uint32_t outside{ 0 };
+
+        for (std::size_t i{ 0 }; i < texels; ++i)
+        {
+            if (color.Texels[i] != 0 && depth.Texels[i] == 0) ++outside;
+        }
+
+        return outside;
+    }
+
     auto RenderService::PrepareDepthPairs() -> void
     {
-        if (!m_RenderStore.IsFirstPersonProbeArmed() || m_RenderStore.GetDepthPairSetup().IsAttempted) return;
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || m_RenderStore.GetDepthPairs().GetSetup().IsAttempted) return;
         if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return;
 
         ID3D11Resource* resource{ m_RenderStore.GetFirstPersonDepth() };
         if (resource == nullptr) return;
 
-        DepthPairSetup setup{ .IsAttempted = true };
+        CopyPairSetup setup{ .IsAttempted = true };
 
         ComPtr<ID3D11Texture2D> texture{};
 
         if (FAILED(resource->QueryInterface(IID_PPV_ARGS(texture.GetAddressOf()))))
         {
             setup.Status = StencilReadStatus::NotTexture;
-            m_RenderStore.SetDepthPairSetup(setup);
+            m_RenderStore.GetDepthPairs().SetSetup(setup);
             return;
         }
 
@@ -1166,56 +1338,44 @@ namespace Engine::Render::System
         if (desc.Format != DXGI_FORMAT_R32G8X24_TYPELESS && desc.Format != DXGI_FORMAT_D32_FLOAT_S8X24_UINT)
         {
             setup.Status = StencilReadStatus::UnsupportedFormat;
-            m_RenderStore.SetDepthPairSetup(setup);
+            m_RenderStore.GetDepthPairs().SetSetup(setup);
             return;
         }
 
         ComPtr<ID3D11Device> device{};
         resource->GetDevice(device.GetAddressOf());
 
-        D3D11_TEXTURE2D_DESC copyDesc{ desc };
-        copyDesc.Usage = D3D11_USAGE_DEFAULT;
-        copyDesc.BindFlags = 0;
-        copyDesc.CPUAccessFlags = 0;
-        copyDesc.MiscFlags = 0;
+        m_RenderStore.GetDepthPairs().SetSetup(CreateCopyPairs(device.Get(), desc, m_RenderStore.GetDepthPairs()));
+    }
 
-        D3D11_TEXTURE2D_DESC stagingDesc{ copyDesc };
-        stagingDesc.Usage = D3D11_USAGE_STAGING;
-        stagingDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    auto RenderService::PrepareColorPairs() -> void
+    {
+        if (!m_RenderStore.IsFirstPersonProbeArmed() || m_RenderStore.GetColorPairs().GetSetup().IsAttempted) return;
+        if (m_RenderStore.IsResizing() || !m_RenderStore.IsReady()) return;
 
-        std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> copies{};
-        ComPtr<ID3D11Texture2D> staging{};
-        HRESULT result{ device != nullptr ? S_OK : E_POINTER };
+        const std::optional<D3D11_TEXTURE2D_DESC> wanted{ m_RenderStore.GetColorDesc() };
+        if (!wanted) return;
 
-        for (std::size_t i{ 0 }; i < copies.size() && SUCCEEDED(result); ++i)
+        // The copies are compared by 4 bytes per texel and read without multisampling: another target is attempted once and reported.
+        if (wanted->SampleDesc.Count != 1 || ColorTexelBytes(wanted->Format) == 0)
         {
-            result = device->CreateTexture2D(&copyDesc, nullptr, copies[i].GetAddressOf());
-        }
-
-        if (SUCCEEDED(result)) result = device->CreateTexture2D(&stagingDesc, nullptr, staging.GetAddressOf());
-
-        if (FAILED(result) || staging == nullptr)
-        {
-            setup.Status = StencilReadStatus::CreateFailed;
-            setup.Result = static_cast<std::int32_t>(result);
-            m_RenderStore.SetDepthPairSetup(setup);
+            m_RenderStore.GetColorPairs().SetSetup(CopyPairSetup{ .IsAttempted = true, .Status = StencilReadStatus::UnsupportedFormat });
             return;
         }
 
-        setup.Status = StencilReadStatus::Read;
-        m_RenderStore.SetDepthPairs(std::move(copies), std::move(staging), desc);
-        m_RenderStore.SetDepthPairSetup(setup);
+        m_RenderStore.GetColorPairs().SetSetup(CreateCopyPairs(m_RenderStore.GetDevice(), *wanted, m_RenderStore.GetColorPairs()));
     }
 
-    auto RenderService::ReadDepthPairs() -> DepthProbeInfo
+    auto RenderService::ReadDepthPairs(ChangedMap& mask) -> DepthProbeInfo
     {
-        DepthProbeInfo info{ .Count = m_RenderStore.GetDepthPairNoteCount() };
+        const CopyPairs<DepthPairNote, k_DepthPairCount>& pairs{ m_RenderStore.GetDepthPairs() };
+        DepthProbeInfo info{ .Count = (std::min)(pairs.GetNoteCount(), static_cast<std::uint32_t>(k_DepthPairCount)) };
 
-        ID3D11Texture2D* staging{ m_RenderStore.GetDepthStaging() };
+        ID3D11Texture2D* staging{ pairs.GetStaging() };
         if (staging == nullptr) return info;
 
-        const D3D11_TEXTURE2D_DESC desc{ m_RenderStore.GetDepthPairDesc() };
-        const std::uint32_t pitch{ desc.Width * k_StencilTexelBytes };
+        const D3D11_TEXTURE2D_DESC desc{ pairs.GetDesc() };
+        const std::uint32_t pitch{ desc.Width * k_DepthTexelLayout.TexelBytes };
 
         ComPtr<ID3D11Device> device{};
         staging->GetDevice(device.GetAddressOf());
@@ -1230,22 +1390,23 @@ namespace Engine::Render::System
         std::vector<std::uint8_t> previousAfter{};
         bool hasPreviousAfter{ false };
 
-        for (std::uint32_t k{ 0 }; k < info.Count && k < k_DepthPairCount; ++k)
+        for (std::uint32_t k{ 0 }; k < info.Count; ++k)
         {
             DepthPairReport& report{ info.Pairs[k] };
-            report.Note = m_RenderStore.GetDepthPairNote(k);
+            report.Note = pairs.GetNote(k);
 
-            if (report.Note.State != DepthPairState::Copied)
+            if (report.Note.State != PairState::Copied)
             {
                 hasPreviousAfter = false;
                 continue;
             }
 
-            HRESULT result{ CopyDepthToCpu(context.Get(), staging, m_RenderStore.GetDepthCopy(k * 2ull), desc.Width, desc.Height, before) };
+            HRESULT result{ CopyTextureToCpu(context.Get(), staging, pairs.GetCopy(k * 2ull), desc.Width, desc.Height,
+                k_DepthTexelLayout.TexelBytes, before) };
 
             if (SUCCEEDED(result) && hasPreviousAfter)
             {
-                const std::optional<DepthDiff> between{ RenderService::CompareDepth(previousAfter.data(), pitch, before.data(), pitch, desc.Width,
+                const std::optional<TexelDiff> between{ RenderService::CompareDepth(previousAfter.data(), pitch, before.data(), pitch, desc.Width,
                     desc.Height) };
 
                 if (between)
@@ -1259,7 +1420,8 @@ namespace Engine::Render::System
 
             if (SUCCEEDED(result))
             {
-                result = CopyDepthToCpu(context.Get(), staging, m_RenderStore.GetDepthCopy(k * 2ull + 1), desc.Width, desc.Height, after);
+                result = CopyTextureToCpu(context.Get(), staging, pairs.GetCopy(k * 2ull + 1), desc.Width, desc.Height,
+                    k_DepthTexelLayout.TexelBytes, after);
             }
 
             if (FAILED(result))
@@ -1269,7 +1431,10 @@ namespace Engine::Render::System
                 continue;
             }
 
-            const std::optional<DepthDiff> changed{ RenderService::CompareDepth(before.data(), pitch, after.data(), pitch, desc.Width, desc.Height) };
+            // The first pair of the mask pass keeps which texels changed: the color pairs count their texels outside of it.
+            const bool isMaskPair{ report.Note.Pass == k_FirstPersonMaskPass && mask.Texels.empty() };
+            const std::optional<TexelDiff> changed{ RenderService::CompareTexels(before.data(), pitch, after.data(), pitch, desc.Width, desc.Height,
+                k_DepthTexelLayout, isMaskPair ? &mask : nullptr) };
 
             if (!changed)
             {
@@ -1286,11 +1451,76 @@ namespace Engine::Render::System
         return info;
     }
 
-    auto RenderService::ReportDepthPairs() -> void
+    auto RenderService::ReadColorPairs(const ChangedMap& depthMask) -> ColorProbeInfo
     {
-        const DepthPairSetup setup{ m_RenderStore.GetDepthPairSetup() };
+        const CopyPairs<ColorPairNote, k_ColorPairCount>& pairs{ m_RenderStore.GetColorPairs() };
+        ColorProbeInfo info{ .Count = (std::min)(pairs.GetNoteCount(), static_cast<std::uint32_t>(k_ColorPairCount)) };
 
-        if (!m_RenderStore.AreDepthPairsReady())
+        ID3D11Texture2D* staging{ pairs.GetStaging() };
+        if (staging == nullptr) return info;
+
+        const D3D11_TEXTURE2D_DESC desc{ pairs.GetDesc() };
+        const std::uint32_t pitch{ desc.Width * k_ColorTexelLayout.TexelBytes };
+        info.Width = desc.Width;
+        info.Height = desc.Height;
+        info.Format = static_cast<std::uint32_t>(desc.Format);
+
+        ComPtr<ID3D11Device> device{};
+        staging->GetDevice(device.GetAddressOf());
+
+        ComPtr<ID3D11DeviceContext> context{};
+        if (device != nullptr) device->GetImmediateContext(context.GetAddressOf());
+        if (context == nullptr) return info;
+
+        std::vector<std::uint8_t> before{};
+        std::vector<std::uint8_t> after{};
+        ChangedMap changedMap{};
+
+        for (std::uint32_t k{ 0 }; k < info.Count; ++k)
+        {
+            ColorPairReport& report{ info.Pairs[k] };
+            report.Note = pairs.GetNote(k);
+            if (report.Note.State != PairState::Copied) continue;
+
+            HRESULT result{ CopyTextureToCpu(context.Get(), staging, pairs.GetCopy(k * 2ull), desc.Width, desc.Height,
+                k_ColorTexelLayout.TexelBytes, before) };
+
+            if (SUCCEEDED(result))
+            {
+                result = CopyTextureToCpu(context.Get(), staging, pairs.GetCopy(k * 2ull + 1), desc.Width, desc.Height,
+                    k_ColorTexelLayout.TexelBytes, after);
+            }
+
+            if (FAILED(result))
+            {
+                report.Status = StencilReadStatus::MapFailed;
+                report.Result = static_cast<std::int32_t>(result);
+                continue;
+            }
+
+            const std::optional<TexelDiff> changed{ RenderService::CompareTexels(before.data(), pitch, after.data(), pitch, desc.Width, desc.Height,
+                k_ColorTexelLayout, &changedMap) };
+
+            if (!changed)
+            {
+                report.Status = StencilReadStatus::BadLayout;
+                continue;
+            }
+
+            report.Status = StencilReadStatus::Read;
+            report.Changed = *changed;
+            report.Outside = RenderService::CountOutsideMask(depthMask, changedMap);
+        }
+
+        return info;
+    }
+
+    auto RenderService::ReportDepthPairs(ChangedMap& mask) -> void
+    {
+        const CopyPairs<DepthPairNote, k_DepthPairCount>& pairs{ m_RenderStore.GetDepthPairs() };
+        const CopyPairSetup setup{ pairs.GetSetup() };
+
+        if (!pairs.AreReady())
         {
             if (!setup.IsAttempted)
             {
@@ -1302,20 +1532,20 @@ namespace Engine::Render::System
                     static_cast<std::uint32_t>(setup.Result));
             }
 
-            m_RenderStore.ReleaseDepthPairs();
+            m_RenderStore.GetDepthPairs().Release();
             return;
         }
 
-        const DepthProbeInfo info{ this->ReadDepthPairs() };
+        const DepthProbeInfo info{ this->ReadDepthPairs(mask) };
 
         if (info.Count == 0) m_Log.Message("[FirstPersonProbe] INFO: depth pairs made but no call of the model was seen.");
 
-        for (std::uint32_t k{ 0 }; k < info.Count && k < k_DepthPairCount; ++k)
+        for (std::uint32_t k{ 0 }; k < info.Count; ++k)
         {
             const DepthPairReport& report{ info.Pairs[k] };
             const char* source{ report.Note.IsCaptured ? " (no depth stencil bound at the entry, captured resource)" : "" };
 
-            if (report.Note.State == DepthPairState::Mismatch)
+            if (report.Note.State == PairState::Mismatch)
             {
                 m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} not copied (the depth stencil is not the texture of the "
                     "copies){}.", k, DepthCallerName(report.Note), source);
@@ -1327,7 +1557,7 @@ namespace Engine::Render::System
             }
             else
             {
-                const DepthDiff& changed{ report.Changed };
+                const TexelDiff& changed{ report.Changed };
 
                 m_Log.Message("[FirstPersonProbe] INFO: depth call {} caller {} changed {} box {},{}..{},{} depth {}..{} weapon {} right {} "
                     "left {}{}.", k, DepthCallerName(report.Note), changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.MinDepth,
@@ -1340,7 +1570,76 @@ namespace Engine::Render::System
             }
         }
 
-        m_RenderStore.ReleaseDepthPairs();
+        m_RenderStore.GetDepthPairs().Release();
+    }
+
+    auto RenderService::ReportColorPairs(const ChangedMap& depthMask) -> void
+    {
+        const CopyPairs<ColorPairNote, k_ColorPairCount>& pairs{ m_RenderStore.GetColorPairs() };
+        const CopyPairSetup setup{ pairs.GetSetup() };
+
+        if (!pairs.AreReady())
+        {
+            if (!setup.IsAttempted)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: color pairs: none (no render target 0 seen at a call of the forward pass 0x26EA78).");
+            }
+            else
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: color pairs: none ({} hresult {:#010X}).", StencilStatusName(setup.Status),
+                    static_cast<std::uint32_t>(setup.Result));
+            }
+
+            m_RenderStore.ReleaseColorPairs();
+            return;
+        }
+
+        const ColorProbeInfo info{ this->ReadColorPairs(depthMask) };
+
+        if (info.Count == 0) m_Log.Message("[FirstPersonProbe] INFO: color pairs: none (made but no call of the forward pass was seen).");
+
+        const std::string target{ std::format("{} {}x{}", FormatText(info.Format), info.Width, info.Height) };
+        const char* noMask{ depthMask.Texels.empty() ? "n/a (no depth pair 0xB read)" : "n/a (size differs)" };
+
+        for (std::uint32_t k{ 0 }; k < info.Count; ++k)
+        {
+            const ColorPairReport& report{ info.Pairs[k] };
+            const unsigned phase{ report.Note.Phase };
+
+            if (report.Note.State == PairState::NoTarget)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: color call {} caller 26EA78 phase {} not copied (no render target 0 bound).", k, phase);
+            }
+            else if (report.Note.State == PairState::Mismatch)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: color call {} caller 26EA78 phase {} not copied (the render target 0 is not the texture "
+                    "of the copies).", k, phase);
+            }
+            else if (report.Status != StencilReadStatus::Read)
+            {
+                m_Log.Message("[FirstPersonProbe] INFO: color call {} caller 26EA78 phase {} not read: {} hresult {:#010X}.", k, phase,
+                    StencilStatusName(report.Status), static_cast<std::uint32_t>(report.Result));
+            }
+            else
+            {
+                const TexelDiff& changed{ report.Changed };
+                const std::string outside{ report.Outside ? std::to_string(*report.Outside) : std::string{ noMask } };
+
+                m_Log.Message("[FirstPersonProbe] INFO: color call {} caller 26EA78 phase {} copied changed {} box {},{}..{},{} weapon {} right {} "
+                    "left {} outside depth mask {} ({}).", k, phase, changed.Changed, changed.X0, changed.Y0, changed.X1, changed.Y1, changed.Weapon,
+                    changed.Right, changed.Changed - changed.Right, outside, target);
+            }
+        }
+
+        m_RenderStore.ReleaseColorPairs();
+    }
+
+    auto RenderService::ReportCopyPairs() -> void
+    {
+        ChangedMap depthMask{};
+
+        this->ReportDepthPairs(depthMask);
+        this->ReportColorPairs(depthMask);
     }
 
     auto RenderService::ReduceStencil(const std::uint8_t* data, std::uint32_t rowPitch, std::uint32_t width, std::uint32_t height)
@@ -1504,7 +1803,7 @@ namespace Engine::Render::System
         {
             m_Log.Message("[FirstPersonProbe] INFO: stencil not read (no depth stencil captured from the model draw or no HUD draw on the thread "
                 "of Present) | {}.", state);
-            this->ReportDepthPairs();
+            this->ReportCopyPairs();
             return;
         }
 
@@ -1513,7 +1812,7 @@ namespace Engine::Render::System
             m_Log.Message("[FirstPersonProbe] INFO: stencil not read: {} hresult {:#010X} texture {}x{} res {} | {}.",
                 StencilStatusName(stencil.Status), static_cast<std::uint32_t>(stencil.Result), stencil.Width, stencil.Height,
                 FormatText(stencil.ResourceFormat), state);
-            this->ReportDepthPairs();
+            this->ReportCopyPairs();
             return;
         }
 
@@ -1523,7 +1822,7 @@ namespace Engine::Render::System
                 state);
         }
 
-        this->ReportDepthPairs();
+        this->ReportCopyPairs();
     }
 
     auto RenderService::WaitForIdle(milliseconds timeout) -> bool

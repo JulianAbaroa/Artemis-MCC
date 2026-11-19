@@ -25,6 +25,9 @@ export namespace Engine::Render::Type
     // The pass 0x26DA08 between the entry and the exit of the first person draw: void(void* view, int32 pass).
     using FirstPersonDepthPassFunction = auto(__fastcall*)(void* view, std::int32_t pass) -> void;
 
+    // The forward pass of the view 0x26EA78: void(void* view, uint8 phase). The phase is a char in DL.
+    using FirstPersonForwardFunction = auto(__fastcall*)(void* view, std::uint8_t phase) -> void;
+
     // The game's test of a first person unit: bool(uint32 user, uint32 objectHandle).
     using IsFirstPersonUnitFunction = auto(__fastcall*)(std::uint32_t user, std::uint32_t objectHandle) -> bool;
 
@@ -243,36 +246,62 @@ export namespace Engine::Render::Type
 
     // How many calls of the first person pass 0x26DA08 the probe copies the depth of, before and after (VW.6.y.2 A4, A5). Two textures each.
     inline constexpr std::size_t k_DepthPairCount{ 6 };
-    inline constexpr std::size_t k_DepthCopyCount{ k_DepthPairCount * 2 };
 
-    // What the detour did with a call of the pass while the depth pairs were ready.
-    enum class DepthPairState : std::uint8_t
+    // How many calls of the forward pass 0x26EA78 the probe copies the color of, before and after (VW.6.y.2 D). Two textures each.
+    inline constexpr std::size_t k_ColorPairCount{ 4 };
+
+    // What the detour did with a call while the copy pairs (depth or color) were ready.
+    enum class PairState : std::uint8_t
     {
         Free,
-        Mismatch,   // the bound depth stencil is not a texture of the description of the copies, nothing was copied
-        Copied      // the depth before the call was copied, and the depth after it when the call returned
+        Mismatch,   // the bound resource is not a texture of the description of the copies, nothing was copied
+        Copied,     // the content before the call was copied, and the content after it when the call returned
+        NoTarget    // nothing was bound to copy from (color pairs: no render target 0)
     };
 
     // One call of the pass seen while the depth pairs were ready, in call order.
     struct DepthPairNote
     {
-        DepthPairState State{ DepthPairState::Free };
+        PairState State{ PairState::Free };
         FirstPersonCaller Caller{ FirstPersonCaller::Other };   // Pass1 (0x26DA08)
         std::int32_t Pass{ 0 };                                 // the pass argument of 0x26DA08
         bool IsCaptured{ false };   // no depth stencil was bound at the entry, the resource captured from the model draw was copied instead
     };
 
-    // How the creation of the depth copy textures went (once per probe, at Present).
-    struct DepthPairSetup
+    // How the creation of the copy textures of the depth pairs or the color pairs went (once per probe, at Present).
+    struct CopyPairSetup
     {
         bool IsAttempted{ false };
         StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when created
         std::int32_t Result{ 0 };       // HRESULT of the step that failed
     };
 
-    // Texels whose depth changed between two copies: count, box (inclusive), depth range of the later copy, how many are in the
+    // How a texel of a copy is compared (VW.6.y.2 D): its size, how many of its first bytes are compared, and whether those bytes are a float
+    // depth whose range is reported.
+    struct TexelLayout
+    {
+        std::uint32_t TexelBytes{ 0 };
+        std::uint32_t CompareBytes{ 0 };
+        bool HasDepthRange{ false };
+    };
+
+    // R32G8X24: the float depth in bytes 0..3, the stencil and 3 unused bytes.
+    inline constexpr TexelLayout k_DepthTexelLayout{ 8, 4, true };
+
+    // A color of 4 bytes per texel (R11G11B10_FLOAT and the 8 bit formats): all the bytes are compared.
+    inline constexpr TexelLayout k_ColorTexelLayout{ 4, 4, false };
+
+    // A byte per texel of an image, 1 where the texel changed, row after row without padding. Empty when none was made.
+    struct ChangedMap
+    {
+        std::uint32_t Width{ 0 };
+        std::uint32_t Height{ 0 };
+        std::vector<std::uint8_t> Texels{};
+    };
+
+    // Texels that changed between two copies: count, box (inclusive), depth range of the later copy (0 for a color), how many are in the
     // weapon region and how many in the right half of the screen (x from width / 2). With Changed 0 the box and the range are 0.
-    struct DepthDiff
+    struct TexelDiff
     {
         std::uint32_t Changed{ 0 };
         std::uint32_t X0{ 0 };
@@ -291,15 +320,42 @@ export namespace Engine::Render::Type
         DepthPairNote Note{};
         StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when Changed is valid
         std::int32_t Result{ 0 };
-        DepthDiff Changed{};
+        TexelDiff Changed{};
         bool HasBetween{ false };
-        DepthDiff Between{};            // previous pair after the call against this pair before it
+        TexelDiff Between{};            // previous pair after the call against this pair before it
     };
 
     struct DepthProbeInfo
     {
         std::uint32_t Count{ 0 };
         std::array<DepthPairReport, k_DepthPairCount> Pairs{};
+    };
+
+    // One call of the forward pass 0x26EA78 seen while the color pairs were ready, in call order.
+    struct ColorPairNote
+    {
+        PairState State{ PairState::Free };
+        std::uint8_t Phase{ 0 };    // the phase argument of 0x26EA78
+    };
+
+    // The reduction of one color pair: what the call changed, and how many of those texels are not in the mask of the depth pair 0xB (nothing
+    // when there is no such mask or its size differs).
+    struct ColorPairReport
+    {
+        ColorPairNote Note{};
+        StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when Changed is valid
+        std::int32_t Result{ 0 };
+        TexelDiff Changed{};
+        std::optional<std::uint32_t> Outside{};
+    };
+
+    struct ColorProbeInfo
+    {
+        std::uint32_t Count{ 0 };
+        std::uint32_t Width{ 0 };
+        std::uint32_t Height{ 0 };
+        std::uint32_t Format{ 0 };      // DXGI_FORMAT of the copies
+        std::array<ColorPairReport, k_ColorPairCount> Pairs{};
     };
 
     // Layout of the vertex data of a draw. Each one has its own input layout and vertex shader.

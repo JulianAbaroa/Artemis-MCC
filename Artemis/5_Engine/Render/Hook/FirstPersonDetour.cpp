@@ -17,6 +17,8 @@ namespace
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassRva;
+    using Engine::Base::Memory::Type::Signature::k_FirstPersonForwardPrologue;
+    using Engine::Base::Memory::Type::Signature::k_FirstPersonForwardRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
@@ -116,6 +118,27 @@ namespace Engine::Render::Hook
         if (isMaskCopied) self->m_RenderService.EndMaskCopy();
     }
 
+    // note: Only measures. Without a probe armed the render service reads one atomic and returns, so the original runs as if unhooked. The
+    // scope spans the original, as in the other hooks.
+    auto __fastcall FirstPersonDetour::HookedForward(void* view, std::uint8_t phase) -> void
+    {
+        FirstPersonDetour* self{ s_Instance.load() };
+
+        if (self == nullptr)
+        {
+            if (s_OriginalForward != nullptr) s_OriginalForward(view, phase);
+            return;
+        }
+
+        RenderStore::HookScope scope{ self->m_RenderStore };
+
+        const std::optional<std::size_t> pair{ self->m_RenderService.BeginColorPair(phase) };
+
+        if (s_OriginalForward != nullptr) s_OriginalForward(view, phase);
+
+        if (pair) self->m_RenderService.EndColorPair(*pair);
+    }
+
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool
     {
         FirstPersonDetour* self{ s_Instance.load() };
@@ -170,7 +193,7 @@ namespace Engine::Render::Hook
         const std::lock_guard<std::mutex> lock{ m_Mutex };
 
         if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr
-            || m_DepthPassAddress.load() != nullptr;
+            || m_DepthPassAddress.load() != nullptr || m_ForwardAddress.load() != nullptr;
         s_Instance.store(this);
 
         const bool isModelHooked{ this->InstallOne("first person model", k_FirstPersonModelPrologue, k_FirstPersonModelRva,
@@ -181,7 +204,10 @@ namespace Engine::Render::Hook
         const bool isDepthPassHooked{ this->InstallOne("first person depth pass", k_FirstPersonDepthPassPrologue, k_FirstPersonDepthPassRva,
             reinterpret_cast<void*>(&HookedDepthPass), reinterpret_cast<void**>(&s_OriginalDepthPass), m_DepthPassAddress) };
 
-        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked)
+        const bool isForwardHooked{ this->InstallOne("first person forward", k_FirstPersonForwardPrologue, k_FirstPersonForwardRva,
+            reinterpret_cast<void*>(&HookedForward), reinterpret_cast<void**>(&s_OriginalForward), m_ForwardAddress) };
+
+        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked && !isForwardHooked)
         {
             s_Instance.store(nullptr);
             return false;
@@ -194,7 +220,7 @@ namespace Engine::Render::Hook
         }
 
         m_IsInstalled.store(true);
-        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isDepthPassHooked);
+        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isDepthPassHooked, isForwardHooked);
         return true;
     }
 
@@ -221,11 +247,12 @@ namespace Engine::Render::Hook
 
         if (!m_IsInstalled.load()) return;
 
-        m_RenderStore.SetFirstPersonHooksInstalled(false, false, false);
+        m_RenderStore.SetFirstPersonHooksInstalled(false, false, false, false);
 
         this->Disable(m_ModelAddress);
         this->Disable(m_UnitAddress);
         this->Disable(m_DepthPassAddress);
+        this->Disable(m_ForwardAddress);
 
         // note: A thread can be past the jump of the hook but not yet inside its HookScope, where WaitForIdle does not see it.
         // 0x266104 runs per object and per frame, maybe on several threads, so that window is real: the grace lets those threads
@@ -240,10 +267,12 @@ namespace Engine::Render::Hook
         this->Remove(m_ModelAddress, "first person model");
         this->Remove(m_UnitAddress, "is first person unit");
         this->Remove(m_DepthPassAddress, "first person depth pass");
+        this->Remove(m_ForwardAddress, "first person forward");
 
         s_OriginalModel = nullptr;
         s_OriginalUnit = nullptr;
         s_OriginalDepthPass = nullptr;
+        s_OriginalForward = nullptr;
 
         m_ModuleBase.store(0);
         m_IsInstalled.store(false);

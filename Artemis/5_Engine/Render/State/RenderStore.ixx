@@ -11,8 +11,9 @@ import std;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::ColorPairNote;
+    using Engine::Render::Type::CopyPairSetup;
     using Engine::Render::Type::DepthPairNote;
-    using Engine::Render::Type::DepthPairSetup;
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
@@ -20,13 +21,116 @@ namespace
     using Engine::Render::Type::MaskWindowReport;
     using Engine::Render::Type::StencilProbeInfo;
 
-    using Engine::Render::Type::k_DepthCopyCount;
+    using Engine::Render::Type::k_ColorPairCount;
     using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
 }
 
 export namespace Engine::Render::State
 {
+    // The copy textures of a probe (VW.6.y.2 A3, D): Count pairs of before and after (pair k is copy 2k before and 2k + 1 after), the staging
+    // texture to read them, the description they were made from and the calls noted in call order with the resource each one copied from.
+    // note: Touched on the thread of Present only (the detour copies there too), no lock. Used for the depth pairs and the color pairs.
+    template <typename Note, std::size_t Count>
+    class CopyPairs
+    {
+    private:
+        template <typename T>
+        using ComPtr = Microsoft::WRL::ComPtr<T>;
+
+    public:
+        auto Set(std::array<ComPtr<ID3D11Texture2D>, Count * 2> copies, ComPtr<ID3D11Texture2D> staging, const D3D11_TEXTURE2D_DESC& desc) -> void
+        {
+            m_Copies = std::move(copies);
+            m_Staging = std::move(staging);
+            m_Desc = desc;
+        }
+
+        // return: Whether the copies exist.
+        auto AreReady() const -> bool
+        {
+            return m_Staging != nullptr;
+        }
+
+        // How the creation went. Kept even when it failed, so the probe tries once.
+        auto SetSetup(const CopyPairSetup& setup) -> void
+        {
+            m_Setup = setup;
+        }
+
+        auto GetSetup() const -> CopyPairSetup
+        {
+            return m_Setup;
+        }
+
+        // return: The description of the original texture the copies were made from.
+        auto GetDesc() const -> D3D11_TEXTURE2D_DESC
+        {
+            return m_Desc;
+        }
+
+        // return: Copy texture i (not owned), null when i is out of range or none exist.
+        auto GetCopy(std::size_t index) const -> ID3D11Texture2D*
+        {
+            return index < m_Copies.size() ? m_Copies[index].Get() : nullptr;
+        }
+
+        auto GetStaging() const -> ID3D11Texture2D*
+        {
+            return m_Staging.Get();
+        }
+
+        // Appends a call to the list and keeps a reference to the resource it copied from, so the after copy uses the same one.
+        // param source: The resource that was copied, null for a call that copied nothing.
+        // return: Its position, or nothing when the Count pairs are taken. No allocation.
+        auto NoteCall(const Note& note, ID3D11Resource* source) -> std::optional<std::size_t>
+        {
+            if (m_NoteCount >= Count) return std::nullopt;
+
+            const std::size_t index{ m_NoteCount++ };
+            m_Notes[index] = note;
+            m_Sources[index] = source;
+            return index;
+        }
+
+        auto GetNote(std::size_t index) const -> Note
+        {
+            return index < m_NoteCount ? m_Notes[index] : Note{};
+        }
+
+        auto GetNoteCount() const -> std::uint32_t
+        {
+            return m_NoteCount;
+        }
+
+        auto GetSource(std::size_t index) const -> ID3D11Resource*
+        {
+            return index < m_NoteCount ? m_Sources[index].Get() : nullptr;
+        }
+
+        // Drops the copies, the staging, the notes and the setup.
+        auto Release() -> void
+        {
+            for (auto& copy : m_Copies) copy.Reset();
+            for (auto& source : m_Sources) source.Reset();
+
+            m_Staging.Reset();
+            m_Desc = {};
+            m_Setup = {};
+            m_Notes = {};
+            m_NoteCount = 0;
+        }
+
+    private:
+        std::array<ComPtr<ID3D11Texture2D>, Count * 2> m_Copies{};
+        ComPtr<ID3D11Texture2D> m_Staging{};
+        D3D11_TEXTURE2D_DESC m_Desc{};
+        CopyPairSetup m_Setup{};
+        std::array<Note, Count> m_Notes{};
+        std::array<ComPtr<ID3D11Resource>, Count> m_Sources{};
+        std::uint32_t m_NoteCount{ 0 };
+    };
+
     // D3D11 objects of the game swap chain and the render flags.
     // note: The flags and the size are atomic, the D3D11 objects are only touched from the render thread.
     class RenderStore
@@ -101,10 +205,11 @@ export namespace Engine::Render::State
         auto IsFirstPersonHidden() const -> bool;
         auto SetFirstPersonHidden(bool isHidden) -> void;
 
-        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked) -> void;
+        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked, bool isForwardHooked) -> void;
         auto IsFirstPersonModelHooked() const -> bool;
         auto IsFirstPersonUnitHooked() const -> bool;
         auto IsFirstPersonDepthPassHooked() const -> bool;
+        auto IsFirstPersonForwardHooked() const -> bool;
 
         // Counts one answer of the first person test turned to false by Drive. Any thread, no allocation.
         auto CountThirdPerson() -> void;
@@ -171,38 +276,24 @@ export namespace Engine::Render::State
         auto SetFirstPersonDriveActive(bool isActive) -> void;
         auto IsFirstPersonDriveActive() const -> bool;
 
-        // Depth pairs of the probe (VW.6.y.2 A3): textures that hold the depth before and after each call of the first person G-buffer pass.
-        // note: All of this is touched on the thread of Present only (the detour copies there too), no lock.
+        // Depth pairs of the probe (VW.6.y.2 A3): textures that hold the depth before and after each call of the first person pass 0x26DA08.
+        // note: Dropped (Release) when a probe is armed, the targets are released and at cleanup, and by the report at the end of the probe.
+        auto GetDepthPairs() -> CopyPairs<DepthPairNote, k_DepthPairCount>&;
+        auto GetDepthPairs() const -> const CopyPairs<DepthPairNote, k_DepthPairCount>&;
 
-        // Keeps the 2 * k_DepthPairCount copy textures (pair k is 2k before, 2k + 1 after), the staging texture to read them and the
-        // description they were made from.
-        auto SetDepthPairs(std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> copies, ComPtr<ID3D11Texture2D> staging,
-            const D3D11_TEXTURE2D_DESC& desc) -> void;
+        // Color pairs of the probe (VW.6.y.2 D): the same for the render target 0 around each call of the forward pass 0x26EA78.
+        auto GetColorPairs() -> CopyPairs<ColorPairNote, k_ColorPairCount>&;
+        auto GetColorPairs() const -> const CopyPairs<ColorPairNote, k_ColorPairCount>&;
 
-        // return: Whether the copies exist.
-        auto AreDepthPairsReady() const -> bool;
+        // Keeps the description of the render target 0 the forward pass was drawn with when the color pairs did not exist yet, so Present makes
+        // them from it. Does nothing when one is noted. note: Thread of Present only, a plain struct, no reference is held.
+        auto NoteColorDesc(const D3D11_TEXTURE2D_DESC& desc) -> void;
 
-        // How the creation went. Kept even when it failed, so the probe tries once.
-        auto SetDepthPairSetup(const DepthPairSetup& setup) -> void;
-        auto GetDepthPairSetup() const -> DepthPairSetup;
+        // return: The noted description, nothing when none was noted since the color pairs were released.
+        auto GetColorDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>;
 
-        // return: The description of the original depth texture the copies were made from.
-        auto GetDepthPairDesc() const -> D3D11_TEXTURE2D_DESC;
-
-        // return: Copy texture i (not owned), null when i is out of range or none exist.
-        auto GetDepthCopy(std::size_t index) const -> ID3D11Texture2D*;
-        auto GetDepthStaging() const -> ID3D11Texture2D*;
-
-        // Appends a call of the pass to the list and keeps a reference to the resource it copied from, so the after copy uses the same one.
-        // param source: The resource that was copied, null for a call that copied nothing.
-        // return: Its position, or nothing when the k_DepthPairCount are taken. No allocation.
-        auto NoteDepthPair(const DepthPairNote& note, ID3D11Resource* source) -> std::optional<std::size_t>;
-        auto GetDepthPairNote(std::size_t index) const -> DepthPairNote;
-        auto GetDepthPairNoteCount() const -> std::uint32_t;
-        auto GetDepthPairSource(std::size_t index) const -> ID3D11Resource*;
-
-        // Drops the copies, the staging, the notes and the setup. Also done when a probe is armed, the targets are released and at cleanup.
-        auto ReleaseDepthPairs() -> void;
+        // Drops the color pairs and the noted description. Same moments as the depth pairs.
+        auto ReleaseColorPairs() -> void;
 
         // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it with the option Arms over overlay, any thread.
         auto IsFirstPersonMaskRequested() const -> bool;
@@ -328,6 +419,7 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonModelHooked{ false };
         std::atomic<bool> m_IsFirstPersonUnitHooked{ false };
         std::atomic<bool> m_IsFirstPersonDepthPassHooked{ false };
+        std::atomic<bool> m_IsFirstPersonForwardHooked{ false };
         std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
         std::atomic<std::uint32_t> m_FirstPersonUnitCalls{ 0 };
@@ -380,12 +472,8 @@ export namespace Engine::Render::State
         std::optional<D3D11_TEXTURE2D_DESC> m_MaskDepthDesc{};
         bool m_IsMaskAttempted{ false };
 
-        std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> m_DepthCopies{};  // Thread of Present only
-        ComPtr<ID3D11Texture2D> m_DepthStaging{};
-        D3D11_TEXTURE2D_DESC m_DepthPairDesc{};
-        DepthPairSetup m_DepthPairSetup{};
-        std::array<DepthPairNote, k_DepthPairCount> m_DepthNotes{};
-        std::array<ComPtr<ID3D11Resource>, k_DepthPairCount> m_DepthSources{};
-        std::uint32_t m_DepthNoteCount{ 0 };
+        CopyPairs<DepthPairNote, k_DepthPairCount> m_DepthPairs{};  // Thread of Present only
+        CopyPairs<ColorPairNote, k_ColorPairCount> m_ColorPairs{};
+        std::optional<D3D11_TEXTURE2D_DESC> m_ColorDesc{};
     };
 }

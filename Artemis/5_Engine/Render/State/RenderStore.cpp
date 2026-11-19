@@ -8,8 +8,8 @@ module Engine.Render.State;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::ColorPairNote;
     using Engine::Render::Type::DepthPairNote;
-    using Engine::Render::Type::DepthPairSetup;
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
@@ -17,7 +17,7 @@ namespace
     using Engine::Render::Type::MaskWindowReport;
     using Engine::Render::Type::StencilProbeInfo;
 
-    using Engine::Render::Type::k_DepthCopyCount;
+    using Engine::Render::Type::k_ColorPairCount;
     using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
 
@@ -155,11 +155,17 @@ namespace Engine::Render::State
         m_IsFirstPersonHidden.store(isHidden, std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked) -> void
+    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked, bool isForwardHooked) -> void
     {
         m_IsFirstPersonModelHooked.store(isModelHooked, std::memory_order_relaxed);
         m_IsFirstPersonUnitHooked.store(isUnitHooked, std::memory_order_relaxed);
         m_IsFirstPersonDepthPassHooked.store(isDepthPassHooked, std::memory_order_relaxed);
+        m_IsFirstPersonForwardHooked.store(isForwardHooked, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsFirstPersonForwardHooked() const -> bool
+    {
+        return m_IsFirstPersonForwardHooked.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::IsFirstPersonDepthPassHooked() const -> bool
@@ -295,7 +301,10 @@ namespace Engine::Render::State
             if (this->GetFirstPersonCallerCount() == 0) return false;
 
             // A captured depth resource without an attempt to make the depth pairs: the frame that made the copies was not measured yet.
-            if (m_FirstPersonDepth != nullptr && !m_DepthPairSetup.IsAttempted) return false;
+            if (m_FirstPersonDepth != nullptr && !m_DepthPairs.GetSetup().IsAttempted) return false;
+
+            // The same for the color pairs: the forward pass noted its target but the copies are not made yet.
+            if (m_ColorDesc && !m_ColorPairs.GetSetup().IsAttempted) return false;
 
             m_FirstPersonProbe.store(k_ProbeIdle, std::memory_order_relaxed);
             this->ReleaseFirstPersonDepth();
@@ -310,7 +319,8 @@ namespace Engine::Render::State
             }
 
             this->ReleaseFirstPersonDepth();
-            this->ReleaseDepthPairs();
+            m_DepthPairs.Release();
+            this->ReleaseColorPairs();
 
             {
                 const std::lock_guard<std::mutex> lock{ m_StencilMutex };
@@ -342,79 +352,40 @@ namespace Engine::Render::State
         m_FirstPersonDepth.Reset();
     }
 
-    auto RenderStore::SetDepthPairs(std::array<ComPtr<ID3D11Texture2D>, k_DepthCopyCount> copies, ComPtr<ID3D11Texture2D> staging,
-        const D3D11_TEXTURE2D_DESC& desc) -> void
+    auto RenderStore::GetDepthPairs() -> CopyPairs<DepthPairNote, k_DepthPairCount>&
     {
-        m_DepthCopies = std::move(copies);
-        m_DepthStaging = std::move(staging);
-        m_DepthPairDesc = desc;
+        return m_DepthPairs;
     }
 
-    auto RenderStore::AreDepthPairsReady() const -> bool
+    auto RenderStore::GetDepthPairs() const -> const CopyPairs<DepthPairNote, k_DepthPairCount>&
     {
-        return m_DepthStaging != nullptr;
+        return m_DepthPairs;
     }
 
-    auto RenderStore::SetDepthPairSetup(const DepthPairSetup& setup) -> void
+    auto RenderStore::GetColorPairs() -> CopyPairs<ColorPairNote, k_ColorPairCount>&
     {
-        m_DepthPairSetup = setup;
+        return m_ColorPairs;
     }
 
-    auto RenderStore::GetDepthPairSetup() const -> DepthPairSetup
+    auto RenderStore::GetColorPairs() const -> const CopyPairs<ColorPairNote, k_ColorPairCount>&
     {
-        return m_DepthPairSetup;
+        return m_ColorPairs;
     }
 
-    auto RenderStore::GetDepthPairDesc() const -> D3D11_TEXTURE2D_DESC
+    auto RenderStore::NoteColorDesc(const D3D11_TEXTURE2D_DESC& desc) -> void
     {
-        return m_DepthPairDesc;
+        if (!m_ColorDesc) m_ColorDesc = desc;
     }
 
-    auto RenderStore::GetDepthCopy(std::size_t index) const -> ID3D11Texture2D*
+    auto RenderStore::GetColorDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>
     {
-        return index < m_DepthCopies.size() ? m_DepthCopies[index].Get() : nullptr;
+        return m_ColorDesc;
     }
 
-    auto RenderStore::GetDepthStaging() const -> ID3D11Texture2D*
+    auto RenderStore::ReleaseColorPairs() -> void
     {
-        return m_DepthStaging.Get();
-    }
-
-    auto RenderStore::NoteDepthPair(const DepthPairNote& note, ID3D11Resource* source) -> std::optional<std::size_t>
-    {
-        if (m_DepthNoteCount >= k_DepthPairCount) return std::nullopt;
-
-        const std::size_t index{ m_DepthNoteCount++ };
-        m_DepthNotes[index] = note;
-        m_DepthSources[index] = source;
-        return index;
-    }
-
-    auto RenderStore::GetDepthPairNote(std::size_t index) const -> DepthPairNote
-    {
-        return index < m_DepthNoteCount ? m_DepthNotes[index] : DepthPairNote{};
-    }
-
-    auto RenderStore::GetDepthPairNoteCount() const -> std::uint32_t
-    {
-        return m_DepthNoteCount;
-    }
-
-    auto RenderStore::GetDepthPairSource(std::size_t index) const -> ID3D11Resource*
-    {
-        return index < m_DepthNoteCount ? m_DepthSources[index].Get() : nullptr;
-    }
-
-    auto RenderStore::ReleaseDepthPairs() -> void
-    {
-        for (auto& copy : m_DepthCopies) copy.Reset();
-        for (auto& source : m_DepthSources) source.Reset();
-
-        m_DepthStaging.Reset();
-        m_DepthPairDesc = {};
-        m_DepthPairSetup = {};
-        m_DepthNotes = {};
-        m_DepthNoteCount = 0;
+        m_ColorPairs.Release();
+        m_ColorDesc.reset();
     }
 
     auto RenderStore::SetStencilProbe(const StencilProbeInfo& info) -> void
@@ -649,7 +620,8 @@ namespace Engine::Render::State
         m_RenderTarget.Reset();
         m_DepthStencil.Reset();
         this->ReleaseFirstPersonDepth();
-        this->ReleaseDepthPairs();
+        m_DepthPairs.Release();
+        this->ReleaseColorPairs();
         this->ReleaseMaskTextures();
     }
 

@@ -11,7 +11,7 @@ import std;
 
 export namespace Engine::Render::Hook
 {
-    // Hooks the first person model pass, the game's first person unit test and the first person depth pass (D331). The model pass is skipped for user 0 with the render
+    // Hooks the first person model pass, the game's first person unit test, the first person depth pass (D331) and the forward pass of the view. The model pass is skipped for user 0 with the render
     // flag HideFirstPerson or while Drive moves the camera. While Drive moves the camera the unit test answers false for user 0, so the
     // game draws the player's own biped and the third person effects. Render only: the pose of the director is never written.
     // The model pass is also measured (VW.6.y.2): for user 0 each call is counted by its caller (the function that called it, by the
@@ -20,6 +20,9 @@ export namespace Engine::Render::Hook
     // The pass 0x26DA08 (void(void* view, int32 pass): first person camera, queue the model, draw the list, normal camera, pop) never changes
     // what is drawn. Its call with pass 0xB is the one that writes the depth of the arms and weapon: at its entry and exit the render service
     // copies the depth for the overlay mask (VW.6.y.2 B) and, with a probe armed, for the depth pairs (A5, the pairs note the pass argument).
+    // The forward pass 0x26EA78 (void(void* view, uint8 phase)) is only measured (VW.6.y.2 D): with a probe armed the render service copies the
+    // color of the render target 0 at its entry and exit (the color pairs), to see whether it draws the parts of the first person model that
+    // the depth pass does not. Nothing changes what is drawn.
     // note: The unit test is also called by effects and perhaps from another thread than the render. Both detours read only atomics and the
     // CameraOverrideStore without locking, and do not allocate or log.
     class FirstPersonDetour
@@ -36,6 +39,7 @@ export namespace Engine::Render::Hook
         using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
         using FirstPersonModelFunction = Engine::Render::Type::FirstPersonModelFunction;
         using FirstPersonDepthPassFunction = Engine::Render::Type::FirstPersonDepthPassFunction;
+        using FirstPersonForwardFunction = Engine::Render::Type::FirstPersonForwardFunction;
         using IsFirstPersonUnitFunction = Engine::Render::Type::IsFirstPersonUnitFunction;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -79,12 +83,14 @@ export namespace Engine::Render::Hook
         static inline FirstPersonModelFunction s_OriginalModel{ nullptr };
         static inline IsFirstPersonUnitFunction s_OriginalUnit{ nullptr };
         static inline FirstPersonDepthPassFunction s_OriginalDepthPass{ nullptr };
+        static inline FirstPersonForwardFunction s_OriginalForward{ nullptr };
 
         // Base of the game module, found when the hooks are installed (the address of a hooked function minus its RVA). 0 when not installed.
         std::atomic<std::uintptr_t> m_ModuleBase{ 0 };
         std::atomic<void*> m_ModelAddress{ nullptr };
         std::atomic<void*> m_UnitAddress{ nullptr };
         std::atomic<void*> m_DepthPassAddress{ nullptr };
+        std::atomic<void*> m_ForwardAddress{ nullptr };
         std::atomic<bool> m_IsInstalled{ false };
         std::mutex m_Mutex{};
 
@@ -106,6 +112,7 @@ export namespace Engine::Render::Hook
 
         static auto __fastcall HookedModel(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
         static auto __fastcall HookedDepthPass(void* view, std::int32_t pass) -> void;
+        static auto __fastcall HookedForward(void* view, std::uint8_t phase) -> void;
         static auto __fastcall HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool;
     };
 }

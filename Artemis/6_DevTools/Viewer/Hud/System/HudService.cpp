@@ -409,19 +409,20 @@ namespace DevTools::Viewer::Hud::System
         const bool isModelHooked{ m_RenderStore.IsFirstPersonModelHooked() };
         const bool isUnitHooked{ m_RenderStore.IsFirstPersonUnitHooked() };
         const bool isDepthPassHooked{ m_RenderStore.IsFirstPersonDepthPassHooked() };
+        const bool isForwardHooked{ m_RenderStore.IsFirstPersonForwardHooked() };
 
         ImGui::Text("First person hook:");
         ImGui::SameLine();
 
-        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked)
+        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked && !isForwardHooked)
         {
-            ImGui::TextColored(k_Orange, "not installed (model, unit, depth pass)");
+            ImGui::TextColored(k_Orange, "not installed (model, unit, depth pass, forward)");
             return;
         }
 
-        ImGui::TextColored(isModelHooked && isUnitHooked && isDepthPassHooked ? k_Green : k_Orange,
-            "installed (model %s, unit %s, depth pass %s), third person: %s, fp unit: %s", isModelHooked ? "yes" : "no",
-            isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no",
+        ImGui::TextColored(isModelHooked && isUnitHooked && isDepthPassHooked && isForwardHooked ? k_Green : k_Orange,
+            "installed (model %s, unit %s, depth pass %s, forward %s), third person: %s, fp unit: %s", isModelHooked ? "yes" : "no",
+            isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", isForwardHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no",
             m_RenderStore.WasFirstPersonUnitLastFrame() ? "yes" : "no");
 
         ImGui::Text("FP probe:");

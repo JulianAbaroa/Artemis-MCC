@@ -170,6 +170,7 @@ TEST(EngineLayerTests, FirstPersonDetourWithoutTheGameInstallsNothing)
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonModelHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonUnitHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonDepthPassHooked());
+    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonForwardHooked());
     render.m_FirstPersonDetour.Uninstall();
 }
 
@@ -470,6 +471,89 @@ TEST(EngineLayerTests, CompareDepthRespectsRowPitchBoxAndRange)
     EXPECT_FALSE(RenderService::CompareDepth(a.data(), pitchA, b.data(), pitchB, 0, height).has_value());
 }
 
+TEST(EngineLayerTests, CompareTexelsComparesAColorOf4BytesPerTexelWithPaddedRows)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::ChangedMap;
+    using Engine::Render::Type::k_ColorTexelLayout;
+
+    constexpr std::uint32_t width{ 8 };
+    constexpr std::uint32_t height{ 4 };
+    constexpr std::uint32_t pitchA{ 48 };
+    constexpr std::uint32_t pitchB{ 40 };
+    std::vector<std::uint8_t> a(static_cast<std::size_t>(pitchA) * height, 0x11);
+    std::vector<std::uint8_t> b(static_cast<std::size_t>(pitchB) * height, 0x11);
+
+    ChangedMap map{};
+    const auto same{ RenderService::CompareTexels(a.data(), pitchA, b.data(), pitchB, width, height, k_ColorTexelLayout, &map) };
+    ASSERT_TRUE(same.has_value());
+    EXPECT_EQ(same->Changed, 0u);
+    EXPECT_EQ(map.Width, width);
+    EXPECT_EQ(map.Height, height);
+    ASSERT_EQ(map.Texels.size(), static_cast<std::size_t>(width) * height);
+    EXPECT_EQ(std::count(map.Texels.begin(), map.Texels.end(), std::uint8_t{ 1 }), 0);
+
+    // The last byte of a texel counts, and the padding of the rows (bytes past width * 4) does not.
+    b[1 * pitchB + 3 * 4 + 3] = 0x22;
+    b[2 * pitchB + 7 * 4] = 0x22;
+    b[0 * pitchB + 33] = 0x22;
+    b[3 * pitchB + 39] = 0x22;
+
+    const auto diff{ RenderService::CompareTexels(a.data(), pitchA, b.data(), pitchB, width, height, k_ColorTexelLayout, &map) };
+    ASSERT_TRUE(diff.has_value());
+    EXPECT_EQ(diff->Changed, 2u);
+    EXPECT_EQ(diff->X0, 3u);
+    EXPECT_EQ(diff->Y0, 1u);
+    EXPECT_EQ(diff->X1, 7u);
+    EXPECT_EQ(diff->Y1, 2u);
+    EXPECT_FLOAT_EQ(diff->MinDepth, 0.0f);
+    EXPECT_FLOAT_EQ(diff->MaxDepth, 0.0f);
+    EXPECT_EQ(diff->Right, 1u);
+    EXPECT_EQ(diff->Weapon, 1u);
+    EXPECT_EQ(map.Texels[1 * width + 3], 1);
+    EXPECT_EQ(map.Texels[2 * width + 7], 1);
+    EXPECT_EQ(std::count(map.Texels.begin(), map.Texels.end(), std::uint8_t{ 1 }), 2);
+
+    // The pitch is smaller than a row of 4 bytes per texel.
+    EXPECT_FALSE(RenderService::CompareTexels(a.data(), 24, b.data(), pitchB, width, height, k_ColorTexelLayout, nullptr).has_value());
+
+    // A layout that is not valid.
+    EXPECT_FALSE(RenderService::CompareTexels(a.data(), pitchA, b.data(), pitchB, width, height, { .TexelBytes = 4, .CompareBytes = 5 }, nullptr)
+        .has_value());
+}
+
+TEST(EngineLayerTests, CountOutsideMaskCountsTheChangedColorTexelsThatTheDepthDidNotChange)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::ChangedMap;
+
+    const auto make = [](std::uint32_t width, std::uint32_t height, std::initializer_list<std::size_t> ones)
+    {
+        ChangedMap map{ .Width = width, .Height = height, .Texels = std::vector<std::uint8_t>(static_cast<std::size_t>(width) * height, 0) };
+        for (const std::size_t i : ones) map.Texels[i] = 1;
+        return map;
+    };
+
+    // All the color texels are inside the depth mask.
+    EXPECT_EQ(RenderService::CountOutsideMask(make(4, 2, { 0, 1, 2, 5 }), make(4, 2, { 1, 2 })), 0u);
+
+    // All outside.
+    EXPECT_EQ(RenderService::CountOutsideMask(make(4, 2, { 0 }), make(4, 2, { 3, 4, 7 })), 3u);
+
+    // Half: two of four are in the mask.
+    EXPECT_EQ(RenderService::CountOutsideMask(make(4, 2, { 1, 2 }), make(4, 2, { 1, 2, 5, 6 })), 2u);
+
+    // No color change at all, and a depth mask that changed nothing.
+    EXPECT_EQ(RenderService::CountOutsideMask(make(4, 2, {}), make(4, 2, {})), 0u);
+    EXPECT_EQ(RenderService::CountOutsideMask(make(4, 2, {}), make(4, 2, { 0, 1 })), 2u);
+
+    // Sizes that differ, or a map that was not made: no count.
+    EXPECT_FALSE(RenderService::CountOutsideMask(make(4, 2, { 0 }), make(2, 4, { 0 })).has_value());
+    EXPECT_FALSE(RenderService::CountOutsideMask(make(8, 2, { 0 }), make(4, 2, { 0 })).has_value());
+    EXPECT_FALSE(RenderService::CountOutsideMask(ChangedMap{}, make(4, 2, { 0 })).has_value());
+    EXPECT_FALSE(RenderService::CountOutsideMask(make(4, 2, { 0 }), ChangedMap{}).has_value());
+}
+
 TEST(EngineLayerTests, MaskPlanCreatesReplacesAndReleasesTheTexturesOnlyWhenNeeded)
 {
     using Engine::Render::System::RenderService;
@@ -575,42 +659,83 @@ TEST(EngineLayerTests, RenderStoreMaskCopyIsTakenOncePerFrameAndReportedForTheLa
 TEST(EngineLayerTests, RenderStoreDepthPairNotesAreKeptInCallOrderUpToTheLimit)
 {
     using Engine::Render::Type::DepthPairNote;
-    using Engine::Render::Type::DepthPairState;
+    using Engine::Render::Type::PairState;
     using Engine::Render::Type::k_DepthPairCount;
 
     Engine::Render::State::RenderStore store{};
-    EXPECT_FALSE(store.AreDepthPairsReady());
-    EXPECT_EQ(store.GetDepthCopy(0), nullptr);
-    EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);
+    EXPECT_FALSE(store.GetDepthPairs().AreReady());
+    EXPECT_EQ(store.GetDepthPairs().GetCopy(0), nullptr);
+    EXPECT_EQ(store.GetDepthPairs().GetNoteCount(), 0u);
 
     for (std::size_t i{ 0 }; i < k_DepthPairCount; ++i)
     {
-        const auto index{ store.NoteDepthPair({ .State = i == 1 ? DepthPairState::Mismatch : DepthPairState::Copied,
+        const auto index{ store.GetDepthPairs().NoteCall({ .State = i == 1 ? PairState::Mismatch : PairState::Copied,
             .Caller = i == 2 ? Engine::Render::Type::FirstPersonCaller::Pass1 : Engine::Render::Type::FirstPersonCaller::Func26E2A0,
             .Pass = i == 2 ? 0xB : 0, .IsCaptured = i == 2 }, nullptr) };
         ASSERT_TRUE(index.has_value());
         EXPECT_EQ(*index, i);
     }
 
-    EXPECT_FALSE(store.NoteDepthPair({ .State = DepthPairState::Copied }, nullptr).has_value());
-    EXPECT_EQ(store.GetDepthPairNoteCount(), static_cast<std::uint32_t>(k_DepthPairCount));
-    EXPECT_EQ(store.GetDepthPairNote(1).State, DepthPairState::Mismatch);
-    EXPECT_TRUE(store.GetDepthPairNote(2).IsCaptured);
-    EXPECT_EQ(store.GetDepthPairNote(2).Caller, Engine::Render::Type::FirstPersonCaller::Pass1);
-    EXPECT_EQ(store.GetDepthPairNote(2).Pass, 0xB);
-    EXPECT_EQ(store.GetDepthPairNote(3).Caller, Engine::Render::Type::FirstPersonCaller::Func26E2A0);
-    EXPECT_FALSE(store.GetDepthPairNote(3).IsCaptured);
+    EXPECT_FALSE(store.GetDepthPairs().NoteCall({ .State = PairState::Copied }, nullptr).has_value());
+    EXPECT_EQ(store.GetDepthPairs().GetNoteCount(), static_cast<std::uint32_t>(k_DepthPairCount));
+    EXPECT_EQ(store.GetDepthPairs().GetNote(1).State, PairState::Mismatch);
+    EXPECT_TRUE(store.GetDepthPairs().GetNote(2).IsCaptured);
+    EXPECT_EQ(store.GetDepthPairs().GetNote(2).Caller, Engine::Render::Type::FirstPersonCaller::Pass1);
+    EXPECT_EQ(store.GetDepthPairs().GetNote(2).Pass, 0xB);
+    EXPECT_EQ(store.GetDepthPairs().GetNote(3).Caller, Engine::Render::Type::FirstPersonCaller::Func26E2A0);
+    EXPECT_FALSE(store.GetDepthPairs().GetNote(3).IsCaptured);
 
-    store.ReleaseDepthPairs();
-    EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);
-    EXPECT_EQ(store.GetDepthPairNote(0).State, DepthPairState::Free);
-    EXPECT_FALSE(store.GetDepthPairSetup().IsAttempted);
+    store.GetDepthPairs().Release();
+    EXPECT_EQ(store.GetDepthPairs().GetNoteCount(), 0u);
+    EXPECT_EQ(store.GetDepthPairs().GetNote(0).State, PairState::Free);
+    EXPECT_FALSE(store.GetDepthPairs().GetSetup().IsAttempted);
 
     // Arming a probe also drops the notes of the old one.
-    EXPECT_TRUE(store.NoteDepthPair({ .State = DepthPairState::Copied }, nullptr).has_value());
+    EXPECT_TRUE(store.GetDepthPairs().NoteCall({ .State = PairState::Copied }, nullptr).has_value());
     store.RequestFirstPersonProbe();
     EXPECT_FALSE(store.StepFirstPersonProbe());
-    EXPECT_EQ(store.GetDepthPairNoteCount(), 0u);
+    EXPECT_EQ(store.GetDepthPairs().GetNoteCount(), 0u);
+}
+
+TEST(EngineLayerTests, RenderStoreColorPairsKeepTheirNotesAndTheTargetDescription)
+{
+    using Engine::Render::Type::ColorPairNote;
+    using Engine::Render::Type::PairState;
+    using Engine::Render::Type::k_ColorPairCount;
+
+    Engine::Render::State::RenderStore store{};
+    EXPECT_FALSE(store.GetColorPairs().AreReady());
+    EXPECT_FALSE(store.GetColorDesc().has_value());
+
+    D3D11_TEXTURE2D_DESC first{};
+    first.Width = 64;
+    D3D11_TEXTURE2D_DESC second{};
+    second.Width = 32;
+
+    // The first description noted is kept.
+    store.NoteColorDesc(first);
+    store.NoteColorDesc(second);
+    ASSERT_TRUE(store.GetColorDesc().has_value());
+    EXPECT_EQ(store.GetColorDesc()->Width, 64u);
+
+    for (std::size_t i{ 0 }; i < k_ColorPairCount; ++i)
+    {
+        const auto index{ store.GetColorPairs().NoteCall({ .State = i == 1 ? PairState::NoTarget : PairState::Copied,
+            .Phase = static_cast<std::uint8_t>(i) }, nullptr) };
+        ASSERT_TRUE(index.has_value());
+        EXPECT_EQ(*index, i);
+    }
+
+    EXPECT_FALSE(store.GetColorPairs().NoteCall({ .State = PairState::Copied }, nullptr).has_value());
+    EXPECT_EQ(store.GetColorPairs().GetNote(1).State, PairState::NoTarget);
+    EXPECT_EQ(store.GetColorPairs().GetNote(3).Phase, 3);
+
+    // The depth pairs are not touched by the color ones.
+    EXPECT_EQ(store.GetDepthPairs().GetNoteCount(), 0u);
+
+    store.ReleaseColorPairs();
+    EXPECT_EQ(store.GetColorPairs().GetNoteCount(), 0u);
+    EXPECT_FALSE(store.GetColorDesc().has_value());
 }
 
 TEST(EngineLayerTests, RenderStoreStencilProbeIsClearedWhenArmed)

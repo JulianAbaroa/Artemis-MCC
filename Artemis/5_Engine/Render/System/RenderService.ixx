@@ -30,7 +30,8 @@ export namespace Engine::Render::System
         using FrameHandler = Engine::Render::Type::FrameHandler;
         using BeforeHudHandler = Engine::Render::Type::BeforeHudHandler;
         using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
-        using DepthDiff = Engine::Render::Type::DepthDiff;
+        using ChangedMap = Engine::Render::Type::ChangedMap;
+        using ColorProbeInfo = Engine::Render::Type::ColorProbeInfo;
         using MaskContext = Engine::Render::Type::MaskContext;
         using MaskPlan = Engine::Render::Type::MaskPlan;
         using DepthProbeInfo = Engine::Render::Type::DepthProbeInfo;
@@ -39,6 +40,8 @@ export namespace Engine::Render::System
         using StencilProbeInfo = Engine::Render::Type::StencilProbeInfo;
         using StencilRegion = Engine::Render::Type::StencilRegion;
         using StencilRegionStats = Engine::Render::Type::StencilRegionStats;
+        using TexelDiff = Engine::Render::Type::TexelDiff;
+        using TexelLayout = Engine::Render::Type::TexelLayout;
         using ShutdownCallback = Engine::Render::Type::ShutdownCallback;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -117,6 +120,18 @@ export namespace Engine::Render::System
         // Copies the same resource to the after texture of the pair, once the original returned. Same rules as BeginDepthPair.
         auto EndDepthPair(std::size_t pair) -> void;
 
+        // Runs at the entry of each call of the forward pass 0x26EA78 while the probe is armed (VW.6.y.2 D). Without color pairs it only notes the
+        // description of the render target 0 (the first time), so Present makes them. With them it copies the resource of the render target 0 to
+        // the before texture of the next pair and notes the call: no render target 0 is NoTarget, another description is Mismatch.
+        // param phase: The phase argument of 0x26EA78.
+        // return: The pair to give to EndColorPair after the original returns, nothing when no copy was made.
+        // note: Called by the first person detour. The immediate context is only touched on the thread of Present. Reads only atomics when the
+        // probe is not armed. COM calls only, no allocation, no log.
+        auto BeginColorPair(std::uint8_t phase) -> std::optional<std::size_t>;
+
+        // Copies the same resource to the after texture of the pair, once the original returned.
+        auto EndColorPair(std::size_t pair) -> void;
+
         // Runs at the entry of 0x26DA08 (VW.6.y.2 B). For the first call with pass 0xB of the frame, when the mask is requested and the
         // textures exist, copies the bound depth stencil resource to the before texture and keeps the resource for EndMaskCopy. When the
         // textures do not exist or do not match the resource it notes the description of the resource, so Present makes them, and the
@@ -141,12 +156,21 @@ export namespace Engine::Render::System
         // arithmetic as the map shaders. 0 when a size is 0.
         static auto ScaleToMask(std::uint32_t pixel, std::uint32_t targetSize, std::uint32_t maskSize) -> std::uint32_t;
 
-        // Compares the depth (float in bytes 0..3 of each 8 byte texel) of two R32G8X24 textures of the same size, rows pitch bytes apart
-        // (VW.6.y.2 A3). A texel counts as changed when the 4 bytes differ.
-        // return: Count, box, depth range of the later texture, weapon count and right half count, or nothing when a pointer is null, a size is 0 or a pitch
-        // is smaller than a row.
+        // Compares two textures of the same size and layout, rows pitch bytes apart (VW.6.y.2 A3, D). A texel counts as changed when its first
+        // CompareBytes bytes differ.
+        // param changedMap: When not null it is filled with a byte per texel, 1 where it changed.
+        // return: Count, box, depth range of the later texture (0 when the layout has none), weapon count and right half count, or nothing when
+        // a pointer is null, a size is 0, the layout is not valid or a pitch is smaller than a row.
+        static auto CompareTexels(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after, std::uint32_t afterPitch,
+            std::uint32_t width, std::uint32_t height, const TexelLayout& layout, ChangedMap* changedMap) -> std::optional<TexelDiff>;
+
+        // CompareTexels of two R32G8X24 depth textures (float depth in bytes 0..3 of each 8 byte texel, the 4 bytes compared).
         static auto CompareDepth(const std::uint8_t* before, std::uint32_t beforePitch, const std::uint8_t* after, std::uint32_t afterPitch,
-            std::uint32_t width, std::uint32_t height) -> std::optional<DepthDiff>;
+            std::uint32_t width, std::uint32_t height) -> std::optional<TexelDiff>;
+
+        // return: How many texels changed in color are not changed in depth (VW.6.y.2 D), the two maps of the same size and complete. Nothing when
+        // a map is empty, the sizes differ or a map is shorter than its size: the count is not made for sizes that differ.
+        static auto CountOutsideMask(const ChangedMap& depth, const ChangedMap& color) -> std::optional<std::uint32_t>;
 
         // Reduces a mapped R32G8X24 depth stencil texture to the stats of its regions (VW.6.y.2 A2): 8 bytes per texel, the float depth in
         // bytes 0..3 and the stencil in byte 4, rows rowPitch bytes apart (the pitch may be larger than the row).
@@ -217,12 +241,26 @@ export namespace Engine::Render::System
         // return: The immediate context when the call runs on the thread of Present with the store ready, null otherwise.
         auto GetPresentContext() -> ID3D11DeviceContext*;
 
+        // At Present of an armed probe whose color target is noted, once: makes the color pair textures and the staging with that description
+        // (VW.6.y.2 D), the same way as the depth pairs. A format that is not 4 bytes per texel or has samples is kept as unsupported.
+        auto PrepareColorPairs() -> void;
+
         // Reads the pairs one texture at a time through the staging and reduces them. A step that fails is kept as status and HRESULT.
+        // param mask: Receives which texels the first copied pair of the mask pass 0xB changed (left empty when there is none).
         // note: Allocates and blocks until the GPU finishes, once per probe, at Present.
-        auto ReadDepthPairs() -> DepthProbeInfo;
+        auto ReadDepthPairs(ChangedMap& mask) -> DepthProbeInfo;
+
+        // The same for the color pairs. Each pair also counts its changed texels outside of the depth mask.
+        auto ReadColorPairs(const ChangedMap& depthMask) -> ColorProbeInfo;
 
         // Reads the pairs, logs one line per pair and one between each two, and releases the copies. Runs at Present, never in a detour.
-        auto ReportDepthPairs() -> void;
+        auto ReportDepthPairs(ChangedMap& mask) -> void;
+
+        // The same for the color pairs, one line per pair, or one line that says why there are none.
+        auto ReportColorPairs(const ChangedMap& depthMask) -> void;
+
+        // Reports the depth pairs, then the color pairs with the depth mask of the first pair 0xB.
+        auto ReportCopyPairs() -> void;
 
         // Logs one INFO line per first person caller that had calls in the last frame and one for the HUD draw (VW.6.y.2).
         // note: Runs at Present, never in a detour.
