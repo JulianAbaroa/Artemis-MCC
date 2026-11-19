@@ -17,8 +17,6 @@ namespace
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassRva;
-    using Engine::Base::Memory::Type::Signature::k_FirstPersonForwardPrologue;
-    using Engine::Base::Memory::Type::Signature::k_FirstPersonForwardRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
@@ -92,23 +90,7 @@ namespace Engine::Render::Hook
         if (maskPair) self->m_RenderService.EndMaskCopy(*maskPair);
     }
 
-    // note: Calls the original untouched. The scope spans the original, as in the other hooks.
-    auto __fastcall FirstPersonDetour::HookedForward(void* view, std::uint8_t phase) -> void
-    {
-        FirstPersonDetour* self{ s_Instance.load() };
-
-        if (self == nullptr)
-        {
-            if (s_OriginalForward != nullptr) s_OriginalForward(view, phase);
-            return;
-        }
-
-        RenderStore::HookScope scope{ self->m_RenderStore };
-
-        if (s_OriginalForward != nullptr) s_OriginalForward(view, phase);
-    }
-
-    // note: The overlay draws here (VW.6.z.1, D334): at the exit of the opaque color pass of the view, so it is over the opaque world and under the
+    // note: The overlay draws here (D334): at the exit of the opaque color pass of the view, so it is over the opaque world and under the
     // effects, blade, shields and HUD of the game. The original runs first. OnSceneDraw is catch-all and takes the one scene point of the frame.
     auto __fastcall FirstPersonDetour::HookedOpaque(void* view) -> void
     {
@@ -180,7 +162,7 @@ namespace Engine::Render::Hook
         const std::lock_guard<std::mutex> lock{ m_Mutex };
 
         if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr
-            || m_DepthPassAddress.load() != nullptr || m_ForwardAddress.load() != nullptr || m_OpaqueAddress.load() != nullptr;
+            || m_DepthPassAddress.load() != nullptr || m_OpaqueAddress.load() != nullptr;
         s_Instance.store(this);
 
         const bool isModelHooked{ this->InstallOne("first person model", k_FirstPersonModelPrologue, k_FirstPersonModelRva,
@@ -191,13 +173,10 @@ namespace Engine::Render::Hook
         const bool isDepthPassHooked{ this->InstallOne("first person depth pass", k_FirstPersonDepthPassPrologue, k_FirstPersonDepthPassRva,
             reinterpret_cast<void*>(&HookedDepthPass), reinterpret_cast<void**>(&s_OriginalDepthPass), m_DepthPassAddress) };
 
-        const bool isForwardHooked{ this->InstallOne("first person forward", k_FirstPersonForwardPrologue, k_FirstPersonForwardRva,
-            reinterpret_cast<void*>(&HookedForward), reinterpret_cast<void**>(&s_OriginalForward), m_ForwardAddress) };
-
         const bool isOpaqueHooked{ this->InstallOne("opaque color pass", k_OpaqueColorPassPrologue, k_OpaqueColorPassRva,
             reinterpret_cast<void*>(&HookedOpaque), reinterpret_cast<void**>(&s_OriginalOpaque), m_OpaqueAddress) };
 
-        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked && !isForwardHooked && !isOpaqueHooked)
+        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked && !isOpaqueHooked)
         {
             s_Instance.store(nullptr);
             return false;
@@ -210,7 +189,7 @@ namespace Engine::Render::Hook
         }
 
         m_IsInstalled.store(true);
-        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isDepthPassHooked, isForwardHooked);
+        m_RenderStore.SetFirstPersonHooksInstalled(isModelHooked, isUnitHooked, isDepthPassHooked, isOpaqueHooked);
         return true;
     }
 
@@ -242,7 +221,6 @@ namespace Engine::Render::Hook
         this->Disable(m_ModelAddress);
         this->Disable(m_UnitAddress);
         this->Disable(m_DepthPassAddress);
-        this->Disable(m_ForwardAddress);
         this->Disable(m_OpaqueAddress);
 
         // note: A thread can be past the jump of the hook but not yet inside its HookScope, where WaitForIdle does not see it.
@@ -258,13 +236,11 @@ namespace Engine::Render::Hook
         this->Remove(m_ModelAddress, "first person model");
         this->Remove(m_UnitAddress, "is first person unit");
         this->Remove(m_DepthPassAddress, "first person depth pass");
-        this->Remove(m_ForwardAddress, "first person forward");
         this->Remove(m_OpaqueAddress, "opaque color pass");
 
         s_OriginalModel = nullptr;
         s_OriginalUnit = nullptr;
         s_OriginalDepthPass = nullptr;
-        s_OriginalForward = nullptr;
         s_OriginalOpaque = nullptr;
 
         m_IsInstalled.store(false);

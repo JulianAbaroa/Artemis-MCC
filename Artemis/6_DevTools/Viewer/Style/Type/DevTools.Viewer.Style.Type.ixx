@@ -11,7 +11,6 @@ export namespace DevTools::Viewer::Style::Type
     };
 
     inline constexpr float k_TranslucentAlpha{ 0.35f };
-    inline constexpr float k_Background[4]{ 0.05f, 0.06f, 0.08f, 1.0f };
 
     inline constexpr Color k_Selected{ 1.0f, 1.0f, 1.0f };
 

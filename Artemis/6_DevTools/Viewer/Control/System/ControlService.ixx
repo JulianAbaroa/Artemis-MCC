@@ -11,8 +11,8 @@ import std;
 export namespace DevTools::Viewer::Control::System
 {
     // Turns window messages and raw mouse movement into viewer actions.
-    // F4 toggles the viewer, TAB switches between the Free and the Game mode, the key left of the 1 (|) cycles the follow mode (Free mode only) and F6 toggles the labels.
-    // In Free mode the viewer takes the movement keys, Ctrl (custom speed), the arrows (overlay mode and page), the left click (pick, or release the selection while following),
+    // F4 toggles the viewer, TAB switches between the Free and the Game mode and F6 toggles the labels.
+    // In Free mode the viewer takes the movement keys, Ctrl (custom speed), the arrows (overlay mode and page), the left click (pick),
     // the right click (zoom), the wheel (speed and field of view) and the mouse.
     // In Game mode it takes nothing but its own hotkeys, so the game keeps its controls.
     class ControlService
@@ -51,7 +51,7 @@ export namespace DevTools::Viewer::Control::System
         OptionsStore& m_OptionsStore;
         SettingsStore& m_SettingsStore;
 
-        // Ctrl + wheel changes the custom speed. The wheel alone changes the orbit distance while orbiting and the field of view otherwise.
+        // Ctrl + wheel changes the custom speed. The wheel alone changes the field of view.
         auto HandleWheel(int delta) -> void;
 
         // return: True if the key is a hotkey. A held key does not repeat the action.

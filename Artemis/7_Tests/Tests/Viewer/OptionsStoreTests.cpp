@@ -16,8 +16,8 @@ namespace
     using DevTools::Viewer::Options::Type::k_ScalarCount;
 
     // Keys of options removed by VW.P: a file saved before still has them.
-    constexpr std::array<std::string_view, 5> k_RemovedKeys{ "FirstPersonOverOverlay", "FirstPersonMaskShown", "SceneColorByGameHdr",
-        "WaitFrameScene", "RecordFrameClock" };
+    constexpr std::array<std::string_view, 10> k_RemovedKeys{ "FirstPersonOverOverlay", "FirstPersonMaskShown", "SceneColorByGameHdr",
+        "WaitFrameScene", "RecordFrameClock", "Overlay", "OverlayInScene", "DriveGameCamera", "MapCollision", "GameFov" };
 
     auto Snapshot(const OptionsStore& store) -> std::string
     {
@@ -52,14 +52,19 @@ TEST(OptionsStoreTests, LoadIgnoresTheKeysOfRemovedOptionsAndKeepsTheOthers)
 TEST(OptionsStoreTests, AnOldPreferencesFileLoadsLineByLineWithoutTheRemovedKeys)
 {
     // The lines of a file from before: the removed keys between options that stay.
-    const std::array<std::pair<std::string_view, std::string_view>, 7> lines{ {
+    const std::array<std::pair<std::string_view, std::string_view>, 12> lines{ {
         { "HideGameHud", "1" },
         { "FirstPersonOverOverlay", "1" },
         { "SceneColorByGameHdr", "1" },
         { "SceneColorScale", "0.0625" },
         { "RecordFrameClock", "1" },
         { "WaitFrameScene", "0" },
-        { "FirstPersonMaskShown", "1" }
+        { "FirstPersonMaskShown", "1" },
+        { "Overlay", "1" },
+        { "OverlayInScene", "1" },
+        { "DriveGameCamera", "1" },
+        { "MapCollision", "1" },
+        { "GameFov", "90" }
     } };
 
     OptionsStore store{};
@@ -81,7 +86,7 @@ TEST(OptionsStoreTests, AnOldPreferencesFileLoadsLineByLineWithoutTheRemovedKeys
 TEST(OptionsStoreTests, SaveWritesEveryOptionAndLoadRestoresIt)
 {
     OptionsStore store{};
-    store.SetEnabled(Flag::Overlay, true);
+    store.SetEnabled(Flag::HideGameHud, true);
     store.SetEnabled(Flag::HideFirstPerson, true);
     store.SetScalar(Scalar::SceneColorScale, 0.000244140625f);
 
@@ -103,7 +108,7 @@ TEST(OptionsStoreTests, SaveWritesEveryOptionAndLoadRestoresIt)
     }
 
     EXPECT_EQ(Snapshot(restored), saved);
-    EXPECT_TRUE(restored.IsEnabled(Flag::Overlay));
+    EXPECT_TRUE(restored.IsEnabled(Flag::HideGameHud));
     // Saved with 6 significant digits, so the value is the same only up to them.
     EXPECT_NEAR(restored.GetScalar(Scalar::SceneColorScale), 0.000244140625f, 1e-8f);
 }

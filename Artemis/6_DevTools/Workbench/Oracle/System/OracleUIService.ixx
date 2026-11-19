@@ -40,7 +40,7 @@ export namespace DevTools::Workbench::Oracle::System
         using OracleUIStore = DevTools::Workbench::Oracle::State::OracleUIStore;
 
     public:
-        // param observedStore: The player the Viewer follows. Its View gives the rays of the tick, and the local player's when nobody is followed.
+        // param observedStore: The player of the object selected in the Viewer. Its View gives the rays of the tick, and the local player's when it is none.
         OracleUIService(Log& log, SettingsStore& settingsStore, const ObservedPlayerStore& observedStore, OracleStore& oracleStore,
             Raycaster& raycaster, OracleUIStore& oracleUIStore) :
             m_Log(log), m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_OracleStore(oracleStore), m_Raycaster(raycaster),

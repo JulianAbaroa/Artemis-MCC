@@ -16,7 +16,6 @@ export namespace DevTools::Viewer::Options::Type
         Interaction,
         Fixtures,
         Limits,
-        Map,
 
         Count
     };
@@ -89,14 +88,9 @@ export namespace DevTools::Viewer::Options::Type
         LimitSafeVolumes,
         LimitSoftCeilings,
 
-        MapCollision,
-
-        Overlay,
         OverlayWireframe,
-        OverlayInScene,
         HideGameHud,
         HideFirstPerson,
-        DriveGameCamera,
 
         Count
     };
@@ -121,7 +115,6 @@ export namespace DevTools::Viewer::Options::Type
         SpeedCustom,
         FovNormal,
         FovZoom,
-        GameFov,
 
         SceneColorScale,
 
@@ -177,7 +170,6 @@ export namespace DevTools::Viewer::Options::Type
         { Group::Interaction, "Interaction", false },
         { Group::Fixtures, "Fixtures", false },
         { Group::Limits, "Map limits", false },
-        { Group::Map, "Map", false },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags
@@ -353,26 +345,14 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::LimitSoftCeilings, Group::Limits, "LimitSoftCeilings", "Soft ceilings",
             "Draws the soft ceiling surfaces of the structure design: blue pushes back, yellow kills softly and purple makes slip. Translucent, without outline.", true },
 
-        { Flag::MapCollision, Group::Map, "MapCollision", "Collision",
-            "Draws the collision surfaces the rays hit (structure and instanced geometry) instead of the render geometry. Orange is invisible, purple is two sided.", true },
-
-        { Flag::Overlay, Group::Camera, "Overlay", "Overlay on the game frame",
-            "With the game camera, draws over the frame of the game instead of clearing it. The Viewer takes the camera the game rendered the frame with, and the map collision goes in depth only so it hides what comes after it.", false },
-
         { Flag::OverlayWireframe, Group::Camera, "OverlayWireframe", "Overlay: collision wireframe",
-            "With the overlay on, also draws the map collision as a visible wireframe, to check that it lines up with the walls of the game frame.", true },
-
-        { Flag::OverlayInScene, Group::Camera, "OverlayInScene", "Overlay in scene",
-            "Draws the overlay inside the frame of the game, before its transparents, effects and HUD, so smoke, the sword blade, spawn points, projectiles and shields show over the overlay. The overlay colors go through the exposure and tone mapping of the game. Off draws it before the HUD (or at Present) as before. Needs Overlay on the game frame.", true },
+            "Also draws the map collision as a visible wireframe over the game frame, to check that it lines up with the walls of the game frame.", true },
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },
 
         { Flag::HideFirstPerson, Group::Camera, "HideFirstPerson", "Hide first person",
-            "Skips the game's first person arms and weapon. While Drive game camera moves the camera they are always hidden and the game draws the player's body.", false },
-
-        { Flag::DriveGameCamera, Group::Camera, "DriveGameCamera", "Drive game camera",
-            "Moves the game's camera with the free camera of the Viewer.", false },
+            "Skips the game's first person arms and weapon. With the free camera they are always hidden and the game draws the player's body.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
@@ -413,11 +393,8 @@ export namespace DevTools::Viewer::Options::Type
         { Scalar::FovZoom, Group::Camera, "FovZoom", "Zoom field of view (deg)",
             "Field of view of the free camera while the zoom is active. The mouse wheel changes it.", 25.0f, 5.0f, 60.0f, "%.0f" },
 
-        { Scalar::GameFov, Group::Camera, "GameFov", "Game camera field of view (deg)",
-            "Field of view of the game camera. Match it to the game view so the Viewer lines up with the crosshair.", 60.0f, 30.0f, 120.0f, "%.0f" },
-
         { Scalar::SceneColorScale, Group::Camera, "SceneColorScale", "Scene color scale",
-            "With Overlay in scene, multiplies the overlay colors, from 2^-12 to 2^4 (logarithmic). The default 2^-5 matches the HDR target of the game (measured in VW.6.z.2, D335): the colors look as with Overlay in scene off. Double click to go back to the default.", 0.03125f, 0.000244140625f, 16.0f, "%.4g", true },
+            "Multiplies the overlay colors, from 2^-12 to 2^4 (logarithmic). The default 2^-5 matches the HDR target of the game (D335). Double click to go back to the default.", 0.03125f, 0.000244140625f, 16.0f, "%.4g", true },
     } };
 
     // return: True if every table has its entries in the order of its enum, so the enum values can index them.

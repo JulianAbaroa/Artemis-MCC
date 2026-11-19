@@ -15,7 +15,6 @@ namespace
 {
     using DevTools::Viewer::Camera::Type::Key;
     using DevTools::Viewer::Camera::Type::Mode;
-    using DevTools::Viewer::Camera::Type::Follow;
     using DevTools::Viewer::Options::Type::Scalar;
     using Engine::Render::Window::Type::IsKeyRepeat;
 
@@ -43,9 +42,6 @@ namespace
     // Factor applied to the custom speed for each notch. The inverse is applied to the field of view.
     constexpr float k_SpeedStep{ 1.15f };
     constexpr float k_FovStep{ 1.08f };
-
-    // Factor applied to the orbit distance for each notch.
-    constexpr float k_OrbitStep{ 1.15f };
 }
 
 namespace DevTools::Viewer::Control::System
@@ -95,17 +91,7 @@ namespace DevTools::Viewer::Control::System
 
         if (message.Message == WM_LBUTTONDOWN)
         {
-            // While following, the crosshair is on the followed object, so a pick would select it again.
-            // The click releases it instead. The follow mode stays armed and the next click picks and follows a new one.
-            if (m_CameraStore.GetFollow() != Follow::Off && m_SelectionStore.HasSelection())
-            {
-                m_SelectionStore.Clear();
-            }
-            else
-            {
-                m_SelectionStore.RequestPick();
-            }
-
+            m_SelectionStore.RequestPick();
             return true;
         }
 
@@ -129,18 +115,11 @@ namespace DevTools::Viewer::Control::System
     {
         const float notches{ static_cast<float>(delta) / k_WheelNotch };
 
-        // Wheel up raises the speed, narrows the field of view (zooms in) and brings the orbit camera closer.
+        // Wheel up raises the speed and narrows the field of view (zooms in).
         if (m_CameraStore.IsKeyDown(Key::Custom))
         {
             const float speed{ m_OptionsStore.GetScalar(Scalar::SpeedCustom) };
             m_OptionsStore.SetScalar(Scalar::SpeedCustom, speed * std::pow(k_SpeedStep, notches));
-            return;
-        }
-
-        if (m_CameraStore.GetFollow() == Follow::Orbit)
-        {
-            const float distance{ m_CameraStore.GetOrbitDistance() };
-            m_CameraStore.SetOrbitDistance(distance * std::pow(1.0f / k_OrbitStep, notches));
             return;
         }
 
@@ -170,16 +149,6 @@ namespace DevTools::Viewer::Control::System
             if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible()) return false;
 
             if (!IsKeyRepeat(message)) m_CameraStore.ToggleMode();
-            return true;
-        }
-
-        case VK_OEM_5:
-        {
-            // The key left of the 1 (|). Only a Free mode key: in Game mode it goes to the game.
-            if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible() ||
-                m_CameraStore.GetMode() != Mode::Free) return false;
-
-            if (!IsKeyRepeat(message)) m_CameraStore.CycleFollow();
             return true;
         }
 

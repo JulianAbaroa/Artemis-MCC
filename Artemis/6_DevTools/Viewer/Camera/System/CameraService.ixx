@@ -11,7 +11,7 @@ import std;
 
 export namespace DevTools::Viewer::Camera::System
 {
-    // Free-fly camera of the viewer. Moves with the keys and the mouse, or follows an object.
+    // Camera of the viewer: the camera of the game (Game mode) or the free camera, which flies with the keys and the mouse and always moves the camera of the game.
     // It builds the view and projection matrices on every update and projects between the world and the screen.
     class CameraService
     {
@@ -38,21 +38,19 @@ export namespace DevTools::Viewer::Camera::System
         auto operator=(const CameraService&) -> CameraService& = delete;
 
         // Advances the camera and rebuilds the matrices.
-        // note: In Game mode the camera is the one the game rendered the frame with (D323), read at the render thread. Without a valid one it
-        // sits on the local player view and keeps its last pose while the player is dead.
+        // note: In Game mode the camera is the one the game rendered the frame with (D323), read at the render thread. Without a valid one the
+        // camera has no render pose (HasRenderPose) and nothing is drawn. In Free mode the camera flies and asks the game for that pose in every
+        // frame (the override of the game camera), and reads the camera the game drew, one frame behind.
         // param acceptInput: If false, the pressed keys are released and the camera does not fly.
-        // param followHandle: Object to follow or orbit. Used only if the follow mode of the store asks for it and the object is in the tick.
         // note: The first update after Deactivate places the camera on the local player.
-        auto Update(const std::shared_ptr<const Tick>& tick,
-            const Viewport& viewport, bool acceptInput,
-            std::optional<std::uint32_t> followHandle) -> void;
+        auto Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport, bool acceptInput) -> void;
 
         // Makes the next Update place the camera on the local player again and gives the game camera back to the game.
         auto Deactivate() -> void;
 
-        // The render pose: the one the overlay is drawn with. It is the camera of the game read this frame (Game mode, and while driving), or the
-        // free pose when there is no valid game camera or the camera is not driven. While driving it is NOT the free pose: the game draws one
-        // frame behind the request, so the overlay must use what the game drew (D323). Everything that draws or measures against the frame
+        // The render pose: the one the overlay is drawn with. It is the camera of the game read this frame, or the free pose when the free camera
+        // has no valid game camera. With the free camera it is NOT the free pose: the game draws one frame behind the request, so the overlay
+        // must use what the game drew (D323). Everything that draws or measures against the frame
         // (view-projection, labels, rays, picking) reads these.
         auto GetEye() const -> Vec3;
         auto GetForward() const -> Vec3;
@@ -60,18 +58,18 @@ export namespace DevTools::Viewer::Camera::System
         auto GetUp() const -> Vec3;
 
         // The requested pose: the free camera (yaw and pitch from the mouse). It is what SetOverride asks of the game and never follows the game
-        // camera while driving.
+        // camera in Free mode.
         auto GetYaw() const -> float;
         auto GetPitch() const -> float;
 
         auto GetViewport() const -> const Viewport&;
 
-        // return: The camera of the game this frame, or nothing when the mode is not Game or the game camera is not valid.
+        // return: The camera of the game this frame, or nothing when the game camera is not valid.
         auto GetGameCamera() const -> const std::optional<GameCamera>&;
 
-        // return: True while the free camera moves the camera of the game (option Drive game camera, Free mode, nothing followed). The
-        // projection is then the one of the game camera read (as in Game mode) and the pose is the free one.
-        auto IsDriving() const -> bool;
+        // return: Whether there is a pose to draw with this frame: the camera of the game is valid, or the free camera flies (without a valid game camera it
+        // draws with the free pose).
+        auto HasRenderPose() const -> bool;
 
         // return: Whether the override of the game camera is published (it can fail to publish when the pose is not valid).
         auto IsOverrideActive() const -> bool;
@@ -98,7 +96,9 @@ export namespace DevTools::Viewer::Camera::System
         GameCameraService& m_GameCameraService;
 
         std::optional<GameCamera> m_GameCamera{};
-        bool m_IsDriving{ false };
+
+        // True while the free camera flies and moves the camera of the game (Free mode).
+        bool m_IsFlying{ false };
 
         // Projection terms of the last Build: the focal values and the off-center terms of x and y.
         float m_FocalX{ 1.0f };
@@ -126,8 +126,6 @@ export namespace DevTools::Viewer::Camera::System
         bool m_IsLastUpdateSet{ false };
         bool m_IsFovSet{ false };
 
-        // True if the last update orbited an object.
-        bool m_IsOrbiting{ false };
         steady_clock::time_point m_LastUpdate{};
 
         // Puts the eye on the local player and aims where it looks.
@@ -140,25 +138,8 @@ export namespace DevTools::Viewer::Camera::System
         // Turns the mouse movement into yaw and pitch, scaled by the field of view, and rebuilds the matrices.
         auto Look(float mouseX, float mouseY) -> void;
 
-        // return: False if the object is not a collidable nor the living biped of a player.
-        auto FindPivot(const std::shared_ptr<const Tick>& tick,
-            std::uint32_t selected, Vec3& outPivot) const -> bool;
-
-        // Turns around the object at the orbit distance. The mouse rotates, the wheel (ControlService) sets the distance.
-        // param wasOrbiting: False on the first frame, when the distance and the aim come from the current pose.
-        // return: False if the object is not in the tick, and the camera does not move.
-        auto OrbitAround(const std::shared_ptr<const Tick>& tick, std::uint32_t selected,
-            bool wasOrbiting, float mouseX, float mouseY, bool acceptInput) -> bool;
-
-        // Places the camera on the local player view. Keeps the last pose if there is no living local player.
-        auto FollowSelf(const std::shared_ptr<const Tick>& tick) -> void;
-
         // Sits the camera on the game camera and takes its axes. Its projection is used by Build.
         auto SeatOnGameCamera(const GameCamera& camera) -> void;
-
-        // return: False if the object is neither a player biped nor a collidable of the tick.
-        auto FindFollowTarget(const std::shared_ptr<const Tick>& tick,
-            std::uint32_t handle, Vec3& outPosition, Vec3& outForward) const -> bool;
 
         // Turns with the mouse and moves with the keys.
         auto Fly(float deltaTime, float mouseX, float mouseY, bool acceptInput) -> void;

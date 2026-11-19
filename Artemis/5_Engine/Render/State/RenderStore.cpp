@@ -7,11 +7,10 @@ module Engine.Render.State;
 
 namespace
 {
-    using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::DrawPlace;
-    using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::MaskTextures;
+    using Engine::Render::Type::SceneStatus;
 
     using Engine::Render::Type::k_MaskPairCount;
 
@@ -144,17 +143,17 @@ namespace Engine::Render::State
         m_IsFirstPersonHidden.store(isHidden, std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked, bool isForwardHooked) -> void
+    auto RenderStore::SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked, bool isOpaqueHooked) -> void
     {
         m_IsFirstPersonModelHooked.store(isModelHooked, std::memory_order_relaxed);
         m_IsFirstPersonUnitHooked.store(isUnitHooked, std::memory_order_relaxed);
         m_IsFirstPersonDepthPassHooked.store(isDepthPassHooked, std::memory_order_relaxed);
-        m_IsFirstPersonForwardHooked.store(isForwardHooked, std::memory_order_relaxed);
+        m_IsOpaquePassHooked.store(isOpaqueHooked, std::memory_order_relaxed);
     }
 
-    auto RenderStore::IsFirstPersonForwardHooked() const -> bool
+    auto RenderStore::IsOpaquePassHooked() const -> bool
     {
-        return m_IsFirstPersonForwardHooked.load(std::memory_order_relaxed);
+        return m_IsOpaquePassHooked.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::IsFirstPersonDepthPassHooked() const -> bool
@@ -202,19 +201,8 @@ namespace Engine::Render::State
         m_PresentThread.store(threadId, std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetHudHookInstalled(bool isInstalled) -> void
+    auto RenderStore::EndFrame() -> void
     {
-        m_IsHudHookInstalled.store(isInstalled, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::CountHudCall() -> void
-    {
-        m_HudCalls.fetch_add(1, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::EndHudFrame() -> void
-    {
-        m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_FirstPersonUnitLastFrame.store(m_FirstPersonUnitCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
 
@@ -227,42 +215,21 @@ namespace Engine::Render::State
         m_MaskFrameDepth.Reset();
     }
 
-    auto RenderStore::CountHudFailure() -> void
-    {
-        m_HudFailures.fetch_add(1, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetHudFailures() const -> std::uint32_t
-    {
-        return m_HudFailures.load(std::memory_order_relaxed);
-    }
-
     auto RenderStore::NextPresentFrame() -> void
     {
-        m_SceneLastStatus.store(m_SceneStatus.exchange(BeforeHudStatus::NoSceneCall, std::memory_order_relaxed), std::memory_order_relaxed);
-        m_DrawPlaceLast.store(m_DrawPlace.exchange(DrawPlace::Present, std::memory_order_relaxed), std::memory_order_relaxed);
-        m_BeforeHudLastStatus.store(m_BeforeHudStatus.exchange(BeforeHudStatus::NoHudDraw, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_SceneLastStatus.store(m_SceneStatus.exchange(SceneStatus::NoSceneCall, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_DrawPlaceLast.store(m_DrawPlace.exchange(DrawPlace::None, std::memory_order_relaxed), std::memory_order_relaxed);
         m_PresentIndex.fetch_add(1, std::memory_order_relaxed);
     }
 
-    auto RenderStore::MarkBeforeHud() -> void
+    auto RenderStore::IsSceneDrawRequested() const -> bool
     {
-        m_BeforeHudMark.store(m_PresentIndex.load(std::memory_order_relaxed) + 1, std::memory_order_relaxed);
+        return m_IsSceneDrawRequested.load(std::memory_order_relaxed);
     }
 
-    auto RenderStore::IsBeforeHudMarked() const -> bool
+    auto RenderStore::SetSceneDrawRequested(bool isRequested) -> void
     {
-        return m_BeforeHudMark.load(std::memory_order_relaxed) == m_PresentIndex.load(std::memory_order_relaxed) + 1;
-    }
-
-    auto RenderStore::SetBeforeHudStatus(BeforeHudStatus status) -> void
-    {
-        m_BeforeHudStatus.store(status, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetBeforeHudStatus() const -> BeforeHudStatus
-    {
-        return m_BeforeHudLastStatus.load(std::memory_order_relaxed);
+        m_IsSceneDrawRequested.store(isRequested, std::memory_order_relaxed);
     }
 
     auto RenderStore::TakeSceneCall() -> bool
@@ -271,12 +238,12 @@ namespace Engine::Render::State
         return m_SceneCallMark.exchange(token, std::memory_order_relaxed) != token;
     }
 
-    auto RenderStore::SetSceneStatus(BeforeHudStatus status) -> void
+    auto RenderStore::SetSceneStatus(SceneStatus status) -> void
     {
         m_SceneStatus.store(status, std::memory_order_relaxed);
     }
 
-    auto RenderStore::GetSceneStatus() const -> BeforeHudStatus
+    auto RenderStore::GetSceneStatus() const -> SceneStatus
     {
         return m_SceneLastStatus.load(std::memory_order_relaxed);
     }
@@ -321,26 +288,6 @@ namespace Engine::Render::State
         return m_SceneColorScale.load(std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetHudSample(const HudHookInfo& sample) -> void
-    {
-        const std::lock_guard<std::mutex> lock{ m_HudSampleMutex };
-        m_HudSample = sample;
-    }
-
-    auto RenderStore::GetHudHook() const -> HudHookInfo
-    {
-        HudHookInfo info{};
-
-        {
-            const std::lock_guard<std::mutex> lock{ m_HudSampleMutex };
-            info = m_HudSample;
-        }
-
-        info.IsHooked = m_IsHudHookInstalled.load(std::memory_order_relaxed);
-        info.CallsPerFrame = m_HudCallsLastFrame.load(std::memory_order_relaxed);
-        return info;
-    }
-
     auto RenderStore::IsFirstPersonMaskRequested() const -> bool
     {
         return m_IsMaskRequested.load(std::memory_order_relaxed);
@@ -349,16 +296,6 @@ namespace Engine::Render::State
     auto RenderStore::SetFirstPersonMaskRequested(bool isRequested) -> void
     {
         m_IsMaskRequested.store(isRequested, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::IsOverlayInSceneRequested() const -> bool
-    {
-        return m_IsOverlayInSceneRequested.load(std::memory_order_relaxed);
-    }
-
-    auto RenderStore::SetOverlayInSceneRequested(bool isRequested) -> void
-    {
-        m_IsOverlayInSceneRequested.store(isRequested, std::memory_order_relaxed);
     }
 
     auto RenderStore::TakeMaskCopy(MaskPairKind kind) -> bool

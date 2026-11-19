@@ -28,12 +28,12 @@ export namespace Engine::Render::System
 
         using FrameContext = Engine::Render::Type::FrameContext;
         using FrameHandler = Engine::Render::Type::FrameHandler;
-        using BeforeHudHandler = Engine::Render::Type::BeforeHudHandler;
-        using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
+        using SceneHandler = Engine::Render::Type::SceneHandler;
+        using SceneStatus = Engine::Render::Type::SceneStatus;
         using MaskContext = Engine::Render::Type::MaskContext;
         using MaskPairKind = Engine::Render::Type::MaskPairKind;
         using MaskPlan = Engine::Render::Type::MaskPlan;
-        using HudHookInfo = Engine::Render::Type::HudHookInfo;
+        using SceneTargetSample = Engine::Render::Type::SceneTargetSample;
         using ShutdownCallback = Engine::Render::Type::ShutdownCallback;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -52,11 +52,10 @@ export namespace Engine::Render::System
         auto OnPostFrame(FrameHandler handler) -> void;     // every frame, after OnFrame
         auto OnResize(FrameHandler handler) -> void;        // after the targets are recreated
 
-        // Registers a handler that draws under the HUD of the game: called at the scene point (exit of the opaque color pass 0x26E500,
-        // before the post, VW.6.z.1) when the option asks for it and the frame allows it, otherwise from the HUD draw before the original
-        // (VW.6.x B). At most once per frame.
+        // Registers a handler that draws the 3D passes of the overlay at the scene point: the exit of the opaque color pass 0x26E500, the only
+        // place they are drawn. At most one draw per frame.
         // note: Runs on the game render thread inside a GpuStateGuard. It returns whether it drew.
-        auto OnBeforeHud(BeforeHudHandler handler) -> void;
+        auto OnScene(SceneHandler handler) -> void;
 
         // Callbacks are called in reverse registration order.
         auto OnShutdown(ShutdownCallback callback) -> void;
@@ -79,36 +78,23 @@ export namespace Engine::Render::System
         // return: False if the shutdown did not finish before the timeout.
         auto WaitForShutdown(milliseconds timeout) -> bool;
 
-        // Runs for each HUD draw of user 0, before the original: counts it, measures what the game draws its HUD with (thread, render target
-        // in slot 0, viewport 0, into the store) and, when nothing blocks it, calls the before-HUD handlers inside a GpuStateGuard.
-        // note: Called by the HUD detour on the game render thread. Nothing escapes: an exception is caught and counted in the store. The immediate context is only touched on the thread of Present with the
-        // targets ready (COM calls only, no allocation in the measure). Each Present frame runs the handlers once and marks the frame in
-        // the store when one drew.
-        auto OnHudDraw() -> void;
+        // return: Why the handlers must not run at the scene point, or nothing if they can: no thread of Present, no targets (not ready,
+        // resizing or shutting down), a bound target of another device, of another size, with more than one sample, or a viewport 0 that is not
+        // the whole target (split screen). The target is the HDR target of the game: it need not be the back buffer but must be a texture of one
+        // sample and the size of the back buffer.
+        static auto FindSceneBlocker(const SceneTargetSample& sample, bool isReady, std::uint32_t width, std::uint32_t height)
+            -> std::optional<SceneStatus>;
 
-        // return: Why the handlers must not run for this HUD draw, or nothing if they can: no thread of Present, no targets (not ready,
-        // resizing or shutting down), a bound target of another device, that is not the current back buffer, of another size, or a
-        // viewport 0 that is not the whole target.
-        static auto FindBeforeHudBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
-            -> std::optional<BeforeHudStatus>;
-
-        // return: Why the handlers must not run at the scene point, or nothing if they can. Same as FindBeforeHudBlocker, except that the
-        // bound target is the HDR target of the game: it need not be the back buffer but must be a texture of one sample and the size of the back
-        // buffer, so a view that is not the whole frame (split screen, another size) never draws in the scene.
-        static auto FindSceneBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
-            -> std::optional<BeforeHudStatus>;
-
-        // return: The factor the overlay passes multiply their RGB by at the scene point (VW.6.z.2): the slider, or 1 when it is not finite or
+        // return: The factor the overlay passes multiply their RGB by at the scene point the slider, or 1 when it is not finite or
         // not positive.
         static auto ComputeSceneColorScale(float slider) -> float;
 
-        // Runs at the exit of each call of the opaque color pass 0x26E500, after the original (VW.6.z.1): with Overlay in scene requested,
-        // the first call of the Present frame on the thread of Present, when nothing blocks it, runs the same handlers as OnHudDraw inside a
-        // GpuStateGuard, with the HDR target bound in slot 0 and the depth stencil of the store. What they draw is inside the frame of the game: the
-        // transparents, effects, blade and HUD of the game are drawn over it. A handler that drew marks the frame, so the HUD draw and Present do not
-        // draw again. When it does not run, everything stays as before (before the HUD, else at Present).
+        // Runs at the exit of each call of the opaque color pass 0x26E500, after the original: the first call of the Present frame on the thread of
+        // Present, when nothing blocks it, runs the scene handlers inside a GpuStateGuard, with the HDR target bound in slot 0 and the depth stencil
+        // of the store. What they draw is inside the frame of the game: the transparents, effects, blade and HUD of the game are drawn over it.
+        // Without a call (the hook is not installed, a menu, a pause without a draw) nothing is drawn in the frame.
         // note: Called by the first person detour on the game render thread. Nothing escapes: an exception is caught and counted
-        // (RenderStore::CountSceneFailure). Reads atomics and returns when the option is off.
+        // (RenderStore::CountSceneFailure).
         auto OnSceneDraw() -> void;
 
         // Runs at the entry of 0x26DA08 (VW.6.y.2 B, E). For the first call of the frame with pass 0xB (pair DepthB) and the first with pass 0 (pair
@@ -152,7 +138,7 @@ export namespace Engine::Render::System
         std::vector<FrameHandler> m_OnFrame{};
         std::vector<FrameHandler> m_OnPostFrame{};
         std::vector<FrameHandler> m_OnResize{};
-        std::vector<BeforeHudHandler> m_OnBeforeHud{};
+        std::vector<SceneHandler> m_OnScene{};
         bool m_IsSceneLogged{ false };      // thread of Present only
         std::vector<ShutdownCallback> m_OnShutdown{};
 
@@ -167,8 +153,8 @@ export namespace Engine::Render::System
         // return: False if the device or the render target could not be obtained.
         auto Attach(IDXGISwapChain* swapChain) -> bool;
 
-        // param isInFrame: Whether the mask is the one of the game frame in progress (drawing before the HUD) or of the last completed
-        // one (drawing at Present).
+        // param isInFrame: Whether the mask is the one of the game frame in progress (the scene point) or of the last completed
+        // one (the events at Present).
         auto MakeContext(bool isInFrame) const -> FrameContext;
         auto MakeMask(bool isInFrame) const -> MaskContext;
 
@@ -185,21 +171,15 @@ export namespace Engine::Render::System
         // return: True when the copy was made. False when the pair is not ready, the resource does not match or the frame already has its copy.
         auto BeginMaskPairCopy(MaskPairKind kind, ID3D11DeviceContext* context, ID3D11Resource* resource, bool canNote) -> bool;
 
-        // The body of OnHudDraw. Exceptions are caught by the caller.
-        auto HandleHudDraw() -> void;
-
         // The body of OnSceneDraw. Exceptions are caught by the caller.
         auto HandleSceneDraw() -> void;
 
-        // Runs the before-HUD handlers inside a GpuStateGuard and marks the frame when one drew or threw (so nobody draws it again).
+        // Runs the scene handlers inside a GpuStateGuard.
         // return: Drawn, Failed (a handler threw) or Declined (none drew).
-        auto RunBeforeHudHandlers(const FrameContext& frame, ID3D11DeviceContext* context) -> BeforeHudStatus;
+        auto RunSceneHandlers(const FrameContext& frame, ID3D11DeviceContext* context) -> SceneStatus;
 
         // Reads the render target bound in slot 0 and the viewport into a sample. Stores nothing.
-        auto MeasureBoundTarget() -> HudHookInfo;
-
-        // Same as MeasureBoundTarget, and stores the sample for the telemetry.
-        auto MeasureHud() -> HudHookInfo;
+        auto MeasureBoundTarget() -> SceneTargetSample;
 
         // return: The immediate context when the call runs on the thread of Present with the store ready, null otherwise.
         auto GetPresentContext() -> ID3D11DeviceContext*;

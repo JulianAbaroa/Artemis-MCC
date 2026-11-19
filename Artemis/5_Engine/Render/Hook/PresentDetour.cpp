@@ -30,7 +30,7 @@ namespace Engine::Render::Hook
 
             self->m_TelemetryStore.RecordPresent();
             self->m_RenderStore.SetPresentThread(GetCurrentThreadId());
-            self->m_RenderStore.EndHudFrame();
+            self->m_RenderStore.EndFrame();
             self->m_RenderService.PresentFrame(swapChain);
             self->m_RenderStore.NextPresentFrame();
         }

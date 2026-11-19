@@ -21,7 +21,6 @@ import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Profiler.Type;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Map.Type;
-import DevTools.Viewer.Style.Type;
 import std;
 
 namespace
@@ -33,7 +32,6 @@ namespace
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
     using Engine::Base::Memory::Type::FrameClock::InterpolationState;
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
-    using Engine::Render::Type::MaskContext;
 
     using DevTools::Viewer::Camera::Type::Viewport;
     using DevTools::Viewer::Collidable::Type::SceneTickOf;
@@ -55,7 +53,6 @@ namespace
     using Views::View::System::RaycastsOf;
 
     using DevTools::Viewer::Map::Type::k_FrameSceneWaitLimit;
-    using DevTools::Viewer::Style::Type::k_Background;
 
     // Ends the GPU timing of the frame when it goes out of scope.
     class GpuTimingScope
@@ -75,25 +72,10 @@ namespace
 
 namespace DevTools::Viewer::Map::System
 {
-    auto MapService::Render(const FrameContext& frame) -> void
+    auto MapService::RenderScene(const FrameContext& frame) -> bool
     {
         std::lock_guard<std::mutex> lock(m_Mutex);
 
-        this->RenderFrame(frame, false);
-    }
-
-    auto MapService::RenderBeforeHud(const FrameContext& frame) -> bool
-    {
-        std::lock_guard<std::mutex> lock(m_Mutex);
-
-        // note: Decided before the scene update, so a frame that declines still gets its one update at Present.
-        if (!this->IsOverlayActive()) return false;
-
-        return this->RenderFrame(frame, true);
-    }
-
-    auto MapService::RenderFrame(const FrameContext& frame, bool isBeforeHud) -> bool
-    {
         if (m_IsSuspended) return false;
 
         if (!frame.Device || !frame.Context ||
@@ -119,8 +101,8 @@ namespace DevTools::Viewer::Map::System
 
         // note: One choice for the whole frame. The camera, the passes, the labels, the selection and the meshes all come from the same scene (D294).
         // The clock is read before it, so the scene is chosen for the very tick that is measured.
-        const FrameClock clock{ m_SceneService.IsGameCamera() ? m_LatencyService.ReadClock() : FrameClock{} };
-        const FrameScenePick pick{ this->AcquireFrameScene(clock, this->IsOverlayActive()) };
+        const FrameClock clock{ m_LatencyService.ReadClock() };
+        const FrameScenePick pick{ this->AcquireFrameScene(clock) };
         const auto& scene = pick.Scene;
         if (!scene || !scene->Tick) return false;
         const auto& tick = scene->Tick;
@@ -149,11 +131,10 @@ namespace DevTools::Viewer::Map::System
             }
 
             this->UpdateFramePoses(*scene, clock, pick);
-            this->RecordLatency(*scene, clock, pick, isBeforeHud);
+            this->RecordLatency(*scene, clock, pick);
 
-            // note: The mode may have changed since RenderBeforeHud decided. The frame still counts as handled (the scene was updated once),
-            // but nothing is drawn over the game frame that is not an overlay.
-            if (isBeforeHud && !this->IsOverlayActive()) return true;
+            // note: Without a pose to draw (Game mode with no valid camera of the game) nothing is drawn, and the labels of the frame are not drawn either.
+            if (!m_SceneService.HasFrameUpdate()) return false;
 
             const auto& palette = m_SceneService.GetPalette();
             const std::uint32_t selected = m_SceneService.GetSelected();
@@ -234,7 +215,7 @@ namespace DevTools::Viewer::Map::System
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Draw };
-                this->Draw(frame, isBeforeHud);
+                this->Draw(frame);
             }
         }
 
@@ -242,12 +223,7 @@ namespace DevTools::Viewer::Map::System
         return true;
     }
 
-    auto MapService::IsOverlayActive() const -> bool
-    {
-        return m_SceneService.IsGameCamera() && m_OptionsStore.IsEnabled(Flag::Overlay);
-    }
-
-    auto MapService::AcquireFrameScene(const FrameClock& clock, bool isOverlay) -> FrameScenePick
+    auto MapService::AcquireFrameScene(const FrameClock& clock) -> FrameScenePick
     {
         FrameScenePick result{};
 
@@ -264,7 +240,7 @@ namespace DevTools::Viewer::Map::System
             return scene ? SceneTickOf{}(*scene) : std::nullopt;
         };
 
-        if (!isOverlay || !hasClock || clock.Tick == 0)
+        if (!hasClock || clock.Tick == 0)
         {
             result.Scene = m_CollidableStore.Acquire();
             return result;
@@ -292,7 +268,7 @@ namespace DevTools::Viewer::Map::System
     {
         const std::optional<std::uint32_t> drawn{ SceneTickOf{}(scene) };
 
-        const bool isInterpolated{ this->IsOverlayActive() && clock.Source != ClockSource::None &&
+        const bool isInterpolated{ clock.Source != ClockSource::None &&
             clock.Interpolation == InterpolationState::On && pick.Kind == PickKind::Exact && drawn };
 
         if (isInterpolated)
@@ -312,16 +288,13 @@ namespace DevTools::Viewer::Map::System
         m_SceneService.SetFramePoses(m_FramePoses);
     }
 
-    auto MapService::RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick, bool isBeforeHud) -> void
+    auto MapService::RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void
     {
-        if (!m_SceneService.IsGameCamera()) return;
-
         const std::optional<GameCamera>& camera{ m_SceneService.GetGameCamera() };
 
         LatencyInput input{};
         input.Clock = clock;
         input.Pick = pick.Kind;
-        input.IsBeforeHud = isBeforeHud;
         input.IsGameMode = m_SceneService.IsGameMode();
         if (camera) input.Camera = camera->Position;
         if (scene.Tick->Match) input.SceneTick = scene.Tick->Match->GameTick;
@@ -331,7 +304,7 @@ namespace DevTools::Viewer::Map::System
         m_LatencyService.Record(input);
     }
 
-    auto MapService::Draw(const FrameContext& frame, bool isBeforeHud) -> void
+    auto MapService::Draw(const FrameContext& frame) -> void
     {
         ID3D11DeviceContext* context = frame.Context;
 
@@ -342,12 +315,8 @@ namespace DevTools::Viewer::Map::System
         // Closes the GPU timing even if a draw throws, so the next frame does not begin a query that is still open.
         const GpuTimingScope gpuTiming{ m_Profiler, context };
 
-        // note: With the overlay the frame of the game stays under what the Viewer draws, so the color is not cleared. The depth is the
-        // Viewer's own and is always cleared to 0, the far value of the reversed depth.
-        const bool isOverlay{ this->IsOverlayActive() };
-
-        // note: Never before the HUD of the game: what is under it is the game frame.
-        if (!isOverlay && !isBeforeHud) context->ClearRenderTargetView(frame.RenderTarget, k_Background);
+        // note: The frame of the game stays under what the Viewer draws, so the color is never cleared. The depth is the Viewer's own and is
+        // always cleared to 0, the far value of the reversed depth.
         context->ClearDepthStencilView(frame.DepthStencil,
             D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 0.0f, 0);
 
@@ -362,13 +331,11 @@ namespace DevTools::Viewer::Map::System
 
         m_GpuPipeline.UpdateCamera(context, m_SceneService.GetViewProjection());
 
-        // note: Only the overlay lies over a game frame that has first person arms. The map view draws its own background.
-        m_GpuPipeline.UpdateMask(context, isOverlay ? frame.Mask : MaskContext{}, frame.Width, frame.Height, frame.ColorScale);
+        m_GpuPipeline.UpdateMask(context, frame.Mask, frame.Width, frame.Height, frame.ColorScale);
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 
-        if (isOverlay) m_MapPass.DrawOverlay(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::OverlayWireframe));
-        else m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::MapCollision));
+        m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::OverlayWireframe));
         m_Profiler.MarkGpu(context, Gpu::Map);
 
         m_DynamicPass.Draw(context, m_GpuPipeline);

@@ -3,7 +3,6 @@ module DevTools.Viewer.Camera.System;
 import Common.Math.Type;
 import Common.Engine.Type;
 import Common.Math.System;
-import Blam.Runtime.Player.Type;
 import Views.View.Type;
 import Views.View.System;
 import DevTools.Viewer.Options.Type;
@@ -17,12 +16,8 @@ namespace
 
     using DevTools::Viewer::Camera::Type::Key;
     using DevTools::Viewer::Camera::Type::Mode;
-    using DevTools::Viewer::Camera::Type::Follow;
-    using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Scalar;
     using Common::Math::Type::Vec3;
-    using Blam::Runtime::Player::Type::Alive::AlivePlayer;
-    using Blam::Runtime::Player::Type::Alive::PlayerTable;
 
     using Views::View::System::AimDirectionOf;
     using Views::View::System::FindObservedView;
@@ -43,23 +38,11 @@ namespace
     // Speed of the field of view transition. Higher is faster.
     constexpr float k_FovSmoothing{ 12.0f };
 
-    // return: The player whose alive biped is the handle, or nullptr if there is none.
-    auto FindPlayerOfBiped(const PlayerTable& table, std::uint32_t bipedHandle) -> const AlivePlayer*
-    {
-        for (const auto& entry : table)
-        {
-            if (entry.second.AliveBipedHandle == bipedHandle) return &entry.second;
-        }
-
-        return nullptr;
-    }
 }
 
 namespace DevTools::Viewer::Camera::System
 {
-    auto CameraService::Update(const std::shared_ptr<const Tick>& tick,
-        const Viewport& viewport, bool acceptInput,
-        std::optional<std::uint32_t> followHandle) -> void
+    auto CameraService::Update(const std::shared_ptr<const Tick>& tick, const Viewport& viewport, bool acceptInput) -> void
     {
         const auto now = steady_clock::now();
 
@@ -84,48 +67,26 @@ namespace DevTools::Viewer::Camera::System
         float mouseX = 0.0f, mouseY = 0.0f;
         m_CameraStore.ConsumeMouseDelta(mouseX, mouseY);
 
-        const bool wasOrbiting{ m_IsOrbiting };
-        m_IsOrbiting = false;
-
-        Vec3 targetPosition{}, targetForward{};
         m_GameCamera.reset();
-        bool isFree{ false };
 
         if (m_CameraStore.GetMode() == Mode::Game)
         {
             m_GameCamera = m_GameCameraService.Read();
 
             if (m_GameCamera) this->SeatOnGameCamera(*m_GameCamera);
-            else this->FollowSelf(tick);
-        }
-        else if (const Follow follow{ m_CameraStore.GetFollow() }; followHandle && follow == Follow::FirstPerson &&
-            this->FindFollowTarget(tick, *followHandle, targetPosition, targetForward))
-        {
-            this->AimAlong(targetForward);
-            m_Eye = targetPosition;
-        }
-        else if (followHandle && follow == Follow::Orbit &&
-            this->OrbitAround(tick, *followHandle, wasOrbiting, mouseX, mouseY, acceptInput))
-        {
-            m_IsOrbiting = true;
+
+            m_IsFlying = false;
+
+            if (m_GameCameraService.IsOverrideActive()) m_GameCameraService.ClearOverride();
         }
         else
         {
             this->Fly(deltaTime, mouseX, mouseY, acceptInput);
-            isFree = true;
-        }
 
-        // note: Driving needs the free camera on its own: following or orbiting an object, or the Game mode, give the camera back to the game.
-        m_IsDriving = isFree && m_OptionsStore.IsEnabled(Flag::DriveGameCamera);
+            m_IsFlying = true;
 
-        if (m_IsDriving)
-        {
             // note: Read before the new pose is asked, so it is the frame of the game made from the previous request.
             m_GameCamera = m_GameCameraService.Read();
-        }
-        else if (m_GameCameraService.IsOverrideActive())
-        {
-            m_GameCameraService.ClearOverride();
         }
 
         this->UpdateLens(deltaTime);
@@ -133,13 +94,13 @@ namespace DevTools::Viewer::Camera::System
 
         // note: The requested pose (the free one), never the render pose: the game draws one frame behind the request, and the free camera must
         // keep flying from where it is, not from the frame the game happened to draw.
-        if (m_IsDriving) m_GameCameraService.SetOverride(m_Eye, m_RequestedForward, m_RequestedUp);
+        if (m_IsFlying) m_GameCameraService.SetOverride(m_Eye, m_RequestedForward, m_RequestedUp);
     }
 
     auto CameraService::Deactivate() -> void
     {
         if (m_GameCameraService.IsOverrideActive()) m_GameCameraService.ClearOverride();
-        m_IsDriving = false;
+        m_IsFlying = false;
 
         m_IsActive = false;
         m_IsLastUpdateSet = false;
@@ -165,10 +126,7 @@ namespace DevTools::Viewer::Camera::System
 
     auto CameraService::UpdateLens(float deltaTime) -> void
     {
-        Scalar scalar{ Scalar::FovNormal };
-
-        if (m_CameraStore.GetMode() == Mode::Game) scalar = Scalar::GameFov;
-        else if (m_CameraStore.IsZoomActive()) scalar = Scalar::FovZoom;
+        const Scalar scalar{ m_CameraStore.IsZoomActive() ? Scalar::FovZoom : Scalar::FovNormal };
 
         const float target{ m_OptionsStore.GetScalar(scalar) * k_DegreesToRadians };
 
@@ -183,47 +141,10 @@ namespace DevTools::Viewer::Camera::System
         m_Lens.FovY += (target - m_Lens.FovY) * blend;
     }
 
-    auto CameraService::FollowSelf(const std::shared_ptr<const Tick>& tick) -> void
-    {
-        const auto* view{ (tick && tick->Views) ? FindObservedView(*tick->Views, k_NoHandle) : nullptr };
-        if (!view || !view->Head.HasBody) return;
-
-        m_Eye = ViewPositionOf(*view);
-        this->AimAlong(AimDirectionOf(*view));
-    }
-
     auto CameraService::SeatOnGameCamera(const GameCamera& camera) -> void
     {
         m_Eye = camera.Position;
         this->AimAlong(camera.Forward);
-    }
-
-    auto CameraService::FindFollowTarget(const std::shared_ptr<const Tick>& tick,
-        std::uint32_t selected, Vec3& outPosition, Vec3& outForward) const -> bool
-    {
-        if (!tick) return false;
-
-        if (tick->PlayerTable)
-        {
-            if (const AlivePlayer* player{ FindPlayerOfBiped(*tick->PlayerTable, selected) })
-            {
-                outPosition = player->CameraPosition;
-                outForward = player->CameraForward;
-                return true;
-            }
-        }
-
-        if (tick->Entities)
-        {
-            if (const auto* entity{ tick->Entities->Find(selected) }; entity != nullptr)
-            {
-                outPosition = entity->BoundingCenter;
-                outForward = entity->Forward;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     auto CameraService::Look(float mouseX, float mouseY) -> void
@@ -236,58 +157,6 @@ namespace DevTools::Viewer::Camera::System
         const float look{ k_LookSpeed * lookScale };
         this->SetPose(m_Eye, m_Yaw - mouseX * look, m_Pitch - mouseY * look);
         this->Build();
-    }
-
-    auto CameraService::FindPivot(const std::shared_ptr<const Tick>& tick,
-        std::uint32_t selected, Vec3& outPivot) const -> bool
-    {
-        if (!tick) return false;
-
-        if (tick->Entities)
-        {
-            if (const auto* entity{ tick->Entities->Find(selected) }; entity != nullptr)
-            {
-                outPivot = entity->BoundingCenter;
-                return true;
-            }
-        }
-
-        if (tick->PlayerTable)
-        {
-            if (const AlivePlayer* player{ FindPlayerOfBiped(*tick->PlayerTable, selected) })
-            {
-                outPivot = player->CameraPosition;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    auto CameraService::OrbitAround(const std::shared_ptr<const Tick>& tick, std::uint32_t selected,
-        bool wasOrbiting, float mouseX, float mouseY, bool acceptInput) -> bool
-    {
-        Vec3 pivot{};
-        if (!this->FindPivot(tick, selected, pivot)) return false;
-
-        if (!wasOrbiting)
-        {
-            // Starts from where the camera is: it turns toward the object and keeps its distance, so the view does not jump.
-            const Vec3 toPivot{ VecMath::Subtract(pivot, m_Eye) };
-            const float distance{ VecMath::Length(toPivot) };
-
-            if (distance > 1e-3f)
-            {
-                m_CameraStore.SetOrbitDistance(distance);
-                this->AimAlong(toPivot);
-            }
-        }
-
-        if (acceptInput) this->Look(mouseX, mouseY);
-        else this->Build();
-
-        m_Eye = VecMath::Subtract(pivot, VecMath::Scale(m_Forward, m_CameraStore.GetOrbitDistance()));
-        return true;
     }
 
     auto CameraService::Fly(float deltaTime, float mouseX, float mouseY,
@@ -349,7 +218,7 @@ namespace DevTools::Viewer::Camera::System
 
         if (m_GameCamera)
         {
-            // note: The render pose is the camera the game drew this frame (in Game mode and while driving, where it comes from the request
+            // note: The render pose is the camera the game drew this frame (in Game mode and with the free camera, where it comes from the request
             // of a frame before), with its own axes, not rebuilt from yaw and pitch, so the roll and the exact aim are kept.
             m_RenderEye = m_GameCamera->Position;
             m_Forward = m_GameCamera->Forward;
@@ -446,9 +315,9 @@ namespace DevTools::Viewer::Camera::System
         return m_Viewport;
     }
 
-    auto CameraService::IsDriving() const -> bool
+    auto CameraService::HasRenderPose() const -> bool
     {
-        return m_IsDriving;
+        return m_IsFlying || m_GameCamera.has_value();
     }
 
     auto CameraService::IsOverrideActive() const -> bool

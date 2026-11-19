@@ -84,7 +84,7 @@ namespace DevTools::Viewer::Latency::System
         const bool hasClock{ input.Clock.Source != ClockSource::None };
         const std::uint32_t tick{ input.Clock.Tick };
 
-        LatencySample sample{ .Clock = input.Clock, .SceneTick = input.SceneTick, .IsBeforeHud = input.IsBeforeHud,
+        LatencySample sample{ .Clock = input.Clock, .SceneTick = input.SceneTick,
             .Pick = input.Pick, .Interp = input.Interp };
 
         if (hasClock && input.SceneTick)

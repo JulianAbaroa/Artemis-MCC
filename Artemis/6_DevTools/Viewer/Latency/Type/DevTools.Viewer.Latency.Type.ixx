@@ -35,12 +35,10 @@ export namespace DevTools::Viewer::Latency::Type
         std::optional<std::uint32_t> SceneTick{};
         // Position of the game camera, none when it is not valid.
         std::optional<Vec3> Camera{};
-        // Game mode of the Viewer camera (not driving the camera, not following).
+        // Game mode of the Viewer camera (not the free camera).
         bool IsGameMode{};
         // Eye of the View of the local player in the scene, none without a View.
         std::optional<Vec3> Eye{};
-        // The frame was drawn under the HUD of the game (the game render thread), not at Present.
-        bool IsBeforeHud{};
         // How the scene was picked for the tick T - 1 (VW.5d), None when it was not picked for a target (the newest was taken).
         PickKind Pick{};
         // How the poses of the objects were found for the frame (VW.5e): between two ticks, extrapolated, or as the scene shows them.
@@ -79,7 +77,6 @@ export namespace DevTools::Viewer::Latency::Type
     {
         FrameClock Clock{};
         std::optional<std::uint32_t> SceneTick{};
-        bool IsBeforeHud{};
         PickKind Pick{};
         PoseSource Interp{};
 

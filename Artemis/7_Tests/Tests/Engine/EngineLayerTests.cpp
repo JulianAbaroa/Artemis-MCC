@@ -155,7 +155,6 @@ TEST(EngineLayerTests, ChudDetourWithoutTheGameInstallsNothing)
 
     // No haloreach.dll in the process: no pass is found, nothing is hooked and the store says so.
     EXPECT_FALSE(render.m_ChudDetour.Install());
-    EXPECT_FALSE(render.m_RenderStore.GetHudHook().IsHooked);
     render.m_ChudDetour.Uninstall();
 }
 
@@ -170,7 +169,7 @@ TEST(EngineLayerTests, FirstPersonDetourWithoutTheGameInstallsNothing)
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonModelHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonUnitHooked());
     EXPECT_FALSE(render.m_RenderStore.IsFirstPersonDepthPassHooked());
-    EXPECT_FALSE(render.m_RenderStore.IsFirstPersonForwardHooked());
+    EXPECT_FALSE(render.m_RenderStore.IsOpaquePassHooked());
     render.m_FirstPersonDetour.Uninstall();
 }
 
@@ -205,18 +204,18 @@ TEST(EngineLayerTests, RenderStoreFirstPersonFlagAndThirdPersonFrame)
     EXPECT_FALSE(store.WasThirdPersonLastFrame());
     store.CountThirdPerson();
     EXPECT_FALSE(store.WasThirdPersonLastFrame());
-    store.EndHudFrame();
+    store.EndFrame();
     EXPECT_TRUE(store.WasThirdPersonLastFrame());
-    store.EndHudFrame();
+    store.EndFrame();
     EXPECT_FALSE(store.WasThirdPersonLastFrame());
 
     // The same for the true answers of the first person test for user 0 (VW.6b.1).
     EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
     store.CountFirstPersonUnit();
     EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
-    store.EndHudFrame();
+    store.EndFrame();
     EXPECT_TRUE(store.WasFirstPersonUnitLastFrame());
-    store.EndHudFrame();
+    store.EndFrame();
     EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
 }
 
@@ -301,7 +300,7 @@ TEST(EngineLayerTests, RenderStoreMaskCopyIsTakenOncePerFrameAndPairAndReportedF
     EXPECT_FALSE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthZero));
 
     // Closing the frame moves the marks to the last frame and frees the copies for the next one.
-    store.EndHudFrame();
+    store.EndFrame();
     EXPECT_FALSE(store.IsMaskCopied(MaskPairKind::DepthZero));
     EXPECT_TRUE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthZero));
     EXPECT_FALSE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthB));
@@ -309,7 +308,7 @@ TEST(EngineLayerTests, RenderStoreMaskCopyIsTakenOncePerFrameAndPairAndReportedF
     EXPECT_TRUE(store.TakeMaskCopy(MaskPairKind::DepthZero));
 
     // A frame with no copy leaves no mask for the one after.
-    store.EndHudFrame();
+    store.EndFrame();
     EXPECT_FALSE(store.WasMaskCopiedLastFrame(MaskPairKind::DepthZero));
 
     // Without a device nothing is ready, and releasing is harmless.
@@ -436,87 +435,15 @@ TEST(EngineLayerTests, ObserverCameraDetourWithoutTheGameInstallsNothing)
     EXPECT_FALSE(base.m_CameraOverrideStore.IsActive());
 }
 
-TEST(EngineLayerTests, BeforeHudDrawsOncePerPresentFrame)
-{
-    using Engine::Render::State::RenderStore;
-    using Engine::Render::System::RenderService;
-    using Engine::Render::Type::BeforeHudStatus;
-    using Engine::Render::Type::HudHookInfo;
-
-    RenderStore store{};
-
-    // The mark belongs to the Present frame in progress: set before the Present handlers, it is gone after the Present.
-    EXPECT_FALSE(store.IsBeforeHudMarked());
-    store.MarkBeforeHud();
-    store.MarkBeforeHud();
-    EXPECT_TRUE(store.IsBeforeHudMarked());
-    store.NextPresentFrame();
-    EXPECT_FALSE(store.IsBeforeHudMarked());
-    store.NextPresentFrame();
-    EXPECT_FALSE(store.IsBeforeHudMarked());
-
-    // The status of a frame is shown once the frame completes, and the next frame starts with no HUD draw.
-    store.SetBeforeHudStatus(BeforeHudStatus::Drawn);
-    EXPECT_EQ(store.GetBeforeHudStatus(), BeforeHudStatus::NoHudDraw);
-    store.NextPresentFrame();
-    EXPECT_EQ(store.GetBeforeHudStatus(), BeforeHudStatus::Drawn);
-    store.NextPresentFrame();
-    EXPECT_EQ(store.GetBeforeHudStatus(), BeforeHudStatus::NoHudDraw);
-
-    HudHookInfo sample{};
-    sample.HasSample = true;
-    sample.IsSameThread = true;
-    sample.HasTarget = true;
-    sample.IsBackBuffer = true;
-    sample.IsSameDevice = true;
-    sample.HasViewport = true;
-    sample.Width = 1920;
-    sample.Height = 1080;
-    sample.ViewportWidth = 1920.0f;
-    sample.ViewportHeight = 1080.0f;
-
-    EXPECT_FALSE(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080).has_value());
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, false, 1920, 1080), BeforeHudStatus::NotReady);
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1280, 720), BeforeHudStatus::TargetMismatch);
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 0, 0), BeforeHudStatus::TargetMismatch);
-
-    // The bound target must be the current back buffer of the store, of its device, and the viewport the whole target.
-    sample.IsBackBuffer = false;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::NotBackBuffer);
-    sample.IsBackBuffer = true;
-
-    sample.IsSameDevice = false;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherDevice);
-    sample.IsSameDevice = true;
-
-    sample.ViewportWidth = 960.0f;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
-    sample.ViewportWidth = 1920.0f;
-    sample.ViewportX = 4.0f;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
-    sample.ViewportX = 0.0f;
-    sample.HasViewport = false;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
-    sample.HasViewport = true;
-
-    sample.HasTarget = false;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::TargetMismatch);
-
-    sample.IsSameThread = false;
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherThread);
-}
-
-TEST(EngineLayerTests, SceneBlockerTakesTheHdrTargetNotTheBackBuffer)
+TEST(EngineLayerTests, SceneBlockerTakesTheHdrTargetOfTheGame)
 {
     using Engine::Render::System::RenderService;
-    using Engine::Render::Type::BeforeHudStatus;
-    using Engine::Render::Type::HudHookInfo;
+    using Engine::Render::Type::SceneStatus;
+    using Engine::Render::Type::SceneTargetSample;
 
-    HudHookInfo sample{};
-    sample.HasSample = true;
+    SceneTargetSample sample{};
     sample.IsSameThread = true;
     sample.HasTarget = true;
-    sample.IsBackBuffer = false;
     sample.IsSameDevice = true;
     sample.HasViewport = true;
     sample.Width = 1920;
@@ -525,93 +452,91 @@ TEST(EngineLayerTests, SceneBlockerTakesTheHdrTargetNotTheBackBuffer)
     sample.ViewportWidth = 1920.0f;
     sample.ViewportHeight = 1080.0f;
 
-    // The valid case: the target of the game is not the back buffer, but one sample and the size of the back buffer.
+    // The valid case: the target of the game is the HDR target, one sample and the size of the back buffer.
     EXPECT_FALSE(RenderService::FindSceneBlocker(sample, true, 1920, 1080).has_value());
-    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::NotBackBuffer);
 
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, false, 1920, 1080), BeforeHudStatus::NotReady);
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1280, 720), BeforeHudStatus::TargetMismatch);
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 0, 0), BeforeHudStatus::TargetMismatch);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, false, 1920, 1080), SceneStatus::NotReady);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1280, 720), SceneStatus::TargetMismatch);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 0, 0), SceneStatus::TargetMismatch);
 
     sample.SampleCount = 4;
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::Multisampled);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), SceneStatus::Multisampled);
     sample.SampleCount = 1;
 
     sample.IsSameDevice = false;
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherDevice);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), SceneStatus::OtherDevice);
     sample.IsSameDevice = true;
 
     sample.ViewportWidth = 960.0f;
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), SceneStatus::SplitViewport);
     sample.ViewportWidth = 1920.0f;
     sample.HasViewport = false;
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), SceneStatus::SplitViewport);
     sample.HasViewport = true;
 
     sample.HasTarget = false;
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::TargetMismatch);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), SceneStatus::TargetMismatch);
     sample.HasTarget = true;
 
     sample.IsSameThread = false;
-    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherThread);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), SceneStatus::OtherThread);
 }
 
 TEST(EngineLayerTests, SceneDrawPlaceAndStatusAreOfTheLastCompletedFrame)
 {
     using Engine::Render::State::RenderStore;
-    using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::SceneStatus;
     using Engine::Render::Type::DrawPlace;
 
     RenderStore store{};
-
-    EXPECT_FALSE(store.IsOverlayInSceneRequested());
-    store.SetOverlayInSceneRequested(true);
-    EXPECT_TRUE(store.IsOverlayInSceneRequested());
 
     // Only the first call of the Present frame takes the scene point.
     EXPECT_TRUE(store.TakeSceneCall());
     EXPECT_FALSE(store.TakeSceneCall());
 
-    store.SetSceneStatus(BeforeHudStatus::Drawn);
+    store.SetSceneStatus(SceneStatus::Drawn);
     store.SetDrawPlace(DrawPlace::Scene);
-    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Present);
-    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::NoSceneCall);
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::None);
+    EXPECT_EQ(store.GetSceneStatus(), SceneStatus::NoSceneCall);
 
     store.NextPresentFrame();
     EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Scene);
-    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::Drawn);
+    EXPECT_EQ(store.GetSceneStatus(), SceneStatus::Drawn);
     EXPECT_TRUE(store.TakeSceneCall());
 
-    // The next frame starts at Present with no scene call, and the HUD can take the place.
-    store.SetSceneStatus(BeforeHudStatus::SplitViewport);
-    store.SetDrawPlace(DrawPlace::Hud);
+    // The next frame starts with no scene call and no place, and a blocked frame keeps its reason.
+    store.SetSceneStatus(SceneStatus::SplitViewport);
     store.NextPresentFrame();
-    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Hud);
-    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::SplitViewport);
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::None);
+    EXPECT_EQ(store.GetSceneStatus(), SceneStatus::SplitViewport);
     store.NextPresentFrame();
-    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Present);
-    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::NoSceneCall);
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::None);
+    EXPECT_EQ(store.GetSceneStatus(), SceneStatus::NoSceneCall);
 
     EXPECT_EQ(store.GetSceneFailures(), 0u);
     store.CountSceneFailure();
     EXPECT_EQ(store.GetSceneFailures(), 1u);
 }
 
-TEST(EngineLayerTests, RenderStoreHudFlagAndCallsPerFrame)
+TEST(EngineLayerTests, SceneDrawRequestIsOffByDefaultAndFollowsTheViewer)
+{
+    using Engine::Render::State::RenderStore;
+
+    RenderStore store{};
+    EXPECT_FALSE(store.IsSceneDrawRequested());
+    store.SetSceneDrawRequested(true);
+    EXPECT_TRUE(store.IsSceneDrawRequested());
+    store.SetSceneDrawRequested(false);
+    EXPECT_FALSE(store.IsSceneDrawRequested());
+}
+
+TEST(EngineLayerTests, RenderStoreHudFlag)
 {
     Engine::Render::State::RenderStore store{};
 
     EXPECT_FALSE(store.IsGameHudHidden());
     store.SetGameHudHidden(true);
     EXPECT_TRUE(store.IsGameHudHidden());
-
-    store.CountHudCall();
-    store.CountHudCall();
-    EXPECT_EQ(store.GetHudHook().CallsPerFrame, 0u);
-    store.EndHudFrame();
-    EXPECT_EQ(store.GetHudHook().CallsPerFrame, 2u);
-    store.EndHudFrame();
-    EXPECT_EQ(store.GetHudHook().CallsPerFrame, 0u);
 }
 
 TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)

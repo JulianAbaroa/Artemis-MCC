@@ -11,7 +11,7 @@ import std;
 export namespace Engine::Render::Hook
 {
     // Hooks the three HUD passes of the game (chud draw, late draw and 3D draw). With the render flag HideGameHud they return without
-    // calling the original. The draw also measures the thread, the render target and the viewport it runs with (user 0 only).
+    // calling the original. Otherwise they only call it: the hooks exist to skip the HUD.
     class ChudDetour
     {
     private:
@@ -34,7 +34,7 @@ export namespace Engine::Render::Hook
 
         // Finds each pass by its RVA and prologue and hooks it. A pass whose prologue does not match is logged as an ERROR and left
         // alone, the others are still hooked. Does nothing if already installed. Can be called again after Uninstall.
-        // return: True if the draw of the list (the one that measures) is hooked.
+        // return: True if the draw of the list is hooked.
         auto Install() -> bool;
 
         // Waits for the calls in flight to drain, then removes the hooks that were installed. Does nothing if not installed.

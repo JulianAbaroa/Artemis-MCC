@@ -19,7 +19,6 @@ namespace
     using DevTools::Viewer::Options::Type::FlagInfo;
     using DevTools::Viewer::Options::Type::ScalarInfo;
     using DevTools::Viewer::Camera::Type::Mode;
-    using DevTools::Viewer::Camera::Type::Follow;
 
     using DevTools::Workbench::Hotkey::Type::Binding;
     using DevTools::Workbench::Settings::Type::SettingsSection;
@@ -39,7 +38,6 @@ namespace
     using DevTools::Gui::Widget::System::StatusGuiService;
 
     constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
-    constexpr std::array<const char*, 3> k_FollowLabels{ "Off", "First person", "Orbit" };
 
     // Share of a row the label takes before its item, and the narrowest an item may get (in font sizes) before it goes under its label.
     constexpr float k_LabelColumnFraction{ 0.4f };
@@ -245,8 +243,8 @@ namespace DevTools::Workbench::Settings::System
             ImGui::SetTooltip("Shows or hides the Viewer. Same as the F4 hotkey.");
         }
 
-        LabelBeforeItem("Mode", "Free camera: the Viewer takes the keyboard and the mouse and flies on its own.\n"
-            "Game camera: the game keeps its controls and the Viewer sits on your view.");
+        LabelBeforeItem("Mode", "Free camera: the Viewer takes the keyboard and the mouse and flies on its own, and the game draws from that camera.\n"
+            "Game camera: the game keeps its controls and the Viewer draws from the camera of the game.");
 
         const int current{ static_cast<int>(m_CameraStore.GetMode()) };
         if (ImGui::BeginCombo("##ViewerMode", k_ModeLabels[current]))
@@ -264,35 +262,6 @@ namespace DevTools::Workbench::Settings::System
 
             ImGui::EndCombo();
         }
-
-
-        const bool isGameMode{ m_CameraStore.GetMode() == Mode::Game };
-        if (isGameMode) ImGui::BeginDisabled();
-
-        LabelBeforeItem("Follow selection", isGameMode ? "Needs the free camera." : "Off: flies on its own.\n"
-            "First person: sits on the view of the selected object.\n"
-            "Orbit: turns around the selected object (mouse rotates, wheel sets the distance).\n"
-            "Same as the key left of the 1.");
-
-        const int currentFollow{ static_cast<int>(m_CameraStore.GetFollow()) };
-        if (ImGui::BeginCombo("##ViewerFollow", k_FollowLabels[currentFollow]))
-        {
-            for (int i{ 0 }; i < static_cast<int>(k_FollowLabels.size()); ++i)
-            {
-                const bool isSelected{ i == currentFollow };
-                if (ImGui::Selectable(k_FollowLabels[i], isSelected))
-                {
-                    m_CameraStore.SetFollow(static_cast<Follow>(i));
-                }
-
-                if (isSelected) ImGui::SetItemDefaultFocus();
-            }
-
-            ImGui::EndCombo();
-        }
-
-
-        if (isGameMode) ImGui::EndDisabled();
 
         bool isZoomActive{ m_CameraStore.IsZoomActive() };
         if (ImGui::Checkbox("Zoom active", &isZoomActive))

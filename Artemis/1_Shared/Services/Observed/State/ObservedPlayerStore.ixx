@@ -4,7 +4,7 @@ import std;
 
 export namespace Services::Observed::State
 {
-    // The player whose view the user is watching: the one the Viewer follows. The AI thread adds it to the agents that get a View (D307).
+    // The player whose view the user is watching: the one of the object selected in the Viewer. The AI thread adds it to the agents that get a View (D307).
     // note: Atomic: the render thread writes it and the AI thread reads it. No player is 0xFFFFFFFF.
     class ObservedPlayerStore
     {

@@ -327,17 +327,8 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 48 83 EC 20"
     };
 
-    // The forward pass of the view (A21 sec. 8, VW.6.y.2 D): void(void* view, uint8 phase), the phase is a char in DL. Phase 0 draws the first
-    // person camera (0x286ebc queues the model, 0x2989e4 with 0xC and 0x14), the others take another branch. It draws the emissive and
-    // transparent parts into the HDR target, so it is only measured, never changed. Read from haloreach.dll on 2026-11-19.
-    inline constexpr Signature k_FirstPersonForwardPrologue
-    {
-        "FirstPersonForwardPrologue",
-        "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 60 20 41 56 48 83 EC 30"
-    };
-
     // The opaque color pass of the view (A21 sec. 8 CORRECTION, D334): void(void* view), called once per view by 0x26C6DC after the first person
-    // lists of 0x26EA78 phase 0 and before the effects and the post. It draws the color of the opaque world (0x2989e4 with list 0), so the overlay
+    // lists of the view and before the effects and the post. It draws the color of the opaque world (0x2989e4 with list 0), so the overlay
     // is drawn at its exit, over the world. Read from haloreach.dll MD5 012f4079... on 2026-11-19.
     inline constexpr Signature k_OpaqueColorPassPrologue
     {
@@ -347,7 +338,6 @@ export namespace Engine::Base::Memory::Type::Signature
 
     inline constexpr std::uint32_t k_FirstPersonModelRva{ 0x286EBC };
     inline constexpr std::uint32_t k_FirstPersonDepthPassRva{ 0x26DA08 };
-    inline constexpr std::uint32_t k_FirstPersonForwardRva{ 0x26EA78 };
     inline constexpr std::uint32_t k_OpaqueColorPassRva{ 0x26E500 };
     inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
 

@@ -52,37 +52,6 @@ namespace DevTools::Viewer::Camera::State
         }
     }
 
-    auto CameraStore::GetFollow() const -> Follow
-    {
-        return m_Follow.load(std::memory_order_relaxed);
-    }
-
-    auto CameraStore::SetFollow(Follow follow) -> void
-    {
-        m_Follow.store(follow, std::memory_order_relaxed);
-    }
-
-    auto CameraStore::CycleFollow() -> void
-    {
-        switch (this->GetFollow())
-        {
-        case Follow::Off:         this->SetFollow(Follow::FirstPerson); break;
-        case Follow::FirstPerson: this->SetFollow(Follow::Orbit); break;
-        default:                  this->SetFollow(Follow::Off); break;
-        }
-    }
-
-    auto CameraStore::GetOrbitDistance() const -> float
-    {
-        return m_OrbitDistance.load(std::memory_order_relaxed);
-    }
-
-    auto CameraStore::SetOrbitDistance(float value) -> void
-    {
-        m_OrbitDistance.store(std::clamp(value, k_MinOrbitDistance, k_MaxOrbitDistance),
-            std::memory_order_relaxed);
-    }
-
     auto CameraStore::IsKeyDown(Key key) const -> bool
     {
         return m_Keys[static_cast<std::size_t>(key)].load(std::memory_order_relaxed);

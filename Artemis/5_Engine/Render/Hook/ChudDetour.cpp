@@ -16,9 +16,6 @@ namespace
     using Engine::Base::Memory::Type::Signature::k_ChudDrawPrologue;
     using Engine::Base::Memory::Type::Signature::k_ChudDrawRva;
     using Engine::Base::Memory::Type::Signature::k_ChudWindow;
-
-    // The only user the measure follows (the first local player).
-    constexpr std::uint32_t k_MeasuredUser{ 0 };
 }
 
 namespace Engine::Render::Hook
@@ -35,8 +32,6 @@ namespace Engine::Render::Hook
         }
 
         RenderStore::HookScope scope{ self->m_RenderStore };
-
-        if (user == k_MeasuredUser) self->m_RenderService.OnHudDraw();
 
         if (self->m_RenderStore.IsGameHudHidden()) return;
 
@@ -120,7 +115,6 @@ namespace Engine::Render::Hook
         }
 
         m_IsInstalled.store(true);
-        m_RenderStore.SetHudHookInstalled(isDrawHooked);
         return isDrawHooked;
     }
 
@@ -146,8 +140,6 @@ namespace Engine::Render::Hook
         const std::lock_guard<std::mutex> lock{ m_Mutex };
 
         if (!m_IsInstalled.load()) return;
-
-        m_RenderStore.SetHudHookInstalled(false);
 
         this->Disable(m_DrawAddress);
         this->Disable(m_DrawLateAddress);

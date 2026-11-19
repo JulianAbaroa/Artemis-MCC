@@ -9,6 +9,7 @@ import Perception.Collidable.System;
 import Perception.Details.State;
 import Perception.Entities.State;
 import Perception.ObjectGraph.State;
+import Perception.Players.Type;
 import Perception.Players.State;
 import Views.Raycast.Type;
 import Views.Raycast.State;
@@ -21,6 +22,10 @@ export namespace Views::View::System
     // return: The View of the player with that handle, or the View of the primary local player when the handle is 0xFFFFFFFF or has none.
     // Null when neither has a computed View. The Viewer and the oracle read the View of the player they watch through it (F4.2).
     auto FindObservedView(const Views::View::Type::ViewTable& views, std::uint32_t observedHandle) -> const Views::View::Type::View*;
+
+    // return: The handle of the player whose current biped is the selected object, or 0xFFFFFFFF (the primary local player) when the selection is
+    // not a player biped or there is none. It is the observed player of the Viewer: selecting the biped of a bot shows its View without moving the camera.
+    auto ObservedPlayerOf(const Perception::Players::Type::Players& players, std::uint32_t selected) -> std::uint32_t;
 
     // return: The unit direction the agent aims along, from the heading and pitch of its aim.
     auto AimDirectionOf(const Views::View::Type::View& view) -> Common::Math::Type::Vec3;

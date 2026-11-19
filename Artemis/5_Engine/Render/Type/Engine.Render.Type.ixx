@@ -26,52 +26,42 @@ export namespace Engine::Render::Type
     // The pass 0x26DA08 between the entry and the exit of the first person draw: void(void* view, int32 pass).
     using FirstPersonDepthPassFunction = auto(__fastcall*)(void* view, std::int32_t pass) -> void;
 
-    // The forward pass of the view 0x26EA78: void(void* view, uint8 phase). The phase is a char in DL.
-    using FirstPersonForwardFunction = auto(__fastcall*)(void* view, std::uint8_t phase) -> void;
-
     // The opaque color pass of the view 0x26E500: void(void* view).
     using OpaqueColorPassFunction = auto(__fastcall*)(void* view) -> void;
 
     // The game's test of a first person unit: bool(uint32 user, uint32 objectHandle).
     using IsFirstPersonUnitFunction = auto(__fastcall*)(std::uint32_t user, std::uint32_t objectHandle) -> bool;
 
-    // Why the last completed frame did or did not draw before the HUD of the game.
-    enum class BeforeHudStatus : std::uint8_t
+    // Why the last completed frame did or did not draw the overlay at the scene point (the exit of the opaque color pass 0x26E500).
+    enum class SceneStatus : std::uint8_t
     {
-        NoHudDraw,          // the game did not run the HUD draw for user 0 in the frame
-        Drawn,              // a handler drew before the HUD
-        OtherThread,        // the HUD draw ran on a thread other than Present
+        NoSceneCall,        // the opaque color pass was not called in the frame (menu, pause without a draw) or its hook is not installed
+        NotRequested,       // the Viewer did not request a scene draw (inactive): the call returned before measuring anything
+        Drawn,              // a handler drew
+        OtherThread,        // the pass ran on a thread other than Present
         NotReady,           // no targets, resizing or shutting down
         TargetMismatch,     // the bound target is not a texture of the size of the back buffer
-        NotBackBuffer,      // the bound target is not the current back buffer of the store
         OtherDevice,        // the bound target belongs to another device than the store's
         SplitViewport,      // viewport 0 is not the whole target (split screen)
-        HudHidden,          // the game HUD is hidden (Hide game HUD)
+        Multisampled,       // the bound target has more than one sample
         Declined,           // the handlers did not draw
-        Multisampled,       // (scene) the bound target has more than one sample
-        NoSceneCall,        // (scene) the opaque color pass was not called in the frame, or the option is off
-        Failed              // a handler threw: the frame counts as handled, so Present does not draw it again
+        Failed              // a handler threw
     };
 
-    // Where the overlay was drawn in the last completed Present frame (VW.6.z).
+    // Where the overlay was drawn in the last completed Present frame.
     enum class DrawPlace : std::uint8_t
     {
-        Present,    // at Present, after the frame of the game (no earlier point drew it)
-        Hud,        // before the HUD of the game, after the post
+        None,       // nowhere: the reason is the SceneStatus
         Scene       // inside the frame, at the exit of the opaque color pass 0x26E500
     };
 
-    // What the HUD detour measured at the last call of the draw for user 0 (VW.6.x). Only reads, never drawn from.
-    struct HudHookInfo
+    // What the scene point measured about the render target bound in slot 0 and the viewport. Only reads, never drawn from.
+    struct SceneTargetSample
     {
-        bool IsHooked{ false };         // the draw detour is installed
-        bool HasSample{ false };        // the draw ran at least once
         bool IsSameThread{ false };     // it ran on the thread of Present. When false the next fields are not read
         bool HasTarget{ false };        // a render target was bound in slot 0
-        bool IsBackBuffer{ false };     // that target is the current back buffer of the store
         bool IsSameDevice{ false };     // that target belongs to the device of the store
         bool HasViewport{ false };
-        std::uint32_t CallsPerFrame{ 0 };   // calls for user 0 between the last two Present
         std::uint32_t Width{ 0 };
         std::uint32_t Height{ 0 };
         std::uint32_t Format{ 0 };      // DXGI_FORMAT of the target view
@@ -106,11 +96,10 @@ export namespace Engine::Render::Type
         }
     }
 
-    // The color target in slot 0: its texture, its view and whether it is the back buffer.
+    // The color target in slot 0: its texture and its view.
     struct ColorTargetInfo
     {
         bool HasTarget{ false };
-        bool IsBackBuffer{ false };     // the resource is the one of the back buffer view of the store
         bool IsSameDevice{ false };     // the target belongs to the device of the store
         std::uint32_t Width{ 0 };
         std::uint32_t Height{ 0 };
@@ -333,8 +322,8 @@ export namespace Engine::Render::Type
 
     using FrameHandler = std::function<void(const FrameContext&)>;
 
-    // Handler that draws under the HUD of the game. return: True if it drew, so the Present handlers skip that work in the frame.
-    using BeforeHudHandler = std::function<bool(const FrameContext&)>;
+    // Handler that draws the 3D passes of the overlay at the scene point. return: True if it drew.
+    using SceneHandler = std::function<bool(const FrameContext&)>;
     using ShutdownCallback = std::function<void()>;
 
     // Longest wait of a render hook for the frame in flight when it is removed.

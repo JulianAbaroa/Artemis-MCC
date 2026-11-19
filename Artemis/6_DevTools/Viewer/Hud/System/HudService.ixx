@@ -40,8 +40,6 @@ export namespace DevTools::Viewer::Hud::System
         using Tick = Bridge::Codec::Tick::Type::Tick;
 
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
-        using BeforeHudStatus = Engine::Render::Type::BeforeHudStatus;
-        using HudHookInfo = Engine::Render::Type::HudHookInfo;
 
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
@@ -87,7 +85,6 @@ export namespace DevTools::Viewer::Hud::System
         // Draws the camera of the game: validity, position, fields of view, aspect against the back buffer and the distance to the View of the
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
-        auto DrawHudHook() -> void;
         auto DrawFirstPersonHook() -> void;
 
         // Draws whether the first person mask of the overlay was copied in the last frame (VW.6.y.2 B).
@@ -95,9 +92,11 @@ export namespace DevTools::Viewer::Hud::System
 
         // Draws the measurement of the lag between the scene of the overlay and the frame of the game (VW.5c), over the last k_WindowFrames.
         auto DrawLatency() -> void;
-        auto DrawOverlayPoint(bool isHooked) -> void;
 
-        // Draws the scale of the last scene draw (VW.6.z.2). Only with Overlay in scene on.
+        // Draws where the overlay was drawn in the last frame: the scene point, or none with the reason.
+        auto DrawOverlayPoint() -> void;
+
+        // Draws the scale of the last scene draw.
         auto DrawSceneColor() -> void;
         auto DrawOverride() -> void;
     };

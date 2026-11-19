@@ -15,7 +15,7 @@ import std;
 
 export namespace DevTools::Viewer::Map::System
 {
-    // Draws the static map geometry, either the render geometry or the collision the rays hit. Both vertex buffers are built once.
+    // Draws the static map geometry over the game frame: the collision the rays hit, or the render geometry when the map has none. Both vertex buffers are built once.
     class MapPass
     {
     private:
@@ -44,13 +44,10 @@ export namespace DevTools::Viewer::Map::System
         // return: True if there is geometry to draw.
         auto HasBuffer() const -> bool;
 
-        // param isCollision: Draws the collision surfaces instead of the render geometry. Falls back to the other one if it is empty.
-        auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isCollision) -> void;
-
-        // Draws the collision for the overlay on the game frame: in depth only (it hides what is drawn after it and writes no color), and
+        // Draws the collision over the game frame: in depth only (it hides what is drawn after it and writes no color), and
         // with wireframe, also as visible lines to check that it lines up with the walls of the frame.
         // note: Uses the render geometry when the map has no collision.
-        auto DrawOverlay(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isWireframe) -> void;
+        auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isWireframe) -> void;
 
         auto Release() -> void;
 

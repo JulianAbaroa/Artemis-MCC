@@ -40,6 +40,7 @@ namespace
     using Tests::Support::ViewScene::MakePlane;
     using Views::Raycast::Type::HitKind;
     using Views::View::System::FindObservedView;
+    using Views::View::System::ObservedPlayerOf;
     using Views::View::System::RaycastsOf;
     using Views::View::Type::AgentSet;
     using Views::View::Type::View;
@@ -269,6 +270,28 @@ TEST(ViewObservedTests, FindsTheObservedPlayerThenTheLocalOne)
     table[1].Head.IsComputed = false;
     EXPECT_EQ(FindObservedView(table, k_NoHandle), nullptr);
     EXPECT_EQ(FindObservedView(table, k_PlayerA), &table[0]);
+}
+
+// The watched player is the one of the selected biped (a bot, or the local player), else the local player (no handle): selecting a bot shows
+// its View without moving the camera, and nothing selected, a pickup or a biped without a player gives the local one.
+TEST(ViewObservedTests, TheSelectedBipedGivesItsPlayerElseTheLocalOne)
+{
+    Perception::Players::Type::Players players{};
+    players.Rows.resize(3);
+    players.Rows[0].Handle = k_PlayerA;
+    players.Rows[0].BipedHandle = k_BipedA;
+    players.Rows[1].Handle = k_PlayerB;
+    players.Rows[1].BipedHandle = 0xB1B1B1B1;
+    players.Rows[2].Handle = k_PlayerC;
+    players.Rows[2].BipedHandle = k_NoHandle;
+
+    EXPECT_EQ(ObservedPlayerOf(players, k_BipedA), k_PlayerA);
+    EXPECT_EQ(ObservedPlayerOf(players, 0xB1B1B1B1), k_PlayerB);
+
+    // A dead player without a biped never matches the no-handle value of a selection that is nothing.
+    EXPECT_EQ(ObservedPlayerOf(players, k_NoHandle), k_NoHandle);
+    EXPECT_EQ(ObservedPlayerOf(players, 0xDEAD0001), k_NoHandle);
+    EXPECT_EQ(ObservedPlayerOf(Perception::Players::Type::Players{}, k_BipedA), k_NoHandle);
 }
 
 // The raycasts the dev tools draw come out of the View: the aim ray from the eye, the pattern from the ray origin in the frame of the aim.

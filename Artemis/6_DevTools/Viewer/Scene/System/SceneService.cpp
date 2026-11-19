@@ -12,20 +12,16 @@ import std;
 
 namespace
 {
-    using DevTools::Viewer::Camera::Type::Follow;
     using DevTools::Viewer::Camera::Type::Mode;
     using Perception::ObjectGraph::Type::ObjectNode;
-    using Perception::Players::Type::Player;
 
     using Views::View::System::FindObservedView;
+    using Views::View::System::ObservedPlayerOf;
     using Views::View::System::ViewPositionOf;
 
     using DevTools::Viewer::Collidable::Type::ShareObjects;
 
     using Common::Engine::Type::k_NoHandle;
-
-    // The game camera counts as in the eyes of the View when closer than this. On foot it measures 0.004, in third person it is meters.
-    constexpr float k_FirstPersonDistance{ 0.1f };
 }
 
 namespace DevTools::Viewer::Scene::System
@@ -114,28 +110,16 @@ namespace DevTools::Viewer::Scene::System
         return m_CameraStore.GetMode() == Mode::Game;
     }
 
-    auto SceneService::IsOwnBipedHidden(std::optional<bool> gameHidesUnit, std::optional<float> eyeDistance) -> bool
-    {
-        if (gameHidesUnit) return *gameHidesUnit;
-
-        // note: Without a valid game camera the camera sits on the View of the local player, so it is hidden.
-        return !eyeDistance || *eyeDistance < k_FirstPersonDistance;
-    }
-
     auto SceneService::HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>
     {
         std::unordered_set<std::uint32_t> hidden{};
         if (!tick.Views) return hidden;
 
-        const View* view{ nullptr };
-        if (m_CameraStore.GetMode() == Mode::Game)
-        {
-            const std::optional<bool> gameHidesUnit{ m_RenderStore.IsFirstPersonUnitHooked()
-                ? std::optional<bool>{ m_RenderStore.WasFirstPersonUnitLastFrame() } : std::nullopt };
-            if (SceneService::IsOwnBipedHidden(gameHidesUnit, this->GetEyeDistance(tick))) view = FindObservedView(*tick.Views, k_NoHandle);
-        }
-        else if (m_CameraStore.GetFollow() == Follow::FirstPerson && m_ObservedStore.Get() != k_NoHandle) view = this->GetObservedView(tick);
+        // note: Only the Game mode hides the biped of the local player, and only when the unit hook says the game hid it. Without the hook nothing is
+        // hidden (no fallback). The free camera hides nothing: the game draws the body.
+        if (m_CameraStore.GetMode() != Mode::Game || !m_RenderStore.IsFirstPersonUnitHooked() || !m_RenderStore.WasFirstPersonUnitLastFrame()) return hidden;
 
+        const View* view{ FindObservedView(*tick.Views, k_NoHandle) };
         if (!view || view->Head.BipedHandle == k_NoHandle) return hidden;
 
         hidden.insert(view->Head.BipedHandle);
@@ -168,28 +152,29 @@ namespace DevTools::Viewer::Scene::System
         const std::shared_ptr<const Tick> tick{ scene ? scene->Tick : nullptr };
 
         const bool acceptInput = !m_SettingsStore.IsMenuVisible();
+        m_CameraService.Update(tick, viewport, acceptInput);
+
+        // note: The watched player is the one of the selected biped, else the local player.
         const std::uint32_t selected = m_SelectionService.GetSelected();
-        const std::optional<std::uint32_t> followHandle =
-            (selected == k_NoHandle)
-            ? std::nullopt : std::optional<std::uint32_t>{ selected };
-
-        m_CameraService.Update(tick, viewport, acceptInput, followHandle);
-
-        std::uint32_t observed{ k_NoHandle };
-        if (followHandle && m_CameraStore.GetFollow() != Follow::Off && tick && tick->Players)
-        {
-            for (const Player& player : tick->Players->Rows)
-            {
-                if (player.BipedHandle == *followHandle) observed = player.Handle;
-            }
-        }
-        m_ObservedStore.Set(observed);
+        m_ObservedStore.Set(tick && tick->Players ? ObservedPlayerOf(*tick->Players, selected) : k_NoHandle);
 
         m_Hidden = tick ? this->HiddenHandlesOf(*tick) : std::unordered_set<std::uint32_t>{};
 
         m_PaletteService.Build(tick);
 
         m_SelectionService.Update(m_CameraService.GetCenterRay(), ShareObjects(scene));
+
+        m_IsFrameUpdated = m_CameraService.HasRenderPose();
+    }
+
+    auto SceneService::HasFrameUpdate() const -> bool
+    {
+        return m_IsFrameUpdated;
+    }
+
+    auto SceneService::EndFrame() -> void
+    {
+        m_IsFrameUpdated = false;
     }
 
     auto SceneService::ClearSelection() -> void
@@ -200,6 +185,7 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::Reset() -> void
     {
         m_Scene.reset();
+        m_IsFrameUpdated = false;
         m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
         m_PaletteService.Reset();
@@ -209,11 +195,6 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::GetViewProjection() const -> const Matrix&
     {
         return m_CameraService.GetViewProjection();
-    }
-
-    auto SceneService::IsGameCamera() const -> bool
-    {
-        return m_CameraStore.GetMode() == Mode::Game || m_CameraService.IsDriving();
     }
 
     auto SceneService::IsOverrideActive() const -> bool

@@ -29,7 +29,7 @@ import std;
 export namespace DevTools::Viewer
 {
     // Root of the Viewer layer. Owns the camera, the selection, the overlay options and the services that draw the scene and the HUD.
-    // note: Hooks into the Platform events. It renders the map and the HUD with the game frame and handles the window and mouse input.
+    // note: Hooks into the Platform events. It draws the 3D passes inside the game frame (the scene point), the labels and the HUD at Present, and handles the window and mouse input.
     class Layer
     {
     private:
@@ -83,30 +83,43 @@ export namespace DevTools::Viewer
                 [this](std::ostream& stream) { m_OptionsStore.Save(stream); },
                 [this](std::string_view key, std::string_view value) { m_OptionsStore.Load(key, value); });
 
-            engine.m_RenderService.OnFrame([this, &gui, &engine](const FrameContext& frame) {
+            engine.m_RenderService.OnFrame([this, &gui, &engine, &service](const FrameContext&) {
                 engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
                 engine.m_RenderStore.SetFirstPersonHidden(m_OptionsStore.IsEnabled(Flag::HideFirstPerson));
 
-                // note: The mask only matters under the overlay, so the depth copies are not made without it.
-                engine.m_RenderStore.SetFirstPersonMaskRequested(m_OptionsStore.IsEnabled(Flag::Overlay));
+                // note: The overlay needs the depth copies of the first person mask, and the scene point draws only for an active Viewer. Without
+                // the Viewer neither is done.
+                const bool isActive{ m_SceneService.IsActive() };
+                engine.m_RenderStore.SetFirstPersonMaskRequested(isActive);
+                engine.m_RenderStore.SetSceneDrawRequested(isActive);
 
-                engine.m_RenderStore.SetOverlayInSceneRequested(m_OptionsStore.IsEnabled(Flag::OverlayInScene) &&
-                    m_OptionsStore.IsEnabled(Flag::Overlay));
+                // The scene point does not run for an inactive Viewer, so the reset (override, flying state, scene, poses, observed player) is made
+                // here. It is idempotent and on the same thread as the scene point.
+                if (!isActive) m_SceneService.Deactivate();
 
-                // note: The scale only matters at the scene point (VW.6.z.2). The store keeps it for the next scene draw.
+                if (isActive && !m_IsActiveLast && !engine.m_RenderStore.IsOpaquePassHooked())
+                {
+                    service.m_Log.Message("[Viewer] ERROR: The hook of the opaque color pass (0x26E500) is not installed, so no 3D pass is drawn.");
+                }
+
+                m_IsActiveLast = isActive;
+
+                // note: The store keeps the scale for the next scene draw.
                 engine.m_RenderStore.SetSceneColorSlider(m_OptionsStore.GetScalar(Scalar::SceneColorScale));
 
-                // The 3D passes ran under the HUD of the game when the event marked the frame. Otherwise they run here, once.
-                if (!engine.m_RenderStore.IsBeforeHudMarked()) m_MapService.Render(frame);
+                // The 3D passes are drawn at the scene point of the game frame (OnScene), not here. The labels use the scene of that update: a frame
+                // without one (a menu, a pause without a draw) has none, and draws no labels.
+                const bool isSceneUpdated{ m_SceneService.HasFrameUpdate() };
+                m_SceneService.EndFrame();
 
                 if (!gui.m_BackendGuiService.IsReady()) return;
 
-                m_LabelService.Draw();
+                if (isSceneUpdated) m_LabelService.Draw();
                 m_HudService.Draw();
             });
 
-            engine.m_RenderService.OnBeforeHud([this](const FrameContext& frame) {
-                return m_MapService.RenderBeforeHud(frame);
+            engine.m_RenderService.OnScene([this](const FrameContext& frame) {
+                return m_MapService.RenderScene(frame);
             });
 
             engine.m_RenderService.OnShutdown([this] {
@@ -146,6 +159,7 @@ export namespace DevTools::Viewer
         OverlayStore m_OverlayStore{};
         OptionsStore m_OptionsStore{};
         LatencyStore m_LatencyStore{};
+        bool m_IsActiveLast{ false };
 
         // --- System ---
         CameraService m_CameraService;

@@ -10,11 +10,10 @@ import std;
 
 namespace
 {
-    using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::DrawPlace;
-    using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::MaskTextures;
+    using Engine::Render::Type::SceneStatus;
 
     using Engine::Render::Type::k_MaskPairCount;
 }
@@ -87,7 +86,7 @@ export namespace Engine::Render::State
         auto SetShutdownDone() -> void;
         auto RequestShutdown() -> void;
 
-        // return: Whether the game HUD passes are skipped (VW.6.x). Read on the render thread by the HUD detours.
+        // return: Whether the game HUD passes are skipped. Read on the render thread by the HUD detours.
         auto IsGameHudHidden() const -> bool;
         auto SetGameHudHidden(bool isHidden) -> void;
 
@@ -95,42 +94,38 @@ export namespace Engine::Render::State
         auto IsFirstPersonHidden() const -> bool;
         auto SetFirstPersonHidden(bool isHidden) -> void;
 
-        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked, bool isForwardHooked) -> void;
+        auto SetFirstPersonHooksInstalled(bool isModelHooked, bool isUnitHooked, bool isDepthPassHooked, bool isOpaqueHooked) -> void;
         auto IsFirstPersonModelHooked() const -> bool;
         auto IsFirstPersonUnitHooked() const -> bool;
         auto IsFirstPersonDepthPassHooked() const -> bool;
-        auto IsFirstPersonForwardHooked() const -> bool;
+        auto IsOpaquePassHooked() const -> bool;
 
         // Counts one answer of the first person test turned to false by Drive. Any thread, no allocation.
         auto CountThirdPerson() -> void;
 
-        // return: Whether the last completed frame (closed by EndHudFrame) turned the first person test to false at least once.
+        // return: Whether the last completed frame (closed by EndFrame) turned the first person test to false at least once.
         auto WasThirdPersonLastFrame() const -> bool;
 
         // Counts one answer true of the first person test for user 0, as the game receives it (Drive turns it to false, those are not counted).
         // note: Any thread, no allocation. The game hides the unit of the player when it answers true.
         auto CountFirstPersonUnit() -> void;
 
-        // return: Whether the last completed frame (closed by EndHudFrame) got at least one true answer of the first person test for user 0.
+        // return: Whether the last completed frame (closed by EndFrame) got at least one true answer of the first person test for user 0.
         auto WasFirstPersonUnitLastFrame() const -> bool;
 
-        // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it while the overlay is on, any thread.
+        // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it, any thread.
         auto IsFirstPersonMaskRequested() const -> bool;
         auto SetFirstPersonMaskRequested(bool isRequested) -> void;
 
-        // The Viewer asks to draw the overlay inside the frame of the game (VW.6.z, option Overlay in scene), any thread.
-        auto IsOverlayInSceneRequested() const -> bool;
-        auto SetOverlayInSceneRequested(bool isRequested) -> void;
-
         // Takes the one copy of a pair in the frame in progress. Any thread, no allocation.
-        // return: True for the first caller of the frame for that pair, false for the others (the frame is closed by EndHudFrame).
+        // return: True for the first caller of the frame for that pair, false for the others (the frame is closed by EndFrame).
         auto TakeMaskCopy(MaskPairKind kind) -> bool;
 
         // Notes that both copies of the pair in the frame in progress were made. Any thread.
         auto MarkMaskCopied(MaskPairKind kind) -> void;
 
-        // return: Whether the copies of the pair were made in the frame in progress (the overlay drawn before the HUD) or in the last completed
-        // one (the overlay drawn at Present).
+        // return: Whether the copies of the pair were made in the frame in progress (the overlay drawn at the scene point) or in the last completed
+        // one (what runs at Present).
         auto IsMaskCopied(MaskPairKind kind) const -> bool;
         auto WasMaskCopiedLastFrame(MaskPairKind kind) const -> bool;
 
@@ -181,45 +176,29 @@ export namespace Engine::Render::State
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
 
-        auto SetHudHookInstalled(bool isInstalled) -> void;
-
-        // Counts one draw of the HUD for user 0 in the frame in progress.
-        auto CountHudCall() -> void;
-
-        // Closes the frame at Present: the count becomes the calls of the last frame and starts again. The mask copy of the frame is closed too.
-        auto EndHudFrame() -> void;
-
-        // Counts an exception that the HUD draw handling caught. note: No allocation, safe in a catch.
-        auto CountHudFailure() -> void;
-        auto GetHudFailures() const -> std::uint32_t;
+        // Closes the frame at Present: the first person test counts become the ones of the last frame and start again, and the mask copy of the frame is closed too.
+        auto EndFrame() -> void;
 
         // Ends the Present frame in progress: the next one gets the next index and the status of this one becomes the last completed.
         // note: Called by the Present hook after the frame handlers.
         auto NextPresentFrame() -> void;
 
-        // Records that something was drawn before the HUD in the Present frame in progress.
-        auto MarkBeforeHud() -> void;
-
-        // return: Whether something was drawn before the HUD in the Present frame in progress. The Present handlers skip that work then.
-        auto IsBeforeHudMarked() const -> bool;
-
-        // Keeps why the frame in progress did or did not draw before the HUD. A later call in the same frame replaces it.
-        auto SetBeforeHudStatus(BeforeHudStatus status) -> void;
-
-        // return: The status of the last completed Present frame.
-        auto GetBeforeHudStatus() const -> BeforeHudStatus;
+        // Whether the Viewer wants the scene draw. The Viewer sets it at each Present from its active state, any thread, no allocation. While false the
+        // scene point returns before it measures the target or builds a context.
+        auto IsSceneDrawRequested() const -> bool;
+        auto SetSceneDrawRequested(bool isRequested) -> void;
 
         // Takes the one scene point of the Present frame in progress (the first exit of the opaque color pass 0x26E500 that passes the scene blocker). Any thread, no allocation.
         // return: True for the first caller of the frame, false for the others.
         auto TakeSceneCall() -> bool;
 
         // Keeps why the frame in progress did or did not draw in the scene (Drawn when it did). Replaced by a later call in the same frame.
-        auto SetSceneStatus(BeforeHudStatus status) -> void;
+        auto SetSceneStatus(SceneStatus status) -> void;
 
         // return: The scene status of the last completed Present frame.
-        auto GetSceneStatus() const -> BeforeHudStatus;
+        auto GetSceneStatus() const -> SceneStatus;
 
-        // Keeps where the frame in progress was drawn (the last call wins). Present until something draws earlier.
+        // Keeps where the frame in progress was drawn. None until the scene point draws.
         auto SetDrawPlace(DrawPlace place) -> void;
 
         // return: Where the last completed Present frame was drawn.
@@ -229,19 +208,13 @@ export namespace Engine::Render::State
         auto CountSceneFailure() -> void;
         auto GetSceneFailures() const -> std::uint32_t;
 
-        // Scene color scale (VW.6.z.2). The Viewer sets the slider at the start of each Present frame, any thread.
+        // Scene color scale. The Viewer sets the slider at the start of each Present frame, any thread.
         auto SetSceneColorSlider(float slider) -> void;
         auto GetSceneColorSlider() const -> float;
 
         // The scale of the last scene draw (1 before the first), for the telemetry.
         auto SetSceneColorScale(float scale) -> void;
         auto GetSceneColorScale() const -> float;
-
-        // Keeps the measure of the last HUD draw. note: A short lock, no allocation. CallsPerFrame and IsHooked are ignored here.
-        auto SetHudSample(const HudHookInfo& sample) -> void;
-
-        // return: The last measure with the counters filled in.
-        auto GetHudHook() const -> HudHookInfo;
 
         // Releases the render target and the depth stencil. Keeps the device and the context.
         auto ReleaseTargets() -> void;
@@ -266,41 +239,28 @@ export namespace Engine::Render::State
         std::atomic<int> m_InFlight{ 0 };
 
         std::atomic<bool> m_IsGameHudHidden{ false };
-        std::atomic<bool> m_IsHudHookInstalled{ false };
         std::atomic<bool> m_IsFirstPersonHidden{ false };
         std::atomic<bool> m_IsFirstPersonModelHooked{ false };
         std::atomic<bool> m_IsFirstPersonUnitHooked{ false };
         std::atomic<bool> m_IsFirstPersonDepthPassHooked{ false };
-        std::atomic<bool> m_IsFirstPersonForwardHooked{ false };
+        std::atomic<bool> m_IsOpaquePassHooked{ false };
         std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
         std::atomic<std::uint32_t> m_FirstPersonUnitCalls{ 0 };
         std::atomic<std::uint32_t> m_FirstPersonUnitLastFrame{ 0 };
         std::atomic<std::uint32_t> m_PresentThread{ 0 };
-        std::atomic<std::uint32_t> m_HudCalls{ 0 };
-        std::atomic<std::uint32_t> m_HudCallsLastFrame{ 0 };
-        std::atomic<std::uint32_t> m_HudFailures{ 0 };
 
-        // Number of Present frames completed, which is the index of the one in progress. The mark holds that index plus one (0 = never).
+        // Number of Present frames completed, which is the index of the one in progress. The scene call mark holds that index plus one (0 = never).
         std::atomic<std::uint64_t> m_PresentIndex{ 0 };
-        std::atomic<std::uint64_t> m_BeforeHudMark{ 0 };
-        std::atomic<BeforeHudStatus> m_BeforeHudStatus{ BeforeHudStatus::NoHudDraw };
-        std::atomic<BeforeHudStatus> m_BeforeHudLastStatus{ BeforeHudStatus::NoHudDraw };
+        std::atomic<bool> m_IsSceneDrawRequested{ false };
         std::atomic<std::uint64_t> m_SceneCallMark{ 0 };
-        std::atomic<BeforeHudStatus> m_SceneStatus{ BeforeHudStatus::NoSceneCall };
-        std::atomic<BeforeHudStatus> m_SceneLastStatus{ BeforeHudStatus::NoSceneCall };
-        std::atomic<DrawPlace> m_DrawPlace{ DrawPlace::Present };
-        std::atomic<DrawPlace> m_DrawPlaceLast{ DrawPlace::Present };
+        std::atomic<SceneStatus> m_SceneStatus{ SceneStatus::NoSceneCall };
+        std::atomic<SceneStatus> m_SceneLastStatus{ SceneStatus::NoSceneCall };
+        std::atomic<DrawPlace> m_DrawPlace{ DrawPlace::None };
+        std::atomic<DrawPlace> m_DrawPlaceLast{ DrawPlace::None };
         std::atomic<std::uint32_t> m_SceneFailures{ 0 };
-        std::atomic<bool> m_IsOverlayInSceneRequested{ false };
         std::atomic<float> m_SceneColorSlider{ 1.0f };
         std::atomic<float> m_SceneColorScale{ 1.0f };
-
-        mutable std::mutex m_HudSampleMutex{};
-        HudHookInfo m_HudSample{};
-
-
-
 
         std::atomic<bool> m_IsMaskRequested{ false };
         std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskTaken{};

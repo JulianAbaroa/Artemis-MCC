@@ -51,13 +51,6 @@ export namespace DevTools::Viewer::Scene::System
         SceneService(const SceneService&) = delete;
         auto operator=(const SceneService&) -> SceneService& = delete;
 
-        // return: Whether the biped of the local player is hidden in Game mode (VW.6b.1).
-        // param gameHidesUnit: Whether the game hid the unit of user 0 in the last closed frame, nothing without the unit hook.
-        // param eyeDistance: Distance from the game camera to the View eye, nothing without a valid game camera.
-        // note: The answer of the game wins. Without it the camera counts as in the eyes when closer than k_FirstPersonDistance, and without a
-        // valid camera the camera sits on the View, so it is hidden.
-        static auto IsOwnBipedHidden(std::optional<bool> gameHidesUnit, std::optional<float> eyeDistance) -> bool;
-
         // return: True if the free camera is active.
         auto IsActive() const -> bool;
 
@@ -65,25 +58,30 @@ export namespace DevTools::Viewer::Scene::System
         auto Deactivate() -> void;
 
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
-        // note: Follows or orbits the selected object according to the follow mode of the camera. When it follows the biped of a player, that
-        // player is the observed one of the Services (the AI thread gives it a View).
+        // note: The observed player of the Services (the one the AI thread gives a View) is the player of the selected biped, else the local player.
         // param scene: The scene acquired once for the frame (D294). It is kept as the scene of the last update.
         auto Update(const std::shared_ptr<const CollidableScene>& scene, const Viewport& viewport) -> void;
 
-        // return: The scene of the last update, so the labels and panels of a frame see the same tick as the 3D passes drawn earlier in it
-        // (they may run before the HUD of the game and at Present). While the viewer is inactive, or the map was reset, a fresh acquire.
+        // return: Whether a scene update with a pose to draw ran since the last EndFrame, so the labels of the Present frame can be drawn. The
+        // update runs at the scene point, so a frame without one (a menu, a pause without a draw) has no labels.
+        auto HasFrameUpdate() const -> bool;
+
+        // Closes the frame: the next one has no update until the scene point runs. Called at Present after the labels.
+        auto EndFrame() -> void;
+
+        // return: The scene of the last update, so the labels and panels of a frame see the same tick as the 3D passes drawn earlier in it. While
+        // the viewer is inactive, or the map was reset, a fresh acquire.
         auto GetFrameScene(const CollidableStore& store) const -> std::shared_ptr<const CollidableScene>;
 
         // return: The View of the player the viewer watches (the observed one, else the primary local player), or null when the tick has none.
         // note: Valid as long as the tick is.
         auto GetObservedView(const Tick& tick) const -> const View*;
 
-        // return: The handles of the biped of the player whose eyes the camera is in, and of the objects hanging from it (weapons in hand).
-        // Empty with the Orbit follow, the free camera that follows nothing, or a View without a biped.
+        // return: The handles of the biped of the local player and of the objects hanging from it (weapons in hand), when the camera is in its eyes.
+        // Empty with the free camera, without the unit hook, or with a View without a biped.
         // note: Computed once per frame by Update. In Game mode it is the primary local player when the game hid its unit in the last closed
-        // frame (RenderStore::WasFirstPersonUnitLastFrame, one frame behind), so with Drive nothing is hidden (in a vehicle or turret expected too, not measured). Without
-        // the unit hook the camera must be within k_FirstPersonDistance of the View eye (on foot). With the FirstPerson
-        // follow it is the followed player. Drawn, that biped and its aim spheres cover the scene.
+        // frame (RenderStore::WasFirstPersonUnitLastFrame, one frame behind), so in a vehicle or turret nothing is hidden when the game draws the body. Without
+        // the unit hook nothing is hidden (the telemetry shows whether it is installed). Drawn, that biped and its aim spheres cover the scene.
         auto GetHiddenHandles() const -> const std::unordered_set<std::uint32_t>&;
 
         // return: The distance from the game camera to the eye of the View of the local player, or nothing without a valid game camera or a View body.
@@ -111,7 +109,7 @@ export namespace DevTools::Viewer::Scene::System
 
         auto GetFramePoses() const -> const FramePoses&;
 
-        // return: True if the camera mode is Game, the free camera driving the game camera not included (IsGameCamera counts both).
+        // return: True if the camera mode is Game (the free camera is the other mode).
         auto IsGameMode() const -> bool;
 
         auto ClearSelection() -> void;
@@ -122,12 +120,7 @@ export namespace DevTools::Viewer::Scene::System
 
         auto GetViewProjection() const -> const Matrix&;
 
-        // return: True if the camera mode is Game (the camera of the game, or the View of the local player when the game one is not valid), or the
-        // free camera drives the game camera (then the frame under the Viewer is the one of the game camera).
-        auto IsGameCamera() const -> bool;
-
-        // return: The camera of the game this frame, or nothing when the mode is not Game, the free camera is not driving it or that camera is
-        // not valid.
+        // return: The camera of the game this frame, or nothing when that camera is not valid.
         auto GetGameCamera() const -> const std::optional<GameCamera>&;
 
         // return: Whether the override of the game camera is published.
@@ -144,6 +137,7 @@ export namespace DevTools::Viewer::Scene::System
         std::unordered_set<std::uint32_t> m_Hidden{};
         std::shared_ptr<const CollidableScene> m_Scene{};
         FramePoses m_FramePoses{};
+        bool m_IsFrameUpdated{ false };
 
         // Builds the hidden set of GetHiddenHandles.
         auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;

@@ -604,6 +604,18 @@ namespace Views::View::System
         return local;
     }
 
+    auto ObservedPlayerOf(const Perception::Players::Type::Players& players, std::uint32_t selected) -> std::uint32_t
+    {
+        if (selected == k_NoHandle) return k_NoHandle;
+
+        for (const auto& player : players.Rows)
+        {
+            if (player.BipedHandle == selected) return player.Handle;
+        }
+
+        return k_NoHandle;
+    }
+
     auto AimDirectionOf(const ::View& view) -> Vec3
     {
         const float aimCos{ std::cos(view.Self.AimPitch) };

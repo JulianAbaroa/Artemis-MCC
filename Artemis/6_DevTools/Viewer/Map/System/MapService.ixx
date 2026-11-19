@@ -39,7 +39,7 @@ export namespace DevTools::Viewer::Map::System
         { pass.Release() } -> std::same_as<void>;
     };
 
-    // MapPass draws with an extra flag (collision or render), so it only has to release.
+    // MapPass draws with an extra flag (the wireframe), so it only has to release.
     static_assert(requires(MapPass pass) { { pass.Release() } -> std::same_as<void>; });
     static_assert(RenderPass<DynamicPass>);
     static_assert(RenderPass<ZonePass>);
@@ -49,7 +49,7 @@ export namespace DevTools::Viewer::Map::System
     static_assert(RenderPass<AimPass>);
     static_assert(RenderPass<ViewPass>);
 
-    // Renders the map frame: the static map, the collidables, the zones, the raycasts, the View of the watched player, the fixture arrows, the aim spheres and the map limits.
+    // Renders the overlay frame: the static map collision, the collidables, the zones, the raycasts, the View of the watched player, the fixture arrows, the aim spheres and the map limits.
     // It uploads what changed in the tick, draws every pass and times the frame with the profiler.
     // note: Render runs on the game render thread. Suspend, Resume and Release may come from other threads, so they share a mutex.
     class MapService
@@ -93,15 +93,11 @@ export namespace DevTools::Viewer::Map::System
         MapService(const MapService&) = delete;
         auto operator=(const MapService&) -> MapService& = delete;
 
-        // Draws one frame. Does nothing while suspended or while the free camera is inactive.
-        // note: Releases the GPU resources first if the device changed.
-        auto Render(const FrameContext& frame) -> void;
-
-        // Draws one frame under the HUD of the game: the same frame as Render, but only with the overlay active (game camera and option).
-        // note: Called from the before-HUD event of Engine.Render, which runs at the scene point (inside the frame, VW.6.z) or at the HUD
-        // draw. The Present handler calls Render only if this one did not draw.
-        // return: True if it drew. When false nothing was updated, so Render does the whole frame.
-        auto RenderBeforeHud(const FrameContext& frame) -> bool;
+        // Draws the 3D passes of the overlay over the game frame, the only way they are drawn. Does nothing while suspended or while the Viewer is inactive.
+        // note: Called from the scene event of Engine.Render, at the exit of the opaque color pass of the game, so it is also the one scene update of the
+        // frame (camera, palette, selection) that the labels and panels of Present read. Releases the GPU resources first if the device changed.
+        // return: True if it drew. When false the scene was not updated for drawing (the SceneService has no frame update).
+        auto RenderScene(const FrameContext& frame) -> bool;
 
         // Releases every GPU resource. Call it before the device goes away.
         auto Release() -> void;
@@ -144,21 +140,12 @@ export namespace DevTools::Viewer::Map::System
         // Device the resources were created on. Compared only, never used.
         const ID3D11Device* m_Device{ nullptr };
 
-        // The frame of Render and RenderBeforeHud. The caller holds the mutex.
-        // param isBeforeHud: Under the HUD of the game: never clears the color, and if the overlay is no longer active after the scene update
-        // it draws nothing but still counts as handled.
-        // return: True if the frame was handled (the scene was updated once), false if nothing was updated.
-        auto RenderFrame(const FrameContext& frame, bool isBeforeHud) -> bool;
-
-        // return: Whether the game camera and the overlay option are on, so what is drawn goes over the game frame.
-        auto IsOverlayActive() const -> bool;
-
-        // Chooses the scene of the frame (D294, VW.5d): over the game frame the one of the tick the game drew (T - 1 of the clock), else the newest.
+        // Chooses the scene of the frame (D294, VW.5d): the one of the tick the game drew (T - 1 of the clock), else the newest.
         // The game draws the state of the tick before the one its clock says (measured in VW.5c at 60 fps). If that scene is not published yet and
         // the scenes arrive one tick at a time, it waits up to k_FrameSceneWaitLimit for it, then takes the nearest one not newer than the target.
-        // param isOverlay: The frame goes over the game frame. Without it, or without a clock, the newest scene is taken and nothing waits.
+        // note: Without a clock the newest scene is taken and nothing waits.
         // note: The caller holds the mutex of this service, which the AI thread never takes, and the wait holds no lock of the store.
-        auto AcquireFrameScene(const FrameClock& clock, bool isOverlay) -> FrameScenePick;
+        auto AcquireFrameScene(const FrameClock& clock) -> FrameScenePick;
 
         // Finds the poses of the frame (VW.5e, D330): over the game frame, with the game interpolating and the scene of T - 1 drawn, each dynamic
         // object goes between its pose in T - 1 and in T by the tick fraction of the clock, or on from T - 2 when T is not in the history. Otherwise
@@ -167,9 +154,9 @@ export namespace DevTools::Viewer::Map::System
         auto UpdateFramePoses(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
         // Records the frame for the latency measurement, after the scene update. The caller holds the mutex.
-        auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick, bool isBeforeHud) -> void;
+        auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
-        auto Draw(const FrameContext& frame, bool isBeforeHud) -> void;
+        auto Draw(const FrameContext& frame) -> void;
 
         // Releases what depends on the map and resets the scene.
         auto ReleaseMap() -> void;

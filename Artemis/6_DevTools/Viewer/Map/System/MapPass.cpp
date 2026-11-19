@@ -137,28 +137,7 @@ namespace DevTools::Viewer::Map::System
         return (m_VertexBuffer != nullptr && m_VertexCount > 0) || (m_CollisionBuffer != nullptr && m_CollisionCount > 0);
     }
 
-    auto MapPass::Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isCollision) -> void
-    {
-        if (!context || !this->HasBuffer()) return;
-
-        const bool hasCollision = m_CollisionBuffer != nullptr && m_CollisionCount > 0;
-        const bool hasRender = m_VertexBuffer != nullptr && m_VertexCount > 0;
-        const bool useCollision = hasCollision && (isCollision || !hasRender);
-
-        pipeline.Bind(context, VertexLayout::Colored);
-
-        if (useCollision)
-        {
-            Engine::Render::System::DrawVertexBuffer(context, m_CollisionBuffer.Get(),
-                m_CollisionCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-            return;
-        }
-
-        Engine::Render::System::DrawVertexBuffer(context, m_VertexBuffer.Get(),
-            m_VertexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    }
-
-    auto MapPass::DrawOverlay(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isWireframe) -> void
+    auto MapPass::Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline, bool isWireframe) -> void
     {
         if (!context || !this->HasBuffer()) return;
 
