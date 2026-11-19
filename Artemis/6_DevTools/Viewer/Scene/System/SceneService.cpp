@@ -114,6 +114,14 @@ namespace DevTools::Viewer::Scene::System
         return m_CameraStore.GetMode() == Mode::Game;
     }
 
+    auto SceneService::IsOwnBipedHidden(std::optional<bool> gameHidesUnit, std::optional<float> eyeDistance) -> bool
+    {
+        if (gameHidesUnit) return *gameHidesUnit;
+
+        // note: Without a valid game camera the camera sits on the View of the local player, so it is hidden.
+        return !eyeDistance || *eyeDistance < k_FirstPersonDistance;
+    }
+
     auto SceneService::HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>
     {
         std::unordered_set<std::uint32_t> hidden{};
@@ -122,9 +130,9 @@ namespace DevTools::Viewer::Scene::System
         const View* view{ nullptr };
         if (m_CameraStore.GetMode() == Mode::Game)
         {
-            // note: Without a valid game camera the camera sits on the View of the local player, so it is hidden.
-            const std::optional<float> distance{ this->GetEyeDistance(tick) };
-            if (!distance || *distance < k_FirstPersonDistance) view = FindObservedView(*tick.Views, k_NoHandle);
+            const std::optional<bool> gameHidesUnit{ m_RenderStore.IsFirstPersonUnitHooked()
+                ? std::optional<bool>{ m_RenderStore.WasFirstPersonUnitLastFrame() } : std::nullopt };
+            if (SceneService::IsOwnBipedHidden(gameHidesUnit, this->GetEyeDistance(tick))) view = FindObservedView(*tick.Views, k_NoHandle);
         }
         else if (m_CameraStore.GetFollow() == Follow::FirstPerson && m_ObservedStore.Get() != k_NoHandle) view = this->GetObservedView(tick);
 

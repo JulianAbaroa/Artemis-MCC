@@ -208,6 +208,15 @@ TEST(EngineLayerTests, RenderStoreFirstPersonFlagAndThirdPersonFrame)
     EXPECT_TRUE(store.WasThirdPersonLastFrame());
     store.EndHudFrame();
     EXPECT_FALSE(store.WasThirdPersonLastFrame());
+
+    // The same for the true answers of the first person test for user 0 (VW.6b.1).
+    EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
+    store.CountFirstPersonUnit();
+    EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
+    store.EndHudFrame();
+    EXPECT_TRUE(store.WasFirstPersonUnitLastFrame());
+    store.EndHudFrame();
+    EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
 }
 
 TEST(EngineLayerTests, FirstPersonCallerIsClassifiedByFunctionRange)

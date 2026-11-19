@@ -420,8 +420,9 @@ namespace DevTools::Viewer::Hud::System
         }
 
         ImGui::TextColored(isModelHooked && isUnitHooked && isDepthPassHooked ? k_Green : k_Orange,
-            "installed (model %s, unit %s, depth pass %s), third person: %s", isModelHooked ? "yes" : "no",
-            isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no");
+            "installed (model %s, unit %s, depth pass %s), third person: %s, fp unit: %s", isModelHooked ? "yes" : "no",
+            isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no",
+            m_RenderStore.WasFirstPersonUnitLastFrame() ? "yes" : "no");
 
         ImGui::Text("FP probe:");
         ImGui::SameLine();

@@ -112,6 +112,13 @@ export namespace Engine::Render::State
         // return: Whether the last completed frame (closed by EndHudFrame) turned the first person test to false at least once.
         auto WasThirdPersonLastFrame() const -> bool;
 
+        // Counts one answer true of the first person test for user 0, as the game receives it (Drive turns it to false, those are not counted).
+        // note: Any thread, no allocation. The game hides the unit of the player when it answers true.
+        auto CountFirstPersonUnit() -> void;
+
+        // return: Whether the last completed frame (closed by EndHudFrame) got at least one true answer of the first person test for user 0.
+        auto WasFirstPersonUnitLastFrame() const -> bool;
+
         // Counts one call of the first person model pass for user 0 in the frame in progress. Any thread, no allocation.
         auto CountFirstPersonCall(FirstPersonCaller caller) -> void;
 
@@ -323,6 +330,8 @@ export namespace Engine::Render::State
         std::atomic<bool> m_IsFirstPersonDepthPassHooked{ false };
         std::atomic<std::uint32_t> m_ThirdPersonCalls{ 0 };
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
+        std::atomic<std::uint32_t> m_FirstPersonUnitCalls{ 0 };
+        std::atomic<std::uint32_t> m_FirstPersonUnitLastFrame{ 0 };
         std::atomic<std::uint32_t> m_PresentThread{ 0 };
         std::atomic<std::uint32_t> m_HudCalls{ 0 };
         std::atomic<std::uint32_t> m_HudCallsLastFrame{ 0 };

@@ -4,6 +4,7 @@ import Common.Math.Type;
 import Services.Observed.State;
 import Services.Settings.State;
 import Engine.Base.Memory.Type;
+import Engine.Render.State;
 import Views.View.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
@@ -27,6 +28,7 @@ export namespace DevTools::Viewer::Scene::System
         using View = Views::View::Type::View;
         using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
+        using RenderStore = Engine::Render::State::RenderStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
         using Viewport = DevTools::Viewer::Camera::Type::Viewport;
@@ -41,13 +43,20 @@ export namespace DevTools::Viewer::Scene::System
 
     public:
         SceneService(SettingsStore& settingsStore, ObservedPlayerStore& observedStore, CameraStore& cameraStore,
-            CameraService& cameraService, SelectionService& selectionService) :
+            CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore) :
             m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_CameraStore(cameraStore),
-            m_CameraService(cameraService), m_SelectionService(selectionService) {}
+            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore) {}
         ~SceneService() = default;
 
         SceneService(const SceneService&) = delete;
         auto operator=(const SceneService&) -> SceneService& = delete;
+
+        // return: Whether the biped of the local player is hidden in Game mode (VW.6b.1).
+        // param gameHidesUnit: Whether the game hid the unit of user 0 in the last closed frame, nothing without the unit hook.
+        // param eyeDistance: Distance from the game camera to the View eye, nothing without a valid game camera.
+        // note: The answer of the game wins. Without it the camera counts as in the eyes when closer than k_FirstPersonDistance, and without a
+        // valid camera the camera sits on the View, so it is hidden.
+        static auto IsOwnBipedHidden(std::optional<bool> gameHidesUnit, std::optional<float> eyeDistance) -> bool;
 
         // return: True if the free camera is active.
         auto IsActive() const -> bool;
@@ -71,8 +80,9 @@ export namespace DevTools::Viewer::Scene::System
 
         // return: The handles of the biped of the player whose eyes the camera is in, and of the objects hanging from it (weapons in hand).
         // Empty with the Orbit follow, the free camera that follows nothing, or a View without a biped.
-        // note: Computed once per frame by Update. In Game mode the camera is in the eyes of the primary local player only when the game
-        // camera is within k_FirstPersonDistance of the View eye (on foot), so in a vehicle or turret nothing is hidden. With the FirstPerson
+        // note: Computed once per frame by Update. In Game mode it is the primary local player when the game hid its unit in the last closed
+        // frame (RenderStore::WasFirstPersonUnitLastFrame, one frame behind), so with Drive nothing is hidden (in a vehicle or turret expected too, not measured). Without
+        // the unit hook the camera must be within k_FirstPersonDistance of the View eye (on foot). With the FirstPerson
         // follow it is the followed player. Drawn, that biped and its aim spheres cover the scene.
         auto GetHiddenHandles() const -> const std::unordered_set<std::uint32_t>&;
 
@@ -146,6 +156,7 @@ export namespace DevTools::Viewer::Scene::System
         CameraStore& m_CameraStore;
         CameraService& m_CameraService;
         SelectionService& m_SelectionService;
+        const RenderStore& m_RenderStore;
 
         PaletteService m_PaletteService{};
     };

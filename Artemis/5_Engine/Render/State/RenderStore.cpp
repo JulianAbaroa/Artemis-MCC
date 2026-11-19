@@ -187,6 +187,16 @@ namespace Engine::Render::State
         return m_ThirdPersonLastFrame.load(std::memory_order_relaxed) != 0;
     }
 
+    auto RenderStore::CountFirstPersonUnit() -> void
+    {
+        m_FirstPersonUnitCalls.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::WasFirstPersonUnitLastFrame() const -> bool
+    {
+        return m_FirstPersonUnitLastFrame.load(std::memory_order_relaxed) != 0;
+    }
+
     auto RenderStore::GetPresentThread() const -> std::uint32_t
     {
         return m_PresentThread.load(std::memory_order_relaxed);
@@ -211,6 +221,7 @@ namespace Engine::Render::State
     {
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_FirstPersonUnitLastFrame.store(m_FirstPersonUnitCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         const bool isCopied{ m_IsMaskCopied.exchange(false, std::memory_order_acq_rel) };
         m_IsMaskCopiedLastFrame.store(isCopied, std::memory_order_release);
         m_IsMaskCallTaken.store(false, std::memory_order_release);

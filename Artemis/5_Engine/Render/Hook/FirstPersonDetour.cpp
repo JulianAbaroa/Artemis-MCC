@@ -132,7 +132,11 @@ namespace Engine::Render::Hook
         // Users other than 0 never reach the store.
         if (user != k_LocalUser || !original) return original;
 
-        if (!FirstPersonDetour::IsThirdPersonShown(user, self->IsDriveActive(), original)) return original;
+        if (!FirstPersonDetour::IsThirdPersonShown(user, self->IsDriveActive(), original))
+        {
+            self->m_RenderStore.CountFirstPersonUnit();
+            return original;
+        }
 
         self->m_RenderStore.CountThirdPerson();
         return false;
