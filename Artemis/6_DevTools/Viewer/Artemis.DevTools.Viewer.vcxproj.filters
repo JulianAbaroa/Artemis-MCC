@@ -133,15 +133,6 @@
     <Filter Include="Interpolation\Type">
       <UniqueIdentifier>{d2927e9a-6343-44b4-bc57-3c417f5e0ed6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Recorder">
-      <UniqueIdentifier>{b09ac3c1-5f08-4d26-8281-194a352fab8a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Recorder\State">
-      <UniqueIdentifier>{9ca84524-5aef-4c87-8468-b6896e8fdd09}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Recorder\System">
-      <UniqueIdentifier>{b13199a7-6a86-4338-832b-75f1952659e6}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Scene">
       <UniqueIdentifier>{9785590d-ddab-57f3-bb0e-09fa9e519989}</UniqueIdentifier>
     </Filter>
@@ -342,18 +333,6 @@
     </ClCompile>
     <ClCompile Include="Interpolation\Type\DevTools.Viewer.Interpolation.Type.ixx">
       <Filter>Interpolation\Type</Filter>
-    </ClCompile>
-    <ClCompile Include="Recorder\State\FrameClockStore.cpp">
-      <Filter>Recorder\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Recorder\State\FrameClockStore.ixx">
-      <Filter>Recorder\State</Filter>
-    </ClCompile>
-    <ClCompile Include="Recorder\System\FrameClockRecorder.cpp">
-      <Filter>Recorder\System</Filter>
-    </ClCompile>
-    <ClCompile Include="Recorder\System\FrameClockRecorder.ixx">
-      <Filter>Recorder\System</Filter>
     </ClCompile>
     <ClCompile Include="Scene\System\SceneService.cpp">
       <Filter>Scene\System</Filter>

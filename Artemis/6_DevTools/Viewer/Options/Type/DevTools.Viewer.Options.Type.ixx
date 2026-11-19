@@ -93,15 +93,10 @@ export namespace DevTools::Viewer::Options::Type
 
         Overlay,
         OverlayWireframe,
-        FirstPersonOverOverlay,
-        FirstPersonMaskShown,
         OverlayInScene,
-        SceneColorByGameHdr,
         HideGameHud,
         HideFirstPerson,
         DriveGameCamera,
-        WaitFrameScene,
-        RecordFrameClock,
 
         Count
     };
@@ -367,17 +362,8 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::OverlayWireframe, Group::Camera, "OverlayWireframe", "Overlay: collision wireframe",
             "With the overlay on, also draws the map collision as a visible wireframe, to check that it lines up with the walls of the game frame.", true },
 
-        { Flag::FirstPersonOverOverlay, Group::Camera, "FirstPersonOverOverlay", "Arms over overlay",
-            "The game's first person arms and weapon are drawn over the overlay: the overlay skips the pixels the game writes in its first person depth pass.", true },
-
-        { Flag::FirstPersonMaskShown, Group::Camera, "FirstPersonMaskShown", "Arms mask: show",
-            "Debug: paints the pixels of the first person mask in red instead of skipping them, to see if the mask covers the arms. Needs Arms over overlay.", false },
-
         { Flag::OverlayInScene, Group::Camera, "OverlayInScene", "Overlay in scene",
             "Draws the overlay inside the frame of the game, before its transparents, effects and HUD, so smoke, the sword blade, spawn points, projectiles and shields show over the overlay. The overlay colors go through the exposure and tone mapping of the game. Off draws it before the HUD (or at Present) as before. Needs Overlay on the game frame.", true },
-
-        { Flag::SceneColorByGameHdr, Group::Camera, "SceneColorByGameHdr", "Scale by game HDR",
-            "With Overlay in scene, multiplies the overlay colors by the constant the game scales its HDR color with (DAT_180c878d0, read at the exit of the opaque pass) times Scene color scale (D335). Off leaves only the slider.", true },
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },
@@ -387,12 +373,6 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::DriveGameCamera, Group::Camera, "DriveGameCamera", "Drive game camera",
             "Moves the game's camera with the free camera of the Viewer.", false },
-
-        { Flag::WaitFrameScene, Group::Camera, "WaitFrameScene", "Wait for game frame scene",
-            "With the overlay, draws the scene of the tick the game drew (one before its clock). If it is not published yet, waits up to 2 ms for it, then draws the nearest older one.", true },
-
-        { Flag::RecordFrameClock, Group::Camera, "RecordFrameClock", "Record frame clock",
-            "Writes one CSV line per frame drawn over the game (clock, scene ticks, camera, eyes) to FrameClock in the storage folder. A new file each time it is turned on.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

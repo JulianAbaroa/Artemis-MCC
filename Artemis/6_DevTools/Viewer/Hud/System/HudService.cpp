@@ -25,7 +25,6 @@ namespace
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
-    using Engine::Render::Type::SceneColorSample;
 
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
@@ -52,12 +51,6 @@ namespace
         case Mode::View:       return "View";
         default:               return "?";
         }
-    }
-
-    // return: The value with 4 significant digits, or n/a when it was not read.
-    auto SceneColorText(float value) -> std::string
-    {
-        return std::isfinite(value) ? std::format("{:.4g}", value) : std::string{ "n/a" };
     }
 
     // return: The words the telemetry gives for why the overlay was not drawn at a point (the HUD draw or the scene).
@@ -332,12 +325,6 @@ namespace DevTools::Viewer::Hud::System
             ImGui::TextColored(k_Red, "%u", faults);
         }
 
-        const std::optional<float> distance{ m_SceneService.GetOverrideDistance() };
-        if (!isActive || !distance) return;
-
-        ImGui::Text("Override error:");
-        ImGui::SameLine();
-        ImGui::TextColored(k_Info, "%.3f wu (asked eye to game camera)", *distance);
     }
 
     auto HudService::DrawOverlayPoint(bool isHooked) -> void
@@ -385,19 +372,9 @@ namespace DevTools::Viewer::Hud::System
     {
         if (!m_RenderStore.IsOverlayInSceneRequested()) return;
 
-        const SceneColorSample sample{ m_RenderStore.GetSceneColorSample() };
-        const std::uint32_t failures{ m_RenderStore.GetSceneColorFailures() };
-
-        ImGui::Text("scene color:");
+        ImGui::Text("scene color scale:");
         ImGui::SameLine();
-        ImGui::TextColored(k_Info, "hdr 0xC878D0 %s | view+0x10 %s | view+0x14 %s | 0xBB6FCC %s | scale final %s", SceneColorText(sample.HdrScale).c_str(),
-            SceneColorText(sample.ViewScale).c_str(), SceneColorText(sample.ViewInverse).c_str(), SceneColorText(sample.ScriptedScale).c_str(),
-            SceneColorText(m_RenderStore.GetSceneColorScale()).c_str());
-
-        if (failures == 0) return;
-
-        ImGui::SameLine();
-        ImGui::TextColored(k_Red, "failed reads %u", failures);
+        ImGui::TextColored(k_Info, "%.4g", m_RenderStore.GetSceneColorScale());
     }
 
     auto HudService::DrawHudHook() -> void
@@ -479,10 +456,6 @@ namespace DevTools::Viewer::Hud::System
             isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", isForwardHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no",
             m_RenderStore.WasFirstPersonUnitLastFrame() ? "yes" : "no");
 
-        ImGui::Text("FP probe:");
-        ImGui::SameLine();
-        ImGui::TextColored(k_Info, "%u callers last frame%s", m_RenderStore.GetFirstPersonCallerCount(),
-            m_RenderStore.IsFirstPersonProbePending() ? " (probe pending)" : "");
     }
 
     auto HudService::DrawFirstPersonMask() -> void
@@ -496,49 +469,11 @@ namespace DevTools::Viewer::Hud::System
             return;
         }
 
-        // note: A frame without copy shows in the window below, so this line does not flicker when only some frames miss it.
-        const bool isAnyReady{ m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthB) || m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthZero) ||
-            m_RenderStore.AreMaskTexturesReady(MaskPairKind::Color) };
+        // note: The mask is made of two pairs of copies, and either one is enough to hide the arms.
+        const bool isCopied{ m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthB) || m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthZero) };
 
-        if (!isAnyReady)
-        {
-            ImGui::TextColored(k_Orange, "on, no copy this frame");
-            return;
-        }
-
-        const bool isScene{ m_RenderStore.IsOverlayInSceneRequested() };
-        const auto yesNo = [this, isScene](MaskPairKind kind)
-        {
-            if (kind == MaskPairKind::Color && isScene) return "skipped (scene)";
-            return m_RenderStore.WasMaskCopiedLastFrame(kind) ? "yes" : "no";
-        };
-        const auto window{ m_RenderStore.GetMaskWindowReport() };
-        const auto desc{ m_RenderStore.GetMaskDesc(m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthB) ? MaskPairKind::DepthB : MaskPairKind::DepthZero) };
-
-        const bool isAnyCopied{ m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthB) || m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthZero) ||
-            (!isScene && m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::Color)) };
-
-        ImGui::TextColored(isAnyCopied ? k_Green : k_Orange, "0xB %s / 0 %s / color %s", yesNo(MaskPairKind::DepthB), yesNo(MaskPairKind::DepthZero),
-            yesNo(MaskPairKind::Color));
-        ImGui::SameLine();
-
-        if (!window)
-        {
-            ImGui::TextColored(k_Info, "size %ux%u, measuring", desc.Width, desc.Height);
-            return;
-        }
-
-        if (isScene)
-        {
-            ImGui::TextColored(k_Info, "size %ux%u, no copy in %u frames: 0xB %u, 0 %u, color skipped, 0xB calls max %u", desc.Width, desc.Height,
-                window->Frames, window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthB)],
-                window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthZero)], window->MaxPassCalls);
-            return;
-        }
-
-        ImGui::TextColored(k_Info, "size %ux%u, no copy in %u frames: 0xB %u, 0 %u, color %u, 0xB calls max %u", desc.Width, desc.Height, window->Frames,
-            window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthB)], window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthZero)],
-            window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::Color)], window->MaxPassCalls);
+        if (isCopied) ImGui::TextColored(k_Green, "on");
+        else ImGui::TextColored(k_Orange, "on, no copy");
     }
 
     auto HudService::DrawLatency() -> void
@@ -586,15 +521,6 @@ namespace DevTools::Viewer::Hud::System
             ImGui::SameLine();
             ImGui::TextColored(report.InterpNone == 0 ? k_Green : k_Orange, "exact %u  extrap %u  none %u",
                 report.InterpExact, report.InterpExtrapolated, report.InterpNone);
-        }
-
-        if (report.DrawnExact + report.DrawnOlder + report.DrawnNewer > 0)
-        {
-            ImGui::Text("Drawn scene (%u f):", static_cast<unsigned>(report.Frames));
-            ImGui::SameLine();
-            ImGui::TextColored(report.DrawnExact == report.Frames ? k_Green : k_Orange,
-                "exact %u  older %u  newer %u  | waits %u  timeouts %u  wait p99 %u us",
-                report.DrawnExact, report.DrawnOlder, report.DrawnNewer, report.Waits, report.Timeouts, report.WaitP99Us);
         }
 
         ImGui::Text("Camera moved within a tick:");

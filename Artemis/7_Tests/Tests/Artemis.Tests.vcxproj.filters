@@ -19,6 +19,9 @@
     <Filter Include="Perception">
       <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Viewer">
+      <UniqueIdentifier>{b4d2fed2-8269-4d7b-8c23-332b45d11a92}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Services">
       <UniqueIdentifier>{f9c99720-d49a-43a9-8107-35153e2a8535}</UniqueIdentifier>
     </Filter>
@@ -182,6 +185,18 @@
     </ClCompile>
     <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.cpp">
       <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Viewer\OptionsStoreTests.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Options\Type\DevTools.Viewer.Options.Type.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Options\State\OptionsStore.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Options\State\OptionsStore.cpp">
+      <Filter>Viewer</Filter>
     </ClCompile>
     <ClCompile Include="Blam\SbspCollisionTests.cpp">
       <Filter>Blam</Filter>

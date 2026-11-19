@@ -85,8 +85,7 @@ namespace DevTools::Viewer::Latency::System
         const std::uint32_t tick{ input.Clock.Tick };
 
         LatencySample sample{ .Clock = input.Clock, .SceneTick = input.SceneTick, .IsBeforeHud = input.IsBeforeHud,
-            .Pick = input.Pick, .WaitedUs = input.WaitedUs, .IsWaited = input.IsWaited, .IsTimedOut = input.IsTimedOut,
-            .Interp = input.Interp };
+            .Pick = input.Pick, .Interp = input.Interp };
 
         if (hasClock && input.SceneTick)
         {
@@ -139,7 +138,6 @@ namespace DevTools::Viewer::Latency::System
         std::vector<float> toCurrent{};
         std::vector<float> toPrevious{};
         std::vector<float> toLerp{};
-        std::vector<float> waits{};
 
         bool hasMaxLag{ false };
 
@@ -162,22 +160,11 @@ namespace DevTools::Viewer::Latency::System
 
             if (sample.IsProbeBehind) ++report.BehindFrames;
 
-            if (sample.Pick == PickKind::Exact) ++report.DrawnExact;
-            else if (sample.Pick == PickKind::Older) ++report.DrawnOlder;
-            else if (sample.Pick == PickKind::Newer) ++report.DrawnNewer;
-
             if (sample.Pick != PickKind::None)
             {
                 if (sample.Interp == PoseSource::Exact) ++report.InterpExact;
                 else if (sample.Interp == PoseSource::Extrapolated) ++report.InterpExtrapolated;
                 else ++report.InterpNone;
-            }
-
-            if (sample.IsWaited)
-            {
-                ++report.Waits;
-                waits.push_back(static_cast<float>(sample.WaitedUs));
-                if (sample.IsTimedOut) ++report.Timeouts;
             }
 
             if (sample.Probe)
@@ -192,7 +179,6 @@ namespace DevTools::Viewer::Latency::System
         report.ToCurrent = PercentilesOf(toCurrent);
         report.ToPrevious = PercentilesOf(toPrevious);
         report.ToLerp = PercentilesOf(toLerp);
-        report.WaitP99Us = static_cast<std::uint32_t>(PercentileOf(waits, k_P99Fraction));
 
         if (!samples.empty())
         {

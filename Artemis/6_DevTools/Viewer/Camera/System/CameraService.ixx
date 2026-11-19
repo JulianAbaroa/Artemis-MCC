@@ -79,10 +79,6 @@ export namespace DevTools::Viewer::Camera::System
         // return: How many faults the observer hook caught while it touched the engine memory.
         auto GetOverrideFaults() const -> std::uint32_t;
 
-        // return: The distance between the eye asked of the game last frame and the position of the game camera read this frame (about 0 with a
-        // frame of delay), or nothing when the camera is not driving or the game camera is not valid.
-        auto GetOverrideDistance() const -> std::optional<float>;
-
         // return: The view matrix multiplied by the projection matrix.
         auto GetViewProjection() const -> const Matrix&;
 
@@ -102,7 +98,6 @@ export namespace DevTools::Viewer::Camera::System
         GameCameraService& m_GameCameraService;
 
         std::optional<GameCamera> m_GameCamera{};
-        std::optional<float> m_OverrideDistance{};
         bool m_IsDriving{ false };
 
         // Projection terms of the last Build: the focal values and the off-center terms of x and y.

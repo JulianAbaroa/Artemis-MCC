@@ -43,10 +43,6 @@ export namespace DevTools::Viewer::Latency::Type
         bool IsBeforeHud{};
         // How the scene was picked for the tick T - 1 (VW.5d), None when it was not picked for a target (the newest was taken).
         PickKind Pick{};
-        // Microseconds the draw waited for the scene to be published, and whether that wait ended by the limit.
-        std::uint32_t WaitedUs{};
-        bool IsWaited{};
-        bool IsTimedOut{};
         // How the poses of the objects were found for the frame (VW.5e): between two ticks, extrapolated, or as the scene shows them.
         PoseSource Interp{};
     };
@@ -85,9 +81,6 @@ export namespace DevTools::Viewer::Latency::Type
         std::optional<std::uint32_t> SceneTick{};
         bool IsBeforeHud{};
         PickKind Pick{};
-        std::uint32_t WaitedUs{};
-        bool IsWaited{};
-        bool IsTimedOut{};
         PoseSource Interp{};
 
         // Lag in ticks: the tick of the game minus the tick of the scene.
@@ -137,15 +130,6 @@ export namespace DevTools::Viewer::Latency::Type
         Percentiles ToPrevious{};
         Percentiles ToLerp{};
 
-        // Frames by how the scene was picked for T - 1 (exact, an older one, a newer one), frames that waited, frames whose wait ended by the
-        // limit, and the 99th percentile of the waits in microseconds (nearest rank, over the frames that waited).
-        std::uint32_t DrawnExact{};
-        std::uint32_t DrawnOlder{};
-        std::uint32_t DrawnNewer{};
-        std::uint32_t Waits{};
-        std::uint32_t Timeouts{};
-        std::uint32_t WaitP99Us{};
-
         // Frames drawn for a target tick by how the poses were found (VW.5e): blended between two ticks, extrapolated from the last two, or the
         // pose of the scene as is (interpolation off in the game, no next or older scene, or no overlay target).
         std::uint32_t InterpExact{};
@@ -153,30 +137,4 @@ export namespace DevTools::Viewer::Latency::Type
         std::uint32_t InterpNone{};
     };
 
-    // One line of the frame clock CSV: a frame drawn over the game (VW.5d).
-    struct FrameClockRow
-    {
-        // Microseconds of the steady clock (QueryPerformanceCounter on Windows) when the frame was recorded.
-        std::int64_t QpcUs{};
-        // "game" (the game camera) or "drive" (the free camera driving it).
-        std::string_view Mode{};
-        FrameClock Clock{};
-        // Game tick of the newest published scene and of the one drawn, none without a Match.
-        std::optional<std::uint32_t> SceneNewest{};
-        std::optional<std::uint32_t> SceneDrawn{};
-        std::uint32_t WaitedUs{};
-        bool IsTimedOut{};
-        // Game camera position and forward, none when it is not valid.
-        std::optional<Vec3> Camera{};
-        std::optional<Vec3> Forward{};
-        // Eye of the View of the local player in the scene drawn, and in the scene one tick before it when that one is in the history.
-        std::optional<Vec3> Eye{};
-        std::optional<Vec3> EyePrevious{};
-        // Position of the vehicle the local player is in, in the scene drawn.
-        std::optional<Vec3> Vehicle{};
-        // How the poses were found (VW.5e), and the eye and the vehicle with the pose the overlay draws them in (none where the plain ones are none).
-        PoseSource Interp{};
-        std::optional<Vec3> EyeRender{};
-        std::optional<Vec3> VehicleRender{};
-    };
 }

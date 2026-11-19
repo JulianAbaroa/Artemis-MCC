@@ -4,7 +4,6 @@ import Common.Log.System;
 import Services.Settings.State;
 import Services.Settings.System;
 import Services.Preferences.System;
-import Engine.Render.State;
 import DevTools.Gui.Style.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
@@ -30,8 +29,6 @@ export namespace DevTools::Workbench::Settings::System
         using SettingsService = Services::Settings::System::SettingsService;
         using PreferencesService = Services::Preferences::System::PreferencesService;
 
-        using RenderStore = Engine::Render::State::RenderStore;
-
         using Group = DevTools::Viewer::Options::Type::Group;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
@@ -45,11 +42,11 @@ export namespace DevTools::Workbench::Settings::System
         SettingsUIService(SettingsStore& settingsStore, SettingsService& settingsService,
             Log& log, HotkeyUIStore& hotkeyStore,
             OptionsStore& optionsStore, PreferencesService& preferencesService,
-            CameraStore& cameraStore, SettingsUIStore& settingsUIStore, RenderStore& renderStore) :
+            CameraStore& cameraStore, SettingsUIStore& settingsUIStore) :
             m_SettingsStore(settingsStore), m_SettingsService(settingsService),
             m_Log(log), m_HotkeyStore(hotkeyStore),
             m_OptionsStore(optionsStore), m_PreferencesService(preferencesService),
-            m_CameraStore(cameraStore), m_SettingsUIStore(settingsUIStore), m_RenderStore(renderStore) {}
+            m_CameraStore(cameraStore), m_SettingsUIStore(settingsUIStore) {}
         ~SettingsUIService() = default;
 
         SettingsUIService(const SettingsUIService&) = delete;
@@ -67,7 +64,6 @@ export namespace DevTools::Workbench::Settings::System
         PreferencesService& m_PreferencesService;
         CameraStore& m_CameraStore;
         SettingsUIStore& m_SettingsUIStore;
-        RenderStore& m_RenderStore;
 
         // ImGui time until which the save and the load buttons show their confirmation.
         double m_SaveFeedbackUntil{ 0.0 };
@@ -94,12 +90,7 @@ export namespace DevTools::Workbench::Settings::System
         // note: These are runtime states and are not saved with the preferences.
         auto DrawCameraControls() -> void;
 
-        // Draws the button of the first person probe. Called inside the Camera group, on the line of Hide first person.
-        auto DrawFirstPersonProbe() -> void;
-
         // Draws the flags and the scalars of a viewer option group.
-        // note: The Camera group also has the one shot button Probe first person (VW.6.y.2) next to Hide first person. It asks the render
-        // store for one log of what the game's first person pass draws with. It is not an option and is not saved.
         auto DrawViewerGroup(Group group) -> void;
 
         // Draws the table of the hotkeys.

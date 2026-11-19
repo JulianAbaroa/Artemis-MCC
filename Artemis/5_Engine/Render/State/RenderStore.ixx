@@ -12,131 +12,15 @@ namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::DrawPlace;
-    using Engine::Render::Type::ColorPairNote;
-    using Engine::Render::Type::CopyPairSetup;
-    using Engine::Render::Type::DepthPairNote;
-    using Engine::Render::Type::FirstPersonCaller;
-    using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::MaskTextures;
-    using Engine::Render::Type::MaskWindow;
-    using Engine::Render::Type::MaskWindowReport;
-    using Engine::Render::Type::SceneColorSample;
-    using Engine::Render::Type::StencilProbeInfo;
 
-    using Engine::Render::Type::k_ColorPairCount;
-    using Engine::Render::Type::k_DepthPairCount;
-    using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_MaskPairCount;
-    using Engine::Render::Type::k_NoSceneColorValue;
 }
 
 export namespace Engine::Render::State
 {
-    // The copy textures of a probe (VW.6.y.2 A3, D): Count pairs of before and after (pair k is copy 2k before and 2k + 1 after), the staging
-    // texture to read them, the description they were made from and the calls noted in call order with the resource each one copied from.
-    // note: Touched on the thread of Present only (the detour copies there too), no lock. Used for the depth pairs and the color pairs.
-    template <typename Note, std::size_t Count>
-    class CopyPairs
-    {
-    private:
-        template <typename T>
-        using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-    public:
-        auto Set(std::array<ComPtr<ID3D11Texture2D>, Count * 2> copies, ComPtr<ID3D11Texture2D> staging, const D3D11_TEXTURE2D_DESC& desc) -> void
-        {
-            m_Copies = std::move(copies);
-            m_Staging = std::move(staging);
-            m_Desc = desc;
-        }
-
-        // return: Whether the copies exist.
-        auto AreReady() const -> bool
-        {
-            return m_Staging != nullptr;
-        }
-
-        // How the creation went. Kept even when it failed, so the probe tries once.
-        auto SetSetup(const CopyPairSetup& setup) -> void
-        {
-            m_Setup = setup;
-        }
-
-        auto GetSetup() const -> CopyPairSetup
-        {
-            return m_Setup;
-        }
-
-        // return: The description of the original texture the copies were made from.
-        auto GetDesc() const -> D3D11_TEXTURE2D_DESC
-        {
-            return m_Desc;
-        }
-
-        // return: Copy texture i (not owned), null when i is out of range or none exist.
-        auto GetCopy(std::size_t index) const -> ID3D11Texture2D*
-        {
-            return index < m_Copies.size() ? m_Copies[index].Get() : nullptr;
-        }
-
-        auto GetStaging() const -> ID3D11Texture2D*
-        {
-            return m_Staging.Get();
-        }
-
-        // Appends a call to the list and keeps a reference to the resource it copied from, so the after copy uses the same one.
-        // param source: The resource that was copied, null for a call that copied nothing.
-        // return: Its position, or nothing when the Count pairs are taken. No allocation.
-        auto NoteCall(const Note& note, ID3D11Resource* source) -> std::optional<std::size_t>
-        {
-            if (m_NoteCount >= Count) return std::nullopt;
-
-            const std::size_t index{ m_NoteCount++ };
-            m_Notes[index] = note;
-            m_Sources[index] = source;
-            return index;
-        }
-
-        auto GetNote(std::size_t index) const -> Note
-        {
-            return index < m_NoteCount ? m_Notes[index] : Note{};
-        }
-
-        auto GetNoteCount() const -> std::uint32_t
-        {
-            return m_NoteCount;
-        }
-
-        auto GetSource(std::size_t index) const -> ID3D11Resource*
-        {
-            return index < m_NoteCount ? m_Sources[index].Get() : nullptr;
-        }
-
-        // Drops the copies, the staging, the notes and the setup.
-        auto Release() -> void
-        {
-            for (auto& copy : m_Copies) copy.Reset();
-            for (auto& source : m_Sources) source.Reset();
-
-            m_Staging.Reset();
-            m_Desc = {};
-            m_Setup = {};
-            m_Notes = {};
-            m_NoteCount = 0;
-        }
-
-    private:
-        std::array<ComPtr<ID3D11Texture2D>, Count * 2> m_Copies{};
-        ComPtr<ID3D11Texture2D> m_Staging{};
-        D3D11_TEXTURE2D_DESC m_Desc{};
-        CopyPairSetup m_Setup{};
-        std::array<Note, Count> m_Notes{};
-        std::array<ComPtr<ID3D11Resource>, Count> m_Sources{};
-        std::uint32_t m_NoteCount{ 0 };
-    };
-
     // D3D11 objects of the game swap chain and the render flags.
     // note: The flags and the size are atomic, the D3D11 objects are only touched from the render thread.
     class RenderStore
@@ -230,83 +114,11 @@ export namespace Engine::Render::State
         // return: Whether the last completed frame (closed by EndHudFrame) got at least one true answer of the first person test for user 0.
         auto WasFirstPersonUnitLastFrame() const -> bool;
 
-        // Counts one call of the first person model pass for user 0 in the frame in progress. Any thread, no allocation.
-        auto CountFirstPersonCall(FirstPersonCaller caller) -> void;
-
-        // return: The calls of that caller in the last completed frame (closed by EndHudFrame).
-        auto GetFirstPersonCalls(FirstPersonCaller caller) const -> std::uint32_t;
-
-        // return: How many callers had at least one call in the last completed frame.
-        auto GetFirstPersonCallerCount() const -> std::uint32_t;
-
-        // Asks for one probe of the first person model pass (VW.6.y.2). Does nothing if one is already pending. Any thread.
-        auto RequestFirstPersonProbe() -> void;
-
-        // return: Whether a probe was requested and has not been reported yet.
-        auto IsFirstPersonProbePending() const -> bool;
-
-        // return: Whether the detour must measure its calls: the probe began at a Present and its frame is in progress.
-        auto IsFirstPersonProbeArmed() const -> bool;
-
-        // Moves the probe one Present on, after EndHudFrame: a requested probe is armed (the samples are cleared, so the frame that follows
-        // is measured whole) and an armed one ends when the closed frame had first person calls.
-        // return: True when the frame just closed is the one to report. The probe is then idle again.
-        auto StepFirstPersonProbe() -> bool;
-
-        // Keeps the measure of a call of the first person model pass, in the slot of its caller. note: A short lock, no allocation.
-        auto SetFirstPersonSample(const FirstPersonSample& sample) -> void;
-
-        // return: The last measure of that caller with the calls of the last frame filled in.
-        auto GetFirstPersonSample(FirstPersonCaller caller) const -> FirstPersonSample;
-
-        // Keeps a reference to the resource of the depth stencil view the first person model is drawn with (the first one seen while the probe
-        // is armed). Does nothing when one is held or the resource is null. note: Thread of Present only (VW.6.y.2 A2).
-        auto CaptureFirstPersonDepth(ID3D11Resource* resource) -> void;
-
-        // return: The captured resource, null when none. Not owned. Thread of Present only.
-        auto GetFirstPersonDepth() const -> ID3D11Resource*;
-
-        // Releases the captured resource. Also done when the probe ends, a new probe is armed, the targets are released and at cleanup.
-        auto ReleaseFirstPersonDepth() -> void;
-
-        // Keeps the stencil read of the probe. note: A short lock.
-        auto SetStencilProbe(const StencilProbeInfo& info) -> void;
-
-        // return: The stencil read of the probe (IsAttempted false when none).
-        auto GetStencilProbe() const -> StencilProbeInfo;
-
-        // return: Whether the stencil of this probe was already tried, so it is read once.
-        auto IsStencilProbeAttempted() const -> bool;
-
-        // Notes whether Drive was active at the last measured model call, to log it with the probe. Any thread.
-        auto SetFirstPersonDriveActive(bool isActive) -> void;
-        auto IsFirstPersonDriveActive() const -> bool;
-
-        // Depth pairs of the probe (VW.6.y.2 A3): textures that hold the depth before and after each call of the first person pass 0x26DA08.
-        // note: Dropped (Release) when a probe is armed, the targets are released and at cleanup, and by the report at the end of the probe.
-        auto GetDepthPairs() -> CopyPairs<DepthPairNote, k_DepthPairCount>&;
-        auto GetDepthPairs() const -> const CopyPairs<DepthPairNote, k_DepthPairCount>&;
-
-        // Color pairs of the probe (VW.6.y.2 D): the same for the render target 0 around each call of the forward pass 0x26EA78.
-        auto GetColorPairs() -> CopyPairs<ColorPairNote, k_ColorPairCount>&;
-        auto GetColorPairs() const -> const CopyPairs<ColorPairNote, k_ColorPairCount>&;
-
-        // Keeps the description of the render target 0 the forward pass was drawn with when the color pairs did not exist yet, so Present makes
-        // them from it. Does nothing when one is noted. note: Thread of Present only, a plain struct, no reference is held.
-        auto NoteColorDesc(const D3D11_TEXTURE2D_DESC& desc) -> void;
-
-        // return: The noted description, nothing when none was noted since the color pairs were released.
-        auto GetColorDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>;
-
-        // Drops the color pairs and the noted description. Same moments as the depth pairs.
-        auto ReleaseColorPairs() -> void;
-
-        // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it with the option Arms over overlay, any thread.
+        // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it while the overlay is on, any thread.
         auto IsFirstPersonMaskRequested() const -> bool;
         auto SetFirstPersonMaskRequested(bool isRequested) -> void;
 
-        // The Viewer asks to draw the overlay inside the frame of the game (VW.6.z, option Overlay in scene), any thread. It also drops the color
-        // mask pair, which the scene point cannot use.
+        // The Viewer asks to draw the overlay inside the frame of the game (VW.6.z, option Overlay in scene), any thread.
         auto IsOverlayInSceneRequested() const -> bool;
         auto SetOverlayInSceneRequested(bool isRequested) -> void;
 
@@ -321,13 +133,6 @@ export namespace Engine::Render::State
         // one (the overlay drawn at Present).
         auto IsMaskCopied(MaskPairKind kind) const -> bool;
         auto WasMaskCopiedLastFrame(MaskPairKind kind) const -> bool;
-
-        // Counts a call of the first person pass 0xB that asked for the mask, whether or not it copied (VW.6.y.2 C). Any thread, no allocation.
-        auto CountMaskPassCall() -> void;
-
-        // return: The last closed telemetry window of the mask, empty before the first one or after the mask stops being requested.
-        // note: The window closes in EndHudFrame every k_MaskWindowFrames frames with the mask requested.
-        auto GetMaskWindowReport() const -> std::optional<MaskWindowReport>;
 
         // Keeps the description of the texture a pair needs when its copies could not be taken (no copies yet or a different texture), so Present
         // makes them from it. note: Thread of Present only.
@@ -424,19 +229,11 @@ export namespace Engine::Render::State
         auto CountSceneFailure() -> void;
         auto GetSceneFailures() const -> std::uint32_t;
 
-        // Scene color scale (VW.6.z.2). The Viewer sets the request at the start of each Present frame (option Scale by game HDR and the slider), any thread.
-        auto SetSceneColorRequest(bool isByGameHdr, float slider) -> void;
-        auto IsSceneColorByGameHdr() const -> bool;
+        // Scene color scale (VW.6.z.2). The Viewer sets the slider at the start of each Present frame, any thread.
+        auto SetSceneColorSlider(float slider) -> void;
         auto GetSceneColorSlider() const -> float;
 
-        // The factors of the game read at the exit of the last opaque color pass (NaN is no value), and how many reads failed (a fault or a value that is
-        // not finite). Any thread, no lock, no allocation.
-        auto SetSceneColorSample(const SceneColorSample& sample) -> void;
-        auto GetSceneColorSample() const -> SceneColorSample;
-        auto CountSceneColorFailures(std::uint32_t count) -> void;
-        auto GetSceneColorFailures() const -> std::uint32_t;
-
-        // The final scale of the last scene draw (1 before the first), for the telemetry.
+        // The scale of the last scene draw (1 before the first), for the telemetry.
         auto SetSceneColorScale(float scale) -> void;
         auto GetSceneColorScale() const -> float;
 
@@ -496,48 +293,23 @@ export namespace Engine::Render::State
         std::atomic<DrawPlace> m_DrawPlaceLast{ DrawPlace::Present };
         std::atomic<std::uint32_t> m_SceneFailures{ 0 };
         std::atomic<bool> m_IsOverlayInSceneRequested{ false };
-        std::atomic<bool> m_IsSceneColorByGameHdr{ false };
         std::atomic<float> m_SceneColorSlider{ 1.0f };
-        std::atomic<float> m_SceneColorHdrScale{ k_NoSceneColorValue };
-        std::atomic<float> m_SceneColorViewScale{ k_NoSceneColorValue };
-        std::atomic<float> m_SceneColorViewInverse{ k_NoSceneColorValue };
-        std::atomic<float> m_SceneColorScriptedScale{ k_NoSceneColorValue };
-        std::atomic<std::uint32_t> m_SceneColorFailures{ 0 };
         std::atomic<float> m_SceneColorScale{ 1.0f };
 
         mutable std::mutex m_HudSampleMutex{};
         HudHookInfo m_HudSample{};
 
-        std::array<std::atomic<std::uint32_t>, k_FirstPersonCallerCount> m_FirstPersonCalls{};
-        std::array<std::atomic<std::uint32_t>, k_FirstPersonCallerCount> m_FirstPersonCallsLastFrame{};
-        std::atomic<std::uint8_t> m_FirstPersonProbe{ 0 };
 
-        mutable std::mutex m_FirstPersonSampleMutex{};
-        std::array<FirstPersonSample, k_FirstPersonCallerCount> m_FirstPersonSamples{};
 
-        ComPtr<ID3D11Resource> m_FirstPersonDepth{};    // Thread of Present only
-        std::atomic<bool> m_IsStencilAttempted{ false };
-        std::atomic<bool> m_IsFirstPersonDriveActive{ false };
-        mutable std::mutex m_StencilMutex{};
-        StencilProbeInfo m_StencilProbe{};
 
         std::atomic<bool> m_IsMaskRequested{ false };
         std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskTaken{};
         std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskCopied{};
         std::array<std::atomic<bool>, k_MaskPairCount> m_IsMaskCopiedLastFrame{};
-        std::atomic<std::uint32_t> m_MaskPassCalls{ 0 };
-        MaskWindow m_MaskWindow{};      // thread of Present only (EndHudFrame)
-        std::atomic<bool> m_IsMaskWindowPublished{ false };
-        std::atomic<std::uint32_t> m_MaskWindowFrames{ 0 };
-        std::array<std::atomic<std::uint32_t>, k_MaskPairCount> m_MaskWindowNoCopy{};
-        std::atomic<std::uint32_t> m_MaskWindowMaxCalls{ 0 };
 
         // Thread of Present only
         std::array<MaskTextures, k_MaskPairCount> m_Masks{};
         ComPtr<ID3D11Resource> m_MaskFrameDepth{};
 
-        CopyPairs<DepthPairNote, k_DepthPairCount> m_DepthPairs{};  // Thread of Present only
-        CopyPairs<ColorPairNote, k_ColorPairCount> m_ColorPairs{};
-        std::optional<D3D11_TEXTURE2D_DESC> m_ColorDesc{};
     };
 }

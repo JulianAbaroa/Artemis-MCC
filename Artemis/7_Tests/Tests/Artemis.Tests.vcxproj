@@ -108,6 +108,10 @@
     <ClCompile Include="Blam\BoundsBvhRefitTests.cpp" />
     <ClCompile Include="Blam\RaycasterTests.cpp" />
     <ClCompile Include="Engine\TickProducerTests.cpp" />
+    <ClCompile Include="Viewer\OptionsStoreTests.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Options\Type\DevTools.Viewer.Options.Type.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Options\State\OptionsStore.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Options\State\OptionsStore.cpp" />
     <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.ixx" />
     <ClCompile Include="..\..\8_Mod\Mod\Port\System\TickProducerAdapter.cpp" />
     <ClCompile Include="Blam\SbspCollisionTests.cpp" />

@@ -10,7 +10,7 @@ decision records, `MakeLight` and `RunLight` on the others) and compares the Tic
 
 ## Does not
 - Need the game: anything that needs MCC is the in-game bench (`Tools/game.py`).
-- Reference `DevTools.*` or `Mod`. The one source of `Mod` it uses is `TickProducerAdapter` (RV.1): its two files are compiled into the test executable, with
+- Reference `DevTools.*` or `Mod`, with two exceptions that are compiled into the test executable and are pure (only `import std`). The Viewer Options files (`DevTools.Viewer.Options.Type.ixx`, `OptionsStore.ixx/.cpp`) are tested by `Viewer/OptionsStoreTests.cpp` (save, load, unknown keys). The one source of `Mod` it uses is `TickProducerAdapter` (RV.1): its two files are compiled into the test executable, with
   `Tests.Support.ModPort` as the primary interface of `Mod.Port.System`, so the rules of the game thread run over the real services without MCC.
 
 ## Input and output

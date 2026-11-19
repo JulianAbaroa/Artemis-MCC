@@ -17,7 +17,6 @@ import DevTools.Viewer.Selection.State;
 import DevTools.Viewer.Selection.System;
 import DevTools.Viewer.Latency.State;
 import DevTools.Viewer.Latency.System;
-import DevTools.Viewer.Recorder.System;
 import DevTools.Viewer.Overlay.State;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
@@ -55,7 +54,6 @@ export namespace DevTools::Viewer
         using ControlService = DevTools::Viewer::Control::System::ControlService;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
-        using FrameClockRecorder = DevTools::Viewer::Recorder::System::FrameClockRecorder;
         using MapService = DevTools::Viewer::Map::System::MapService;
         using HudService = DevTools::Viewer::Hud::System::HudService;
         using LabelService = DevTools::Viewer::Hud::System::LabelService;
@@ -73,8 +71,7 @@ export namespace DevTools::Viewer
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService,
                 engine.m_RenderStore),
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
-            m_FrameClockRecorder(service.m_Log, service.m_SettingsStore),
-            m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService, m_FrameClockRecorder,
+            m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
             m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SelectionStore, m_SceneService,
                 m_LatencyService),
@@ -91,16 +88,13 @@ export namespace DevTools::Viewer
                 engine.m_RenderStore.SetFirstPersonHidden(m_OptionsStore.IsEnabled(Flag::HideFirstPerson));
 
                 // note: The mask only matters under the overlay, so the depth copies are not made without it.
-                engine.m_RenderStore.SetFirstPersonMaskRequested(m_OptionsStore.IsEnabled(Flag::FirstPersonOverOverlay) &&
-                    m_OptionsStore.IsEnabled(Flag::Overlay));
+                engine.m_RenderStore.SetFirstPersonMaskRequested(m_OptionsStore.IsEnabled(Flag::Overlay));
 
-                // note: Drawing in the scene also drops the color mask pair, which that point cannot use (VW.6.z).
                 engine.m_RenderStore.SetOverlayInSceneRequested(m_OptionsStore.IsEnabled(Flag::OverlayInScene) &&
                     m_OptionsStore.IsEnabled(Flag::Overlay));
 
-                // note: The scale only matters at the scene point (VW.6.z.2). The store keeps the request for the next scene draw.
-                engine.m_RenderStore.SetSceneColorRequest(m_OptionsStore.IsEnabled(Flag::SceneColorByGameHdr),
-                    m_OptionsStore.GetScalar(Scalar::SceneColorScale));
+                // note: The scale only matters at the scene point (VW.6.z.2). The store keeps it for the next scene draw.
+                engine.m_RenderStore.SetSceneColorSlider(m_OptionsStore.GetScalar(Scalar::SceneColorScale));
 
                 // The 3D passes ran under the HUD of the game when the event marked the frame. Otherwise they run here, once.
                 if (!engine.m_RenderStore.IsBeforeHudMarked()) m_MapService.Render(frame);
@@ -160,7 +154,6 @@ export namespace DevTools::Viewer
         ControlService m_ControlService;
         SceneService m_SceneService;
         LatencyService m_LatencyService;
-        FrameClockRecorder m_FrameClockRecorder;
         MapService m_MapService;
         HudService m_HudService;
         LabelService m_LabelService;

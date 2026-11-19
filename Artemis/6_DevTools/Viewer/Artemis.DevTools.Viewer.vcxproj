@@ -157,10 +157,6 @@
     <ClCompile Include="Profiler\System\FrameProfiler.cpp" />
     <ClCompile Include="Profiler\System\FrameProfiler.ixx" />
     <ClCompile Include="Profiler\Type\DevTools.Viewer.Profiler.Type.ixx" />
-    <ClCompile Include="Recorder\State\FrameClockStore.cpp" />
-    <ClCompile Include="Recorder\State\FrameClockStore.ixx" />
-    <ClCompile Include="Recorder\System\FrameClockRecorder.cpp" />
-    <ClCompile Include="Recorder\System\FrameClockRecorder.ixx" />
     <ClCompile Include="Scene\System\SceneService.cpp" />
     <ClCompile Include="Scene\System\SceneService.ixx" />
     <ClCompile Include="Selection\State\SelectionStore.cpp" />

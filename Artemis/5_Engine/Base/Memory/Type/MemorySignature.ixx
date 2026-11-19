@@ -351,12 +351,6 @@ export namespace Engine::Base::Memory::Type::Signature
     inline constexpr std::uint32_t k_OpaqueColorPassRva{ 0x26E500 };
     inline constexpr std::uint32_t k_IsFirstPersonUnitRva{ 0x266104 };
 
-    // Float globals of haloreach.dll that scale the color of the HDR target (A21 sec. 8, VW.6.z.2). DAT_180c878d0 is the constant the shaders of
-    // the game read (0x252e28 leaves it as a * b of the exposure scale of the view and the second factor), DAT_180bb6fcc is 2^(k - E) times the
-    // scripted exposure. Read only, at the exit of the opaque color pass, to measure which one follows the factor the overlay needs.
-    inline constexpr std::uint32_t k_HdrScaleGlobalRva{ 0xC878D0 };
-    inline constexpr std::uint32_t k_ScriptedScaleGlobalRva{ 0xBB6FCC };
-
     // The prologue must begin exactly at the RVA (no slack: a moved function is not called).
     inline constexpr std::uint32_t k_CollisionTestVectorWindow{ 0 };
 

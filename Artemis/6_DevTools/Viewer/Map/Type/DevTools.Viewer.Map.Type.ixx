@@ -22,9 +22,8 @@ namespace
 
 export namespace DevTools::Viewer::Map::Type
 {
-    // Longest the thread that draws waits for the scene of the tick the game drew to be published (option Wait for game frame scene).
-    // The cap is a choice (D329), not a measured latency: it is short because the thread that waits is the one that draws the game frame. How
-    // long the scene really takes is measured by the Waits, Timeouts and wait p99 of the Drawn scene telemetry and by the frame clock CSV.
+    // Longest the thread that draws waits for the scene of the tick the game drew to be published.
+    // The cap is a choice (D329), not a measured latency: it is short because the thread that waits is the one that draws the game frame.
     // Past the cap the nearest older scene is drawn.
     inline constexpr std::chrono::microseconds k_FrameSceneWaitLimit{ 2000 };
 
@@ -34,11 +33,6 @@ export namespace DevTools::Viewer::Map::Type
         std::shared_ptr<const CollidableScene> Scene{};
         // Exact, older or newer than the tick the game drew (T - 1). None when no target applied and the newest was taken.
         PickKind Kind{};
-        // Game tick of the newest published scene when it was picked, none without a Match.
-        std::optional<std::uint32_t> Newest{};
-        bool IsWaited{};
-        bool IsTimedOut{};
-        std::uint32_t WaitedUs{};
     };
 
     // Folds a set of object handles into one value for the upload gates of the passes (order independent).

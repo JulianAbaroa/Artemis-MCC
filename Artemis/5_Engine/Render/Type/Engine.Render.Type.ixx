@@ -61,18 +61,6 @@ export namespace Engine::Render::Type
         Scene       // inside the frame, at the exit of the opaque color pass 0x26E500
     };
 
-    // The depth stencil view that was bound.
-    struct DepthTargetInfo
-    {
-        bool HasDepth{ false };
-        std::uint64_t Resource{ 0 };        // address of the resource, only to compare it with another sample. Never dereferenced
-        std::uint32_t Width{ 0 };
-        std::uint32_t Height{ 0 };
-        std::uint32_t ResourceFormat{ 0 };
-        std::uint32_t ViewFormat{ 0 };
-        std::uint32_t ViewFlags{ 0 };       // D3D11_DSV_READ_ONLY_DEPTH (1) and D3D11_DSV_READ_ONLY_STENCIL (2)
-    };
-
     // What the HUD detour measured at the last call of the draw for user 0 (VW.6.x). Only reads, never drawn from.
     struct HudHookInfo
     {
@@ -89,7 +77,6 @@ export namespace Engine::Render::Type
         std::uint32_t Format{ 0 };      // DXGI_FORMAT of the target view
         std::uint32_t SampleCount{ 1 }; // samples of the target texture
         float ViewportX{ 0.0f }, ViewportY{ 0.0f }, ViewportWidth{ 0.0f }, ViewportHeight{ 0.0f };
-        DepthTargetInfo Depth{};        // the depth stencil view bound at the draw (VW.6.y.2)
     };
 
     // Name of a DXGI format the render passes use (color and depth). return: Null for the others.
@@ -119,34 +106,6 @@ export namespace Engine::Render::Type
         }
     }
 
-    // The callers of the first person model pass that the probe tells apart (VW.6.y.2). Each is a function of the game that calls it.
-    enum class FirstPersonCaller : std::uint8_t
-    {
-        Pass1,          // 0x26DA08 (called by 0x26C6DC with 0xB and by 0x26D740)
-        Func26E2A0,     // 0x26E2A0
-        ViewPhase,      // 0x26EA78 (phase 0 or 1 of the view)
-        Func277D00,     // 0x277D00 (no known direct caller)
-        Other           // any other return address, the raw RVA is kept
-    };
-
-    inline constexpr std::size_t k_FirstPersonCallerCount{ 5 };
-
-    // A function of the game by its first byte and its size, as the decompiled code gives them.
-    struct FirstPersonCallerRange
-    {
-        FirstPersonCaller Caller{ FirstPersonCaller::Other };
-        std::uint32_t Rva{ 0 };
-        std::uint32_t Size{ 0 };
-    };
-
-    inline constexpr std::array<FirstPersonCallerRange, 4> k_FirstPersonCallerRanges
-    { {
-        { FirstPersonCaller::Pass1,      0x26DA08, 498 },
-        { FirstPersonCaller::Func26E2A0, 0x26E2A0, 605 },
-        { FirstPersonCaller::ViewPhase,  0x26EA78, 788 },
-        { FirstPersonCaller::Func277D00, 0x277D00, 543 }
-    } };
-
     // The color target in slot 0: its texture, its view and whether it is the back buffer.
     struct ColorTargetInfo
     {
@@ -158,220 +117,6 @@ export namespace Engine::Render::Type
         std::uint32_t ResourceFormat{ 0 };  // DXGI_FORMAT of the texture
         std::uint32_t ViewFormat{ 0 };      // DXGI_FORMAT of the view (0 = same as the texture)
         std::uint32_t SampleCount{ 1 };     // samples of the texture
-    };
-
-    struct ViewportInfo
-    {
-        bool HasViewport{ false };
-        float X{ 0.0f }, Y{ 0.0f }, Width{ 0.0f }, Height{ 0.0f };
-        float MinDepth{ 0.0f }, MaxDepth{ 0.0f };
-    };
-
-    // The depth stencil state that was bound. HasState false is the default state of D3D11 (a null state).
-    struct DepthStencilStateInfo
-    {
-        bool HasState{ false };
-        bool IsDepthEnabled{ false };
-        bool IsStencilEnabled{ false };
-        std::uint32_t DepthWriteMask{ 0 };      // D3D11_DEPTH_WRITE_MASK
-        std::uint32_t DepthFunc{ 0 };           // D3D11_COMPARISON_FUNC
-        std::uint32_t StencilReadMask{ 0 };
-        std::uint32_t StencilWriteMask{ 0 };
-        std::uint32_t StencilRef{ 0 };          // read even when the state is null
-        std::uint32_t FrontFunc{ 0 };           // D3D11_COMPARISON_FUNC
-        std::uint32_t FrontPassOp{ 0 };         // D3D11_STENCIL_OP
-        std::uint32_t FrontFailOp{ 0 };
-        std::uint32_t FrontDepthFailOp{ 0 };
-    };
-
-    // The rasterizer state that was bound. HasState false is the default state (a null state).
-    struct RasterizerStateInfo
-    {
-        bool HasState{ false };
-        bool IsDepthClipEnabled{ false };
-        std::int32_t DepthBias{ 0 };
-        float SlopeScaledDepthBias{ 0.0f };
-        std::uint32_t CullMode{ 0 };            // D3D11_CULL_MODE
-    };
-
-    // What the first person model detour measured at a call for user 0 (VW.6.y.2). Only reads, never drawn from.
-    struct FirstPersonSample
-    {
-        bool HasSample{ false };
-        bool IsSameThread{ false };     // it ran on the thread of Present. When false the next fields are not read
-        FirstPersonCaller Caller{ FirstPersonCaller::Other };
-        std::uint32_t CallerRva{ 0 };   // return address minus the base of haloreach.dll
-        std::uint32_t Pass{ 0 };        // the uint8 argument of the model pass
-        std::uint32_t CallsPerFrame{ 0 };   // calls of this caller between the last two Present
-        std::uint32_t RenderTargetCount{ 0 };   // non null render targets bound
-        ColorTargetInfo Color{};        // render target 0
-        DepthTargetInfo Depth{};
-        ViewportInfo Viewport{};        // viewport 0
-        DepthStencilStateInfo DepthState{};
-        RasterizerStateInfo Rasterizer{};
-    };
-
-    // Where the stencil of the game is reduced in the probe (VW.6.y.2 A2), in texels of the depth stencil texture. Weapon is the lower right
-    // quadrant, Center a box of 10% of the width and height in the middle, Top the upper quarter.
-    enum class StencilRegion : std::uint8_t
-    {
-        All,
-        Weapon,
-        Center,
-        Top
-    };
-
-    inline constexpr std::size_t k_StencilRegionCount{ 4 };
-    inline constexpr std::size_t k_StencilValueCount{ 256 };
-    inline constexpr std::size_t k_StencilBitCount{ 8 };
-
-    // What happened reading the depth stencil texture of the game.
-    enum class StencilReadStatus : std::uint8_t
-    {
-        NotRead,
-        Read,
-        NotTexture,         // the resource is not a 2D texture
-        UnsupportedFormat,  // not R32G8X24 (typeless or D32_FLOAT_S8X24_UINT)
-        CreateFailed,       // the staging texture could not be created (Result is the HRESULT)
-        MapFailed,          // Map(READ) of the staging copy failed (Result is the HRESULT)
-        BadLayout           // no data or a row pitch smaller than a row
-    };
-
-    // The stencil and depth of one region: texel count, 256 stencil counters, how many texels have each bit set, depth range.
-    struct StencilRegionStats
-    {
-        std::uint32_t Texels{ 0 };
-        std::array<std::uint32_t, k_StencilValueCount> Histogram{};
-        std::array<std::uint32_t, k_StencilBitCount> BitCounts{};
-        float MinDepth{ 0.0f };
-        float MaxDepth{ 0.0f };
-        std::uint32_t ZeroDepthTexels{ 0 };     // reversed Z: 0 is far or sky
-    };
-
-    // One read of the stencil of the first person depth stencil resource at the HUD draw (VW.6.y.2 A2). Fixed size, no allocation.
-    struct StencilProbeInfo
-    {
-        bool IsAttempted{ false };      // the read was tried at a HUD draw of this probe
-        StencilReadStatus Status{ StencilReadStatus::NotRead };
-        std::int32_t Result{ 0 };       // HRESULT of the step that failed
-        std::uint32_t Width{ 0 };
-        std::uint32_t Height{ 0 };
-        std::uint32_t ResourceFormat{ 0 };  // DXGI_FORMAT of the texture
-        std::array<StencilRegionStats, k_StencilRegionCount> Regions{};
-    };
-
-    // How many calls of the first person pass 0x26DA08 the probe copies the depth of, before and after (VW.6.y.2 A4, A5). Two textures each.
-    inline constexpr std::size_t k_DepthPairCount{ 6 };
-
-    // How many calls of the forward pass 0x26EA78 the probe copies the color of, before and after (VW.6.y.2 D). Two textures each.
-    inline constexpr std::size_t k_ColorPairCount{ 4 };
-
-    // What the detour did with a call while the copy pairs (depth or color) were ready.
-    enum class PairState : std::uint8_t
-    {
-        Free,
-        Mismatch,   // the bound resource is not a texture of the description of the copies, nothing was copied
-        Copied,     // the content before the call was copied, and the content after it when the call returned
-        NoTarget    // nothing was bound to copy from (color pairs: no render target 0)
-    };
-
-    // One call of the pass seen while the depth pairs were ready, in call order.
-    struct DepthPairNote
-    {
-        PairState State{ PairState::Free };
-        FirstPersonCaller Caller{ FirstPersonCaller::Other };   // Pass1 (0x26DA08)
-        std::int32_t Pass{ 0 };                                 // the pass argument of 0x26DA08
-        bool IsCaptured{ false };   // no depth stencil was bound at the entry, the resource captured from the model draw was copied instead
-    };
-
-    // How the creation of the copy textures of the depth pairs or the color pairs went (once per probe, at Present).
-    struct CopyPairSetup
-    {
-        bool IsAttempted{ false };
-        StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when created
-        std::int32_t Result{ 0 };       // HRESULT of the step that failed
-    };
-
-    // How a texel of a copy is compared (VW.6.y.2 D): its size, how many of its first bytes are compared, and whether those bytes are a float
-    // depth whose range is reported.
-    struct TexelLayout
-    {
-        std::uint32_t TexelBytes{ 0 };
-        std::uint32_t CompareBytes{ 0 };
-        bool HasDepthRange{ false };
-    };
-
-    // R32G8X24: the float depth in bytes 0..3, the stencil and 3 unused bytes.
-    inline constexpr TexelLayout k_DepthTexelLayout{ 8, 4, true };
-
-    // A color of 4 bytes per texel (R11G11B10_FLOAT and the 8 bit formats): all the bytes are compared.
-    inline constexpr TexelLayout k_ColorTexelLayout{ 4, 4, false };
-
-    // A byte per texel of an image, 1 where the texel changed, row after row without padding. Empty when none was made.
-    struct ChangedMap
-    {
-        std::uint32_t Width{ 0 };
-        std::uint32_t Height{ 0 };
-        std::vector<std::uint8_t> Texels{};
-    };
-
-    // Texels that changed between two copies: count, box (inclusive), depth range of the later copy (0 for a color), how many are in the
-    // weapon region and how many in the right half of the screen (x from width / 2). With Changed 0 the box and the range are 0.
-    struct TexelDiff
-    {
-        std::uint32_t Changed{ 0 };
-        std::uint32_t X0{ 0 };
-        std::uint32_t Y0{ 0 };
-        std::uint32_t X1{ 0 };
-        std::uint32_t Y1{ 0 };
-        float MinDepth{ 0.0f };
-        float MaxDepth{ 0.0f };
-        std::uint32_t Weapon{ 0 };
-        std::uint32_t Right{ 0 };
-    };
-
-    // The reduction of one pair: what the call changed and, when the previous pair was read too, what changed between the two calls.
-    struct DepthPairReport
-    {
-        DepthPairNote Note{};
-        StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when Changed is valid
-        std::int32_t Result{ 0 };
-        TexelDiff Changed{};
-        bool HasBetween{ false };
-        TexelDiff Between{};            // previous pair after the call against this pair before it
-    };
-
-    struct DepthProbeInfo
-    {
-        std::uint32_t Count{ 0 };
-        std::array<DepthPairReport, k_DepthPairCount> Pairs{};
-    };
-
-    // One call of the forward pass 0x26EA78 seen while the color pairs were ready, in call order.
-    struct ColorPairNote
-    {
-        PairState State{ PairState::Free };
-        std::uint8_t Phase{ 0 };    // the phase argument of 0x26EA78
-    };
-
-    // The reduction of one color pair: what the call changed, and how many of those texels are not in the mask of the depth pair 0xB (nothing
-    // when there is no such mask or its size differs).
-    struct ColorPairReport
-    {
-        ColorPairNote Note{};
-        StencilReadStatus Status{ StencilReadStatus::NotRead };     // Read when Changed is valid
-        std::int32_t Result{ 0 };
-        TexelDiff Changed{};
-        std::optional<std::uint32_t> Outside{};
-    };
-
-    struct ColorProbeInfo
-    {
-        std::uint32_t Count{ 0 };
-        std::uint32_t Width{ 0 };
-        std::uint32_t Height{ 0 };
-        std::uint32_t Format{ 0 };      // DXGI_FORMAT of the copies
-        std::array<ColorPairReport, k_ColorPairCount> Pairs{};
     };
 
     // Layout of the vertex data of a draw. Each one has its own input layout and vertex shader.
@@ -426,20 +171,15 @@ export namespace Engine::Render::Type
     inline constexpr std::int32_t k_FirstPersonMaskPass{ 0xB };
     inline constexpr std::int32_t k_FirstPersonZeroPass{ 0 };
 
-    // The first phase of the forward pass 0x26EA78 is the depth mask. The phases after it draw the emissive parts that write no depth, such as
-    // the blade of the sword (VW.6.y.2 A6).
-    inline constexpr std::uint8_t k_ForwardDepthPhase{ 0 };
-
-    // The copies of the overlay mask: the depth around the call with pass 0xB, the depth around the call with pass 0 and the color of the
-    // forward pass 0x26EA78. Each one is a pair of textures taken before and after the call.
+    // The copies of the overlay mask: the depth around the call with pass 0xB and the depth around the call with pass 0. Each one is a pair of
+    // textures taken before and after the call.
     enum class MaskPairKind : std::uint8_t
     {
         DepthB,
-        DepthZero,
-        Color
+        DepthZero
     };
 
-    inline constexpr std::size_t k_MaskPairCount{ 3 };
+    inline constexpr std::size_t k_MaskPairCount{ 2 };
 
     // Fixed slots of the overlay mask in the pixel stage of the map shaders (VW.6.y.2 B, E): the before and after copy of each pair
     // (shader resources, consecutive from slot 0 in the order of MaskPairKind) and the constant buffer with the sizes and flags.
@@ -480,13 +220,6 @@ export namespace Engine::Render::Type
         return isSaved ? MaskSource::Saved : MaskSource::None;
     }
 
-    // return: Whether a pair is wanted. The color pair is the one of the forward pass phase 1, drawn after the scene point, so with the overlay
-    // drawn in the scene (VW.6.z) it is not wanted.
-    constexpr auto IsMaskPairWanted(bool isMaskRequested, bool isSceneRequested, MaskPairKind kind) -> bool
-    {
-        return isMaskRequested && !(isSceneRequested && kind == MaskPairKind::Color);
-    }
-
     // One pair of copies of the mask for the overlay. Without IsValid the pair is not used.
     struct MaskPairView
     {
@@ -519,23 +252,19 @@ export namespace Engine::Render::Type
         std::array<MaskPairView, k_MaskPairCount> Pairs{};
     };
 
-    // The constant buffer b1 of the pixel shader, 48 bytes as the shader declares it.
+    // The constant buffer b1 of the pixel shader, 32 bytes as the shader declares it.
     struct MaskConstants
     {
         std::uint32_t DepthBWidth{ 1 };
         std::uint32_t DepthBHeight{ 1 };
         std::uint32_t DepthZeroWidth{ 1 };
         std::uint32_t DepthZeroHeight{ 1 };
-        std::uint32_t ColorWidth{ 1 };
-        std::uint32_t ColorHeight{ 1 };
         std::uint32_t TargetWidth{ 1 };
         std::uint32_t TargetHeight{ 1 };
         std::uint32_t ValidFlags{ 0 };      // bit i: the pair of MaskPairKind i is used
-        std::uint32_t MaskShown{ 0 };
         float ColorScale{ 1.0f };           // the pixel shader multiplies the RGB it outputs by it (VW.6.z.2)
-        std::uint32_t Padding{ 0 };
     };
-    static_assert(sizeof(MaskConstants) == 48);
+    static_assert(sizeof(MaskConstants) == 32);
 
     // return: Whether the pair can be sampled: valid, both views, a size and a target size, so the shader never divides by zero.
     constexpr auto IsMaskPairUsable(const MaskPairView& pair, std::uint32_t targetWidth, std::uint32_t targetHeight) -> bool
@@ -546,10 +275,9 @@ export namespace Engine::Render::Type
 
     // Makes the constants of the pixel shader of a mask.
     // param colorScale: The factor of the RGB output (the scene color scale, 1 outside the scene). It does not depend on the mask.
-    // param isMaskShown: Debug. The pixels of the mask are painted instead of skipped. Ignored when no pair is usable.
     // return: The flags hold the usable pairs only, and the sizes of a pair that is not usable stay 1.
-    inline auto MakeMaskConstants(const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth, std::uint32_t targetHeight,
-        float colorScale = 1.0f) -> MaskConstants
+    inline auto MakeMaskConstants(const MaskContext& mask, std::uint32_t targetWidth, std::uint32_t targetHeight, float colorScale = 1.0f)
+        -> MaskConstants
     {
         MaskConstants constants{};
         constants.ColorScale = colorScale;
@@ -572,11 +300,6 @@ export namespace Engine::Render::Type
                 constants.DepthZeroWidth = pair.Width;
                 constants.DepthZeroHeight = pair.Height;
                 break;
-
-            case MaskPairKind::Color:
-                constants.ColorWidth = pair.Width;
-                constants.ColorHeight = pair.Height;
-                break;
             }
         }
 
@@ -584,92 +307,9 @@ export namespace Engine::Render::Type
         {
             constants.TargetWidth = targetWidth;
             constants.TargetHeight = targetHeight;
-            constants.MaskShown = isMaskShown ? 1u : 0u;
         }
 
         return constants;
-    }
-
-    // return: The format a shader resource view of a color texture of the mask uses, nothing when the format is not one the mask compares.
-    // A typeless 8 bit format is viewed as UNORM.
-    inline auto ColorMaskViewFormat(DXGI_FORMAT format) -> std::optional<DXGI_FORMAT>
-    {
-        switch (format)
-        {
-        case DXGI_FORMAT_R11G11B10_FLOAT:
-        case DXGI_FORMAT_R10G10B10A2_UNORM:
-        case DXGI_FORMAT_R8G8B8A8_UNORM:
-        case DXGI_FORMAT_R8G8B8A8_UNORM_SRGB:
-        case DXGI_FORMAT_B8G8R8A8_UNORM:
-        case DXGI_FORMAT_B8G8R8A8_UNORM_SRGB:
-            return format;
-
-        case DXGI_FORMAT_R8G8B8A8_TYPELESS:
-            return DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        default:
-            return std::nullopt;
-        }
-    }
-
-    // Frames of a telemetry window of the overlay mask, counted only while the mask is requested (VW.6.y.2 C, E).
-    inline constexpr std::uint32_t k_MaskWindowFrames{ 120 };
-
-    // Counters of the window in progress.
-    struct MaskWindow
-    {
-        std::uint32_t Frames{ 0 };                                          // frames with the mask requested
-        std::array<std::uint32_t, k_MaskPairCount> NoCopyFrames{};          // of those, frames in which each pair took no copy
-        std::uint32_t MaxPassCalls{ 0 };                                    // most 0xB calls seen in one frame
-    };
-
-    // A closed window, published for the telemetry.
-    struct MaskWindowReport
-    {
-        std::uint32_t Frames{ 0 };
-        std::array<std::uint32_t, k_MaskPairCount> NoCopyFrames{};
-        std::uint32_t MaxPassCalls{ 0 };
-    };
-
-    // Adds one frame with the mask requested to the window.
-    // param isCopied: Whether each pair took its copies in the frame.
-    // param passCalls: Calls of 0xB that asked for the mask in the frame, including those that did not copy.
-    // return: The window when it reached k_MaskWindowFrames, which is then reset. Empty otherwise.
-    inline auto AdvanceMaskWindow(MaskWindow& window, const std::array<bool, k_MaskPairCount>& isCopied, std::uint32_t passCalls)
-        -> std::optional<MaskWindowReport>
-    {
-        ++window.Frames;
-
-        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
-        {
-            if (!isCopied[i]) ++window.NoCopyFrames[i];
-        }
-
-        window.MaxPassCalls = (std::max)(window.MaxPassCalls, passCalls);
-
-        if (window.Frames < k_MaskWindowFrames) return std::nullopt;
-
-        const MaskWindowReport report{ window.Frames, window.NoCopyFrames, window.MaxPassCalls };
-        window = MaskWindow{};
-        return report;
-    }
-
-    // Adds the texels of a changed map to another, for the union of the depth the first person passes wrote (VW.6.y.2 E).
-    // return: False when the sizes differ and nothing was added. An empty target takes the size of the source.
-    inline auto UnionChangedMap(ChangedMap& target, const ChangedMap& source) -> bool
-    {
-        if (source.Texels.empty()) return true;
-
-        if (target.Texels.empty())
-        {
-            target = source;
-            return true;
-        }
-
-        if (target.Width != source.Width || target.Height != source.Height || target.Texels.size() != source.Texels.size()) return false;
-
-        for (std::size_t i{ 0 }; i < target.Texels.size(); ++i) target.Texels[i] |= source.Texels[i];
-        return true;
     }
 
     // What the handlers receive on each render event.
@@ -689,22 +329,6 @@ export namespace Engine::Render::Type
         // Factor the 3D passes of the overlay multiply the RGB they output by (VW.6.z.2). 1 everywhere but at the scene point, where the HDR target is not
         // in the 0..1 range of the back buffer.
         float ColorScale{ 1.0f };
-    };
-
-    // Offsets in the view the opaque color pass receives (A21 sec. 8, VW.6.z.2): 0x26d090 stores 2^E * a global at +0x10 and 2^(k - E) at +0x14.
-    inline constexpr std::uint32_t k_ViewExposureScaleOffset{ 0x10 };
-    inline constexpr std::uint32_t k_ViewInverseScaleOffset{ 0x14 };
-
-    // "No value" of a float of SceneColorSample: not read or not finite.
-    inline constexpr float k_NoSceneColorValue{ std::numeric_limits<float>::quiet_NaN() };
-
-    // The factors of the game that scale the color of the HDR target, read at the exit of the opaque color pass of a view (VW.6.z.2).
-    struct SceneColorSample
-    {
-        float HdrScale{ k_NoSceneColorValue };      // DAT_180c878d0, the constant the shaders of the game read
-        float ViewScale{ k_NoSceneColorValue };     // view + 0x10
-        float ViewInverse{ k_NoSceneColorValue };   // view + 0x14
-        float ScriptedScale{ k_NoSceneColorValue }; // DAT_180bb6fcc
     };
 
     using FrameHandler = std::function<void(const FrameContext&)>;

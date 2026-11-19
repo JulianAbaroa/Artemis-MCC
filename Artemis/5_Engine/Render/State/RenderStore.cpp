@@ -8,37 +8,16 @@ module Engine.Render.State;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
-    using Engine::Render::Type::ColorPairNote;
-    using Engine::Render::Type::DepthPairNote;
     using Engine::Render::Type::DrawPlace;
-    using Engine::Render::Type::FirstPersonCaller;
-    using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::MaskTextures;
-    using Engine::Render::Type::MaskWindow;
-    using Engine::Render::Type::MaskWindowReport;
-    using Engine::Render::Type::SceneColorSample;
-    using Engine::Render::Type::StencilProbeInfo;
 
-    using Engine::Render::Type::k_ColorPairCount;
-    using Engine::Render::Type::k_DepthPairCount;
-    using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_MaskPairCount;
-
-    // States of the first person probe.
-    constexpr std::uint8_t k_ProbeIdle{ 0 };
-    constexpr std::uint8_t k_ProbeRequested{ 1 };
-    constexpr std::uint8_t k_ProbeArmed{ 2 };
 
     auto MaskSlotOf(MaskPairKind kind) -> std::size_t
     {
         return (std::min)(static_cast<std::size_t>(kind), k_MaskPairCount - 1);
-    }
-
-    auto SlotOf(FirstPersonCaller caller) -> std::size_t
-    {
-        return (std::min)(static_cast<std::size_t>(caller), k_FirstPersonCallerCount - 1);
     }
 }
 
@@ -238,223 +217,14 @@ namespace Engine::Render::State
         m_HudCallsLastFrame.store(m_HudCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_FirstPersonUnitLastFrame.store(m_FirstPersonUnitCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
-        std::array<bool, k_MaskPairCount> isCopied{};
 
         for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
         {
-            isCopied[i] = m_IsMaskCopied[i].exchange(false, std::memory_order_acq_rel);
-            m_IsMaskCopiedLastFrame[i].store(isCopied[i], std::memory_order_release);
+            m_IsMaskCopiedLastFrame[i].store(m_IsMaskCopied[i].exchange(false, std::memory_order_acq_rel), std::memory_order_release);
             m_IsMaskTaken[i].store(false, std::memory_order_release);
         }
 
         m_MaskFrameDepth.Reset();
-
-        const std::uint32_t passCalls{ m_MaskPassCalls.exchange(0, std::memory_order_relaxed) };
-
-        if (!this->IsFirstPersonMaskRequested())
-        {
-            // A window is only of frames with the mask requested, so a new request starts a new one.
-            m_MaskWindow = MaskWindow{};
-            m_IsMaskWindowPublished.store(false, std::memory_order_release);
-        }
-        else if (const auto report{ Engine::Render::Type::AdvanceMaskWindow(m_MaskWindow, isCopied, passCalls) })
-        {
-            m_MaskWindowFrames.store(report->Frames, std::memory_order_relaxed);
-
-            for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i) m_MaskWindowNoCopy[i].store(report->NoCopyFrames[i], std::memory_order_relaxed);
-
-            m_MaskWindowMaxCalls.store(report->MaxPassCalls, std::memory_order_relaxed);
-            m_IsMaskWindowPublished.store(true, std::memory_order_release);
-        }
-
-        for (std::size_t i{ 0 }; i < k_FirstPersonCallerCount; ++i)
-        {
-            m_FirstPersonCallsLastFrame[i].store(m_FirstPersonCalls[i].exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
-        }
-    }
-
-    auto RenderStore::CountFirstPersonCall(FirstPersonCaller caller) -> void
-    {
-        m_FirstPersonCalls[SlotOf(caller)].fetch_add(1, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetFirstPersonCalls(FirstPersonCaller caller) const -> std::uint32_t
-    {
-        return m_FirstPersonCallsLastFrame[SlotOf(caller)].load(std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetFirstPersonCallerCount() const -> std::uint32_t
-    {
-        std::uint32_t count{ 0 };
-
-        for (const auto& calls : m_FirstPersonCallsLastFrame)
-        {
-            if (calls.load(std::memory_order_relaxed) != 0) ++count;
-        }
-
-        return count;
-    }
-
-    auto RenderStore::RequestFirstPersonProbe() -> void
-    {
-        std::uint8_t expected{ k_ProbeIdle };
-        m_FirstPersonProbe.compare_exchange_strong(expected, k_ProbeRequested, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::IsFirstPersonProbePending() const -> bool
-    {
-        return m_FirstPersonProbe.load(std::memory_order_relaxed) != k_ProbeIdle;
-    }
-
-    auto RenderStore::IsFirstPersonProbeArmed() const -> bool
-    {
-        return m_FirstPersonProbe.load(std::memory_order_relaxed) == k_ProbeArmed;
-    }
-
-    auto RenderStore::StepFirstPersonProbe() -> bool
-    {
-        const std::uint8_t state{ m_FirstPersonProbe.load(std::memory_order_relaxed) };
-
-        if (state == k_ProbeArmed)
-        {
-            if (this->GetFirstPersonCallerCount() == 0) return false;
-
-            // A captured depth resource without an attempt to make the depth pairs: the frame that made the copies was not measured yet.
-            if (m_FirstPersonDepth != nullptr && !m_DepthPairs.GetSetup().IsAttempted) return false;
-
-            // The same for the color pairs: the forward pass noted its target but the copies are not made yet.
-            if (m_ColorDesc && !m_ColorPairs.GetSetup().IsAttempted) return false;
-
-            m_FirstPersonProbe.store(k_ProbeIdle, std::memory_order_relaxed);
-            this->ReleaseFirstPersonDepth();
-            return true;
-        }
-
-        if (state == k_ProbeRequested)
-        {
-            {
-                const std::lock_guard<std::mutex> lock{ m_FirstPersonSampleMutex };
-                m_FirstPersonSamples = {};
-            }
-
-            this->ReleaseFirstPersonDepth();
-            m_DepthPairs.Release();
-            this->ReleaseColorPairs();
-
-            {
-                const std::lock_guard<std::mutex> lock{ m_StencilMutex };
-                m_StencilProbe = {};
-            }
-
-            m_IsStencilAttempted.store(false, std::memory_order_relaxed);
-
-            m_FirstPersonProbe.store(k_ProbeArmed, std::memory_order_relaxed);
-        }
-
-        return false;
-    }
-
-    auto RenderStore::CaptureFirstPersonDepth(ID3D11Resource* resource) -> void
-    {
-        if (resource == nullptr || m_FirstPersonDepth != nullptr) return;
-
-        m_FirstPersonDepth = resource;
-    }
-
-    auto RenderStore::GetFirstPersonDepth() const -> ID3D11Resource*
-    {
-        return m_FirstPersonDepth.Get();
-    }
-
-    auto RenderStore::ReleaseFirstPersonDepth() -> void
-    {
-        m_FirstPersonDepth.Reset();
-    }
-
-    auto RenderStore::GetDepthPairs() -> CopyPairs<DepthPairNote, k_DepthPairCount>&
-    {
-        return m_DepthPairs;
-    }
-
-    auto RenderStore::GetDepthPairs() const -> const CopyPairs<DepthPairNote, k_DepthPairCount>&
-    {
-        return m_DepthPairs;
-    }
-
-    auto RenderStore::GetColorPairs() -> CopyPairs<ColorPairNote, k_ColorPairCount>&
-    {
-        return m_ColorPairs;
-    }
-
-    auto RenderStore::GetColorPairs() const -> const CopyPairs<ColorPairNote, k_ColorPairCount>&
-    {
-        return m_ColorPairs;
-    }
-
-    auto RenderStore::NoteColorDesc(const D3D11_TEXTURE2D_DESC& desc) -> void
-    {
-        if (!m_ColorDesc) m_ColorDesc = desc;
-    }
-
-    auto RenderStore::GetColorDesc() const -> std::optional<D3D11_TEXTURE2D_DESC>
-    {
-        return m_ColorDesc;
-    }
-
-    auto RenderStore::ReleaseColorPairs() -> void
-    {
-        m_ColorPairs.Release();
-        m_ColorDesc.reset();
-    }
-
-    auto RenderStore::SetStencilProbe(const StencilProbeInfo& info) -> void
-    {
-        {
-            const std::lock_guard<std::mutex> lock{ m_StencilMutex };
-            m_StencilProbe = info;
-        }
-
-        m_IsStencilAttempted.store(info.IsAttempted, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetStencilProbe() const -> StencilProbeInfo
-    {
-        const std::lock_guard<std::mutex> lock{ m_StencilMutex };
-        return m_StencilProbe;
-    }
-
-    auto RenderStore::IsStencilProbeAttempted() const -> bool
-    {
-        return m_IsStencilAttempted.load(std::memory_order_relaxed);
-    }
-
-    auto RenderStore::SetFirstPersonDriveActive(bool isActive) -> void
-    {
-        m_IsFirstPersonDriveActive.store(isActive, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::IsFirstPersonDriveActive() const -> bool
-    {
-        return m_IsFirstPersonDriveActive.load(std::memory_order_relaxed);
-    }
-
-    auto RenderStore::SetFirstPersonSample(const FirstPersonSample& sample) -> void
-    {
-        const std::lock_guard<std::mutex> lock{ m_FirstPersonSampleMutex };
-        m_FirstPersonSamples[SlotOf(sample.Caller)] = sample;
-    }
-
-    auto RenderStore::GetFirstPersonSample(FirstPersonCaller caller) const -> FirstPersonSample
-    {
-        FirstPersonSample sample{};
-
-        {
-            const std::lock_guard<std::mutex> lock{ m_FirstPersonSampleMutex };
-            sample = m_FirstPersonSamples[SlotOf(caller)];
-        }
-
-        sample.CallsPerFrame = this->GetFirstPersonCalls(caller);
-        return sample;
     }
 
     auto RenderStore::CountHudFailure() -> void
@@ -531,47 +301,14 @@ namespace Engine::Render::State
         return m_SceneFailures.load(std::memory_order_relaxed);
     }
 
-    auto RenderStore::SetSceneColorRequest(bool isByGameHdr, float slider) -> void
+    auto RenderStore::SetSceneColorSlider(float slider) -> void
     {
-        m_IsSceneColorByGameHdr.store(isByGameHdr, std::memory_order_relaxed);
         m_SceneColorSlider.store(slider, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::IsSceneColorByGameHdr() const -> bool
-    {
-        return m_IsSceneColorByGameHdr.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::GetSceneColorSlider() const -> float
     {
         return m_SceneColorSlider.load(std::memory_order_relaxed);
-    }
-
-    auto RenderStore::SetSceneColorSample(const SceneColorSample& sample) -> void
-    {
-        m_SceneColorHdrScale.store(sample.HdrScale, std::memory_order_relaxed);
-        m_SceneColorViewScale.store(sample.ViewScale, std::memory_order_relaxed);
-        m_SceneColorViewInverse.store(sample.ViewInverse, std::memory_order_relaxed);
-        m_SceneColorScriptedScale.store(sample.ScriptedScale, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetSceneColorSample() const -> SceneColorSample
-    {
-        return SceneColorSample{
-            .HdrScale = m_SceneColorHdrScale.load(std::memory_order_relaxed),
-            .ViewScale = m_SceneColorViewScale.load(std::memory_order_relaxed),
-            .ViewInverse = m_SceneColorViewInverse.load(std::memory_order_relaxed),
-            .ScriptedScale = m_SceneColorScriptedScale.load(std::memory_order_relaxed) };
-    }
-
-    auto RenderStore::CountSceneColorFailures(std::uint32_t count) -> void
-    {
-        m_SceneColorFailures.fetch_add(count, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetSceneColorFailures() const -> std::uint32_t
-    {
-        return m_SceneColorFailures.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::SetSceneColorScale(float scale) -> void
@@ -642,23 +379,6 @@ namespace Engine::Render::State
     auto RenderStore::WasMaskCopiedLastFrame(MaskPairKind kind) const -> bool
     {
         return m_IsMaskCopiedLastFrame[MaskSlotOf(kind)].load(std::memory_order_acquire);
-    }
-
-    auto RenderStore::CountMaskPassCall() -> void
-    {
-        m_MaskPassCalls.fetch_add(1, std::memory_order_relaxed);
-    }
-
-    auto RenderStore::GetMaskWindowReport() const -> std::optional<MaskWindowReport>
-    {
-        if (!m_IsMaskWindowPublished.load(std::memory_order_acquire)) return std::nullopt;
-
-        MaskWindowReport report{ .Frames = m_MaskWindowFrames.load(std::memory_order_relaxed),
-            .MaxPassCalls = m_MaskWindowMaxCalls.load(std::memory_order_relaxed) };
-
-        for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i) report.NoCopyFrames[i] = m_MaskWindowNoCopy[i].load(std::memory_order_relaxed);
-
-        return report;
     }
 
     auto RenderStore::NoteMaskDesc(MaskPairKind kind, const D3D11_TEXTURE2D_DESC& desc) -> void
@@ -758,9 +478,6 @@ namespace Engine::Render::State
     {
         m_RenderTarget.Reset();
         m_DepthStencil.Reset();
-        this->ReleaseFirstPersonDepth();
-        m_DepthPairs.Release();
-        this->ReleaseColorPairs();
         this->ReleaseMaskTextures();
     }
 

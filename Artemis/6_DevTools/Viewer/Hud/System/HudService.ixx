@@ -90,14 +90,14 @@ export namespace DevTools::Viewer::Hud::System
         auto DrawHudHook() -> void;
         auto DrawFirstPersonHook() -> void;
 
-        // Draws the state of the first person mask of the overlay (VW.6.y.2 B).
+        // Draws whether the first person mask of the overlay was copied in the last frame (VW.6.y.2 B).
         auto DrawFirstPersonMask() -> void;
 
         // Draws the measurement of the lag between the scene of the overlay and the frame of the game (VW.5c), over the last k_WindowFrames.
         auto DrawLatency() -> void;
         auto DrawOverlayPoint(bool isHooked) -> void;
 
-        // Draws the factors of the game that scale the HDR color and the scale of the last scene draw (VW.6.z.2). Only with Overlay in scene on.
+        // Draws the scale of the last scene draw (VW.6.z.2). Only with Overlay in scene on.
         auto DrawSceneColor() -> void;
         auto DrawOverride() -> void;
     };

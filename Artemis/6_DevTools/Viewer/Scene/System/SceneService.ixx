@@ -136,9 +136,6 @@ export namespace DevTools::Viewer::Scene::System
         // return: How many faults the observer hook caught while it touched the engine memory.
         auto GetOverrideFaults() const -> std::uint32_t;
 
-        // return: The distance between the eye asked of the game and the position of its camera, or nothing when the camera is not driving.
-        auto GetOverrideDistance() const -> std::optional<float>;
-
         // return: The selected handle, or k_NoHandle.
         auto GetSelected() const -> std::uint32_t;
         auto GetPalette() const -> const PaletteService&;

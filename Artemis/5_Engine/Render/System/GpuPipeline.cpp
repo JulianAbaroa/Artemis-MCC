@@ -27,7 +27,7 @@ namespace
 
     // The copies of the pairs are bound together from slot 0, before and after of each pair in the order of MaskPairKind.
     static_assert(MaskPreSlot(MaskPairKind::DepthB) == 0 && MaskPostSlot(MaskPairKind::DepthB) == 1 &&
-        MaskPostSlot(MaskPairKind::Color) == k_MaskSlotCount - 1);
+        MaskPostSlot(MaskPairKind::DepthZero) == k_MaskSlotCount - 1);
 
     // Depth bias of the DepthOnly surface. The depth is reversed (near is 1, far is 0), so negative terms push the surface away from the camera.
     // The wireframe of the same mesh then wins the depth test without being pulled through nearby walls. The bias is in units of the float
@@ -38,8 +38,8 @@ namespace
     // HLSL source of the map pipeline, shared by every pass.
     // Vertex shaders: VSMain (Vertex), VSInstanced (SphereInstance) and VSInstancedMesh (MeshInstance).
     // Pixel shader: PSMain, flat shading from the screen-space derivatives and two fixed lights. It first skips the pixels of the
-    // first person arms of the game (IsFirstPersonPixel): the texels whose depth or color differs between the two copies of any pair taken
-    // around the passes that draw them. The copies are t0 to t5 (depth 0xB, depth 0, color) and the sizes and flags b1, bound by UpdateMask.
+    // first person arms of the game (IsFirstPersonPixel): the texels whose depth differs between the two copies of any pair taken
+    // around the passes that draw them. The copies are t0 to t3 (depth 0xB, depth 0) and the sizes and flags b1, bound by UpdateMask.
     constexpr const char* k_MapSource = R"(
 cbuffer Camera : register(b0)
 {
@@ -50,20 +50,15 @@ cbuffer Mask : register(b1)
 {
     uint2 DepthBSize;
     uint2 DepthZeroSize;
-    uint2 ColorSize;
     uint2 TargetSize;
     uint  ValidFlags;
-    uint  MaskShown;
     float ColorScale;
-    uint  MaskPadding;
 };
 
 Texture2D<float>  DepthBPre    : register(t0);
 Texture2D<float>  DepthBPost   : register(t1);
 Texture2D<float>  DepthZeroPre : register(t2);
 Texture2D<float>  DepthZeroPost: register(t3);
-Texture2D<float4> ColorPre     : register(t4);
-Texture2D<float4> ColorPost    : register(t5);
 
 // The texel of a copy of the given size that covers the pixel, as ScaleToMask does.
 int3 MaskTexel(uint2 pixel, uint2 size)
@@ -71,8 +66,8 @@ int3 MaskTexel(uint2 pixel, uint2 size)
     return int3(min(pixel * size / TargetSize, size - 1), 0);
 }
 
-// Whether the pixel is one the game draws its first person arms on: the depth changed in the pass 0xB or in the pass 0, or the color
-// changed in the forward pass, comparing the three channels bit by bit. The flags say which pairs were copied in the frame.
+// Whether the pixel is one the game draws its first person arms on: the depth changed in the pass 0xB or in the pass 0. The flags say which
+// pairs were copied in the frame.
 bool IsFirstPersonPixel(float4 screenPos)
 {
     if (ValidFlags == 0) return false;
@@ -89,12 +84,6 @@ bool IsFirstPersonPixel(float4 screenPos)
     {
         int3 location = MaskTexel(pixel, DepthZeroSize);
         if (DepthZeroPre.Load(location) != DepthZeroPost.Load(location)) return true;
-    }
-
-    if ((ValidFlags & 4) != 0)
-    {
-        int3 location = MaskTexel(pixel, ColorSize);
-        if (any(asuint(ColorPre.Load(location).rgb) != asuint(ColorPost.Load(location).rgb))) return true;
     }
 
     return false;
@@ -161,11 +150,7 @@ float4 PSMain(VSOut input) : SV_TARGET
     float3 dx = ddx(input.worldPos);
     float3 dy = ddy(input.worldPos);
 
-    if (IsFirstPersonPixel(input.pos))
-    {
-        if (MaskShown != 0) return float4(1.0f, 0.0f, 0.0f, 1.0f);
-        discard;
-    }
+    if (IsFirstPersonPixel(input.pos)) discard;
 
     float3 n = normalize(cross(dx, dy));
 
@@ -475,12 +460,12 @@ namespace Engine::Render::System
         }
     }
 
-    auto GpuPipeline::UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth,
-        std::uint32_t targetHeight, float colorScale) -> void
+    auto GpuPipeline::UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, std::uint32_t targetWidth, std::uint32_t targetHeight,
+        float colorScale) -> void
     {
         if (!context || !m_MaskBuffer) return;
 
-        const MaskConstants constants{ MakeMaskConstants(mask, isMaskShown, targetWidth, targetHeight, colorScale) };
+        const MaskConstants constants{ MakeMaskConstants(mask, targetWidth, targetHeight, colorScale) };
 
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (FAILED(context->Map(m_MaskBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) return;

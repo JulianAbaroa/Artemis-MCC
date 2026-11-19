@@ -24,7 +24,6 @@ import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Map.Type;
-import DevTools.Viewer.Recorder.System;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Scene.System;
 import DevTools.Viewer.Options.State;
@@ -74,20 +73,18 @@ export namespace DevTools::Viewer::Map::System
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
-        using FrameClockRecorder = DevTools::Viewer::Recorder::System::FrameClockRecorder;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         // param collidableStore: The scene drawn, with the Tick it belongs to (D294).
         // param latencyService: Told, once per frame, what the overlay draws against the clock of the game (VW.5c).
-        // param frameClockRecorder: Gets one row per frame drawn over the game while the option is on (VW.5d).
         // param lifecycleStore: Read to not wait for a scene while the pipeline is being torn down.
         MapService(Log& log, CollidableStore& collidableStore,
             SceneService& sceneService, OptionsStore& optionsStore, LatencyService& latencyService,
-            FrameClockRecorder& frameClockRecorder, LifecycleStore& lifecycleStore) :
+            LifecycleStore& lifecycleStore) :
             m_Log(log), m_CollidableStore(collidableStore),
             m_SceneService(sceneService), m_OptionsStore(optionsStore), m_LatencyService(latencyService),
-            m_FrameClockRecorder(frameClockRecorder), m_LifecycleStore(lifecycleStore),
+            m_LifecycleStore(lifecycleStore),
             m_GpuPipeline(log), m_MapPass(log),
             m_DynamicPass(log), m_ZonePass(log),
             m_RaycastPass(log), m_ViewPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
@@ -120,7 +117,6 @@ export namespace DevTools::Viewer::Map::System
         SceneService& m_SceneService;
         OptionsStore& m_OptionsStore;
         LatencyService& m_LatencyService;
-        FrameClockRecorder& m_FrameClockRecorder;
         LifecycleStore& m_LifecycleStore;
 
         GpuPipeline m_GpuPipeline;
@@ -172,9 +168,6 @@ export namespace DevTools::Viewer::Map::System
 
         // Records the frame for the latency measurement, after the scene update. The caller holds the mutex.
         auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick, bool isBeforeHud) -> void;
-
-        // Adds the row of the frame to the CSV of the frame clock when the option is on, after the scene update. The caller holds the mutex.
-        auto RecordFrameClock(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
         auto Draw(const FrameContext& frame, bool isBeforeHud) -> void;
 

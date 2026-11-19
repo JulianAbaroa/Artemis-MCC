@@ -14,15 +14,10 @@ export namespace Engine::Render::Hook
     // Hooks the first person model pass, the game's first person unit test, the first person depth pass (D331) and the forward pass of the view. The model pass is skipped for user 0 with the render
     // flag HideFirstPerson or while Drive moves the camera. While Drive moves the camera the unit test answers false for user 0, so the
     // game draws the player's own biped and the third person effects. Render only: the pose of the director is never written.
-    // The model pass is also measured (VW.6.y.2): for user 0 each call is counted by its caller (the function that called it, by the
-    // return address) and, once a probe is armed in the store, the render targets, depth stencil, viewport, depth stencil state and
-    // rasterizer state bound at that moment are copied to the store before the original runs. Nothing changes what is drawn.
     // The pass 0x26DA08 (void(void* view, int32 pass): first person camera, queue the model, draw the list, normal camera, pop) never changes
-    // what is drawn. Its call with pass 0xB is the one that writes the depth of the arms and weapon: at its entry and exit the render service
-    // copies the depth for the overlay mask (VW.6.y.2 B) and, with a probe armed, for the depth pairs (A5, the pairs note the pass argument).
-    // The forward pass 0x26EA78 (void(void* view, uint8 phase)) is only measured (VW.6.y.2 D): with a probe armed the render service copies the
-    // color of the render target 0 at its entry and exit (the color pairs), to see whether it draws the parts of the first person model that
-    // the depth pass does not. Nothing changes what is drawn.
+    // what is drawn. Its calls with pass 0xB and 0 write the depth of the arms and weapon: at their entry and exit the render service
+    // copies the depth for the overlay mask (VW.6.y.2 B, E).
+    // The forward pass 0x26EA78 (void(void* view, uint8 phase)) is hooked and called untouched.
     // The opaque color pass 0x26E500 (void(void* view), once per view, after the first person lists of 0x26EA78 phase 0) is hooked to draw the overlay
     // in the scene (VW.6.z.1, D334): the detour calls the original and then RenderService::OnSceneDraw, so the overlay is over the opaque world and
     // under the effects, the blade and the HUD of the game.
@@ -39,7 +34,6 @@ export namespace Engine::Render::Hook
 
         using AOBService = Engine::Base::Memory::System::AOBService;
 
-        using FirstPersonCaller = Engine::Render::Type::FirstPersonCaller;
         using FirstPersonModelFunction = Engine::Render::Type::FirstPersonModelFunction;
         using FirstPersonDepthPassFunction = Engine::Render::Type::FirstPersonDepthPassFunction;
         using FirstPersonForwardFunction = Engine::Render::Type::FirstPersonForwardFunction;
@@ -65,10 +59,6 @@ export namespace Engine::Render::Hook
         // note: Can be called from two threads (the unhook of the game thread and the shutdown of the main thread), serialized by a mutex.
         auto Uninstall() -> void;
 
-        // return: Which function of the game called the model pass, by the return address minus the base of the game module. Other when the
-        // address is in none of the known functions.
-        static auto ClassifyCaller(std::uint32_t rva) -> FirstPersonCaller;
-
         // return: Whether the model pass is skipped. Only user 0 is ever skipped.
         static auto IsFirstPersonModelSkipped(std::uint32_t user, bool isHidden, bool isDriveActive) -> bool;
 
@@ -90,8 +80,6 @@ export namespace Engine::Render::Hook
         static inline FirstPersonForwardFunction s_OriginalForward{ nullptr };
         static inline OpaqueColorPassFunction s_OriginalOpaque{ nullptr };
 
-        // Base of the game module, found when the hooks are installed (the address of a hooked function minus its RVA). 0 when not installed.
-        std::atomic<std::uintptr_t> m_ModuleBase{ 0 };
         std::atomic<void*> m_ModelAddress{ nullptr };
         std::atomic<void*> m_UnitAddress{ nullptr };
         std::atomic<void*> m_DepthPassAddress{ nullptr };
@@ -108,14 +96,6 @@ export namespace Engine::Render::Hook
         auto Disable(const std::atomic<void*>& address) -> void;
 
         auto Remove(std::atomic<void*>& address, const char* name) -> void;
-
-        // Counts the call for its caller and, while the probe is armed, measures the D3D state. User 0 only.
-        // param returnAddress: The return address of the detour.
-        auto NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void;
-
-        // Reads the factors of the game that scale the HDR color (the two floats of the view and the two globals) and keeps them in the store,
-        // counting the reads that fail. Only with Overlay in scene requested. Read only, no engine call, no allocation (VW.6.z.2).
-        auto NoteSceneColor(const void* view) -> void;
 
         // return: Whether a valid and fresh pose is published, the same rule the observer camera hook applies.
         auto IsDriveActive() const -> bool;

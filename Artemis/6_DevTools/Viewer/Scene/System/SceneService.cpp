@@ -226,11 +226,6 @@ namespace DevTools::Viewer::Scene::System
         return m_CameraService.GetOverrideFaults();
     }
 
-    auto SceneService::GetOverrideDistance() const -> std::optional<float>
-    {
-        return m_CameraService.GetOverrideDistance();
-    }
-
     auto SceneService::GetGameCamera() const -> const std::optional<GameCamera>&
     {
         return m_CameraService.GetGameCamera();

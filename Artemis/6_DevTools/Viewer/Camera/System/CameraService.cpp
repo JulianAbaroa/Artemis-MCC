@@ -89,9 +89,7 @@ namespace DevTools::Viewer::Camera::System
 
         Vec3 targetPosition{}, targetForward{};
         m_GameCamera.reset();
-        m_OverrideDistance.reset();
         bool isFree{ false };
-        const Vec3 requestedEye{ m_Eye };
 
         if (m_CameraStore.GetMode() == Mode::Game)
         {
@@ -124,7 +122,6 @@ namespace DevTools::Viewer::Camera::System
         {
             // note: Read before the new pose is asked, so it is the frame of the game made from the previous request.
             m_GameCamera = m_GameCameraService.Read();
-            if (m_GameCamera) m_OverrideDistance = static_cast<float>(VecMath::Distance(requestedEye, m_GameCamera->Position));
         }
         else if (m_GameCameraService.IsOverrideActive())
         {
@@ -462,11 +459,6 @@ namespace DevTools::Viewer::Camera::System
     auto CameraService::GetOverrideFaults() const -> std::uint32_t
     {
         return m_GameCameraService.GetOverrideFaultCount();
-    }
-
-    auto CameraService::GetOverrideDistance() const -> std::optional<float>
-    {
-        return m_OverrideDistance;
     }
 
     auto CameraService::GetGameCamera() const -> const std::optional<GameCamera>&

@@ -1,7 +1,6 @@
 module;
 
 #include <windows.h>
-#include <intrin.h>
 
 module Engine.Render.Hook;
 import :FirstPerson;
@@ -13,12 +12,7 @@ namespace
 {
     using Engine::Render::State::RenderStore;
     using Engine::Render::Type::MaskPairKind;
-    using Engine::Render::Type::SceneColorSample;
-    using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_IdleTimeout;
-    using Engine::Render::Type::k_NoSceneColorValue;
-    using Engine::Render::Type::k_ViewExposureScaleOffset;
-    using Engine::Render::Type::k_ViewInverseScaleOffset;
 
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassPrologue;
@@ -28,12 +22,10 @@ namespace
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
-    using Engine::Base::Memory::Type::Signature::k_HdrScaleGlobalRva;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitPrologue;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitRva;
     using Engine::Base::Memory::Type::Signature::k_OpaqueColorPassPrologue;
     using Engine::Base::Memory::Type::Signature::k_OpaqueColorPassRva;
-    using Engine::Base::Memory::Type::Signature::k_ScriptedScaleGlobalRva;
 
     // The first local player, the only user that is ever changed.
     constexpr std::uint32_t k_LocalUser{ 0 };
@@ -41,60 +33,10 @@ namespace
     // Time between disabling the hooks and draining them (see Uninstall).
     constexpr std::chrono::milliseconds k_DisableGrace{ 20 };
 
-    // return: The float at the address, or k_NoSceneColorValue when the address is 0, the read faults or the value is not finite.
-    // param outFailures: Incremented for each failed read.
-    // note: Guarded with __try: the view and the globals belong to the game. Read only.
-    auto ReadGameFloat(std::uintptr_t address, std::uint32_t& outFailures) -> float
-    {
-        float value{ k_NoSceneColorValue };
-        bool isRead{ address != 0 };
-
-        if (isRead)
-        {
-            __try
-            {
-                value = *reinterpret_cast<const volatile float*>(address);
-            }
-            __except (EXCEPTION_EXECUTE_HANDLER)
-            {
-                isRead = false;
-            }
-        }
-
-        if (isRead && std::isfinite(value)) return value;
-
-        ++outFailures;
-        return k_NoSceneColorValue;
-    }
 }
 
 namespace Engine::Render::Hook
 {
-    auto FirstPersonDetour::ClassifyCaller(std::uint32_t rva) -> FirstPersonCaller
-    {
-        for (const auto& range : k_FirstPersonCallerRanges)
-        {
-            if (rva >= range.Rva && rva - range.Rva < range.Size) return range.Caller;
-        }
-
-        return FirstPersonCaller::Other;
-    }
-
-    auto FirstPersonDetour::NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void
-    {
-        const std::uintptr_t base{ m_ModuleBase.load() };
-        const std::uintptr_t address{ reinterpret_cast<std::uintptr_t>(returnAddress) };
-        const std::uint32_t rva{ base != 0 && address >= base ? static_cast<std::uint32_t>(address - base) : 0 };
-        const FirstPersonCaller caller{ FirstPersonDetour::ClassifyCaller(rva) };
-
-        m_RenderStore.CountFirstPersonCall(caller);
-
-        if (!m_RenderStore.IsFirstPersonProbeArmed()) return;
-
-        m_RenderStore.SetFirstPersonDriveActive(this->IsDriveActive());
-        m_RenderService.MeasureFirstPerson(caller, rva, pass);
-    }
-
     auto FirstPersonDetour::IsFirstPersonModelSkipped(std::uint32_t user, bool isHidden, bool isDriveActive) -> bool
     {
         return user == k_LocalUser && (isHidden || isDriveActive);
@@ -123,16 +65,14 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        if (user == k_LocalUser) self->NoteModelCall(_ReturnAddress(), pass);
-
         if (FirstPersonDetour::IsFirstPersonModelSkipped(user, self->m_RenderStore.IsFirstPersonHidden(), self->IsDriveActive())) return;
 
         if (s_OriginalModel != nullptr) s_OriginalModel(camera, user, pass);
     }
 
-    // note: The service decides if this call is copied: for the overlay mask (VW.6.y.2 B, E: the first call with pass 0xB of the frame and the first with pass 0, the game draws the arms in one or the other) and for
-    // the probe pairs (A5, the pair keeps the pass argument, 0xB from 0x26C6DC and 0 from 0x26D740). Without a mask request or a probe it
-    // only reads atomics. The scope spans the original, as in the other hooks.
+    // note: The service decides if this call is copied for the overlay mask (VW.6.y.2 B, E: the first call with pass 0xB of the frame and the
+    // first with pass 0, the game draws the arms in one or the other). Without a mask request it only reads atomics. The scope spans the
+    // original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedDepthPass(void* view, std::int32_t pass) -> void
     {
         FirstPersonDetour* self{ s_Instance.load() };
@@ -146,17 +86,13 @@ namespace Engine::Render::Hook
         RenderStore::HookScope scope{ self->m_RenderStore };
 
         const std::optional<MaskPairKind> maskPair{ self->m_RenderService.BeginMaskCopy(pass) };
-        const std::optional<std::size_t> pair{ self->m_RenderService.BeginDepthPair(FirstPersonCaller::Pass1, pass) };
 
         if (s_OriginalDepthPass != nullptr) s_OriginalDepthPass(view, pass);
 
-        if (pair) self->m_RenderService.EndDepthPair(*pair);
         if (maskPair) self->m_RenderService.EndMaskCopy(*maskPair);
     }
 
-    // note: Measures for the probe, copies the render target 0 for the overlay mask (VW.6.y.2 E, the first call with a phase other than 0).
-    // Without a probe armed or a mask requested the render service reads atomics and returns, so the original runs as if unhooked. The scope
-    // spans the original, as in the other hooks.
+    // note: Calls the original untouched. The scope spans the original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedForward(void* view, std::uint8_t phase) -> void
     {
         FirstPersonDetour* self{ s_Instance.load() };
@@ -169,13 +105,7 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        const bool isMaskCopied{ self->m_RenderService.BeginColorMaskCopy(phase) };
-        const std::optional<std::size_t> pair{ self->m_RenderService.BeginColorPair(phase) };
-
         if (s_OriginalForward != nullptr) s_OriginalForward(view, phase);
-
-        if (pair) self->m_RenderService.EndColorPair(*pair);
-        if (isMaskCopied) self->m_RenderService.EndColorMaskCopy();
     }
 
     // note: The overlay draws here (VW.6.z.1, D334): at the exit of the opaque color pass of the view, so it is over the opaque world and under the
@@ -194,26 +124,7 @@ namespace Engine::Render::Hook
 
         if (s_OriginalOpaque != nullptr) s_OriginalOpaque(view);
 
-        self->NoteSceneColor(view);
         self->m_RenderService.OnSceneDraw();
-    }
-
-    auto FirstPersonDetour::NoteSceneColor(const void* view) -> void
-    {
-        if (!m_RenderStore.IsOverlayInSceneRequested()) return;
-
-        const std::uintptr_t base{ m_ModuleBase.load() };
-        const std::uintptr_t viewAddress{ reinterpret_cast<std::uintptr_t>(view) };
-        std::uint32_t failures{ 0 };
-
-        SceneColorSample sample{};
-        sample.HdrScale = ReadGameFloat(base != 0 ? base + k_HdrScaleGlobalRva : 0, failures);
-        sample.ViewScale = ReadGameFloat(viewAddress != 0 ? viewAddress + k_ViewExposureScaleOffset : 0, failures);
-        sample.ViewInverse = ReadGameFloat(viewAddress != 0 ? viewAddress + k_ViewInverseScaleOffset : 0, failures);
-        sample.ScriptedScale = ReadGameFloat(base != 0 ? base + k_ScriptedScaleGlobalRva : 0, failures);
-
-        m_RenderStore.SetSceneColorSample(sample);
-        if (failures != 0) m_RenderStore.CountSceneColorFailures(failures);
     }
 
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool
@@ -260,7 +171,6 @@ namespace Engine::Render::Hook
         }
 
         address.store(functionAddress);
-        m_ModuleBase.store(reinterpret_cast<std::uintptr_t>(functionAddress) - rva);
         m_Log.Message("[FirstPersonDetour] INFO: {} hooked at rva {:X}.", name, rva);
         return true;
     }
@@ -357,7 +267,6 @@ namespace Engine::Render::Hook
         s_OriginalForward = nullptr;
         s_OriginalOpaque = nullptr;
 
-        m_ModuleBase.store(0);
         m_IsInstalled.store(false);
         s_Instance.store(nullptr);
     }
