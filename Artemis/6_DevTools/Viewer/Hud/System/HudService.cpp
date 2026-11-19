@@ -25,6 +25,7 @@ namespace
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::SceneColorSample;
 
     using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Collidable::Type::ShareObjects;
@@ -51,6 +52,12 @@ namespace
         case Mode::View:       return "View";
         default:               return "?";
         }
+    }
+
+    // return: The value with 4 significant digits, or n/a when it was not read.
+    auto SceneColorText(float value) -> std::string
+    {
+        return std::isfinite(value) ? std::format("{:.4g}", value) : std::string{ "n/a" };
     }
 
     // return: The words the telemetry gives for why the overlay was not drawn at a point (the HUD draw or the scene).
@@ -374,11 +381,31 @@ namespace DevTools::Viewer::Hud::System
         ImGui::TextColored(k_Red, "scene failures %u", failures);
     }
 
+    auto HudService::DrawSceneColor() -> void
+    {
+        if (!m_RenderStore.IsOverlayInSceneRequested()) return;
+
+        const SceneColorSample sample{ m_RenderStore.GetSceneColorSample() };
+        const std::uint32_t failures{ m_RenderStore.GetSceneColorFailures() };
+
+        ImGui::Text("scene color:");
+        ImGui::SameLine();
+        ImGui::TextColored(k_Info, "hdr 0xC878D0 %s | view+0x10 %s | view+0x14 %s | 0xBB6FCC %s | scale final %s", SceneColorText(sample.HdrScale).c_str(),
+            SceneColorText(sample.ViewScale).c_str(), SceneColorText(sample.ViewInverse).c_str(), SceneColorText(sample.ScriptedScale).c_str(),
+            SceneColorText(m_RenderStore.GetSceneColorScale()).c_str());
+
+        if (failures == 0) return;
+
+        ImGui::SameLine();
+        ImGui::TextColored(k_Red, "failed reads %u", failures);
+    }
+
     auto HudService::DrawHudHook() -> void
     {
         const HudHookInfo info{ m_RenderStore.GetHudHook() };
 
         this->DrawOverlayPoint(info.IsHooked);
+        this->DrawSceneColor();
 
         ImGui::Text("HUD hook:");
         ImGui::SameLine();

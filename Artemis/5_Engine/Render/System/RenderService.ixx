@@ -107,6 +107,11 @@ export namespace Engine::Render::System
         static auto FindSceneBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
             -> std::optional<BeforeHudStatus>;
 
+        // return: The factor the overlay passes multiply their RGB by at the scene point (VW.6.z.2): the value the game uses (hdrScale) times the
+        // slider when isByGameHdr, else the slider alone. A hdrScale that is not finite (not read) counts as 1, and so does a slider that is not
+        // finite or not positive.
+        static auto ComputeSceneColorScale(bool isByGameHdr, float hdrScale, float slider) -> float;
+
         // Runs at the exit of each call of the opaque color pass 0x26E500, after the original (VW.6.z.1): with Overlay in scene requested,
         // the first call of the Present frame on the thread of Present, when nothing blocks it, runs the same handlers as OnHudDraw inside a
         // GpuStateGuard, with the HDR target bound in slot 0 and the depth stencil of the store. What they draw is inside the frame of the game: the

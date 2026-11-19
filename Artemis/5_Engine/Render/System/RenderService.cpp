@@ -964,6 +964,14 @@ namespace Engine::Render::System
         }
     }
 
+    auto RenderService::ComputeSceneColorScale(bool isByGameHdr, float hdrScale, float slider) -> float
+    {
+        const float factor{ std::isfinite(slider) && slider > 0.0f ? slider : 1.0f };
+        if (!isByGameHdr || !std::isfinite(hdrScale) || hdrScale <= 0.0f) return factor;
+
+        return hdrScale * factor;
+    }
+
     auto RenderService::HandleSceneDraw() -> void
     {
         if (!m_RenderStore.IsOverlayInSceneRequested() || m_RenderStore.IsBeforeHudMarked()) return;
@@ -997,6 +1005,11 @@ namespace Engine::Render::System
         frame.RenderTarget = target.Get();
         frame.Width = sample.Width;
         frame.Height = sample.Height;
+
+        // note: The factors were read by the hook of the same call, a moment ago. Only the scene point scales the color.
+        frame.ColorScale = RenderService::ComputeSceneColorScale(m_RenderStore.IsSceneColorByGameHdr(), m_RenderStore.GetSceneColorSample().HdrScale,
+            m_RenderStore.GetSceneColorSlider());
+        m_RenderStore.SetSceneColorScale(frame.ColorScale);
 
         const BeforeHudStatus status{ this->RunBeforeHudHandlers(frame, context) };
         m_RenderStore.SetSceneStatus(status);

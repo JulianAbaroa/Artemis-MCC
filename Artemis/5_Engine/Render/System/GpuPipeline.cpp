@@ -54,7 +54,8 @@ cbuffer Mask : register(b1)
     uint2 TargetSize;
     uint  ValidFlags;
     uint  MaskShown;
-    uint2 MaskPadding;
+    float ColorScale;
+    uint  MaskPadding;
 };
 
 Texture2D<float>  DepthBPre    : register(t0);
@@ -179,7 +180,7 @@ float4 PSMain(VSOut input) : SV_TARGET
     float lighting = ambient + diff1 * 0.5f + diff2;
     lighting = saturate(lighting);
 
-    return float4(input.color * lighting, 1.0f);
+    return float4(input.color * lighting * ColorScale, 1.0f);
 }
 )";
 
@@ -475,11 +476,11 @@ namespace Engine::Render::System
     }
 
     auto GpuPipeline::UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth,
-        std::uint32_t targetHeight) -> void
+        std::uint32_t targetHeight, float colorScale) -> void
     {
         if (!context || !m_MaskBuffer) return;
 
-        const MaskConstants constants{ MakeMaskConstants(mask, isMaskShown, targetWidth, targetHeight) };
+        const MaskConstants constants{ MakeMaskConstants(mask, isMaskShown, targetWidth, targetHeight, colorScale) };
 
         D3D11_MAPPED_SUBRESOURCE mapped{};
         if (FAILED(context->Map(m_MaskBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) return;

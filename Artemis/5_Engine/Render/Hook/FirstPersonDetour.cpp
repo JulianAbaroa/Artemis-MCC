@@ -1,5 +1,6 @@
 module;
 
+#include <windows.h>
 #include <intrin.h>
 
 module Engine.Render.Hook;
@@ -12,8 +13,12 @@ namespace
 {
     using Engine::Render::State::RenderStore;
     using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::SceneColorSample;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
     using Engine::Render::Type::k_IdleTimeout;
+    using Engine::Render::Type::k_NoSceneColorValue;
+    using Engine::Render::Type::k_ViewExposureScaleOffset;
+    using Engine::Render::Type::k_ViewInverseScaleOffset;
 
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonDepthPassPrologue;
@@ -23,16 +28,44 @@ namespace
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelPrologue;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonModelRva;
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
+    using Engine::Base::Memory::Type::Signature::k_HdrScaleGlobalRva;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitPrologue;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitRva;
     using Engine::Base::Memory::Type::Signature::k_OpaqueColorPassPrologue;
     using Engine::Base::Memory::Type::Signature::k_OpaqueColorPassRva;
+    using Engine::Base::Memory::Type::Signature::k_ScriptedScaleGlobalRva;
 
     // The first local player, the only user that is ever changed.
     constexpr std::uint32_t k_LocalUser{ 0 };
 
     // Time between disabling the hooks and draining them (see Uninstall).
     constexpr std::chrono::milliseconds k_DisableGrace{ 20 };
+
+    // return: The float at the address, or k_NoSceneColorValue when the address is 0, the read faults or the value is not finite.
+    // param outFailures: Incremented for each failed read.
+    // note: Guarded with __try: the view and the globals belong to the game. Read only.
+    auto ReadGameFloat(std::uintptr_t address, std::uint32_t& outFailures) -> float
+    {
+        float value{ k_NoSceneColorValue };
+        bool isRead{ address != 0 };
+
+        if (isRead)
+        {
+            __try
+            {
+                value = *reinterpret_cast<const volatile float*>(address);
+            }
+            __except (EXCEPTION_EXECUTE_HANDLER)
+            {
+                isRead = false;
+            }
+        }
+
+        if (isRead && std::isfinite(value)) return value;
+
+        ++outFailures;
+        return k_NoSceneColorValue;
+    }
 }
 
 namespace Engine::Render::Hook
@@ -161,7 +194,26 @@ namespace Engine::Render::Hook
 
         if (s_OriginalOpaque != nullptr) s_OriginalOpaque(view);
 
+        self->NoteSceneColor(view);
         self->m_RenderService.OnSceneDraw();
+    }
+
+    auto FirstPersonDetour::NoteSceneColor(const void* view) -> void
+    {
+        if (!m_RenderStore.IsOverlayInSceneRequested()) return;
+
+        const std::uintptr_t base{ m_ModuleBase.load() };
+        const std::uintptr_t viewAddress{ reinterpret_cast<std::uintptr_t>(view) };
+        std::uint32_t failures{ 0 };
+
+        SceneColorSample sample{};
+        sample.HdrScale = ReadGameFloat(base != 0 ? base + k_HdrScaleGlobalRva : 0, failures);
+        sample.ViewScale = ReadGameFloat(viewAddress != 0 ? viewAddress + k_ViewExposureScaleOffset : 0, failures);
+        sample.ViewInverse = ReadGameFloat(viewAddress != 0 ? viewAddress + k_ViewInverseScaleOffset : 0, failures);
+        sample.ScriptedScale = ReadGameFloat(base != 0 ? base + k_ScriptedScaleGlobalRva : 0, failures);
+
+        m_RenderStore.SetSceneColorSample(sample);
+        if (failures != 0) m_RenderStore.CountSceneColorFailures(failures);
     }
 
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool

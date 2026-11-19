@@ -757,6 +757,73 @@ TEST(EngineLayerTests, MaskConstantsFlagOnlyTheUsablePairsAndTakeTheirSizes)
     EXPECT_EQ(MakeMaskConstants(mask, false, 0, 720).ValidFlags, 0u);
 }
 
+TEST(EngineLayerTests, SceneColorScaleCombinesTheOptionTheValueTheGameGaveAndTheSlider)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::k_NoSceneColorValue;
+
+    constexpr float k_Infinity{ std::numeric_limits<float>::infinity() };
+
+    // Off: the slider alone, whatever the game value is.
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(false, 8.0f, 0.5f), 0.5f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(false, k_NoSceneColorValue, 1.0f), 1.0f);
+
+    // On: the game value times the slider.
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, 8.0f, 0.5f), 4.0f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, 0.25f, 1.0f), 0.25f);
+
+    // On without a value (not read or not finite): 1 times the slider.
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, k_NoSceneColorValue, 2.0f), 2.0f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, k_Infinity, 2.0f), 2.0f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, -k_Infinity, 1.0f), 1.0f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, 0.0f, 2.0f), 2.0f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, -1.0f, 2.0f), 2.0f);
+
+    // A slider that is not finite or not positive counts as 1.
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(true, 8.0f, k_NoSceneColorValue), 8.0f);
+    EXPECT_FLOAT_EQ(RenderService::ComputeSceneColorScale(false, 8.0f, 0.0f), 1.0f);
+}
+
+TEST(EngineLayerTests, SceneColorStoreKeepsTheRequestTheSampleAndTheFailuresAndTheShaderGetsTheScale)
+{
+    using Engine::Render::State::RenderStore;
+    using Engine::Render::Type::MakeMaskConstants;
+    using Engine::Render::Type::MaskContext;
+    using Engine::Render::Type::SceneColorSample;
+    using Engine::Render::Type::k_NoSceneColorValue;
+
+    RenderStore store{};
+
+    // Before anything is set: no request, the slider at 1, no value and no failure.
+    EXPECT_FALSE(store.IsSceneColorByGameHdr());
+    EXPECT_FLOAT_EQ(store.GetSceneColorSlider(), 1.0f);
+    EXPECT_FLOAT_EQ(store.GetSceneColorScale(), 1.0f);
+    EXPECT_TRUE(std::isnan(store.GetSceneColorSample().HdrScale));
+    EXPECT_EQ(store.GetSceneColorFailures(), 0u);
+
+    store.SetSceneColorRequest(true, 0.125f);
+    EXPECT_TRUE(store.IsSceneColorByGameHdr());
+    EXPECT_FLOAT_EQ(store.GetSceneColorSlider(), 0.125f);
+
+    store.SetSceneColorSample(SceneColorSample{ .HdrScale = 4.0f, .ViewScale = 2.0f, .ViewInverse = 0.5f, .ScriptedScale = k_NoSceneColorValue });
+    const SceneColorSample sample{ store.GetSceneColorSample() };
+    EXPECT_FLOAT_EQ(sample.HdrScale, 4.0f);
+    EXPECT_FLOAT_EQ(sample.ViewScale, 2.0f);
+    EXPECT_FLOAT_EQ(sample.ViewInverse, 0.5f);
+    EXPECT_TRUE(std::isnan(sample.ScriptedScale));
+
+    store.CountSceneColorFailures(1);
+    store.CountSceneColorFailures(2);
+    EXPECT_EQ(store.GetSceneColorFailures(), 3u);
+
+    store.SetSceneColorScale(0.5f);
+    EXPECT_FLOAT_EQ(store.GetSceneColorScale(), 0.5f);
+
+    // The shader constants carry the scale, with or without a mask, and 1 by default.
+    EXPECT_FLOAT_EQ(MakeMaskConstants(MaskContext{}, false, 1920, 1080).ColorScale, 1.0f);
+    EXPECT_FLOAT_EQ(MakeMaskConstants(MaskContext{}, false, 1920, 1080, 0.25f).ColorScale, 0.25f);
+}
+
 TEST(EngineLayerTests, UnionChangedMapMergesTheTexelsOfTheSameSizeAndKeepsTheTargetOtherwise)
 {
     using Engine::Render::Type::ChangedMap;

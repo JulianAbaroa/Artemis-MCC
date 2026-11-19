@@ -18,6 +18,7 @@ namespace
     using Engine::Render::Type::MaskTextures;
     using Engine::Render::Type::MaskWindow;
     using Engine::Render::Type::MaskWindowReport;
+    using Engine::Render::Type::SceneColorSample;
     using Engine::Render::Type::StencilProbeInfo;
 
     using Engine::Render::Type::k_ColorPairCount;
@@ -528,6 +529,59 @@ namespace Engine::Render::State
     auto RenderStore::GetSceneFailures() const -> std::uint32_t
     {
         return m_SceneFailures.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetSceneColorRequest(bool isByGameHdr, float slider) -> void
+    {
+        m_IsSceneColorByGameHdr.store(isByGameHdr, std::memory_order_relaxed);
+        m_SceneColorSlider.store(slider, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsSceneColorByGameHdr() const -> bool
+    {
+        return m_IsSceneColorByGameHdr.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetSceneColorSlider() const -> float
+    {
+        return m_SceneColorSlider.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetSceneColorSample(const SceneColorSample& sample) -> void
+    {
+        m_SceneColorHdrScale.store(sample.HdrScale, std::memory_order_relaxed);
+        m_SceneColorViewScale.store(sample.ViewScale, std::memory_order_relaxed);
+        m_SceneColorViewInverse.store(sample.ViewInverse, std::memory_order_relaxed);
+        m_SceneColorScriptedScale.store(sample.ScriptedScale, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetSceneColorSample() const -> SceneColorSample
+    {
+        return SceneColorSample{
+            .HdrScale = m_SceneColorHdrScale.load(std::memory_order_relaxed),
+            .ViewScale = m_SceneColorViewScale.load(std::memory_order_relaxed),
+            .ViewInverse = m_SceneColorViewInverse.load(std::memory_order_relaxed),
+            .ScriptedScale = m_SceneColorScriptedScale.load(std::memory_order_relaxed) };
+    }
+
+    auto RenderStore::CountSceneColorFailures(std::uint32_t count) -> void
+    {
+        m_SceneColorFailures.fetch_add(count, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetSceneColorFailures() const -> std::uint32_t
+    {
+        return m_SceneColorFailures.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetSceneColorScale(float scale) -> void
+    {
+        m_SceneColorScale.store(scale, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetSceneColorScale() const -> float
+    {
+        return m_SceneColorScale.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::SetHudSample(const HudHookInfo& sample) -> void

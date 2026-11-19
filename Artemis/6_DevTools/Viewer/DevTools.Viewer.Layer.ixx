@@ -47,6 +47,7 @@ export namespace DevTools::Viewer
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using Flag = DevTools::Viewer::Options::Type::Flag;
+        using Scalar = DevTools::Viewer::Options::Type::Scalar;
 
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
         using CollidableSceneService = DevTools::Viewer::Collidable::System::CollidableSceneService;
@@ -96,6 +97,10 @@ export namespace DevTools::Viewer
                 // note: Drawing in the scene also drops the color mask pair, which that point cannot use (VW.6.z).
                 engine.m_RenderStore.SetOverlayInSceneRequested(m_OptionsStore.IsEnabled(Flag::OverlayInScene) &&
                     m_OptionsStore.IsEnabled(Flag::Overlay));
+
+                // note: The scale only matters at the scene point (VW.6.z.2). The store keeps the request for the next scene draw.
+                engine.m_RenderStore.SetSceneColorRequest(m_OptionsStore.IsEnabled(Flag::SceneColorByGameHdr),
+                    m_OptionsStore.GetScalar(Scalar::SceneColorScale));
 
                 // The 3D passes ran under the HUD of the game when the event marked the frame. Otherwise they run here, once.
                 if (!engine.m_RenderStore.IsBeforeHudMarked()) m_MapService.Render(frame);

@@ -62,7 +62,7 @@ namespace DevTools::Viewer::Options::State
         for (const ScalarInfo& info : k_Scalars)
         {
             stream << k_PreferencePrefix << info.Key << "="
-                << std::format("{:.3f}", this->GetScalar(info.Id)) << "\n";
+                << (info.IsLogarithmic ? std::format("{:.6g}", this->GetScalar(info.Id)) : std::format("{:.3f}", this->GetScalar(info.Id))) << "\n";
         }
     }
 

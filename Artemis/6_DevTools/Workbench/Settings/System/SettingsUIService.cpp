@@ -368,9 +368,17 @@ namespace DevTools::Workbench::Settings::System
             ImGui::PushID(info.Key);
 
             float value{ m_OptionsStore.GetScalar(info.Id) };
-            if (ImGui::SliderFloat("##value", &value, info.Min, info.Max, info.Format))
+            const ImGuiSliderFlags sliderFlags{ info.IsLogarithmic ? ImGuiSliderFlags_Logarithmic : ImGuiSliderFlags_None };
+            if (ImGui::SliderFloat("##value", &value, info.Min, info.Max, info.Format, sliderFlags))
             {
                 m_OptionsStore.SetScalar(info.Id, value);
+            }
+
+            if (info.IsLogarithmic)
+            {
+                if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) m_OptionsStore.SetScalar(info.Id, info.Default);
+
+                ImGui::TextDisabled("log2 %.2f", std::log2(m_OptionsStore.GetScalar(info.Id)));
             }
 
             ImGui::PopID();

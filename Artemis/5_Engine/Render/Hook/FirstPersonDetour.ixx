@@ -113,6 +113,10 @@ export namespace Engine::Render::Hook
         // param returnAddress: The return address of the detour.
         auto NoteModelCall(const void* returnAddress, std::uint8_t pass) -> void;
 
+        // Reads the factors of the game that scale the HDR color (the two floats of the view and the two globals) and keeps them in the store,
+        // counting the reads that fail. Only with Overlay in scene requested. Read only, no engine call, no allocation (VW.6.z.2).
+        auto NoteSceneColor(const void* view) -> void;
+
         // return: Whether a valid and fresh pose is published, the same rule the observer camera hook applies.
         auto IsDriveActive() const -> bool;
 

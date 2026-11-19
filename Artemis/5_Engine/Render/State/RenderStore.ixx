@@ -22,12 +22,14 @@ namespace
     using Engine::Render::Type::MaskTextures;
     using Engine::Render::Type::MaskWindow;
     using Engine::Render::Type::MaskWindowReport;
+    using Engine::Render::Type::SceneColorSample;
     using Engine::Render::Type::StencilProbeInfo;
 
     using Engine::Render::Type::k_ColorPairCount;
     using Engine::Render::Type::k_DepthPairCount;
     using Engine::Render::Type::k_FirstPersonCallerCount;
     using Engine::Render::Type::k_MaskPairCount;
+    using Engine::Render::Type::k_NoSceneColorValue;
 }
 
 export namespace Engine::Render::State
@@ -422,6 +424,22 @@ export namespace Engine::Render::State
         auto CountSceneFailure() -> void;
         auto GetSceneFailures() const -> std::uint32_t;
 
+        // Scene color scale (VW.6.z.2). The Viewer sets the request at the start of each Present frame (option Scale by game HDR and the slider), any thread.
+        auto SetSceneColorRequest(bool isByGameHdr, float slider) -> void;
+        auto IsSceneColorByGameHdr() const -> bool;
+        auto GetSceneColorSlider() const -> float;
+
+        // The factors of the game read at the exit of the last opaque color pass (NaN is no value), and how many reads failed (a fault or a value that is
+        // not finite). Any thread, no lock, no allocation.
+        auto SetSceneColorSample(const SceneColorSample& sample) -> void;
+        auto GetSceneColorSample() const -> SceneColorSample;
+        auto CountSceneColorFailures(std::uint32_t count) -> void;
+        auto GetSceneColorFailures() const -> std::uint32_t;
+
+        // The final scale of the last scene draw (1 before the first), for the telemetry.
+        auto SetSceneColorScale(float scale) -> void;
+        auto GetSceneColorScale() const -> float;
+
         // Keeps the measure of the last HUD draw. note: A short lock, no allocation. CallsPerFrame and IsHooked are ignored here.
         auto SetHudSample(const HudHookInfo& sample) -> void;
 
@@ -478,6 +496,14 @@ export namespace Engine::Render::State
         std::atomic<DrawPlace> m_DrawPlaceLast{ DrawPlace::Present };
         std::atomic<std::uint32_t> m_SceneFailures{ 0 };
         std::atomic<bool> m_IsOverlayInSceneRequested{ false };
+        std::atomic<bool> m_IsSceneColorByGameHdr{ false };
+        std::atomic<float> m_SceneColorSlider{ 1.0f };
+        std::atomic<float> m_SceneColorHdrScale{ k_NoSceneColorValue };
+        std::atomic<float> m_SceneColorViewScale{ k_NoSceneColorValue };
+        std::atomic<float> m_SceneColorViewInverse{ k_NoSceneColorValue };
+        std::atomic<float> m_SceneColorScriptedScale{ k_NoSceneColorValue };
+        std::atomic<std::uint32_t> m_SceneColorFailures{ 0 };
+        std::atomic<float> m_SceneColorScale{ 1.0f };
 
         mutable std::mutex m_HudSampleMutex{};
         HudHookInfo m_HudSample{};

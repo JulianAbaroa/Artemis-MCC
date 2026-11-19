@@ -96,6 +96,7 @@ export namespace DevTools::Viewer::Options::Type
         FirstPersonOverOverlay,
         FirstPersonMaskShown,
         OverlayInScene,
+        SceneColorByGameHdr,
         HideGameHud,
         HideFirstPerson,
         DriveGameCamera,
@@ -126,6 +127,8 @@ export namespace DevTools::Viewer::Options::Type
         FovNormal,
         FovZoom,
         GameFov,
+
+        SceneColorScale,
 
         Count
     };
@@ -161,6 +164,7 @@ export namespace DevTools::Viewer::Options::Type
         float Min{};
         float Max{};
         const char* Format{};
+        bool IsLogarithmic{};   // the slider is logarithmic and the value is saved with significant digits (a tiny value must not be saved as 0.000)
     };
 
     inline constexpr std::size_t k_GroupCount{ static_cast<std::size_t>(Group::Count) };
@@ -372,6 +376,9 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::OverlayInScene, Group::Camera, "OverlayInScene", "Overlay in scene",
             "Draws the overlay inside the frame of the game, before its transparents, effects and HUD, so smoke, the sword blade, spawn points, projectiles and shields show over the overlay. The overlay colors go through the exposure and tone mapping of the game. Off draws it before the HUD (or at Present) as before. Needs Overlay on the game frame.", true },
 
+        { Flag::SceneColorByGameHdr, Group::Camera, "SceneColorByGameHdr", "Scale by game HDR",
+            "With Overlay in scene, multiplies the overlay colors by the constant the game scales its HDR color with (DAT_180c878d0, read at the exit of the opaque pass) times Scene color scale (D335). Off leaves only the slider.", true },
+
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },
 
@@ -428,6 +435,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Scalar::GameFov, Group::Camera, "GameFov", "Game camera field of view (deg)",
             "Field of view of the game camera. Match it to the game view so the Viewer lines up with the crosshair.", 60.0f, 30.0f, 120.0f, "%.0f" },
+
+        { Scalar::SceneColorScale, Group::Camera, "SceneColorScale", "Scene color scale",
+            "With Overlay in scene, multiplies the overlay colors, from 2^-12 to 2^4 (logarithmic). The default 2^-5 matches the HDR target of the game (measured in VW.6.z.2, D335): the colors look as with Overlay in scene off. Double click to go back to the default.", 0.03125f, 0.000244140625f, 16.0f, "%.4g", true },
     } };
 
     // return: True if every table has its entries in the order of its enum, so the enum values can index them.

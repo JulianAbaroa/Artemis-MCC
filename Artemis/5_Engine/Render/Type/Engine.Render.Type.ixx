@@ -532,7 +532,8 @@ export namespace Engine::Render::Type
         std::uint32_t TargetHeight{ 1 };
         std::uint32_t ValidFlags{ 0 };      // bit i: the pair of MaskPairKind i is used
         std::uint32_t MaskShown{ 0 };
-        std::uint32_t Padding[2]{};
+        float ColorScale{ 1.0f };           // the pixel shader multiplies the RGB it outputs by it (VW.6.z.2)
+        std::uint32_t Padding{ 0 };
     };
     static_assert(sizeof(MaskConstants) == 48);
 
@@ -544,12 +545,14 @@ export namespace Engine::Render::Type
     }
 
     // Makes the constants of the pixel shader of a mask.
+    // param colorScale: The factor of the RGB output (the scene color scale, 1 outside the scene). It does not depend on the mask.
     // param isMaskShown: Debug. The pixels of the mask are painted instead of skipped. Ignored when no pair is usable.
     // return: The flags hold the usable pairs only, and the sizes of a pair that is not usable stay 1.
-    inline auto MakeMaskConstants(const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth, std::uint32_t targetHeight)
-        -> MaskConstants
+    inline auto MakeMaskConstants(const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth, std::uint32_t targetHeight,
+        float colorScale = 1.0f) -> MaskConstants
     {
         MaskConstants constants{};
+        constants.ColorScale = colorScale;
 
         for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
         {
@@ -682,6 +685,26 @@ export namespace Engine::Render::Type
         std::uint32_t Height{ 0 };
 
         MaskContext Mask{};     // the first person mask of this frame, used by the overlay passes
+
+        // Factor the 3D passes of the overlay multiply the RGB they output by (VW.6.z.2). 1 everywhere but at the scene point, where the HDR target is not
+        // in the 0..1 range of the back buffer.
+        float ColorScale{ 1.0f };
+    };
+
+    // Offsets in the view the opaque color pass receives (A21 sec. 8, VW.6.z.2): 0x26d090 stores 2^E * a global at +0x10 and 2^(k - E) at +0x14.
+    inline constexpr std::uint32_t k_ViewExposureScaleOffset{ 0x10 };
+    inline constexpr std::uint32_t k_ViewInverseScaleOffset{ 0x14 };
+
+    // "No value" of a float of SceneColorSample: not read or not finite.
+    inline constexpr float k_NoSceneColorValue{ std::numeric_limits<float>::quiet_NaN() };
+
+    // The factors of the game that scale the color of the HDR target, read at the exit of the opaque color pass of a view (VW.6.z.2).
+    struct SceneColorSample
+    {
+        float HdrScale{ k_NoSceneColorValue };      // DAT_180c878d0, the constant the shaders of the game read
+        float ViewScale{ k_NoSceneColorValue };     // view + 0x10
+        float ViewInverse{ k_NoSceneColorValue };   // view + 0x14
+        float ScriptedScale{ k_NoSceneColorValue }; // DAT_180bb6fcc
     };
 
     using FrameHandler = std::function<void(const FrameContext&)>;

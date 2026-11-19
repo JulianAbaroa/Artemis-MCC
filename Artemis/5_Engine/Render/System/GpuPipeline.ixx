@@ -57,8 +57,10 @@ export namespace Engine::Render::System
         // binds "mask off" and the shader skips nothing.
         // param isMaskShown: Debug (VW.6.y.2 C). The pixels of the mask are painted opaque red instead of skipped. Ignored without a valid mask.
         // param targetWidth: Size of the render target, the mask is scaled by the ratio of the sizes when they differ.
+        // param colorScale: The factor every pixel shader output RGB is multiplied by (FrameContext::ColorScale, VW.6.z.2). Alpha is not touched.
         // note: Call it before the draws and ClearMask after them. Does nothing if not ready.
-        auto UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth, std::uint32_t targetHeight) -> void;
+        auto UpdateMask(ID3D11DeviceContext* context, const MaskContext& mask, bool isMaskShown, std::uint32_t targetWidth, std::uint32_t targetHeight,
+            float colorScale) -> void;
 
         // Unbinds the depth copies of the pixel stage, so the next CopyResource into them finds them free. Does nothing if not ready.
         auto ClearMask(ID3D11DeviceContext* context) -> void;
