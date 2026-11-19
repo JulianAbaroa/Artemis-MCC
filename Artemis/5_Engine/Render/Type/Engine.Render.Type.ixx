@@ -29,6 +29,9 @@ export namespace Engine::Render::Type
     // The forward pass of the view 0x26EA78: void(void* view, uint8 phase). The phase is a char in DL.
     using FirstPersonForwardFunction = auto(__fastcall*)(void* view, std::uint8_t phase) -> void;
 
+    // The opaque color pass of the view 0x26E500: void(void* view).
+    using OpaqueColorPassFunction = auto(__fastcall*)(void* view) -> void;
+
     // The game's test of a first person unit: bool(uint32 user, uint32 objectHandle).
     using IsFirstPersonUnitFunction = auto(__fastcall*)(std::uint32_t user, std::uint32_t objectHandle) -> bool;
 
@@ -46,7 +49,7 @@ export namespace Engine::Render::Type
         HudHidden,          // the game HUD is hidden (Hide game HUD)
         Declined,           // the handlers did not draw
         Multisampled,       // (scene) the bound target has more than one sample
-        NoSceneCall,        // (scene) the forward pass was not called with phase 0 in the frame, or the option is off
+        NoSceneCall,        // (scene) the opaque color pass was not called in the frame, or the option is off
         Failed              // a handler threw: the frame counts as handled, so Present does not draw it again
     };
 
@@ -55,7 +58,7 @@ export namespace Engine::Render::Type
     {
         Present,    // at Present, after the frame of the game (no earlier point drew it)
         Hud,        // before the HUD of the game, after the post
-        Scene       // inside the frame, at the entry of the forward pass 0x26EA78 with phase 0
+        Scene       // inside the frame, at the exit of the opaque color pass 0x26E500
     };
 
     // The depth stencil view that was bound.

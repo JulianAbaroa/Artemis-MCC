@@ -23,6 +23,9 @@ export namespace Engine::Render::Hook
     // The forward pass 0x26EA78 (void(void* view, uint8 phase)) is only measured (VW.6.y.2 D): with a probe armed the render service copies the
     // color of the render target 0 at its entry and exit (the color pairs), to see whether it draws the parts of the first person model that
     // the depth pass does not. Nothing changes what is drawn.
+    // The opaque color pass 0x26E500 (void(void* view), once per view, after the first person lists of 0x26EA78 phase 0) is hooked to draw the overlay
+    // in the scene (VW.6.z.1, D334): the detour calls the original and then RenderService::OnSceneDraw, so the overlay is over the opaque world and
+    // under the effects, the blade and the HUD of the game.
     // note: The unit test is also called by effects and perhaps from another thread than the render. Both detours read only atomics and the
     // CameraOverrideStore without locking, and do not allocate or log.
     class FirstPersonDetour
@@ -40,6 +43,7 @@ export namespace Engine::Render::Hook
         using FirstPersonModelFunction = Engine::Render::Type::FirstPersonModelFunction;
         using FirstPersonDepthPassFunction = Engine::Render::Type::FirstPersonDepthPassFunction;
         using FirstPersonForwardFunction = Engine::Render::Type::FirstPersonForwardFunction;
+        using OpaqueColorPassFunction = Engine::Render::Type::OpaqueColorPassFunction;
         using IsFirstPersonUnitFunction = Engine::Render::Type::IsFirstPersonUnitFunction;
 
         using RenderStore = Engine::Render::State::RenderStore;
@@ -54,7 +58,7 @@ export namespace Engine::Render::Hook
 
         // Finds each function by its RVA and prologue and hooks it. One whose prologue does not match is logged as an ERROR and left alone,
         // the others are still hooked. Does nothing if already installed. Can be called again after Uninstall.
-        // return: True if at least one of the four is hooked.
+        // return: True if at least one of the five is hooked.
         auto Install() -> bool;
 
         // Waits for the calls in flight to drain, then removes the hooks that were installed. Does nothing if not installed.
@@ -84,6 +88,7 @@ export namespace Engine::Render::Hook
         static inline IsFirstPersonUnitFunction s_OriginalUnit{ nullptr };
         static inline FirstPersonDepthPassFunction s_OriginalDepthPass{ nullptr };
         static inline FirstPersonForwardFunction s_OriginalForward{ nullptr };
+        static inline OpaqueColorPassFunction s_OriginalOpaque{ nullptr };
 
         // Base of the game module, found when the hooks are installed (the address of a hooked function minus its RVA). 0 when not installed.
         std::atomic<std::uintptr_t> m_ModuleBase{ 0 };
@@ -91,6 +96,7 @@ export namespace Engine::Render::Hook
         std::atomic<void*> m_UnitAddress{ nullptr };
         std::atomic<void*> m_DepthPassAddress{ nullptr };
         std::atomic<void*> m_ForwardAddress{ nullptr };
+        std::atomic<void*> m_OpaqueAddress{ nullptr };
         std::atomic<bool> m_IsInstalled{ false };
         std::mutex m_Mutex{};
 
@@ -113,6 +119,7 @@ export namespace Engine::Render::Hook
         static auto __fastcall HookedModel(void* camera, std::uint32_t user, std::uint8_t pass) -> void;
         static auto __fastcall HookedDepthPass(void* view, std::int32_t pass) -> void;
         static auto __fastcall HookedForward(void* view, std::uint8_t phase) -> void;
+        static auto __fastcall HookedOpaque(void* view) -> void;
         static auto __fastcall HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool;
     };
 }

@@ -402,7 +402,7 @@ export namespace Engine::Render::State
         // return: The status of the last completed Present frame.
         auto GetBeforeHudStatus() const -> BeforeHudStatus;
 
-        // Takes the one scene point of the Present frame in progress (the first call of the forward pass with phase 0 that passes the scene blocker). Any thread, no allocation.
+        // Takes the one scene point of the Present frame in progress (the first exit of the opaque color pass 0x26E500 that passes the scene blocker). Any thread, no allocation.
         // return: True for the first caller of the frame, false for the others.
         auto TakeSceneCall() -> bool;
 

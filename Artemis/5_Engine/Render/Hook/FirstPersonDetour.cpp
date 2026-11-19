@@ -13,7 +13,6 @@ namespace
     using Engine::Render::State::RenderStore;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
-    using Engine::Render::Type::k_ForwardDepthPhase;
     using Engine::Render::Type::k_IdleTimeout;
 
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
@@ -26,6 +25,8 @@ namespace
     using Engine::Base::Memory::Type::Signature::k_FirstPersonWindow;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitPrologue;
     using Engine::Base::Memory::Type::Signature::k_IsFirstPersonUnitRva;
+    using Engine::Base::Memory::Type::Signature::k_OpaqueColorPassPrologue;
+    using Engine::Base::Memory::Type::Signature::k_OpaqueColorPassRva;
 
     // The first local player, the only user that is ever changed.
     constexpr std::uint32_t k_LocalUser{ 0 };
@@ -120,8 +121,7 @@ namespace Engine::Render::Hook
         if (maskPair) self->m_RenderService.EndMaskCopy(*maskPair);
     }
 
-    // note: Measures for the probe, copies the render target 0 for the overlay mask (VW.6.y.2 E, the first call with a phase other than 0) and,
-    // with phase 0, lets the overlay draw in the scene (VW.6.z, RenderService::OnSceneDraw) after those and before the original.
+    // note: Measures for the probe, copies the render target 0 for the overlay mask (VW.6.y.2 E, the first call with a phase other than 0).
     // Without a probe armed or a mask requested the render service reads atomics and returns, so the original runs as if unhooked. The scope
     // spans the original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedForward(void* view, std::uint8_t phase) -> void
@@ -136,10 +136,6 @@ namespace Engine::Render::Hook
 
         RenderStore::HookScope scope{ self->m_RenderStore };
 
-        // note: The overlay draws here (VW.6.z): inside the frame, before the transparents, effects and HUD of the game. Before the copies
-        // of the probe, so both hold the overlay and the probe measures only what the game draws in the call.
-        if (phase == k_ForwardDepthPhase) self->m_RenderService.OnSceneDraw();
-
         const bool isMaskCopied{ self->m_RenderService.BeginColorMaskCopy(phase) };
         const std::optional<std::size_t> pair{ self->m_RenderService.BeginColorPair(phase) };
 
@@ -147,6 +143,25 @@ namespace Engine::Render::Hook
 
         if (pair) self->m_RenderService.EndColorPair(*pair);
         if (isMaskCopied) self->m_RenderService.EndColorMaskCopy();
+    }
+
+    // note: The overlay draws here (VW.6.z.1, D334): at the exit of the opaque color pass of the view, so it is over the opaque world and under the
+    // effects, blade, shields and HUD of the game. The original runs first. OnSceneDraw is catch-all and takes the one scene point of the frame.
+    auto __fastcall FirstPersonDetour::HookedOpaque(void* view) -> void
+    {
+        FirstPersonDetour* self{ s_Instance.load() };
+
+        if (self == nullptr)
+        {
+            if (s_OriginalOpaque != nullptr) s_OriginalOpaque(view);
+            return;
+        }
+
+        RenderStore::HookScope scope{ self->m_RenderStore };
+
+        if (s_OriginalOpaque != nullptr) s_OriginalOpaque(view);
+
+        self->m_RenderService.OnSceneDraw();
     }
 
     auto __fastcall FirstPersonDetour::HookedUnit(std::uint32_t user, std::uint32_t objectHandle) -> bool
@@ -203,7 +218,7 @@ namespace Engine::Render::Hook
         const std::lock_guard<std::mutex> lock{ m_Mutex };
 
         if (m_IsInstalled.load()) return m_ModelAddress.load() != nullptr || m_UnitAddress.load() != nullptr
-            || m_DepthPassAddress.load() != nullptr || m_ForwardAddress.load() != nullptr;
+            || m_DepthPassAddress.load() != nullptr || m_ForwardAddress.load() != nullptr || m_OpaqueAddress.load() != nullptr;
         s_Instance.store(this);
 
         const bool isModelHooked{ this->InstallOne("first person model", k_FirstPersonModelPrologue, k_FirstPersonModelRva,
@@ -217,7 +232,10 @@ namespace Engine::Render::Hook
         const bool isForwardHooked{ this->InstallOne("first person forward", k_FirstPersonForwardPrologue, k_FirstPersonForwardRva,
             reinterpret_cast<void*>(&HookedForward), reinterpret_cast<void**>(&s_OriginalForward), m_ForwardAddress) };
 
-        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked && !isForwardHooked)
+        const bool isOpaqueHooked{ this->InstallOne("opaque color pass", k_OpaqueColorPassPrologue, k_OpaqueColorPassRva,
+            reinterpret_cast<void*>(&HookedOpaque), reinterpret_cast<void**>(&s_OriginalOpaque), m_OpaqueAddress) };
+
+        if (!isModelHooked && !isUnitHooked && !isDepthPassHooked && !isForwardHooked && !isOpaqueHooked)
         {
             s_Instance.store(nullptr);
             return false;
@@ -263,6 +281,7 @@ namespace Engine::Render::Hook
         this->Disable(m_UnitAddress);
         this->Disable(m_DepthPassAddress);
         this->Disable(m_ForwardAddress);
+        this->Disable(m_OpaqueAddress);
 
         // note: A thread can be past the jump of the hook but not yet inside its HookScope, where WaitForIdle does not see it.
         // 0x266104 runs per object and per frame, maybe on several threads, so that window is real: the grace lets those threads
@@ -278,11 +297,13 @@ namespace Engine::Render::Hook
         this->Remove(m_UnitAddress, "is first person unit");
         this->Remove(m_DepthPassAddress, "first person depth pass");
         this->Remove(m_ForwardAddress, "first person forward");
+        this->Remove(m_OpaqueAddress, "opaque color pass");
 
         s_OriginalModel = nullptr;
         s_OriginalUnit = nullptr;
         s_OriginalDepthPass = nullptr;
         s_OriginalForward = nullptr;
+        s_OriginalOpaque = nullptr;
 
         m_ModuleBase.store(0);
         m_IsInstalled.store(false);

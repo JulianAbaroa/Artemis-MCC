@@ -68,7 +68,7 @@ namespace
         case BeforeHudStatus::HudHidden:       return "game HUD hidden";
         case BeforeHudStatus::Declined:        return "Viewer declined (overlay off, no game camera or nothing to draw)";
         case BeforeHudStatus::Multisampled:    return "target has more than one sample";
-        case BeforeHudStatus::NoSceneCall:     return "no forward pass call in the frame";
+        case BeforeHudStatus::NoSceneCall:     return "no opaque color pass call in the frame";
         case BeforeHudStatus::Failed:          return "a handler failed, the frame was not redrawn";
         case BeforeHudStatus::Drawn:           return "drawn";
         }

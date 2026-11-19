@@ -61,8 +61,8 @@ export namespace Engine::Render::System
         auto OnPostFrame(FrameHandler handler) -> void;     // every frame, after OnFrame
         auto OnResize(FrameHandler handler) -> void;        // after the targets are recreated
 
-        // Registers a handler that draws under the HUD of the game: called at the scene point (entry of the forward pass with phase 0,
-        // before the post, VW.6.z) when the option asks for it and the frame allows it, otherwise from the HUD draw before the original
+        // Registers a handler that draws under the HUD of the game: called at the scene point (exit of the opaque color pass 0x26E500,
+        // before the post, VW.6.z.1) when the option asks for it and the frame allows it, otherwise from the HUD draw before the original
         // (VW.6.x B). At most once per frame.
         // note: Runs on the game render thread inside a GpuStateGuard. It returns whether it drew.
         auto OnBeforeHud(BeforeHudHandler handler) -> void;
@@ -107,7 +107,7 @@ export namespace Engine::Render::System
         static auto FindSceneBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
             -> std::optional<BeforeHudStatus>;
 
-        // Runs at the entry of each call of the forward pass 0x26EA78 with phase 0, before the original (VW.6.z): with Overlay in scene requested,
+        // Runs at the exit of each call of the opaque color pass 0x26E500, after the original (VW.6.z.1): with Overlay in scene requested,
         // the first call of the Present frame on the thread of Present, when nothing blocks it, runs the same handlers as OnHudDraw inside a
         // GpuStateGuard, with the HDR target bound in slot 0 and the depth stencil of the store. What they draw is inside the frame of the game: the
         // transparents, effects, blade and HUD of the game are drawn over it. A handler that drew marks the frame, so the HUD draw and Present do not
