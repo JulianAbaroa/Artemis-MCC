@@ -98,8 +98,10 @@ namespace
 
 namespace DevTools::Workbench::Viewer::System
 {
-    ViewerUIService::ViewerUIService(OptionsStore& optionsStore, CameraStore& cameraStore, const ObservedPlayerStore& observedStore, TickStore& tickStore) :
-        m_OptionsStore(optionsStore), m_CameraStore(cameraStore), m_ObservedStore(observedStore), m_TickStore(tickStore)
+    ViewerUIService::ViewerUIService(OptionsStore& optionsStore, CameraStore& cameraStore, const ObservedPlayerStore& observedStore, TickStore& tickStore,
+        InspectorService& inspectorService) :
+        m_OptionsStore(optionsStore), m_CameraStore(cameraStore), m_ObservedStore(observedStore), m_TickStore(tickStore),
+        m_InspectorService(inspectorService)
     {
         for (const LayerInfo& info : k_Layers)
         {
@@ -115,6 +117,7 @@ namespace DevTools::Workbench::Viewer::System
             this->DrawPreset();
             this->DrawCamera();
             this->DrawLayers();
+            this->DrawInspector();
             this->DrawDevelopment();
 
             ImGui::Spacing();
@@ -281,6 +284,15 @@ namespace DevTools::Workbench::Viewer::System
 
             if (isSelected) ImGui::PopStyleColor();
         }
+    }
+
+    auto ViewerUIService::DrawInspector() -> void
+    {
+        ImGui::Spacing();
+
+        if (!ImGui::CollapsingHeader("Inspector", ImGuiTreeNodeFlags_DefaultOpen)) return;
+
+        m_InspectorService.Draw();
     }
 
     auto ViewerUIService::DrawDevelopment() -> void

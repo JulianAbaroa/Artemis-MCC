@@ -2,15 +2,14 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module DevTools.Viewer.Hud.System;
-import :Affordances;
+module DevTools.Viewer.Inspector.System;
+import :Interaction;
 
 import Common.Engine.Type;
 import Common.Semantic.Type;
 import Blam.Runtime.Object.Type;
 import Views.Affordance.Type;
 import DevTools.Gui.Color.System;
-import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
 import DevTools.Viewer.Format.System;
 import std;
@@ -20,7 +19,6 @@ namespace
     using Bridge::Codec::Tick::Type::Tick;
     using Blam::Runtime::Object::Type::Alive::ObjectTable;
     using Blam::Runtime::Object::Type::Alive::AliveObject;
-    using Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
     using Views::Affordance::Type::Affordance;
     using Views::Affordance::Type::AffordanceActivation;
     using Views::Affordance::Type::SeatStatus;
@@ -31,12 +29,10 @@ namespace
 
     using DevTools::Gui::Color::System::GroupToColor;
     using DevTools::Viewer::Format::System::AffordanceFormater;
-    using DevTools::Viewer::Format::System::InteractionFormater;
 
     using DevTools::Gui::Widget::System::PanelGuiService;
 
     using Common::Engine::Type::k_NoHandle;
-    using DevTools::Gui::Style::Type::k_SectionColor;
 
     constexpr ImVec4 k_PositiveColor{ 0.4f, 1.0f, 0.4f, 1.0f };
 
@@ -57,59 +53,6 @@ namespace
         const std::size_t slash = tag.find_last_of("\\/");
 
         return (slash == std::string::npos) ? tag : tag.substr(slash + 1);
-    }
-
-    auto DrawEngineInteraction(const AliveInteraction& interaction) -> void
-    {
-        ImGui::TextColored(k_SectionColor, "Engine Interaction State");
-        ImGui::Spacing();
-
-        const bool hasObject = interaction.HasObjectTarget();
-
-        if (hasObject)
-        {
-            ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f }, "Object");
-            ImGui::Text("  Type:   %s",
-                InteractionFormater::InteractionKindToString(interaction.Kind));
-            ImGui::Text("  Handle: 0x%08X", interaction.TargetObjectHandle);
-            ImGui::Text("  Detail: %s", InteractionFormater::InteractionDetailToString(
-                interaction.Kind, interaction.InteractionSlotID));
-        }
-        else
-        {
-            ImGui::TextDisabled("Object - none");
-        }
-
-        ImGui::Spacing();
-
-        const bool hasMelee = interaction.HasMeleeTarget();
-
-        if (hasMelee)
-        {
-            ImGui::TextColored({ 1.f, 0.4f, 0.2f, 1.f }, "Melee");
-            ImGui::Text("  Target: 0x%08X", interaction.MeleeTargetHandle);
-        }
-        else
-        {
-            ImGui::TextDisabled("Melee - none");
-        }
-
-        ImGui::Spacing();
-
-        const bool hasAim = interaction.HasAimTarget();
-
-        if (hasAim)
-        {
-            ImGui::TextColored({ 0.4f, 0.8f, 1.f, 1.f }, "Aim");
-            ImGui::Text("  Target:    0x%08X", interaction.AimTargetHandle);
-            ImGui::Text("  SlotID:    0x%08X", interaction.AimTargetSlotID);
-            ImGui::Text("  ModelPart: 0x%02X", interaction.ModelPart);
-            PanelGuiService::DrawVec3("  LocalPos: ", interaction.AimHitLocalPosition);
-        }
-        else
-        {
-            ImGui::TextDisabled("Aim - none");
-        }
     }
 
     auto DrawProfile(const Profile& p) -> void
@@ -251,32 +194,28 @@ namespace
     }
 }
 
-namespace DevTools::Viewer::Hud::System
+namespace DevTools::Viewer::Inspector::System
 {
-    auto AffordancesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
+    auto InteractionSection::Find(const Tick& tick, std::uint32_t handle) -> const Affordance*
     {
-        const AliveInteraction interaction = tick.Interaction ?
-            *tick.Interaction : AliveInteraction{};
-
-        DrawEngineInteraction(interaction);
-
-        PanelGuiService::DrawSectionSeparator(nullptr);
-
-        if (!tick.Affordances)
-        {
-            ImGui::TextDisabled("No affordance data.");
-            return;
-        }
+        if (!tick.Affordances) return nullptr;
 
         for (const Affordance& item : *tick.Affordances)
         {
-            if (item.Handle == handle)
-            {
-                DrawDetails(item, tick.ObjectTable.get());
-                return;
-            }
+            if (item.Handle == handle) return &item;
         }
 
-        ImGui::TextDisabled("Selected object is not an affordance.");
+        return nullptr;
+    }
+
+    auto InteractionSection::Draw(const Tick& tick, const Affordance* item) -> void
+    {
+        if (!item)
+        {
+            ImGui::TextDisabled("No affordance for this object.");
+            return;
+        }
+
+        DrawDetails(*item, tick.ObjectTable.get());
     }
 }

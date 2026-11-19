@@ -66,15 +66,6 @@ namespace DevTools::Viewer::Control::System
 
         if (isKeyDown)
         {
-            switch (message.WParam)
-            {
-            case VK_RIGHT: m_OverlayStore.NextMode(); return true;
-            case VK_LEFT:  m_OverlayStore.PreviousMode(); return true;
-            case VK_DOWN:  m_OverlayStore.NextPage(); return true;
-            case VK_UP:    m_OverlayStore.PreviousPage(); return true;
-            default: break;
-            }
-
             Key key{};
             if (ToCameraKey(message.WParam, key)) m_CameraStore.SetKeyDown(key, true);
 

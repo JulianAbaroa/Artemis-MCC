@@ -2,8 +2,8 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module DevTools.Viewer.Hud.System;
-import :Fixtures;
+module DevTools.Viewer.Inspector.System;
+import :Fixture;
 
 import Common.Semantic.Type;
 import Common.ZoneShape.Type;
@@ -212,9 +212,34 @@ namespace
     }
 }
 
-namespace DevTools::Viewer::Hud::System
+namespace DevTools::Viewer::Inspector::System
 {
-    auto FixturesHud::Draw(const Tick& tick, std::uint32_t handle) -> void
+    auto FixtureSection::Applies(const Tick& tick, std::uint32_t handle) -> bool
+    {
+        const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };
+        if (entity == nullptr) return false;
+
+        switch (entity->Function)
+        {
+        case Function::Teleporter:
+        case Function::Lift:
+        case Function::Barrier:
+        case Function::ObjectiveSpawn:
+        case Function::ObjectiveZone:
+        case Function::Boundary:
+        case Function::Prop:
+        case Function::SpawnPoint:
+        case Function::ObjectiveItem:
+            return true;
+
+        default:
+            break;
+        }
+
+        return tick.ZoneDetails && tick.ZoneDetails->find(handle) != tick.ZoneDetails->end();
+    }
+
+    auto FixtureSection::Draw(const Tick& tick, std::uint32_t handle) -> void
     {
         // note: Every fixture is an entity, with its details when it has them (D88, D90, D91, D92).
         const Entity* entity{ tick.Entities ? tick.Entities->Find(handle) : nullptr };

@@ -4,7 +4,6 @@ import Services.Settings.State;
 import Engine.Render.Window.Type;
 import DevTools.Viewer.Camera.State;
 import DevTools.Viewer.Selection.State;
-import DevTools.Viewer.Overlay.State;
 import DevTools.Viewer.Options.State;
 import std;
 
@@ -12,7 +11,7 @@ export namespace DevTools::Viewer::Control::System
 {
     // Turns window messages and raw mouse movement into viewer actions.
     // F4 toggles the viewer, TAB switches between the Free and the Game mode and F6 toggles the labels.
-    // In Free mode the viewer takes the movement keys, Ctrl (custom speed), the arrows (overlay mode and page), the left click (pick),
+    // In Free mode the viewer takes the movement keys, Ctrl (custom speed), the left click (pick),
     // the right click (zoom), the wheel (speed and field of view) and the mouse.
     // In Game mode it takes nothing but its own hotkeys, so the game keeps its controls.
     class ControlService
@@ -23,15 +22,14 @@ export namespace DevTools::Viewer::Control::System
         using RawMouse = Engine::Render::Window::Type::RawMouse;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
-        using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
         ControlService(SettingsStore& settingsStore, CameraStore& cameraStore,
-            SelectionStore& selectionStore, OverlayStore& overlayStore,
+            SelectionStore& selectionStore,
             OptionsStore& optionsStore) :
             m_CameraStore(cameraStore), m_SelectionStore(selectionStore),
-            m_OverlayStore(overlayStore), m_OptionsStore(optionsStore),
+            m_OptionsStore(optionsStore),
             m_SettingsStore(settingsStore) {}
         ~ControlService() = default;
 
@@ -47,7 +45,6 @@ export namespace DevTools::Viewer::Control::System
     private:
         CameraStore& m_CameraStore;
         SelectionStore& m_SelectionStore;
-        OverlayStore& m_OverlayStore;
         OptionsStore& m_OptionsStore;
         SettingsStore& m_SettingsStore;
 

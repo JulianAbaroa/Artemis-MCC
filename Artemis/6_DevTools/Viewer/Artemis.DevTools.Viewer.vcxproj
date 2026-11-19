@@ -150,7 +150,6 @@
     <ClCompile Include="Options\Type\DevTools.Viewer.Options.Type.ixx" />
     <ClCompile Include="Overlay\State\OverlayStore.cpp" />
     <ClCompile Include="Overlay\State\OverlayStore.ixx" />
-    <ClCompile Include="Overlay\Type\DevTools.Viewer.Overlay.Type.ixx" />
     <ClCompile Include="Palette\System\PaletteService.cpp" />
     <ClCompile Include="Palette\System\PaletteService.ixx" />
     <ClCompile Include="Palette\Type\DevTools.Viewer.Palette.Type.ixx" />
@@ -185,16 +184,22 @@
     <ClCompile Include="Hud\System\Label\PlayerLabels.ixx" />
     <ClCompile Include="Hud\System\Label\VehicleLabels.cpp" />
     <ClCompile Include="Hud\System\Label\VehicleLabels.ixx" />
-    <ClCompile Include="Hud\System\Panel\AffordancesHud.cpp" />
-    <ClCompile Include="Hud\System\Panel\AffordancesHud.ixx" />
-    <ClCompile Include="Hud\System\Panel\CollidablesHud.cpp" />
-    <ClCompile Include="Hud\System\Panel\CollidablesHud.ixx" />
-    <ClCompile Include="Hud\System\Panel\FixturesHud.cpp" />
-    <ClCompile Include="Hud\System\Panel\FixturesHud.ixx" />
-    <ClCompile Include="Hud\System\Panel\HealthsHud.cpp" />
-    <ClCompile Include="Hud\System\Panel\HealthsHud.ixx" />
-    <ClCompile Include="Hud\System\Panel\ViewHud.cpp" />
-    <ClCompile Include="Hud\System\Panel\ViewHud.ixx" />
+    <ClCompile Include="Inspector\System\InspectorService.cpp" />
+    <ClCompile Include="Inspector\System\InspectorService.ixx" />
+    <ClCompile Include="Inspector\System\Section\CollisionSection.cpp" />
+    <ClCompile Include="Inspector\System\Section\CollisionSection.ixx" />
+    <ClCompile Include="Inspector\System\Section\EntitySection.cpp" />
+    <ClCompile Include="Inspector\System\Section\EntitySection.ixx" />
+    <ClCompile Include="Inspector\System\Section\FixtureSection.cpp" />
+    <ClCompile Include="Inspector\System\Section\FixtureSection.ixx" />
+    <ClCompile Include="Inspector\System\Section\InteractionSection.cpp" />
+    <ClCompile Include="Inspector\System\Section\InteractionSection.ixx" />
+    <ClCompile Include="Inspector\System\Section\RawSection.cpp" />
+    <ClCompile Include="Inspector\System\Section\RawSection.ixx" />
+    <ClCompile Include="Inspector\System\Section\ViewSection.cpp" />
+    <ClCompile Include="Inspector\System\Section\ViewSection.ixx" />
+    <ClCompile Include="Inspector\System\Section\VitalitySection.cpp" />
+    <ClCompile Include="Inspector\System\Section\VitalitySection.ixx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CONTRACT.md" />

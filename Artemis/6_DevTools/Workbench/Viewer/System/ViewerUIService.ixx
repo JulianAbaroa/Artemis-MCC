@@ -6,6 +6,7 @@ import Bridge.Codec.Tick.State;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Camera.State;
+import DevTools.Viewer.Inspector.System;
 import std;
 
 namespace
@@ -29,10 +30,12 @@ export namespace DevTools::Workbench::Viewer::System
         using ScalarInfo = DevTools::Viewer::Options::Type::ScalarInfo;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
+        using InspectorService = DevTools::Viewer::Inspector::System::InspectorService;
 
     public:
         // Builds the tooltip of each layer from the flag table.
-        ViewerUIService(OptionsStore& optionsStore, CameraStore& cameraStore, const ObservedPlayerStore& observedStore, TickStore& tickStore);
+        ViewerUIService(OptionsStore& optionsStore, CameraStore& cameraStore, const ObservedPlayerStore& observedStore, TickStore& tickStore,
+            InspectorService& inspectorService);
         ~ViewerUIService() = default;
 
         ViewerUIService(const ViewerUIService&) = delete;
@@ -46,6 +49,7 @@ export namespace DevTools::Workbench::Viewer::System
         CameraStore& m_CameraStore;
         const ObservedPlayerStore& m_ObservedStore;
         TickStore& m_TickStore;
+        InspectorService& m_InspectorService;
 
         // What each level of each layer shows, in the order of Layer.
         std::array<std::string, k_LayerCount> m_LayerTooltips{};
@@ -68,6 +72,9 @@ export namespace DevTools::Workbench::Viewer::System
 
         // Draws the three buttons Off, Minimal and Full of a layer, or a combo when the row is too narrow for them.
         auto DrawLevelSelector(Layer layer) -> void;
+
+        // Draws the inspector of the selected object.
+        auto DrawInspector() -> void;
 
         // Draws the development options, folded by default.
         auto DrawDevelopment() -> void;

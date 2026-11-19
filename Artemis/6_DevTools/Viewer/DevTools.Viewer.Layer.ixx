@@ -23,6 +23,7 @@ import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Control.System;
 import DevTools.Viewer.Map.System;
 import DevTools.Viewer.Hud.System;
+import DevTools.Viewer.Inspector.System;
 import DevTools.Viewer.Scene.System;
 import std;
 
@@ -57,6 +58,7 @@ export namespace DevTools::Viewer
         using MapService = DevTools::Viewer::Map::System::MapService;
         using HudService = DevTools::Viewer::Hud::System::HudService;
         using LabelService = DevTools::Viewer::Hud::System::LabelService;
+        using InspectorService = DevTools::Viewer::Inspector::System::InspectorService;
 
     public:
         // param environment: Source of the debug collidables, which are not part of the Tick.
@@ -67,15 +69,16 @@ export namespace DevTools::Viewer
             m_CameraService(m_CameraStore, m_OptionsStore, engine.m_GameCameraService),
             m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
             m_SelectionService(m_SelectionStore),
-            m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OverlayStore, m_OptionsStore),
+            m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService,
                 engine.m_RenderStore),
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SelectionStore, m_SceneService,
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SceneService,
                 m_LatencyService),
-            m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore)
+            m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
+            m_InspectorService(m_SceneService, m_CollidableStore, m_SelectionStore)
         {
             auto& lifecycle = engine.m_LifecycleService;
 
@@ -171,5 +174,6 @@ export namespace DevTools::Viewer
         MapService m_MapService;
         HudService m_HudService;
         LabelService m_LabelService;
+        InspectorService m_InspectorService;
     };
 }

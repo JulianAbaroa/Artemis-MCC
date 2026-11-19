@@ -2,8 +2,8 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module DevTools.Viewer.Hud.System;
-import :ObservedView;
+module DevTools.Viewer.Inspector.System;
+import :View;
 
 import Common.Engine.Type;
 import Common.Math.Type;
@@ -111,9 +111,9 @@ namespace
     }
 }
 
-namespace DevTools::Viewer::Hud::System
+namespace DevTools::Viewer::Inspector::System
 {
-    auto ViewHud::Draw(const View* view) -> void
+    auto ViewSection::Draw(const View* view) -> void
     {
         if (!view)
         {

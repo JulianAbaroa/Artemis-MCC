@@ -2,22 +2,27 @@ module;
 
 #include "External/imgui/imgui.h"
 
-module DevTools.Viewer.Hud.System;
-import :Collidables;
+module DevTools.Viewer.Inspector.System;
+import :Raw;
 
-import Perception.Collidable.Type;
+import Blam.Runtime.Interaction.Type;
 import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
+import DevTools.Viewer.Format.System;
 import std;
 
 namespace
 {
+    using Blam::Runtime::Interaction::Type::Alive::AliveInteraction;
     using Perception::Collidable::Type::Collidable;
     using Perception::Collidable::Type::RegionDiagnostic;
+
+    using DevTools::Viewer::Format::System::InteractionFormater;
 
     using DevTools::Gui::Widget::System::PanelGuiService;
 
     using DevTools::Gui::Style::Type::k_BytesPerRow;
+    using DevTools::Gui::Style::Type::k_SectionColor;
 
     constexpr ImVec4 k_AlertColor{ 1.0f, 0.4f, 0.4f, 1.0f };
 
@@ -174,58 +179,70 @@ namespace
         }
     }
 
-    auto DrawCollidable(const Collidable& instance) -> void
+    auto DrawEngineInteraction(const AliveInteraction& interaction) -> void
     {
-        PanelGuiService::DrawHeader(ImVec4(0.4f, 0.86f, 1.0f, 1.0f), "Collidable",
-            instance.TagName, instance.Handle);
+        ImGui::TextColored(k_SectionColor, "Engine Interaction State");
+        ImGui::Spacing();
+
+        const bool hasObject = interaction.HasObjectTarget();
+
+        if (hasObject)
+        {
+            ImGui::TextColored({ 0.2f, 1.f, 0.2f, 1.f }, "Object");
+            ImGui::Text("  Type:   %s",
+                InteractionFormater::InteractionKindToString(interaction.Kind));
+            ImGui::Text("  Handle: 0x%08X", interaction.TargetObjectHandle);
+            ImGui::Text("  Detail: %s", InteractionFormater::InteractionDetailToString(
+                interaction.Kind, interaction.InteractionSlotID));
+        }
+        else
+        {
+            ImGui::TextDisabled("Object - none");
+        }
 
         ImGui::Spacing();
 
-        PanelGuiService::DrawVec3("Position:", instance.Position);
-        PanelGuiService::DrawVec3("Forward:", instance.Forward);
-        PanelGuiService::DrawVec3("Up:", instance.Up);
+        const bool hasMelee = interaction.HasMeleeTarget();
 
-        PanelGuiService::DrawSectionSeparator();
-
-        const auto& mesh = instance.WorldMesh;
-
-        ImGui::TextDisabled("World mesh:");
-        ImGui::Text("Triangles: %d", static_cast<int>(mesh.Triangles.size()));
-        ImGui::Text("Node: %d", static_cast<int>(mesh.NodeIndex));
-        ImGui::Text("Region: %d", static_cast<int>(mesh.RegionIndex));
-        ImGui::Text("Permutation: %d", static_cast<int>(mesh.PermutationIndex));
+        if (hasMelee)
+        {
+            ImGui::TextColored({ 1.f, 0.4f, 0.2f, 1.f }, "Melee");
+            ImGui::Text("  Target: 0x%08X", interaction.MeleeTargetHandle);
+        }
+        else
+        {
+            ImGui::TextDisabled("Melee - none");
+        }
 
         ImGui::Spacing();
 
-        ImGui::TextDisabled("Bounds (model-space):");
-        PanelGuiService::DrawVec3("Min:", mesh.LocalMin);
-        PanelGuiService::DrawVec3("Max:", mesh.LocalMax);
+        const bool hasAim = interaction.HasAimTarget();
 
-        PanelGuiService::DrawSectionSeparator();
-
-        DrawRegions(instance);
+        if (hasAim)
+        {
+            ImGui::TextColored({ 0.4f, 0.8f, 1.f, 1.f }, "Aim");
+            ImGui::Text("  Target:    0x%08X", interaction.AimTargetHandle);
+            ImGui::Text("  SlotID:    0x%08X", interaction.AimTargetSlotID);
+            ImGui::Text("  ModelPart: 0x%02X", interaction.ModelPart);
+            PanelGuiService::DrawVec3("  LocalPos: ", interaction.AimHitLocalPosition);
+        }
+        else
+        {
+            ImGui::TextDisabled("Aim - none");
+        }
     }
 }
 
-namespace DevTools::Viewer::Hud::System
+namespace DevTools::Viewer::Inspector::System
 {
-    auto CollidablesHud::Draw(const std::shared_ptr<const Collidables>& collidables, std::uint32_t handle) -> void
+    auto RawSection::Draw(const Tick& tick, const Collidable* collidable, bool isLocalBiped) -> void
     {
-        if (!collidables)
-        {
-            ImGui::TextDisabled("No collidable data.");
-            return;
-        }
+        if (collidable) DrawRegions(*collidable);
 
-        for (const auto& instance : *collidables)
-        {
-            if (instance.Handle == handle)
-            {
-                DrawCollidable(instance);
-                return;
-            }
-        }
+        if (!isLocalBiped) return;
 
-        ImGui::TextDisabled("Selected object is not a collidable.");
+        if (collidable) PanelGuiService::DrawSectionSeparator();
+
+        DrawEngineInteraction(tick.Interaction ? *tick.Interaction : AliveInteraction{});
     }
 }

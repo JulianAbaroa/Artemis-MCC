@@ -4,19 +4,14 @@ module;
 
 module DevTools.Viewer.Hud.System;
 
-import Common.Engine.Type;
 import Engine.Base.Memory.Type;
 import Engine.Base.Memory.Type;
 import Engine.Render.Type;
-import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Latency.Type;
-import DevTools.Viewer.Overlay.Type;
 import std;
 
 namespace
 {
-    using DevTools::Viewer::Overlay::Type::Mode;
-
     using Engine::Base::Memory::Type::GameCamera::GameCamera;
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
     using Engine::Base::Memory::Type::FrameClock::InterpolationState;
@@ -24,8 +19,6 @@ namespace
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::SceneStatus;
 
-    using Common::Engine::Type::k_NoHandle;
-    using DevTools::Viewer::Collidable::Type::ShareObjects;
     using DevTools::Viewer::Latency::Type::LatencyReport;
     using DevTools::Viewer::Latency::Type::LatencySample;
 
@@ -36,20 +29,6 @@ namespace
     const ImVec4 k_Orange{ 1.0f, 0.6f, 0.0f, 1.0f };
     const ImVec4 k_Red{ 1.0f, 0.0f, 0.0f, 1.0f };
     const ImVec4 k_Info{ 0.6f, 0.8f, 1.0f, 1.0f };
-
-    auto ModeLabel(Mode mode) -> const char*
-    {
-        switch (mode)
-        {
-        case Mode::Default:    return "Telemetry";
-        case Mode::Collidable: return "Collidable";
-        case Mode::Health:     return "Health";
-        case Mode::Fixture:    return "Fixture";
-        case Mode::Affordance: return "Affordance";
-        case Mode::View:       return "View";
-        default:               return "?";
-        }
-    }
 
     // return: The words the telemetry gives for why the overlay was not drawn at the scene point.
     auto SceneReason(SceneStatus status) -> const char*
@@ -97,39 +76,12 @@ namespace DevTools::Viewer::Hud::System
 
         if (ImGui::Begin("##overlay", nullptr, flags))
         {
-            this->DrawNavBar();
-
             if (m_RenderStore.IsGameHudHidden()) ImGui::TextColored(k_Orange, "Game HUD hidden");
 
-            ImGui::Separator();
-
-            if (m_OverlayStore.GetMode() == Mode::Default)
-            {
-                this->DrawDefault();
-            }
-            else if (m_OverlayStore.GetMode() == Mode::View)
-            {
-                const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
-                this->DrawViewPanel(scene ? scene->Tick : nullptr);
-            }
-            else
-            {
-                const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
-                this->DrawSelectedPanel(scene ? scene->Tick : nullptr);
-            }
+            this->DrawDefault();
         }
 
         ImGui::End();
-    }
-
-    auto HudService::DrawNavBar() -> void
-    {
-        ImGui::TextDisabled("<");
-        ImGui::SameLine();
-        ImGui::TextColored(ImVec4(0.45f, 0.78f, 0.96f, 1.0f), "%s",
-            ModeLabel(m_OverlayStore.GetMode()));
-        ImGui::SameLine();
-        ImGui::TextDisabled(">");
     }
 
     auto HudService::DrawDefault() -> void
@@ -139,87 +91,6 @@ namespace DevTools::Viewer::Hud::System
 
         const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
         this->DrawGameCamera(scene ? scene->Tick : nullptr);
-    }
-
-    auto HudService::DrawViewPanel(const std::shared_ptr<const Tick>& tick) -> void
-    {
-        // note: It follows the watched player, not the selection, so it needs no selected object.
-        ViewHud::Draw(tick ? m_SceneService.GetObservedView(*tick) : nullptr);
-    }
-
-    auto HudService::DrawSelectedPanel(const std::shared_ptr<const Tick>& tick) -> void
-    {
-        const std::uint32_t handle = m_SelectionStore.GetSelected();
-
-        if (handle == k_NoHandle)
-        {
-            ImGui::TextDisabled("No selection.");
-            m_LastHandle = k_NoHandle;
-            return;
-        }
-
-        if (handle != m_LastHandle)
-        {
-            m_OverlayStore.ResetPage();
-            m_LastHandle = handle;
-        }
-
-        const float screenHeight = static_cast<float>(m_RenderStore.GetHeight());
-        const float pageHeight = screenHeight * 0.5f;
-        const float screenWidth = static_cast<float>(m_RenderStore.GetWidth());
-        const float panelWidth = (std::min)((std::max)(screenWidth * 0.30f, 480.0f), screenWidth - 40.0f);
-
-        ImGui::BeginChild("##panel_body", ImVec2(panelWidth, pageHeight), false,
-            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-
-        if (tick) this->DrawPanel(*tick, handle);
-        else      ImGui::TextDisabled("No data.");
-
-        const float contentHeight = ImGui::GetCursorPosY();
-
-        int totalPages{ 1 };
-        if (pageHeight > 0.0f)
-        {
-            totalPages = static_cast<int>(std::ceil(contentHeight / pageHeight));
-        }
-        if (totalPages < 1) totalPages = 1;
-
-        m_OverlayStore.ClampPage(totalPages - 1);
-        const int page = m_OverlayStore.GetPage();
-        ImGui::SetScrollY(page * pageHeight);
-
-        ImGui::EndChild();
-
-        if (totalPages > 1)
-        {
-            ImGui::Separator();
-            ImGui::TextDisabled("Page %d/%d  (Up/Down)", page + 1, totalPages);
-        }
-    }
-
-    auto HudService::DrawPanel(const Tick& tick, std::uint32_t handle) -> void
-    {
-        switch (m_OverlayStore.GetMode())
-        {
-        case Mode::Collidable:
-            CollidablesHud::Draw(ShareObjects(m_SceneService.GetFrameScene(m_CollidableStore)), handle);
-            break;
-
-        case Mode::Health:
-            HealthsHud::Draw(tick, handle);
-            break;
-
-        case Mode::Fixture:
-            FixturesHud::Draw(tick, handle);
-            break;
-
-        case Mode::Affordance:
-            AffordancesHud::Draw(tick, handle);
-            break;
-
-        default:
-            break;
-        }
     }
 
     auto HudService::DrawFramerate() -> void
