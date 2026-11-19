@@ -10,6 +10,7 @@ namespace
     using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::ColorPairNote;
     using Engine::Render::Type::DepthPairNote;
+    using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::HudHookInfo;
@@ -467,6 +468,8 @@ namespace Engine::Render::State
 
     auto RenderStore::NextPresentFrame() -> void
     {
+        m_SceneLastStatus.store(m_SceneStatus.exchange(BeforeHudStatus::NoSceneCall, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_DrawPlaceLast.store(m_DrawPlace.exchange(DrawPlace::Present, std::memory_order_relaxed), std::memory_order_relaxed);
         m_BeforeHudLastStatus.store(m_BeforeHudStatus.exchange(BeforeHudStatus::NoHudDraw, std::memory_order_relaxed), std::memory_order_relaxed);
         m_PresentIndex.fetch_add(1, std::memory_order_relaxed);
     }
@@ -489,6 +492,42 @@ namespace Engine::Render::State
     auto RenderStore::GetBeforeHudStatus() const -> BeforeHudStatus
     {
         return m_BeforeHudLastStatus.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::TakeSceneCall() -> bool
+    {
+        const std::uint64_t token{ m_PresentIndex.load(std::memory_order_relaxed) + 1 };
+        return m_SceneCallMark.exchange(token, std::memory_order_relaxed) != token;
+    }
+
+    auto RenderStore::SetSceneStatus(BeforeHudStatus status) -> void
+    {
+        m_SceneStatus.store(status, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetSceneStatus() const -> BeforeHudStatus
+    {
+        return m_SceneLastStatus.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetDrawPlace(DrawPlace place) -> void
+    {
+        m_DrawPlace.store(place, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetDrawPlace() const -> DrawPlace
+    {
+        return m_DrawPlaceLast.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::CountSceneFailure() -> void
+    {
+        m_SceneFailures.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetSceneFailures() const -> std::uint32_t
+    {
+        return m_SceneFailures.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::SetHudSample(const HudHookInfo& sample) -> void
@@ -519,6 +558,16 @@ namespace Engine::Render::State
     auto RenderStore::SetFirstPersonMaskRequested(bool isRequested) -> void
     {
         m_IsMaskRequested.store(isRequested, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::IsOverlayInSceneRequested() const -> bool
+    {
+        return m_IsOverlayInSceneRequested.load(std::memory_order_relaxed);
+    }
+
+    auto RenderStore::SetOverlayInSceneRequested(bool isRequested) -> void
+    {
+        m_IsOverlayInSceneRequested.store(isRequested, std::memory_order_relaxed);
     }
 
     auto RenderStore::TakeMaskCopy(MaskPairKind kind) -> bool
@@ -642,6 +691,13 @@ namespace Engine::Render::State
         for (MaskTextures& mask : m_Masks) mask = MaskTextures{};
 
         m_MaskFrameDepth.Reset();
+    }
+
+    auto RenderStore::ReleaseMaskTextures(MaskPairKind kind) -> void
+    {
+        m_Masks[MaskSlotOf(kind)] = MaskTextures{};
+
+        if (kind == MaskPairKind::DepthB) m_MaskFrameDepth.Reset();
     }
 
     auto RenderStore::ReleaseTargets() -> void

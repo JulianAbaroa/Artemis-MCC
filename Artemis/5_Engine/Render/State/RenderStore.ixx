@@ -11,6 +11,7 @@ import std;
 namespace
 {
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::ColorPairNote;
     using Engine::Render::Type::CopyPairSetup;
     using Engine::Render::Type::DepthPairNote;
@@ -302,6 +303,11 @@ export namespace Engine::Render::State
         auto IsFirstPersonMaskRequested() const -> bool;
         auto SetFirstPersonMaskRequested(bool isRequested) -> void;
 
+        // The Viewer asks to draw the overlay inside the frame of the game (VW.6.z, option Overlay in scene), any thread. It also drops the color
+        // mask pair, which the scene point cannot use.
+        auto IsOverlayInSceneRequested() const -> bool;
+        auto SetOverlayInSceneRequested(bool isRequested) -> void;
+
         // Takes the one copy of a pair in the frame in progress. Any thread, no allocation.
         // return: True for the first caller of the frame for that pair, false for the others (the frame is closed by EndHudFrame).
         auto TakeMaskCopy(MaskPairKind kind) -> bool;
@@ -361,6 +367,9 @@ export namespace Engine::Render::State
         // are released and at cleanup.
         auto ReleaseMaskTextures() -> void;
 
+        // The same for one pair. Dropping the pair 0xB also drops the resource kept for the pass 0 pair.
+        auto ReleaseMaskTextures(MaskPairKind kind) -> void;
+
         // Thread of Present, noted at every Present. 0 until the first one.
         auto GetPresentThread() const -> std::uint32_t;
         auto SetPresentThread(std::uint32_t threadId) -> void;
@@ -392,6 +401,26 @@ export namespace Engine::Render::State
 
         // return: The status of the last completed Present frame.
         auto GetBeforeHudStatus() const -> BeforeHudStatus;
+
+        // Takes the one scene point of the Present frame in progress (the first call of the forward pass with phase 0 that passes the scene blocker). Any thread, no allocation.
+        // return: True for the first caller of the frame, false for the others.
+        auto TakeSceneCall() -> bool;
+
+        // Keeps why the frame in progress did or did not draw in the scene (Drawn when it did). Replaced by a later call in the same frame.
+        auto SetSceneStatus(BeforeHudStatus status) -> void;
+
+        // return: The scene status of the last completed Present frame.
+        auto GetSceneStatus() const -> BeforeHudStatus;
+
+        // Keeps where the frame in progress was drawn (the last call wins). Present until something draws earlier.
+        auto SetDrawPlace(DrawPlace place) -> void;
+
+        // return: Where the last completed Present frame was drawn.
+        auto GetDrawPlace() const -> DrawPlace;
+
+        // Counts an exception at the scene point, which the call catches. Any thread.
+        auto CountSceneFailure() -> void;
+        auto GetSceneFailures() const -> std::uint32_t;
 
         // Keeps the measure of the last HUD draw. note: A short lock, no allocation. CallsPerFrame and IsHooked are ignored here.
         auto SetHudSample(const HudHookInfo& sample) -> void;
@@ -442,6 +471,13 @@ export namespace Engine::Render::State
         std::atomic<std::uint64_t> m_BeforeHudMark{ 0 };
         std::atomic<BeforeHudStatus> m_BeforeHudStatus{ BeforeHudStatus::NoHudDraw };
         std::atomic<BeforeHudStatus> m_BeforeHudLastStatus{ BeforeHudStatus::NoHudDraw };
+        std::atomic<std::uint64_t> m_SceneCallMark{ 0 };
+        std::atomic<BeforeHudStatus> m_SceneStatus{ BeforeHudStatus::NoSceneCall };
+        std::atomic<BeforeHudStatus> m_SceneLastStatus{ BeforeHudStatus::NoSceneCall };
+        std::atomic<DrawPlace> m_DrawPlace{ DrawPlace::Present };
+        std::atomic<DrawPlace> m_DrawPlaceLast{ DrawPlace::Present };
+        std::atomic<std::uint32_t> m_SceneFailures{ 0 };
+        std::atomic<bool> m_IsOverlayInSceneRequested{ false };
 
         mutable std::mutex m_HudSampleMutex{};
         HudHookInfo m_HudSample{};

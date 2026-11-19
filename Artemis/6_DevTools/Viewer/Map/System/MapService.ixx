@@ -101,7 +101,8 @@ export namespace DevTools::Viewer::Map::System
         auto Render(const FrameContext& frame) -> void;
 
         // Draws one frame under the HUD of the game: the same frame as Render, but only with the overlay active (game camera and option).
-        // note: Called from the before-HUD event of Engine.Render. The Present handler calls Render only if this one did not draw.
+        // note: Called from the before-HUD event of Engine.Render, which runs at the scene point (inside the frame, VW.6.z) or at the HUD
+        // draw. The Present handler calls Render only if this one did not draw.
         // return: True if it drew. When false nothing was updated, so Render does the whole frame.
         auto RenderBeforeHud(const FrameContext& frame) -> bool;
 

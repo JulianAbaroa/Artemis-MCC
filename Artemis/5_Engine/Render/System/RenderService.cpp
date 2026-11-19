@@ -15,6 +15,7 @@ namespace
 
     using Engine::Render::State::CopyPairs;
 
+    using Engine::Render::Type::BeforeHudStatus;
     using Engine::Render::Type::ChangedMap;
     using Engine::Render::Type::ColorPairNote;
     using Engine::Render::Type::ColorPairReport;
@@ -26,6 +27,7 @@ namespace
     using Engine::Render::Type::DepthProbeInfo;
     using Engine::Render::Type::DepthStencilStateInfo;
     using Engine::Render::Type::DepthTargetInfo;
+    using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::FirstPersonCaller;
     using Engine::Render::Type::FirstPersonSample;
     using Engine::Render::Type::FormatName;
@@ -47,6 +49,7 @@ namespace
 
     using Engine::Render::Type::ChooseZeroMaskSource;
     using Engine::Render::Type::ColorMaskViewFormat;
+    using Engine::Render::Type::IsMaskPairWanted;
     using Engine::Render::Type::UnionChangedMap;
 
     using Engine::Render::Type::k_ColorPairCount;
@@ -65,6 +68,26 @@ namespace
 
     using std::chrono::steady_clock;
     using std::chrono::microseconds;
+
+    // return: Why a draw of the overlay cannot use the target bound in slot 0, or nothing. The HUD draw needs the back buffer, the scene point the
+    // HDR target of the game (one sample, the size of the back buffer).
+    auto FindTargetBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height, bool isInScene)
+        -> std::optional<BeforeHudStatus>
+    {
+        if (!sample.IsSameThread) return BeforeHudStatus::OtherThread;
+        if (!isReady) return BeforeHudStatus::NotReady;
+        if (!sample.HasTarget || width == 0 || height == 0) return BeforeHudStatus::TargetMismatch;
+        if (!sample.IsSameDevice) return BeforeHudStatus::OtherDevice;
+        if (!isInScene && !sample.IsBackBuffer) return BeforeHudStatus::NotBackBuffer;
+        if (sample.Width != width || sample.Height != height) return BeforeHudStatus::TargetMismatch;
+        if (isInScene && sample.SampleCount != 1) return BeforeHudStatus::Multisampled;
+
+        const bool isWholeTarget{ sample.HasViewport && sample.ViewportX == 0.0f && sample.ViewportY == 0.0f &&
+            sample.ViewportWidth == static_cast<float>(width) && sample.ViewportHeight == static_cast<float>(height) };
+        if (!isWholeTarget) return BeforeHudStatus::SplitViewport;
+
+        return std::nullopt;
+    }
 
     // How the log names the first person pass of a depth pair: the function 0x26DA08 and its pass argument.
     auto DepthCallerName(const DepthPairNote& note) -> std::string
@@ -381,6 +404,7 @@ namespace
         ComPtr<ID3D11Resource> backBuffer{};
         if (backBufferView != nullptr) backBufferView->GetResource(backBuffer.GetAddressOf());
 
+        info.SampleCount = textureDesc.SampleDesc.Count;
         info.IsBackBuffer = backBuffer != nullptr && backBuffer.Get() == resource.Get();
 
         ComPtr<ID3D11Device> targetDevice{};
@@ -745,10 +769,14 @@ namespace Engine::Render::System
 
         if (!m_RenderStore.IsFirstPersonMaskRequested()) return mask;
 
+        const bool isScene{ m_RenderStore.IsOverlayInSceneRequested() };
+
         for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
         {
             const MaskPairKind kind{ static_cast<MaskPairKind>(i) };
-            if (!m_RenderStore.AreMaskTexturesReady(kind)) continue;
+
+            // The color pair is not used (nor copied) when the overlay draws in the scene: the shader leaves it out.
+            if (!IsMaskPairWanted(true, isScene, kind) || !m_RenderStore.AreMaskTexturesReady(kind)) continue;
 
             const D3D11_TEXTURE2D_DESC desc{ m_RenderStore.GetMaskDesc(kind) };
             MaskPairView& pair{ mask.Pairs[i] };
@@ -829,18 +857,13 @@ namespace Engine::Render::System
     auto RenderService::FindBeforeHudBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
         -> std::optional<BeforeHudStatus>
     {
-        if (!sample.IsSameThread) return BeforeHudStatus::OtherThread;
-        if (!isReady) return BeforeHudStatus::NotReady;
-        if (!sample.HasTarget || width == 0 || height == 0) return BeforeHudStatus::TargetMismatch;
-        if (!sample.IsSameDevice) return BeforeHudStatus::OtherDevice;
-        if (!sample.IsBackBuffer) return BeforeHudStatus::NotBackBuffer;
-        if (sample.Width != width || sample.Height != height) return BeforeHudStatus::TargetMismatch;
+        return FindTargetBlocker(sample, isReady, width, height, false);
+    }
 
-        const bool isWholeTarget{ sample.HasViewport && sample.ViewportX == 0.0f && sample.ViewportY == 0.0f &&
-            sample.ViewportWidth == static_cast<float>(width) && sample.ViewportHeight == static_cast<float>(height) };
-        if (!isWholeTarget) return BeforeHudStatus::SplitViewport;
-
-        return std::nullopt;
+    auto RenderService::FindSceneBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
+        -> std::optional<BeforeHudStatus>
+    {
+        return FindTargetBlocker(sample, isReady, width, height, true);
     }
 
     auto RenderService::OnHudDraw() -> void
@@ -896,6 +919,14 @@ namespace Engine::Render::System
         frame.Width = sample.Width;
         frame.Height = sample.Height;
 
+        const BeforeHudStatus status{ this->RunBeforeHudHandlers(frame, context) };
+
+        if (status != BeforeHudStatus::Declined) m_RenderStore.SetDrawPlace(DrawPlace::Hud);
+        m_RenderStore.SetBeforeHudStatus(status);
+    }
+
+    auto RenderService::RunBeforeHudHandlers(const FrameContext& frame, ID3D11DeviceContext* context) -> BeforeHudStatus
+    {
         bool isDrawn{ false };
         bool isFailed{ false };
 
@@ -910,7 +941,7 @@ namespace Engine::Render::System
                 }
                 catch (...)
                 {
-                    // The handler may have drawn part of the frame: it counts as handled, so Present does not draw it again.
+                    // The handler may have drawn part of the frame: it counts as handled, so nobody draws it again.
                     isFailed = true;
                     this->ReportHandlerError("OnBeforeHud");
                 }
@@ -918,10 +949,78 @@ namespace Engine::Render::System
         }
 
         if (isDrawn || isFailed) m_RenderStore.MarkBeforeHud();
-        m_RenderStore.SetBeforeHudStatus(isFailed ? BeforeHudStatus::Failed : isDrawn ? BeforeHudStatus::Drawn : BeforeHudStatus::Declined);
+        return isFailed ? BeforeHudStatus::Failed : isDrawn ? BeforeHudStatus::Drawn : BeforeHudStatus::Declined;
+    }
+
+    auto RenderService::OnSceneDraw() -> void
+    {
+        try
+        {
+            this->HandleSceneDraw();
+        }
+        catch (...)
+        {
+            m_RenderStore.CountSceneFailure();
+        }
+    }
+
+    auto RenderService::HandleSceneDraw() -> void
+    {
+        if (!m_RenderStore.IsOverlayInSceneRequested() || m_RenderStore.IsBeforeHudMarked()) return;
+
+        const HudHookInfo sample{ this->MeasureBoundTarget() };
+
+        const bool isReady{ m_RenderStore.IsReady() && !m_RenderStore.IsResizing() && !m_RenderStore.IsShutdownRequested() };
+
+        if (const auto blocker{ RenderService::FindSceneBlocker(sample, isReady, m_RenderStore.GetWidth(), m_RenderStore.GetHeight()) })
+        {
+            m_RenderStore.SetSceneStatus(*blocker);
+            return;
+        }
+
+        // Only a call that passes the blocker (so on the Present thread) takes the point of the frame: a blocked call of another view
+        // does not use it up, and a later call of the main view can still draw.
+        if (!m_RenderStore.TakeSceneCall()) return;
+
+        ID3D11DeviceContext* context{ m_RenderStore.GetContext() };
+
+        ComPtr<ID3D11RenderTargetView> target{};
+        if (context != nullptr) context->OMGetRenderTargets(1, target.GetAddressOf(), nullptr);
+
+        if (context == nullptr || target == nullptr)
+        {
+            m_RenderStore.SetSceneStatus(BeforeHudStatus::NotReady);
+            return;
+        }
+
+        FrameContext frame{ this->MakeContext(true) };
+        frame.RenderTarget = target.Get();
+        frame.Width = sample.Width;
+        frame.Height = sample.Height;
+
+        const BeforeHudStatus status{ this->RunBeforeHudHandlers(frame, context) };
+        m_RenderStore.SetSceneStatus(status);
+
+        if (status == BeforeHudStatus::Declined) return;
+
+        m_RenderStore.SetDrawPlace(DrawPlace::Scene);
+
+        if (!m_IsSceneLogged)
+        {
+            const char* format{ FormatName(sample.Format) };
+            m_IsSceneLogged = true;
+            m_Log.Message("[RenderService] INFO: The overlay draws in the scene, target format {} ({}), {}x{}.", format != nullptr ? format : "unknown", sample.Format, sample.Width, sample.Height);
+        }
     }
 
     auto RenderService::MeasureHud() -> HudHookInfo
+    {
+        const HudHookInfo sample{ this->MeasureBoundTarget() };
+        m_RenderStore.SetHudSample(sample);
+        return sample;
+    }
+
+    auto RenderService::MeasureBoundTarget() -> HudHookInfo
     {
         HudHookInfo sample{};
         sample.HasSample = true;
@@ -931,7 +1030,6 @@ namespace Engine::Render::System
 
         if (!sample.IsSameThread || m_RenderStore.IsResizing() || !m_RenderStore.IsReady())
         {
-            m_RenderStore.SetHudSample(sample);
             return sample;
         }
 
@@ -939,7 +1037,6 @@ namespace Engine::Render::System
 
         if (context == nullptr)
         {
-            m_RenderStore.SetHudSample(sample);
             return sample;
         }
 
@@ -954,6 +1051,7 @@ namespace Engine::Render::System
             sample.HasTarget = true;
             sample.Width = color.Width;
             sample.Height = color.Height;
+            sample.SampleCount = color.SampleCount;
             sample.Format = color.ViewFormat != DXGI_FORMAT_UNKNOWN ? color.ViewFormat : color.ResourceFormat;
             sample.IsBackBuffer = color.IsBackBuffer;
             sample.IsSameDevice = color.IsSameDevice;
@@ -974,7 +1072,6 @@ namespace Engine::Render::System
             sample.ViewportHeight = viewport.Height;
         }
 
-        m_RenderStore.SetHudSample(sample);
         return sample;
     }
 
@@ -1205,7 +1302,8 @@ namespace Engine::Render::System
 
     auto RenderService::BeginColorMaskCopy(std::uint8_t phase) -> bool
     {
-        if (phase == k_ForwardDepthPhase || !m_RenderStore.IsFirstPersonMaskRequested()) return false;
+        if (phase == k_ForwardDepthPhase ||
+            !IsMaskPairWanted(m_RenderStore.IsFirstPersonMaskRequested(), m_RenderStore.IsOverlayInSceneRequested(), MaskPairKind::Color)) return false;
 
         ID3D11DeviceContext* context{ this->GetPresentContext() };
         if (context == nullptr) return false;
@@ -1231,14 +1329,14 @@ namespace Engine::Render::System
         const bool isDepth{ kind != MaskPairKind::Color };
         const std::optional<D3D11_TEXTURE2D_DESC> wanted{ m_RenderStore.GetMaskWantedDesc(kind == MaskPairKind::DepthZero ? MaskPairKind::DepthB : kind) };
 
-        switch (RenderService::PlanMask(m_RenderStore.IsFirstPersonMaskRequested(), wanted, m_RenderStore.IsMaskAttempted(kind),
+        switch (RenderService::PlanMask(IsMaskPairWanted(m_RenderStore.IsFirstPersonMaskRequested(), m_RenderStore.IsOverlayInSceneRequested(), kind), wanted, m_RenderStore.IsMaskAttempted(kind),
             m_RenderStore.GetMaskDesc(kind)))
         {
         case MaskPlan::Keep:
             return;
 
         case MaskPlan::Release:
-            m_RenderStore.ReleaseMaskTextures();
+            m_RenderStore.ReleaseMaskTextures(kind);
             return;
 
         case MaskPlan::Create:

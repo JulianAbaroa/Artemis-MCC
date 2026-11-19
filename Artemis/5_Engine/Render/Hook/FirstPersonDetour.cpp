@@ -13,6 +13,7 @@ namespace
     using Engine::Render::State::RenderStore;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::k_FirstPersonCallerRanges;
+    using Engine::Render::Type::k_ForwardDepthPhase;
     using Engine::Render::Type::k_IdleTimeout;
 
     using Engine::Base::Memory::Type::ObserverCamera::k_OverrideMaxAge;
@@ -119,7 +120,8 @@ namespace Engine::Render::Hook
         if (maskPair) self->m_RenderService.EndMaskCopy(*maskPair);
     }
 
-    // note: Measures for the probe and copies the render target 0 for the overlay mask (VW.6.y.2 E, the first call with a phase other than 0).
+    // note: Measures for the probe, copies the render target 0 for the overlay mask (VW.6.y.2 E, the first call with a phase other than 0) and,
+    // with phase 0, lets the overlay draw in the scene (VW.6.z, RenderService::OnSceneDraw) after those and before the original.
     // Without a probe armed or a mask requested the render service reads atomics and returns, so the original runs as if unhooked. The scope
     // spans the original, as in the other hooks.
     auto __fastcall FirstPersonDetour::HookedForward(void* view, std::uint8_t phase) -> void
@@ -133,6 +135,10 @@ namespace Engine::Render::Hook
         }
 
         RenderStore::HookScope scope{ self->m_RenderStore };
+
+        // note: The overlay draws here (VW.6.z): inside the frame, before the transparents, effects and HUD of the game. Before the copies
+        // of the probe, so both hold the overlay and the probe measures only what the game draws in the call.
+        if (phase == k_ForwardDepthPhase) self->m_RenderService.OnSceneDraw();
 
         const bool isMaskCopied{ self->m_RenderService.BeginColorMaskCopy(phase) };
         const std::optional<std::size_t> pair{ self->m_RenderService.BeginColorPair(phase) };

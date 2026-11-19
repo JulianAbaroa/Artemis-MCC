@@ -21,6 +21,7 @@ namespace
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
     using Engine::Base::Memory::Type::FrameClock::InterpolationState;
     using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::FormatName;
     using Engine::Render::Type::HudHookInfo;
     using Engine::Render::Type::MaskPairKind;
@@ -50,6 +51,29 @@ namespace
         case Mode::View:       return "View";
         default:               return "?";
         }
+    }
+
+    // return: The words the telemetry gives for why the overlay was not drawn at a point (the HUD draw or the scene).
+    auto BeforeHudReason(BeforeHudStatus status) -> const char*
+    {
+        switch (status)
+        {
+        case BeforeHudStatus::NoHudDraw:       return "no HUD draw in the frame";
+        case BeforeHudStatus::OtherThread:     return "draws on another thread";
+        case BeforeHudStatus::NotReady:        return "render target not ready";
+        case BeforeHudStatus::TargetMismatch:  return "target is not the size of the back buffer";
+        case BeforeHudStatus::NotBackBuffer:   return "target is not the back buffer";
+        case BeforeHudStatus::OtherDevice:     return "target is of another device";
+        case BeforeHudStatus::SplitViewport:   return "viewport is not the whole target (split screen)";
+        case BeforeHudStatus::HudHidden:       return "game HUD hidden";
+        case BeforeHudStatus::Declined:        return "Viewer declined (overlay off, no game camera or nothing to draw)";
+        case BeforeHudStatus::Multisampled:    return "target has more than one sample";
+        case BeforeHudStatus::NoSceneCall:     return "no forward pass call in the frame";
+        case BeforeHudStatus::Failed:          return "a handler failed, the frame was not redrawn";
+        case BeforeHudStatus::Drawn:           return "drawn";
+        }
+
+        return "?";
     }
 }
 
@@ -311,41 +335,43 @@ namespace DevTools::Viewer::Hud::System
 
     auto HudService::DrawOverlayPoint(bool isHooked) -> void
     {
-        ImGui::Text("Overlay drawn:");
+        ImGui::Text("draw:");
         ImGui::SameLine();
-
-        const BeforeHudStatus status{ m_RenderStore.GetBeforeHudStatus() };
 
         if (!isHooked)
         {
-            ImGui::TextColored(k_Orange, "at Present (HUD hook not installed)");
+            ImGui::TextColored(k_Orange, "present (HUD hook not installed)");
             return;
         }
 
-        if (status == BeforeHudStatus::Drawn)
+        const DrawPlace place{ m_RenderStore.GetDrawPlace() };
+        const bool isSceneOn{ m_RenderStore.IsOverlayInSceneRequested() };
+        const char* sceneReason{ BeforeHudReason(m_RenderStore.GetSceneStatus()) };
+        const char* hudReason{ BeforeHudReason(m_RenderStore.GetBeforeHudStatus()) };
+        const std::uint32_t failures{ m_RenderStore.GetSceneFailures() };
+
+        if (place == DrawPlace::Scene)
         {
-            ImGui::TextColored(k_Green, "before HUD");
-            return;
+            ImGui::TextColored(k_Green, "scene");
+        }
+        else if (place == DrawPlace::Hud)
+        {
+            if (isSceneOn) ImGui::TextColored(k_Orange, "hud (scene: %s)", sceneReason);
+            else ImGui::TextColored(k_Green, "hud");
+        }
+        else if (isSceneOn)
+        {
+            ImGui::TextColored(k_Info, "present (scene: %s; HUD: %s)", sceneReason, hudReason);
+        }
+        else
+        {
+            ImGui::TextColored(k_Info, "present (%s)", hudReason);
         }
 
-        const char* reason{ "?" };
+        if (failures == 0) return;
 
-        switch (status)
-        {
-        case BeforeHudStatus::NoHudDraw:       reason = "no HUD draw in the frame"; break;
-        case BeforeHudStatus::OtherThread:     reason = "HUD draws on another thread"; break;
-        case BeforeHudStatus::NotReady:        reason = "render target not ready"; break;
-        case BeforeHudStatus::TargetMismatch:  reason = "HUD target is not the size of the back buffer"; break;
-        case BeforeHudStatus::NotBackBuffer:   reason = "HUD target is not the back buffer"; break;
-        case BeforeHudStatus::OtherDevice:     reason = "HUD target is of another device"; break;
-        case BeforeHudStatus::SplitViewport:   reason = "viewport is not the whole target (split screen)"; break;
-        case BeforeHudStatus::HudHidden:       reason = "game HUD hidden"; break;
-        case BeforeHudStatus::Declined:        reason = "Viewer declined (overlay off, no game camera or nothing to draw)"; break;
-        case BeforeHudStatus::Failed:          reason = "a handler failed, the frame was not redrawn"; break;
-        default:                               break;
-        }
-
-        ImGui::TextColored(k_Info, "at Present (%s)", reason);
+        ImGui::SameLine();
+        ImGui::TextColored(k_Red, "scene failures %u", failures);
     }
 
     auto HudService::DrawHudHook() -> void
@@ -453,12 +479,17 @@ namespace DevTools::Viewer::Hud::System
             return;
         }
 
-        const auto yesNo = [this](MaskPairKind kind) { return m_RenderStore.WasMaskCopiedLastFrame(kind) ? "yes" : "no"; };
+        const bool isScene{ m_RenderStore.IsOverlayInSceneRequested() };
+        const auto yesNo = [this, isScene](MaskPairKind kind)
+        {
+            if (kind == MaskPairKind::Color && isScene) return "skipped (scene)";
+            return m_RenderStore.WasMaskCopiedLastFrame(kind) ? "yes" : "no";
+        };
         const auto window{ m_RenderStore.GetMaskWindowReport() };
         const auto desc{ m_RenderStore.GetMaskDesc(m_RenderStore.AreMaskTexturesReady(MaskPairKind::DepthB) ? MaskPairKind::DepthB : MaskPairKind::DepthZero) };
 
         const bool isAnyCopied{ m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthB) || m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::DepthZero) ||
-            m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::Color) };
+            (!isScene && m_RenderStore.WasMaskCopiedLastFrame(MaskPairKind::Color)) };
 
         ImGui::TextColored(isAnyCopied ? k_Green : k_Orange, "0xB %s / 0 %s / color %s", yesNo(MaskPairKind::DepthB), yesNo(MaskPairKind::DepthZero),
             yesNo(MaskPairKind::Color));
@@ -467,6 +498,14 @@ namespace DevTools::Viewer::Hud::System
         if (!window)
         {
             ImGui::TextColored(k_Info, "size %ux%u, measuring", desc.Width, desc.Height);
+            return;
+        }
+
+        if (isScene)
+        {
+            ImGui::TextColored(k_Info, "size %ux%u, no copy in %u frames: 0xB %u, 0 %u, color skipped, 0xB calls max %u", desc.Width, desc.Height,
+                window->Frames, window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthB)],
+                window->NoCopyFrames[static_cast<std::size_t>(MaskPairKind::DepthZero)], window->MaxPassCalls);
             return;
         }
 

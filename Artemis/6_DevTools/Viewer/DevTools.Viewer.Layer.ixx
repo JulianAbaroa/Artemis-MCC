@@ -93,6 +93,10 @@ export namespace DevTools::Viewer
                 engine.m_RenderStore.SetFirstPersonMaskRequested(m_OptionsStore.IsEnabled(Flag::FirstPersonOverOverlay) &&
                     m_OptionsStore.IsEnabled(Flag::Overlay));
 
+                // note: Drawing in the scene also drops the color mask pair, which that point cannot use (VW.6.z).
+                engine.m_RenderStore.SetOverlayInSceneRequested(m_OptionsStore.IsEnabled(Flag::OverlayInScene) &&
+                    m_OptionsStore.IsEnabled(Flag::Overlay));
+
                 // The 3D passes ran under the HUD of the game when the event marked the frame. Otherwise they run here, once.
                 if (!engine.m_RenderStore.IsBeforeHudMarked()) m_MapService.Render(frame);
 

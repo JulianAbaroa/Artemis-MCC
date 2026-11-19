@@ -95,6 +95,7 @@ export namespace DevTools::Viewer::Options::Type
         OverlayWireframe,
         FirstPersonOverOverlay,
         FirstPersonMaskShown,
+        OverlayInScene,
         HideGameHud,
         HideFirstPerson,
         DriveGameCamera,
@@ -367,6 +368,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::FirstPersonMaskShown, Group::Camera, "FirstPersonMaskShown", "Arms mask: show",
             "Debug: paints the pixels of the first person mask in red instead of skipping them, to see if the mask covers the arms. Needs Arms over overlay.", false },
+
+        { Flag::OverlayInScene, Group::Camera, "OverlayInScene", "Overlay in scene",
+            "Draws the overlay inside the frame of the game, before its transparents, effects and HUD, so smoke, the sword blade, spawn points, projectiles and shields show over the overlay. The overlay colors go through the exposure and tone mapping of the game. Off draws it before the HUD (or at Present) as before. Needs Overlay on the game frame.", true },
 
         { Flag::HideGameHud, Group::Camera, "HideGameHud", "Hide game HUD",
             "Skips the game's HUD passes. For clean captures.", false },

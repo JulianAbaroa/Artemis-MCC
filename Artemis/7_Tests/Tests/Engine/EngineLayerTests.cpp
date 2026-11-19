@@ -983,6 +983,134 @@ TEST(EngineLayerTests, BeforeHudDrawsOncePerPresentFrame)
     EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherThread);
 }
 
+TEST(EngineLayerTests, SceneBlockerTakesTheHdrTargetNotTheBackBuffer)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::HudHookInfo;
+
+    HudHookInfo sample{};
+    sample.HasSample = true;
+    sample.IsSameThread = true;
+    sample.HasTarget = true;
+    sample.IsBackBuffer = false;
+    sample.IsSameDevice = true;
+    sample.HasViewport = true;
+    sample.Width = 1920;
+    sample.Height = 1080;
+    sample.SampleCount = 1;
+    sample.ViewportWidth = 1920.0f;
+    sample.ViewportHeight = 1080.0f;
+
+    // The valid case: the target of the game is not the back buffer, but one sample and the size of the back buffer.
+    EXPECT_FALSE(RenderService::FindSceneBlocker(sample, true, 1920, 1080).has_value());
+    EXPECT_EQ(RenderService::FindBeforeHudBlocker(sample, true, 1920, 1080), BeforeHudStatus::NotBackBuffer);
+
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, false, 1920, 1080), BeforeHudStatus::NotReady);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1280, 720), BeforeHudStatus::TargetMismatch);
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 0, 0), BeforeHudStatus::TargetMismatch);
+
+    sample.SampleCount = 4;
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::Multisampled);
+    sample.SampleCount = 1;
+
+    sample.IsSameDevice = false;
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherDevice);
+    sample.IsSameDevice = true;
+
+    sample.ViewportWidth = 960.0f;
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
+    sample.ViewportWidth = 1920.0f;
+    sample.HasViewport = false;
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::SplitViewport);
+    sample.HasViewport = true;
+
+    sample.HasTarget = false;
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::TargetMismatch);
+    sample.HasTarget = true;
+
+    sample.IsSameThread = false;
+    EXPECT_EQ(RenderService::FindSceneBlocker(sample, true, 1920, 1080), BeforeHudStatus::OtherThread);
+}
+
+TEST(EngineLayerTests, SceneOptionDropsTheColorMaskPair)
+{
+    using Engine::Render::System::RenderService;
+    using Engine::Render::Type::IsMaskPairWanted;
+    using Engine::Render::Type::MaskPairKind;
+    using Engine::Render::Type::MaskPlan;
+
+    // Without the scene option the three pairs are wanted when the mask is.
+    EXPECT_TRUE(IsMaskPairWanted(true, false, MaskPairKind::DepthB));
+    EXPECT_TRUE(IsMaskPairWanted(true, false, MaskPairKind::DepthZero));
+    EXPECT_TRUE(IsMaskPairWanted(true, false, MaskPairKind::Color));
+
+    // With it the color pair is not wanted, the depth pairs are.
+    EXPECT_TRUE(IsMaskPairWanted(true, true, MaskPairKind::DepthB));
+    EXPECT_TRUE(IsMaskPairWanted(true, true, MaskPairKind::DepthZero));
+    EXPECT_FALSE(IsMaskPairWanted(true, true, MaskPairKind::Color));
+
+    // No mask, no pair.
+    EXPECT_FALSE(IsMaskPairWanted(false, false, MaskPairKind::DepthB));
+    EXPECT_FALSE(IsMaskPairWanted(false, true, MaskPairKind::DepthB));
+
+    // PlanMask with that answer: the color pair already made is released, and none is made.
+    D3D11_TEXTURE2D_DESC desc{};
+    desc.Width = 1920;
+    desc.Height = 1080;
+    desc.Format = DXGI_FORMAT_R11G11B10_FLOAT;
+    desc.SampleDesc.Count = 1;
+    const std::optional<D3D11_TEXTURE2D_DESC> wanted{ desc };
+
+    const bool isColorWantedSceneOn{ IsMaskPairWanted(true, true, MaskPairKind::Color) };
+    const bool isColorWantedSceneOff{ IsMaskPairWanted(true, false, MaskPairKind::Color) };
+    EXPECT_EQ(RenderService::PlanMask(isColorWantedSceneOn, wanted, true, desc), MaskPlan::Release);
+    EXPECT_EQ(RenderService::PlanMask(isColorWantedSceneOn, wanted, false, {}), MaskPlan::Keep);
+    EXPECT_EQ(RenderService::PlanMask(isColorWantedSceneOff, wanted, false, {}), MaskPlan::Create);
+    EXPECT_EQ(RenderService::PlanMask(isColorWantedSceneOff, wanted, true, desc), MaskPlan::Keep);
+}
+
+TEST(EngineLayerTests, SceneDrawPlaceAndStatusAreOfTheLastCompletedFrame)
+{
+    using Engine::Render::State::RenderStore;
+    using Engine::Render::Type::BeforeHudStatus;
+    using Engine::Render::Type::DrawPlace;
+
+    RenderStore store{};
+
+    EXPECT_FALSE(store.IsOverlayInSceneRequested());
+    store.SetOverlayInSceneRequested(true);
+    EXPECT_TRUE(store.IsOverlayInSceneRequested());
+
+    // Only the first call of the Present frame takes the scene point.
+    EXPECT_TRUE(store.TakeSceneCall());
+    EXPECT_FALSE(store.TakeSceneCall());
+
+    store.SetSceneStatus(BeforeHudStatus::Drawn);
+    store.SetDrawPlace(DrawPlace::Scene);
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Present);
+    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::NoSceneCall);
+
+    store.NextPresentFrame();
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Scene);
+    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::Drawn);
+    EXPECT_TRUE(store.TakeSceneCall());
+
+    // The next frame starts at Present with no scene call, and the HUD can take the place.
+    store.SetSceneStatus(BeforeHudStatus::SplitViewport);
+    store.SetDrawPlace(DrawPlace::Hud);
+    store.NextPresentFrame();
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Hud);
+    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::SplitViewport);
+    store.NextPresentFrame();
+    EXPECT_EQ(store.GetDrawPlace(), DrawPlace::Present);
+    EXPECT_EQ(store.GetSceneStatus(), BeforeHudStatus::NoSceneCall);
+
+    EXPECT_EQ(store.GetSceneFailures(), 0u);
+    store.CountSceneFailure();
+    EXPECT_EQ(store.GetSceneFailures(), 1u);
+}
+
 TEST(EngineLayerTests, RenderStoreHudFlagAndCallsPerFrame)
 {
     Engine::Render::State::RenderStore store{};

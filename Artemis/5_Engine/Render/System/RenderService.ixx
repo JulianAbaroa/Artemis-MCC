@@ -61,7 +61,9 @@ export namespace Engine::Render::System
         auto OnPostFrame(FrameHandler handler) -> void;     // every frame, after OnFrame
         auto OnResize(FrameHandler handler) -> void;        // after the targets are recreated
 
-        // Registers a handler that draws under the HUD of the game, called from the HUD draw before the original (VW.6.x B).
+        // Registers a handler that draws under the HUD of the game: called at the scene point (entry of the forward pass with phase 0,
+        // before the post, VW.6.z) when the option asks for it and the frame allows it, otherwise from the HUD draw before the original
+        // (VW.6.x B). At most once per frame.
         // note: Runs on the game render thread inside a GpuStateGuard. It returns whether it drew.
         auto OnBeforeHud(BeforeHudHandler handler) -> void;
 
@@ -98,6 +100,21 @@ export namespace Engine::Render::System
         // viewport 0 that is not the whole target.
         static auto FindBeforeHudBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
             -> std::optional<BeforeHudStatus>;
+
+        // return: Why the handlers must not run at the scene point, or nothing if they can. Same as FindBeforeHudBlocker, except that the
+        // bound target is the HDR target of the game: it need not be the back buffer but must be a texture of one sample and the size of the back
+        // buffer, so a view that is not the whole frame (split screen, another size) never draws in the scene.
+        static auto FindSceneBlocker(const HudHookInfo& sample, bool isReady, std::uint32_t width, std::uint32_t height)
+            -> std::optional<BeforeHudStatus>;
+
+        // Runs at the entry of each call of the forward pass 0x26EA78 with phase 0, before the original (VW.6.z): with Overlay in scene requested,
+        // the first call of the Present frame on the thread of Present, when nothing blocks it, runs the same handlers as OnHudDraw inside a
+        // GpuStateGuard, with the HDR target bound in slot 0 and the depth stencil of the store. What they draw is inside the frame of the game: the
+        // transparents, effects, blade and HUD of the game are drawn over it. A handler that drew marks the frame, so the HUD draw and Present do not
+        // draw again. When it does not run, everything stays as before (before the HUD, else at Present).
+        // note: Called by the first person detour on the game render thread. Nothing escapes: an exception is caught and counted
+        // (RenderStore::CountSceneFailure). Reads atomics and returns when the option is off.
+        auto OnSceneDraw() -> void;
 
         // Runs for each call of the first person model pass for user 0 while the probe is armed, before the original: reads the render
         // targets, depth stencil, viewport 0, depth stencil state and rasterizer state bound now, and keeps them in the slot of the caller.
@@ -210,6 +227,7 @@ export namespace Engine::Render::System
         std::vector<FrameHandler> m_OnPostFrame{};
         std::vector<FrameHandler> m_OnResize{};
         std::vector<BeforeHudHandler> m_OnBeforeHud{};
+        bool m_IsSceneLogged{ false };      // thread of Present only
         std::vector<ShutdownCallback> m_OnShutdown{};
 
         std::mutex m_ShutdownMutex{};
@@ -244,7 +262,17 @@ export namespace Engine::Render::System
         // The body of OnHudDraw. Exceptions are caught by the caller.
         auto HandleHudDraw() -> void;
 
-        // Reads the render target bound in slot 0 and the viewport into a sample, and stores it.
+        // The body of OnSceneDraw. Exceptions are caught by the caller.
+        auto HandleSceneDraw() -> void;
+
+        // Runs the before-HUD handlers inside a GpuStateGuard and marks the frame when one drew or threw (so nobody draws it again).
+        // return: Drawn, Failed (a handler threw) or Declined (none drew).
+        auto RunBeforeHudHandlers(const FrameContext& frame, ID3D11DeviceContext* context) -> BeforeHudStatus;
+
+        // Reads the render target bound in slot 0 and the viewport into a sample. Stores nothing.
+        auto MeasureBoundTarget() -> HudHookInfo;
+
+        // Same as MeasureBoundTarget, and stores the sample for the telemetry.
         auto MeasureHud() -> HudHookInfo;
 
         // At a HUD draw of an armed probe, once: copies the depth stencil texture the first person model was drawn with to a staging texture,

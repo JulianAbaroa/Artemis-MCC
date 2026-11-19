@@ -45,7 +45,17 @@ export namespace Engine::Render::Type
         SplitViewport,      // viewport 0 is not the whole target (split screen)
         HudHidden,          // the game HUD is hidden (Hide game HUD)
         Declined,           // the handlers did not draw
+        Multisampled,       // (scene) the bound target has more than one sample
+        NoSceneCall,        // (scene) the forward pass was not called with phase 0 in the frame, or the option is off
         Failed              // a handler threw: the frame counts as handled, so Present does not draw it again
+    };
+
+    // Where the overlay was drawn in the last completed Present frame (VW.6.z).
+    enum class DrawPlace : std::uint8_t
+    {
+        Present,    // at Present, after the frame of the game (no earlier point drew it)
+        Hud,        // before the HUD of the game, after the post
+        Scene       // inside the frame, at the entry of the forward pass 0x26EA78 with phase 0
     };
 
     // The depth stencil view that was bound.
@@ -74,6 +84,7 @@ export namespace Engine::Render::Type
         std::uint32_t Width{ 0 };
         std::uint32_t Height{ 0 };
         std::uint32_t Format{ 0 };      // DXGI_FORMAT of the target view
+        std::uint32_t SampleCount{ 1 }; // samples of the target texture
         float ViewportX{ 0.0f }, ViewportY{ 0.0f }, ViewportWidth{ 0.0f }, ViewportHeight{ 0.0f };
         DepthTargetInfo Depth{};        // the depth stencil view bound at the draw (VW.6.y.2)
     };
@@ -143,6 +154,7 @@ export namespace Engine::Render::Type
         std::uint32_t Height{ 0 };
         std::uint32_t ResourceFormat{ 0 };  // DXGI_FORMAT of the texture
         std::uint32_t ViewFormat{ 0 };      // DXGI_FORMAT of the view (0 = same as the texture)
+        std::uint32_t SampleCount{ 1 };     // samples of the texture
     };
 
     struct ViewportInfo
@@ -463,6 +475,13 @@ export namespace Engine::Render::Type
     {
         if (isBound) return MaskSource::Bound;
         return isSaved ? MaskSource::Saved : MaskSource::None;
+    }
+
+    // return: Whether a pair is wanted. The color pair is the one of the forward pass phase 1, drawn after the scene point, so with the overlay
+    // drawn in the scene (VW.6.z) it is not wanted.
+    constexpr auto IsMaskPairWanted(bool isMaskRequested, bool isSceneRequested, MaskPairKind kind) -> bool
+    {
+        return isMaskRequested && !(isSceneRequested && kind == MaskPairKind::Color);
     }
 
     // One pair of copies of the mask for the overlay. Without IsValid the pair is not used.
