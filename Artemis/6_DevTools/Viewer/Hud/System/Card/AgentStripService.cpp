@@ -27,9 +27,8 @@ namespace
     // Margin from the top of the frame, in pixels at text scale 1.
     constexpr float k_StripMargin{ 16.0f };
 
-    // Opacity of the neighbours, and size of the position text relative to the names.
+    // Opacity of the neighbours.
     constexpr float k_DimAlpha{ 0.55f };
-    constexpr float k_PositionScale{ 0.75f };
 
     // Draws the name of a player in its team color, with (dead) when it has no body. The current one goes between brackets.
     auto DrawName(const RosterEntry& entry, bool isCurrent) -> void
@@ -84,8 +83,8 @@ namespace DevTools::Viewer::Hud::System
                 ImGui::TextDisabled(">");
             }
 
+            // note: The position keeps the scale of the names: a smaller font sat high on the line and was hard to read.
             ImGui::SameLine();
-            ImGui::SetWindowFontScale(scale * k_PositionScale);
             ImGui::TextDisabled("%zu / %zu", strip.Current + 1, roster.size());
         }
 

@@ -143,13 +143,14 @@ namespace DevTools::Viewer::Control::System
             return true;
         }
 
-        case VK_LEFT:
-        case VK_RIGHT:
+        case VK_UP:
+        case VK_DOWN:
         {
-            // Not viewer keys while the viewer is off or the menu is open. A held key asks for one step only.
+            // Up is the next player and down the previous one, as in the theater (D348). Not viewer keys while the viewer is off or the menu
+            // is open. A held key asks for one step only.
             if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible()) return false;
 
-            if (!IsKeyRepeat(message)) m_SelectionStore.RequestStep(message.WParam == VK_RIGHT ? 1 : -1);
+            if (!IsKeyRepeat(message)) m_SelectionStore.RequestStep(message.WParam == VK_UP ? 1 : -1);
             return true;
         }
 

@@ -10,8 +10,8 @@ import std;
 export namespace DevTools::Viewer::Control::System
 {
     // Turns window messages and raw mouse movement into viewer actions.
-    // F4 toggles the viewer, TAB switches between the Free and the Game mode, F6 toggles the labels and the left and right arrows ask for the
-    // previous and next player of the roster (VW.9b), in both modes.
+    // F4 toggles the viewer, TAB switches between the Free and the Game mode, F6 toggles the labels and the up and down arrows ask for the
+    // next and previous player of the roster (VW.9b), in both modes.
     // In Free mode the viewer takes the movement keys, Ctrl (custom speed), the left click (pick),
     // the right click (zoom), the wheel (speed and field of view) and the mouse.
     // In Game mode it takes nothing but its own hotkeys, so the game keeps its controls.

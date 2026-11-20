@@ -7,7 +7,7 @@ import std;
 
 export namespace DevTools::Viewer::Hud::System
 {
-    // Draws the strip with the previous, current and next player of the roster at the top center of the game frame (VW.9b). The left and right arrows
+    // Draws the strip with the previous, current and next player of the roster at the top center of the game frame (VW.9b). The up and down arrows
     // step along that roster.
     class AgentStripService
     {
