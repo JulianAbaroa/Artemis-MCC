@@ -109,6 +109,10 @@
     <ClCompile Include="Blam\RaycasterTests.cpp" />
     <ClCompile Include="Engine\TickProducerTests.cpp" />
     <ClCompile Include="Viewer\OptionsStoreTests.cpp" />
+    <ClCompile Include="Viewer\RosterOrderTests.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Roster\Type\DevTools.Viewer.Roster.Type.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.cpp" />
     <ClCompile Include="Viewer\SelectionStoreTests.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.cpp" />

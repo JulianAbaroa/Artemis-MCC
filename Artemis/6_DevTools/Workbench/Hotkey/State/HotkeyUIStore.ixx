@@ -29,12 +29,14 @@ export namespace DevTools::Workbench::Hotkey::State
 
     private:
         static constexpr std::uint32_t k_VkTab{ 0x09 };
+        static constexpr std::uint32_t k_VkLeft{ 0x25 };
+        static constexpr std::uint32_t k_VkRight{ 0x27 };
         static constexpr std::uint32_t k_VkF2{ 0x71 };
         static constexpr std::uint32_t k_VkF3{ 0x72 };
         static constexpr std::uint32_t k_VkF4{ 0x73 };
         static constexpr std::uint32_t k_VkF6{ 0x75 };
 
-        const std::array<Binding, 12> m_Bindings
+        const std::array<Binding, 14> m_Bindings
         { {
             { Action::ToggleLauncher, Scope::UI, k_VkF2, false,
                 "Toggle Launcher", "F2", "Show or hide the launcher." },
@@ -47,6 +49,12 @@ export namespace DevTools::Workbench::Hotkey::State
 
             { Action::None, Scope::Viewer, k_VkTab, false,
                 "Switch Viewer Mode", "TAB", "Alternates between the free camera and the game camera while the Viewer is active." },
+
+            { Action::None, Scope::Viewer, k_VkLeft, false,
+                "Previous Player", "LEFT ARROW", "Selects the previous player of the roster (by team, humans by name, then bots by number) while the Viewer is active." },
+
+            { Action::None, Scope::Viewer, k_VkRight, false,
+                "Next Player", "RIGHT ARROW", "Selects the next player of the roster (by team, humans by name, then bots by number) while the Viewer is active." },
 
             { Action::None, Scope::Viewer, k_VkF6, false,
                 "Toggle Labels", "F6", "Show or hide the 3D labels over the map." },

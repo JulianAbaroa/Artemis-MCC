@@ -16,6 +16,21 @@ namespace
     constexpr std::uint32_t k_Player{ 0x00010003 };
 }
 
+TEST(SelectionStoreTests, StepRequestsAddUpAndAreConsumedOnce)
+{
+    SelectionStore store{};
+    EXPECT_EQ(store.ConsumeStep(), 0);
+
+    store.RequestStep(1);
+    store.RequestStep(1);
+    store.RequestStep(-1);
+    EXPECT_EQ(store.ConsumeStep(), 1);
+    EXPECT_EQ(store.ConsumeStep(), 0);
+
+    store.RequestStep(-1);
+    EXPECT_EQ(store.ConsumeStep(), -1);
+}
+
 TEST(SelectionStoreTests, ThereIsNoSelectionAtFirst)
 {
     SelectionStore store{};

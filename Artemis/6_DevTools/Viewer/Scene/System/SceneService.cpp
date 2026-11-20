@@ -3,6 +3,7 @@ module DevTools.Viewer.Scene.System;
 import Common.Engine.Type;
 import Common.Math.System;
 import Engine.Base.Pov.System;
+import Engine.Control.Simulation.Type;
 import Blam.MapModel.Definitions.Type;
 import Perception.Entities.Type;
 import Perception.ObjectGraph.Type;
@@ -10,6 +11,8 @@ import Perception.Players.Type;
 import Views.View.System;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Collidable.Type;
+import DevTools.Viewer.Roster.Type;
+import DevTools.Viewer.Roster.System;
 import DevTools.Viewer.Selection.State;
 import std;
 
@@ -27,7 +30,12 @@ namespace
     using Views::View::System::ViewPositionOf;
 
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Roster::System::IndexOfPlayer;
+    using DevTools::Viewer::Roster::System::SortRoster;
+    using DevTools::Viewer::Roster::System::StepFrom;
+    using DevTools::Viewer::Roster::Type::RosterEntry;
 
+    using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_NoHandle;
 
     // return: The first biped on the chain of parents of the object (the object itself included) in the graph of the tick, none when there is
@@ -170,6 +178,7 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::Deactivate() -> void
     {
         m_Scene.reset();
+        m_Roster.clear();
         m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
         m_PovRequestStore.Clear();
@@ -189,6 +198,10 @@ namespace DevTools::Viewer::Scene::System
         const bool acceptInput = !m_SettingsStore.IsMenuVisible();
         m_CameraService.Update(tick, viewport, acceptInput);
 
+        // The steps go before the follow, so the same frame already watches the new player.
+        m_Roster = tick ? this->BuildRoster(*tick) : std::vector<RosterEntry>{};
+        this->StepSelection(m_SelectionService.ConsumeStep(), tick);
+
         // note: The watched player is the one the selection follows, else the local player.
         m_ObservedStore.Set(this->FollowSelectedPlayer(tick));
 
@@ -199,6 +212,51 @@ namespace DevTools::Viewer::Scene::System
         m_SelectionService.Update(m_CameraService.GetCenterRay(), ShareObjects(scene));
 
         m_IsFrameUpdated = m_CameraService.HasRenderPose();
+    }
+
+    auto SceneService::BuildRoster(const Tick& tick) -> std::vector<RosterEntry>
+    {
+        std::vector<RosterEntry> roster{};
+        if (!tick.Players) return roster;
+
+        m_BotStore.CopyBots(m_Bots);
+        roster.reserve(tick.Players->Rows.size());
+
+        for (const Player& player : tick.Players->Rows)
+        {
+            const std::size_t index{ player.Handle & k_HandleIndexMask };
+            const auto bot{ std::ranges::find(m_Bots, index, &Bot::PlayerIndex) };
+
+            roster.push_back(RosterEntry{
+                .Handle = player.Handle,
+                .BipedHandle = player.BipedHandle,
+                .Name = player.Name,
+                .Team = player.Team,
+                .BotNumber = bot != m_Bots.end() ? std::optional<std::size_t>{ bot->Number } : std::nullopt,
+                .IsAlive = player.IsAlive() });
+        }
+
+        SortRoster(roster);
+        return roster;
+    }
+
+    auto SceneService::StepSelection(int delta, const std::shared_ptr<const Tick>& tick) -> void
+    {
+        if (delta == 0 || m_Roster.empty() || !tick || !tick->Players) return;
+
+        // The player of the selection, found by its biped when the selection came from a pick. A selection that is not a player starts at the end.
+        std::uint32_t current{ m_SelectionService.GetSelectedPlayer() };
+        if (current == k_NoHandle) current = ObservedPlayerOf(*tick->Players, m_SelectionService.GetSelected());
+
+        const std::optional<std::size_t> next{ StepFrom(m_Roster.size(), IndexOfPlayer(m_Roster, current), delta) };
+        if (!next) return;
+
+        m_SelectionService.Follow(m_Roster[*next].Handle, m_Roster[*next].BipedHandle);
+    }
+
+    auto SceneService::GetRoster() const -> const std::vector<RosterEntry>&
+    {
+        return m_Roster;
     }
 
     auto SceneService::FollowSelectedPlayer(const std::shared_ptr<const Tick>& tick) -> std::uint32_t
@@ -248,6 +306,7 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::Reset() -> void
     {
         m_Scene.reset();
+        m_Roster.clear();
         m_IsFrameUpdated = false;
         m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);

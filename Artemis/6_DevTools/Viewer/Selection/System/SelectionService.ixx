@@ -38,6 +38,9 @@ export namespace DevTools::Viewer::Selection::System
         // Selects a player and its current biped (VW.9a B6).
         auto Follow(std::uint32_t playerHandle, std::uint32_t bipedHandle) -> void;
 
+        // return: The roster steps asked since the last call (SelectionStore::ConsumeStep).
+        auto ConsumeStep() -> int;
+
         auto Clear() -> void;
 
         // Drops the cached boxes. The next update rebuilds them.

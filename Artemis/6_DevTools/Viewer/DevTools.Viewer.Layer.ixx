@@ -65,6 +65,7 @@ export namespace DevTools::Viewer
         using HudService = DevTools::Viewer::Hud::System::HudService;
         using LabelService = DevTools::Viewer::Hud::System::LabelService;
         using AgentCardService = DevTools::Viewer::Hud::System::AgentCardService;
+        using AgentStripService = DevTools::Viewer::Hud::System::AgentStripService;
         using InspectorService = DevTools::Viewer::Inspector::System::InspectorService;
 
     public:
@@ -78,7 +79,7 @@ export namespace DevTools::Viewer
             m_SelectionService(m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService,
-                engine.m_RenderStore, engine.m_PovRequestStore),
+                engine.m_RenderStore, engine.m_PovRequestStore, engine.m_BotStore),
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
@@ -86,6 +87,7 @@ export namespace DevTools::Viewer
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
             m_AgentCardService(m_CollidableStore, m_SceneService, m_OptionsStore, m_SelectionStore, engine.m_BotStore),
+            m_AgentStripService(m_SceneService, m_OptionsStore, m_SelectionStore),
             m_InspectorService(m_SceneService, m_CollidableStore, m_SelectionStore, engine.m_PlayerActionStore, engine.m_BotStore)
         {
             auto& lifecycle = engine.m_LifecycleService;
@@ -137,11 +139,12 @@ export namespace DevTools::Viewer
 
                 if (!gui.m_BackendGuiService.IsReady()) return;
 
-                // The card has the gate of the labels: the same scene update, so never the data of another frame.
+                // The card and the strip have the gate of the labels: the same scene update, so never the data of another frame.
                 if (isSceneUpdated)
                 {
                     m_LabelService.Draw();
                     m_AgentCardService.Draw();
+                    m_AgentStripService.Draw();
                 }
 
                 m_HudService.Draw();
@@ -201,6 +204,7 @@ export namespace DevTools::Viewer
         HudService m_HudService;
         LabelService m_LabelService;
         AgentCardService m_AgentCardService;
+        AgentStripService m_AgentStripService;
         InspectorService m_InspectorService;
     };
 }

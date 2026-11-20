@@ -33,6 +33,11 @@ namespace DevTools::Viewer::Selection::System
         m_SelectionStore.Follow(playerHandle, bipedHandle);
     }
 
+    auto SelectionService::ConsumeStep() -> int
+    {
+        return m_SelectionStore.ConsumeStep();
+    }
+
     auto SelectionService::Clear() -> void
     {
         m_SelectionStore.Clear();

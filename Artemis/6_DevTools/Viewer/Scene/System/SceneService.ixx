@@ -4,6 +4,8 @@ import Common.Math.Type;
 import Services.Observed.State;
 import Services.Settings.State;
 import Engine.Base.Memory.Type;
+import Engine.Control.Simulation.Type;
+import Engine.Control.Simulation.State;
 import Engine.Base.Pov.Type;
 import Engine.Base.Pov.State;
 import Engine.Render.State;
@@ -16,6 +18,7 @@ import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Palette.System;
+import DevTools.Viewer.Roster.Type;
 import DevTools.Viewer.Selection.System;
 import std;
 
@@ -41,14 +44,18 @@ export namespace DevTools::Viewer::Scene::System
         using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
+        using Bot = Engine::Control::Simulation::Type::Bot;
+        using BotStore = Engine::Control::Simulation::State::BotStore;
+        using RosterEntry = DevTools::Viewer::Roster::Type::RosterEntry;
         using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
         using PaletteService = DevTools::Viewer::Palette::System::PaletteService;
 
     public:
         SceneService(SettingsStore& settingsStore, ObservedPlayerStore& observedStore, CameraStore& cameraStore,
-            CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore, PovRequestStore& povRequestStore) :
+            CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore, PovRequestStore& povRequestStore,
+            const BotStore& botStore) :
             m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_CameraStore(cameraStore),
-            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore), m_PovRequestStore(povRequestStore) {}
+            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore), m_PovRequestStore(povRequestStore), m_BotStore(botStore) {}
         ~SceneService() = default;
 
         SceneService(const SceneService&) = delete;
@@ -62,6 +69,7 @@ export namespace DevTools::Viewer::Scene::System
         auto Deactivate() -> void;
 
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
+        // note: Builds the roster of the frame, applies the arrow steps asked since the last frame (VW.9b) and then follows the selected player.
         // note: The observed player of the Services (the one the AI thread gives a View) is the player of the selected biped, else the local player.
         // param scene: The scene acquired once for the frame (D294). It is kept as the scene of the last update.
         auto Update(const std::shared_ptr<const CollidableScene>& scene, const Viewport& viewport) -> void;
@@ -142,11 +150,23 @@ export namespace DevTools::Viewer::Scene::System
         auto GetSelected() const -> std::uint32_t;
         auto GetPalette() const -> const PaletteService&;
 
+        // return: Every player of the table of the frame scene, ordered by team, humans by name and then bots by number (VW.9b). Built once per update,
+        // empty without a tick. The arrows walk it and the strip draws from it.
+        auto GetRoster() const -> const std::vector<RosterEntry>&;
+
     private:
         std::unordered_set<std::uint32_t> m_Hidden{};
         std::shared_ptr<const CollidableScene> m_Scene{};
         FramePoses m_FramePoses{};
         bool m_IsFrameUpdated{ false };
+        std::vector<RosterEntry> m_Roster{};
+        std::vector<Bot> m_Bots{};
+
+        // return: The roster of the players of the tick, sorted.
+        auto BuildRoster(const Tick& tick) -> std::vector<RosterEntry>;
+
+        // Moves the selection to the player delta positions away in the roster, from the selected player or, with none, to the first or last.
+        auto StepSelection(int delta, const std::shared_ptr<const Tick>& tick) -> void;
 
         // Resolves the selection to a player (VW.9a B6) and rewrites the selected object as the current biped of that player.
         // return: The player the selection follows, or 0xFFFFFFFF: the selection is not a player, or the tick has no players (the follow is kept).
@@ -162,6 +182,7 @@ export namespace DevTools::Viewer::Scene::System
         SelectionService& m_SelectionService;
         const RenderStore& m_RenderStore;
         PovRequestStore& m_PovRequestStore;
+        const BotStore& m_BotStore;
 
         PaletteService m_PaletteService{};
     };

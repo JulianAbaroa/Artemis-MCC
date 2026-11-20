@@ -148,6 +148,15 @@
     <Filter Include="Scene\System">
       <UniqueIdentifier>{f4373108-8790-59f1-ac37-96bed769ca9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Roster">
+      <UniqueIdentifier>{9e7e7526-406e-44d0-8320-d1b0843fea06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Roster\System">
+      <UniqueIdentifier>{617f5bcd-4795-4425-a890-13af7e2d3245}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Roster\Type">
+      <UniqueIdentifier>{79d718ac-8041-4020-b6cc-49bba47d5708}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Selection">
       <UniqueIdentifier>{b6ad4ffa-0ada-5982-92c6-b538d36c0afa}</UniqueIdentifier>
     </Filter>
@@ -216,6 +225,12 @@
     </ClCompile>
     <ClCompile Include="Geometry\System\ZoneGeometry.ixx">
       <Filter>Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Card\AgentStripService.cpp">
+      <Filter>Hud\System\Card</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Card\AgentStripService.ixx">
+      <Filter>Hud\System\Card</Filter>
     </ClCompile>
     <ClCompile Include="Hud\System\Card\AgentCardService.cpp">
       <Filter>Hud\System\Card</Filter>
@@ -345,6 +360,15 @@
     </ClCompile>
     <ClCompile Include="Interpolation\Type\DevTools.Viewer.Interpolation.Type.ixx">
       <Filter>Interpolation\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Roster\System\RosterOrder.cpp">
+      <Filter>Roster\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Roster\System\RosterOrder.ixx">
+      <Filter>Roster\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Roster\Type\DevTools.Viewer.Roster.Type.ixx">
+      <Filter>Roster\Type</Filter>
     </ClCompile>
     <ClCompile Include="Scene\System\SceneService.cpp">
       <Filter>Scene\System</Filter>

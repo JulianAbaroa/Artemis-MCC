@@ -9,6 +9,7 @@ export import :InteractionLabels;
 export import :FixtureLabels;
 export import :Labels;
 export import :AgentCard;
+export import :AgentStrip;
 
 import Services.Telemetry.State;
 import Engine.Base.Pov.State;

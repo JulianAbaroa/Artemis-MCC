@@ -52,4 +52,14 @@ namespace DevTools::Viewer::Selection::State
     {
         return m_IsPickPending.exchange(false, std::memory_order_relaxed);
     }
+
+    auto SelectionStore::RequestStep(int delta) -> void
+    {
+        m_PendingSteps.fetch_add(delta, std::memory_order_relaxed);
+    }
+
+    auto SelectionStore::ConsumeStep() -> int
+    {
+        return m_PendingSteps.exchange(0, std::memory_order_relaxed);
+    }
 }

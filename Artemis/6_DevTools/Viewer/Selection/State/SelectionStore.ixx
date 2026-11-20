@@ -10,7 +10,7 @@ namespace
 
 export namespace DevTools::Viewer::Selection::State
 {
-    // Holds the selected object handle, the player it follows and the pending pick request.
+    // Holds the selected object handle, the player it follows and the pending pick and step requests.
     // The values are atomic because the input writes them and the render frame reads them.
     // note: Selecting the biped of a player follows the player (VW.9a B6): the object is the current biped of that player, which the scene service
     // rewrites at every update, and the player stays when the biped dies, respawns or is replaced.
@@ -41,9 +41,17 @@ export namespace DevTools::Viewer::Selection::State
         // return: True once per request.
         auto ConsumePick() -> bool;
 
+        // Asks the scene service to move the selected player by delta positions of the roster on its next update (VW.9b). Requests add up.
+        // note: Called from the window thread, consumed on the render thread.
+        auto RequestStep(int delta) -> void;
+
+        // return: The steps asked since the last call (negative goes back), and clears them.
+        auto ConsumeStep() -> int;
+
     private:
         std::atomic<std::uint32_t> m_Selected{ k_NoHandle };
         std::atomic<std::uint32_t> m_SelectedPlayer{ k_NoHandle };
         std::atomic<bool> m_IsPickPending{ false };
+        std::atomic<int> m_PendingSteps{ 0 };
     };
 }
