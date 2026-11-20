@@ -16,6 +16,7 @@ namespace
     using Engine::Base::Pov::System::DecidePovCall;
     using Engine::Base::Pov::System::IsPovOnOtherPlayer;
     using Engine::Base::Pov::System::NextAssigned;
+    using Engine::Base::Pov::System::ShouldAckLoadout;
     using Engine::Base::Pov::Type::PovRequest;
     using Engine::Base::Pov::Type::PovStatus;
     using Engine::Base::Pov::Type::k_PovRequestMaxAge;
@@ -23,6 +24,7 @@ namespace
     constexpr std::uint32_t k_Bot{ 0x00030001 };
     constexpr std::uint32_t k_Other{ 0x00040002 };
     constexpr std::uint32_t k_Local{ 0x00010000 };
+    constexpr std::array<std::uint32_t, 4> k_Controllers{ k_Local, k_NoHandle, k_NoHandle, k_NoHandle };
 }
 
 TEST(PovTests, AValidRequestDifferentFromTheViewIsAssigned)
@@ -239,4 +241,41 @@ TEST(PovTests, TheStatusStoreKeepsTheHandlesTheCountsAndTheInstalledFlag)
     EXPECT_EQ(status.Calls, 0u);
     EXPECT_EQ(status.Reasserts, 0u);
     EXPECT_EQ(status.Faults, 1u);
+}
+
+TEST(PovTests, TheStatusStoreCountsTheLoadoutAcksAndAnewRequestZeroesThem)
+{
+    PovStatusStore store{};
+    EXPECT_EQ(store.Read().LoadoutAcks, 0u);
+
+    store.CountLoadoutAck();
+    store.CountLoadoutAck();
+    EXPECT_EQ(store.Read().LoadoutAcks, 2u);
+
+    store.ResetCounts();
+    EXPECT_EQ(store.Read().LoadoutAcks, 0u);
+
+    store.CountLoadoutAck();
+    store.Reset();
+    EXPECT_EQ(store.Read().LoadoutAcks, 0u);
+}
+
+TEST(PovTests, ALoadoutIsAcknowledgedOnlyForAWatchedPlayerNoControllerOwnsWhenTheBytesDiffer)
+{
+    // A bot with a chosen loadout the UI has not acknowledged: yes.
+    EXPECT_TRUE(ShouldAckLoadout(k_Bot, k_Controllers, 2, 1));
+
+    // The player of a controller: the game marks it by itself.
+    EXPECT_FALSE(ShouldAckLoadout(k_Local, k_Controllers, 2, 1));
+
+    // Any of the four controllers.
+    const std::array<std::uint32_t, 4> last{ k_NoHandle, k_NoHandle, k_NoHandle, k_Bot };
+    EXPECT_FALSE(ShouldAckLoadout(k_Bot, last, 2, 1));
+
+    // No player.
+    EXPECT_FALSE(ShouldAckLoadout(k_NoHandle, k_Controllers, 2, 1));
+
+    // Equal bytes: nothing to write.
+    EXPECT_FALSE(ShouldAckLoadout(k_Bot, k_Controllers, 3, 3));
+    EXPECT_FALSE(ShouldAckLoadout(k_Bot, k_Controllers, 0, 0));
 }

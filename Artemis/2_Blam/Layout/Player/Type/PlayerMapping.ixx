@@ -15,6 +15,10 @@ export namespace Blam::Layout::Player::Type::Mapping
     // Player handle of every output user (uint32 by view index), or 0xFFFFFFFF without one.
     constexpr std::uintptr_t k_OutputUserPlayer{ 0xB8 };
 
+    // Player handle of every controller (uint32 by controller index, k_MaxLocalUsers of them), or 0xFFFFFFFF without one (VW.9a.x, D345).
+    // note: The controller is the one the UI of the loadout prompt works for: not the same array as the input users above.
+    constexpr std::uintptr_t k_ControllerPlayer{ 0x24 };
+
     // Bytes of one entry of the arrays above.
     constexpr std::uintptr_t k_EntryStride{ 0x4 };
 }

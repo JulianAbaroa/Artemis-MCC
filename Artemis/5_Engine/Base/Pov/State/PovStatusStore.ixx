@@ -32,10 +32,13 @@ export namespace Engine::Base::Pov::State
         // Counts a call of the engine function. A reassert is one made after the engine changed the view on its own.
         auto CountCall(bool isReassert) -> void;
 
+        // Counts a loadout acknowledgement written for the watched player.
+        auto CountLoadoutAck() -> void;
+
         // Counts a fault caught around the engine function.
         auto CountFault() -> void;
 
-        // Zeroes the calls and the reasserts: a request began.
+        // Zeroes the calls, the reasserts and the loadout acknowledgements: a request began.
         auto ResetCounts() -> void;
 
         auto SetInstalled(bool isInstalled) -> void;
@@ -52,6 +55,7 @@ export namespace Engine::Base::Pov::State
         std::atomic<std::uint32_t> m_Assigned{ k_NoHandle };
         std::atomic<std::uint32_t> m_Calls{ 0 };
         std::atomic<std::uint32_t> m_Reasserts{ 0 };
+        std::atomic<std::uint32_t> m_LoadoutAcks{ 0 };
         std::atomic<std::uint32_t> m_Faults{ 0 };
         std::atomic<bool> m_IsInstalled{ false };
     };

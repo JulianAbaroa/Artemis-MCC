@@ -264,8 +264,8 @@ namespace DevTools::Viewer::Hud::System
 
         const Player* player{ tick && tick->Players ? tick->Players->Find(status.RequestedHandle) : nullptr };
 
-        ImGui::TextColored(status.Faults == 0 ? k_Info : k_Red, "%s req 0x%08X engine 0x%08X local 0x%08X calls %u reasserts %u faults %u%s",
-            player ? player->Name.c_str() : "?", status.RequestedHandle, status.EngineHandle, status.LocalHandle, status.Calls, status.Reasserts, status.Faults,
+        ImGui::TextColored(status.Faults == 0 ? k_Info : k_Red, "%s req 0x%08X engine 0x%08X local 0x%08X calls %u reasserts %u loadout acks %u faults %u%s",
+            player ? player->Name.c_str() : "?", status.RequestedHandle, status.EngineHandle, status.LocalHandle, status.Calls, status.Reasserts, status.LoadoutAcks, status.Faults,
             m_SceneService.IsPovPlayerDead(status) ? " dead, HUD hidden" : "");
     }
 

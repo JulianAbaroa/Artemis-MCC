@@ -70,4 +70,12 @@ export namespace Blam::Layout::Player::Type::Offset
     // Game time (int32) at which the player picked up the red, blue and yellow powerup, one value each in that order. 0 for never or
     // deleted (the engine clears the three when the unit is released, that is, on death) (D263).
     constexpr std::uintptr_t k_PowerupPickupTicks{ 0x0300 };
+
+    // Loadout the player chose (uint8) (VW.9a.x, D345).
+    // note: The loadout prompt opens while it differs from k_LoadoutAcknowledged.
+    constexpr std::uintptr_t k_Loadout{ 0x3E0 };
+
+    // Loadout the UI has acknowledged (uint8) (VW.9a.x, D345).
+    // note: The engine sets it equal to k_Loadout when it opens the prompt, but on the player of the controller, not on the one of the view.
+    constexpr std::uintptr_t k_LoadoutAcknowledged{ 0x3E1 };
 }

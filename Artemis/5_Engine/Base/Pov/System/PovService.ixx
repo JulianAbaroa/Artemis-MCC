@@ -1,5 +1,6 @@
 export module Engine.Base.Pov.System;
 
+import Common.Engine.Type;
 import Common.Log.System;
 import Engine.Base.Memory.System;
 import Engine.Base.Pov.Type;
@@ -8,6 +9,8 @@ import std;
 
 namespace
 {
+    using Common::Engine::Type::k_MaxLocalUsers;
+
     using Engine::Base::Pov::Type::PovProbePlayerCopy;
     using Engine::Base::Pov::Type::PovProbePlayerState;
     using Engine::Base::Pov::Type::PovProbeReason;
@@ -40,6 +43,17 @@ export namespace Engine::Base::Pov::System
     // got there by the return call of this update or by itself (the request ended or became invalid with the engine already on local, or the request
     // is the local player). A call that set another player makes it the service's. Otherwise it is unchanged.
     auto NextAssigned(std::uint32_t previous, std::optional<std::uint32_t> assignedNow, std::uint32_t engineCurrent, std::uint32_t local) -> std::uint32_t;
+
+    // Decides whether the loadout of a watched player must be acknowledged (VW.9a.x, D345).
+    // param playerHandle: The player the view of user 0 shows, 0xFFFFFFFF when there is none.
+    // param controllerPlayers: The player of each controller (0xFFFFFFFF for an empty one).
+    // param chosen: The loadout the player chose (byte +0x3E0 of his datum).
+    // param acknowledged: The loadout the UI acknowledged (byte +0x3E1).
+    // return: True only for a player that is no controller's, when the two bytes differ. The engine acknowledges the loadout of the player of the
+    // controller by itself, never of the one a view shows: the prompt of the loadout would then open, close and open again for as long as the
+    // POV lasts.
+    auto ShouldAckLoadout(std::uint32_t playerHandle, const std::array<std::uint32_t, k_MaxLocalUsers>& controllerPlayers, std::uint8_t chosen,
+        std::uint8_t acknowledged) -> bool;
 
     // return: Whether the status says the view of user 0 shows a requested player that is not the local one.
     auto IsPovOnOtherPlayer(const Engine::Base::Pov::Type::PovStatus& status) -> bool;
@@ -91,7 +105,8 @@ export namespace Engine::Base::Pov::System
         // nothing when the service owns no view.
         auto Release(std::chrono::milliseconds timeout) -> void;
 
-        // Reads the request and the view of user 0 and assigns the player that DecidePovCall gives, if any. Publishes the status.
+        // Reads the request and the view of user 0 and assigns the player that DecidePovCall gives, if any. Publishes the status. While the view
+        // shows a requested player that no controller owns it also acknowledges his loadout (ShouldAckLoadout, one byte written in his datum).
         // param threadContext: The engine thread context of the game thread, 0 if there is none.
         // note: Game thread only, before the ticks of the frame. Does nothing without the function or without a readable player mapping.
         // It ends with the probe of VW.9a.x (TEMPORAL): while a POV is requested, or the player of the view of user 0 or of the input user 0 has

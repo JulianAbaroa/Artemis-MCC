@@ -25,6 +25,11 @@ namespace Engine::Base::Pov::State
         if (isReassert) m_Reasserts.fetch_add(1, std::memory_order_relaxed);
     }
 
+    auto PovStatusStore::CountLoadoutAck() -> void
+    {
+        m_LoadoutAcks.fetch_add(1, std::memory_order_relaxed);
+    }
+
     auto PovStatusStore::CountFault() -> void
     {
         m_Faults.fetch_add(1, std::memory_order_relaxed);
@@ -34,6 +39,7 @@ namespace Engine::Base::Pov::State
     {
         m_Calls.store(0, std::memory_order_relaxed);
         m_Reasserts.store(0, std::memory_order_relaxed);
+        m_LoadoutAcks.store(0, std::memory_order_relaxed);
     }
 
     auto PovStatusStore::Reset() -> void
@@ -41,6 +47,7 @@ namespace Engine::Base::Pov::State
         this->SetHandles(k_NoHandle, k_NoHandle, k_NoHandle, k_NoHandle);
         m_Calls.store(0, std::memory_order_relaxed);
         m_Reasserts.store(0, std::memory_order_relaxed);
+        m_LoadoutAcks.store(0, std::memory_order_relaxed);
         m_Faults.store(0, std::memory_order_relaxed);
         m_IsInstalled.store(false, std::memory_order_relaxed);
     }
@@ -59,6 +66,7 @@ namespace Engine::Base::Pov::State
             .AssignedHandle = m_Assigned.load(std::memory_order_relaxed),
             .Calls = m_Calls.load(std::memory_order_relaxed),
             .Reasserts = m_Reasserts.load(std::memory_order_relaxed),
+            .LoadoutAcks = m_LoadoutAcks.load(std::memory_order_relaxed),
             .Faults = m_Faults.load(std::memory_order_relaxed),
             .IsInstalled = m_IsInstalled.load(std::memory_order_relaxed) };
     }

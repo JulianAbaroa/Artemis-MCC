@@ -63,6 +63,9 @@ export namespace Engine::Base::Pov::Type
         // Calls made to show the requested player again after the engine changed the view on its own, since the request began.
         std::uint32_t Reasserts{};
 
+        // Loadout acknowledgements written for the watched player since the request began (VW.9a.x, D345).
+        std::uint32_t LoadoutAcks{};
+
         // Faults caught around the engine function since it was found (Install starts the count over).
         std::uint32_t Faults{};
 

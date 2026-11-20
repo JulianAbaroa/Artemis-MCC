@@ -15,6 +15,7 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_HandleIndexMask;
+    using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_SaltShift;
@@ -22,15 +23,19 @@ namespace
     using Blam::Layout::Object::Type::Constant::k_TelemetryDataPlayerTableOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextMappingOffset;
     using Blam::Layout::Object::Type::Constant::k_ThreadContextTelemetryDataOffset;
+    using Blam::Layout::Player::Type::Mapping::k_ControllerPlayer;
     using Blam::Layout::Player::Type::Mapping::k_EntryStride;
     using Blam::Layout::Player::Type::Mapping::k_InputUserPlayer;
     using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
     using Blam::Layout::Player::Type::Offset::k_Handle;
+    using Blam::Layout::Player::Type::Offset::k_Loadout;
+    using Blam::Layout::Player::Type::Offset::k_LoadoutAcknowledged;
     using Blam::Layout::Player::Type::Size::k_Base;
 
     using Engine::Base::Memory::Type::Signature::k_AssignOutputUserPrologue;
     using Engine::Base::Memory::Type::Signature::k_AssignOutputUserRva;
     using Engine::Base::Memory::Type::Signature::k_AssignOutputUserWindow;
+    using Engine::Base::Pov::System::ShouldAckLoadout;
     using Engine::Base::Pov::Type::PovAssignFunction;
     using Engine::Base::Pov::Type::PovRequest;
     using Engine::Base::Pov::Type::PovStatus;
@@ -563,6 +568,48 @@ namespace
         }
     }
 
+    // Acknowledges the loadout of a player of the table: writes the byte the UI reads (k_LoadoutAcknowledged) equal to the chosen one, when
+    // ShouldAckLoadout says so (VW.9a.x, D345). The handle is resolved here, at every call: no pointer is kept between ticks.
+    // return: Whether the byte was written. Guarded: the only access to engine memory that writes, one byte, the same mark the game makes for the
+    // player of a controller.
+    auto AckLoadout(std::uintptr_t threadContext, std::uint32_t handle) -> bool
+    {
+        const std::uint32_t index{ handle & k_HandleIndexMask };
+        const std::uint32_t salt{ handle >> k_SaltShift };
+        if (handle == k_NoHandle || salt == 0 || index >= k_MaxPlayers) return false;
+
+        __try
+        {
+            const std::uintptr_t mapping{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextMappingOffset) };
+            const std::uintptr_t telemetryData{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextTelemetryDataOffset) };
+            if (mapping == 0 || telemetryData == 0) return false;
+
+            const std::uintptr_t table{ *reinterpret_cast<const std::uintptr_t*>(telemetryData + k_TelemetryDataPlayerTableOffset) };
+            if (table == 0) return false;
+
+            std::array<std::uint32_t, k_MaxLocalUsers> controllerPlayers{};
+            for (std::size_t controller{ 0 }; controller < k_MaxLocalUsers; ++controller)
+            {
+                controllerPlayers[controller] = *reinterpret_cast<const std::uint32_t*>(mapping + k_ControllerPlayer + (controller * k_EntryStride));
+            }
+
+            // The entry must still be this player: the guard of the only write is checked here, with no engine code run in between.
+            const std::uintptr_t player{ table + (index * k_Base) };
+            if (*reinterpret_cast<const std::uint16_t*>(player + k_Handle) != salt) return false;
+
+            const std::uint8_t chosen{ *reinterpret_cast<const std::uint8_t*>(player + k_Loadout) };
+            const std::uint8_t acknowledged{ *reinterpret_cast<const std::uint8_t*>(player + k_LoadoutAcknowledged) };
+            if (!ShouldAckLoadout(handle, controllerPlayers, chosen, acknowledged)) return false;
+
+            *reinterpret_cast<std::uint8_t*>(player + k_LoadoutAcknowledged) = chosen;
+            return true;
+        }
+        __except (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)
+        {
+            return false;
+        }
+    }
+
     // return: False if the engine function faulted.
     auto CallAssign(PovAssignFunction assign, std::uint32_t handle) -> bool
     {
@@ -600,6 +647,13 @@ namespace Engine::Base::Pov::System
         if (local != k_NoHandle && viewAfter == local) return k_NoHandle;
         if (assignedNow) return *assignedNow;
         return previous;
+    }
+
+    auto ShouldAckLoadout(std::uint32_t playerHandle, const std::array<std::uint32_t, k_MaxLocalUsers>& controllerPlayers, std::uint8_t chosen,
+        std::uint8_t acknowledged) -> bool
+    {
+        if (playerHandle == k_NoHandle || chosen == acknowledged) return false;
+        return std::ranges::find(controllerPlayers, playerHandle) == controllerPlayers.end();
     }
 
     auto IsPovOnOtherPlayer(const PovStatus& status) -> bool
@@ -708,6 +762,13 @@ namespace Engine::Base::Pov::System
 
         const std::uint32_t assigned{ NextAssigned(previous.AssignedHandle, assignedNow, mapping.EngineHandle, mapping.LocalHandle) };
         m_StatusStore.SetHandles(requested.value_or(k_NoHandle), mapping.EngineHandle, mapping.LocalHandle, assigned);
+
+        // The engine view already shows a requested player that is not the local one (not on the tick that assigned it): the UI never
+        // acknowledges his loadout (D345), so this does.
+        if (isRequestedValid && mapping.EngineHandle == *requested && mapping.EngineHandle != mapping.LocalHandle && AckLoadout(threadContext, mapping.EngineHandle))
+        {
+            m_StatusStore.CountLoadoutAck();
+        }
     }
 
     auto PovService::Probe(std::uintptr_t threadContext) -> void
