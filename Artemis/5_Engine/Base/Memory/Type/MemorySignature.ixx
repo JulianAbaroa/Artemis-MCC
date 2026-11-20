@@ -366,4 +366,63 @@ export namespace Engine::Base::Memory::Type::Signature
 
     // Same rule for the view assignment.
     inline constexpr std::uint32_t k_AssignOutputUserWindow{ 0 };
+
+    // TEMPORAL VW.9a.x (PovProbe, deleted when VW.9a.x closes): the functions the probe hooks to log who moves the view of user 0 and what state
+    // changes when the watched player dies, besides the view assignment above (0x53D7C). Prologues read from haloreach.dll MD5
+    // 012f4079af9a8bb0f624c178af8e0753. The prologue of 0x53CA4 is the 14 bytes before its first relative call.
+    inline constexpr Signature k_ViewUnitPrologue
+    {
+        "ViewUnitPrologue",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56 41"
+    };
+
+    inline constexpr Signature k_PlayerUnitPrologue
+    {
+        "PlayerUnitPrologue",
+        "48 89 5C 24 08 57 48 83 EC 20 8B DA 8B F9"
+    };
+
+    inline constexpr Signature k_PlayerAssignUnitPrologue
+    {
+        "PlayerAssignUnitPrologue",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 54 41 55 41 56 41 57"
+    };
+
+    // The cursor candidate: a virtual void(this, uint32* p) that reads GetCursorPos on the window of the game. Not confirmed.
+    inline constexpr Signature k_CursorUpdatePrologue
+    {
+        "CursorUpdatePrologue",
+        "48 89 5C 24 18 48 89 74 24 20 55 57 41 56 48 8D 6C 24 C0 48 81 EC 40 01"
+    };
+
+    inline constexpr std::uint32_t k_ViewUnitRva{ 0x54070 };
+    inline constexpr std::uint32_t k_PlayerUnitRva{ 0x53CA4 };
+    inline constexpr std::uint32_t k_PlayerAssignUnitRva{ 0x45814 };
+    inline constexpr std::uint32_t k_CursorUpdateRva{ 0x2D2018 };
+
+    // Same rule for the probe functions: the prologue must begin exactly at the RVA.
+    inline constexpr std::uint32_t k_PovProbeWindow{ 0 };
+
+    // TEMPORAL VW.9a.x: fields of the snapshot of the probe, none confirmed beyond the read of the code. Inside the player mapping globals
+    // (*(thread context + 0x158)): the unit of every input user (uint32, +0x14), the count of the views (uint16, +0xB4), the unit of every
+    // view (uint32, +0xC8) and the views of every player index (uint8[16], +0xD8). The player handle of input and output users are
+    // k_InputUserPlayer and k_OutputUserPlayer of Blam.Layout.
+    inline constexpr std::uintptr_t k_ProbeMappingInputUnit{ 0x14 };
+    inline constexpr std::uintptr_t k_ProbeMappingViewCount{ 0xB4 };
+    inline constexpr std::uintptr_t k_ProbeMappingViewUnit{ 0xC8 };
+    inline constexpr std::uintptr_t k_ProbeMappingViewMask{ 0xD8 };
+    inline constexpr std::uint32_t k_ProbeMaskEntries{ 16 };
+
+    // A byte of the control globals (*(thread context + 0xD8)) the probe follows, next to the output user entries.
+    inline constexpr std::uintptr_t k_ProbeControlByte{ 0x94B };
+
+    // The structure at *(thread context + 0x188) the UI candidate 0x104F34 compares: three uint32 at (view + 0x8F) * 0xC.
+    inline constexpr std::uintptr_t k_ProbeThreadContextUi{ 0x188 };
+    inline constexpr std::uintptr_t k_ProbeUiViewBias{ 0x8F };
+    inline constexpr std::uintptr_t k_ProbeUiEntryStride{ 0xC };
+    inline constexpr std::uint32_t k_ProbeUiFields{ 3 };
+
+    // One uint32 per view in the game engine globals (*(thread context + 0x20)) that 0x104F34 sets to zero.
+    inline constexpr std::uintptr_t k_ProbeGameEngineViewValue{ 0x35C4 };
+    inline constexpr std::uintptr_t k_ProbeGameEngineViewStride{ 0x4 };
 }

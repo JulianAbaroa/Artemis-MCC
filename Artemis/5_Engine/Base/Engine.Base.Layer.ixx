@@ -18,6 +18,7 @@ import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
 import Engine.Base.Pov.State;
 import Engine.Base.Pov.System;
+import Engine.Base.Pov.Hook;
 
 export namespace Engine::Base
 {
@@ -56,9 +57,11 @@ export namespace Engine::Base
         using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using PresetService = Engine::Base::Preset::System::PresetService;
 
+        using PovProbeStore = Engine::Base::Pov::State::PovProbeStore;
         using PovRequestStore = Engine::Base::Pov::State::PovRequestStore;
         using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
         using PovService = Engine::Base::Pov::System::PovService;
+        using PovProbeDetours = Engine::Base::Pov::Hook::PovProbeDetours;
 
     public:
         explicit Layer(Services::Layer& service) :
@@ -70,7 +73,7 @@ export namespace Engine::Base
             m_MapVariantService(service.m_Log, m_MapVariantStore),
             m_MapVariantDecodeService(service.m_Log, m_AOBService),
             m_MatchSetupService(service.m_Log, m_LifecycleStore, m_MatchSetupStore, m_PresetService, m_MapVariantService),
-            m_PovService(service.m_Log, m_AOBService, m_PovRequestStore, m_PovStatusStore),
+            m_PovService(service.m_Log, m_AOBService, m_MemoryReaderService, m_PovRequestStore, m_PovStatusStore, m_PovProbeStore),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_OpenMapDetour(service.m_Log, m_AOBService, m_LifecycleService),
@@ -80,6 +83,7 @@ export namespace Engine::Base
             m_CanAcceptAnyJoinRequestDetour(service.m_Log, m_AOBService, m_LocalUserStore),
             m_SessionJoinCheckPatch(service.m_Log, m_AOBService, m_LocalUserStore),
             m_ObserverCameraDetour(service.m_Log, m_AOBService, m_CameraOverrideStore),
+            m_PovProbeDetours(service.m_Log, m_AOBService, m_PovProbeStore),
             m_FrameClockReader(m_MemoryReaderService, m_AOBService) {}
         ~Layer() = default;
 
@@ -96,6 +100,7 @@ export namespace Engine::Base
         CameraOverrideStore m_CameraOverrideStore{};
         PovRequestStore m_PovRequestStore{};
         PovStatusStore m_PovStatusStore{};
+        PovProbeStore m_PovProbeStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
@@ -119,6 +124,7 @@ export namespace Engine::Base
         CanAcceptAnyJoinRequestDetour m_CanAcceptAnyJoinRequestDetour;
         SessionJoinCheckPatch m_SessionJoinCheckPatch;
         ObserverCameraDetour m_ObserverCameraDetour;
+        PovProbeDetours m_PovProbeDetours;
         FrameClockReader m_FrameClockReader;
     };
 }

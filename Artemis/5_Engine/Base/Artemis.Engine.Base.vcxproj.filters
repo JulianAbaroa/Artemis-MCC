@@ -28,6 +28,9 @@
     <Filter Include="Pov">
       <UniqueIdentifier>{3ffbc611-01d7-4533-9f0f-2c8252708de6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pov\Hook">
+      <UniqueIdentifier>{5b0e2c47-3f1a-4d68-9a7e-c1d4f6a82b93}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Pov\State">
       <UniqueIdentifier>{286158c9-4ae0-4cb4-9672-b7c7479ea339}</UniqueIdentifier>
     </Filter>
@@ -319,8 +322,23 @@
     <ClCompile Include="Memory\State\CameraOverrideStore.cpp">
       <Filter>Memory\State</Filter>
     </ClCompile>
+    <ClCompile Include="Pov\Engine.Base.Pov.Hook.ixx">
+      <Filter>Pov</Filter>
+    </ClCompile>
     <ClCompile Include="Pov\Engine.Base.Pov.State.ixx">
       <Filter>Pov</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\Hook\PovProbeDetours.cpp">
+      <Filter>Pov\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\Hook\PovProbeDetours.ixx">
+      <Filter>Pov\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\State\PovProbeStore.cpp">
+      <Filter>Pov\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\State\PovProbeStore.ixx">
+      <Filter>Pov\State</Filter>
     </ClCompile>
     <ClCompile Include="Pov\State\PovRequestStore.cpp">
       <Filter>Pov\State</Filter>

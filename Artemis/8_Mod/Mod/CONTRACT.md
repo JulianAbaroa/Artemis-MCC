@@ -66,6 +66,7 @@ The check and the push are two steps, so observers must stay well under the 1 s 
 - Order of the engine callbacks: engine first, then the tools (Gui, Viewer, Workbench), then the pipeline.
 - The action source is connected before the action hook is installed.
 - The POV (VW.9a): `PovService::Install` goes in with the engine and `Release(250 ms)` then `Uninstall` run first in the unhook, before the hook of `SimulationTicksDetour` is removed (it goes last): on the game thread `Release` gives the view back at once, on the main thread it waits (up to 250 ms, then a WARNING and it goes on; more than the 100 ms the tick producer waits in `k_ReadTimeout` plus one frame, so a frame held by a full queue still gets to serve the return) for `Update`, which runs in the tick hook, to put the view of user 0 back on the local player.
+- PovProbe (TEMPORAL, VW.9a.x): `PovProbeDetours::Install` goes in after `PovService::Install` in `OnEngineInitialized`; `Uninstall` goes after `PovService::Uninstall` in `OnUnhook` and in the shutdown, like `ObserverCameraDetour`. It writes `[PovProbe]` log lines only while the Viewer requests a POV.
 
 ## Tests
 `TickProducerTests` in `Artemis.Tests` (RV.1) run `TickProducerAdapter` over the real `CaptureService` (fake memory), `BridgeService` (store with a fake region),

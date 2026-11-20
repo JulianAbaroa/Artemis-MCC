@@ -139,8 +139,11 @@ namespace Mod
             // The camera of the game is built by code of the game module too: its hook goes in and out with the engine.
             m_Base.m_ObserverCameraDetour.Install();
 
-            // The view assignment is called, not hooked, and it is code of the game module too.
+            // The view assignment is called, not hooked (hooked by the TEMPORARY PovProbe while VW.9a.x is open), and it is code of the game module too.
             m_Base.m_PovService.Install();
+
+            // TEMPORAL VW.9a.x: the probe that notes who moves the view of user 0 (it writes only while a POV is requested).
+            m_Base.m_PovProbeDetours.Install();
         });
 
         // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
@@ -152,6 +155,7 @@ namespace Mod
             // from another thread by the game thread in its next frames (the tick hook is removed last, below).
             m_Base.m_PovService.Release(k_PovReleaseTimeout);
             m_Base.m_PovService.Uninstall();
+            m_Base.m_PovProbeDetours.Uninstall();
             m_Base.m_ObserverCameraDetour.Uninstall();
             m_Render.m_FirstPersonDetour.Uninstall();
             m_Render.m_ChudDetour.Uninstall();
@@ -202,6 +206,7 @@ namespace Mod
     {
         m_Render.m_WndProcDetour.Uninstall();
         m_Render.m_GetRawInputDataDetour.Uninstall();
+        m_Base.m_PovProbeDetours.Uninstall();
         m_Base.m_ObserverCameraDetour.Uninstall();
 
         m_Render.m_RenderService.RequestShutdown();

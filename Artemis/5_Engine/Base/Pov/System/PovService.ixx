@@ -6,6 +6,11 @@ import Engine.Base.Pov.Type;
 import Engine.Base.Pov.State;
 import std;
 
+namespace
+{
+    using Engine::Base::Pov::Type::k_PovProbeDrainBatch;
+}
+
 export namespace Engine::Base::Pov::System
 {
     // Decides what to pass to the engine function that assigns the view of user 0 (VW.9a, D340).
@@ -43,15 +48,21 @@ export namespace Engine::Base::Pov::System
         using Log = Common::Log::System::Log;
 
         using AOBService = Engine::Base::Memory::System::AOBService;
+        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
         using PovAssignFunction = Engine::Base::Pov::Type::PovAssignFunction;
+        using PovProbeCursor = Engine::Base::Pov::Type::PovProbeCursor;
+        using PovProbeEvent = Engine::Base::Pov::Type::PovProbeEvent;
 
+        using PovProbeStore = Engine::Base::Pov::State::PovProbeStore;
         using PovRequestStore = Engine::Base::Pov::State::PovRequestStore;
         using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
 
     public:
-        PovService(Log& log, AOBService& aobService, PovRequestStore& requestStore, PovStatusStore& statusStore) :
-            m_Log(log), m_AOBService(aobService), m_RequestStore(requestStore), m_StatusStore(statusStore) {}
+        PovService(Log& log, AOBService& aobService, MemoryReaderService& reader, PovRequestStore& requestStore, PovStatusStore& statusStore,
+            PovProbeStore& probeStore) :
+            m_Log(log), m_AOBService(aobService), m_Reader(reader), m_RequestStore(requestStore), m_StatusStore(statusStore),
+            m_ProbeStore(probeStore) {}
         ~PovService() = default;
 
         PovService(const PovService&) = delete;
@@ -77,13 +88,17 @@ export namespace Engine::Base::Pov::System
         // Reads the request and the view of user 0 and assigns the player that DecidePovCall gives, if any. Publishes the status.
         // param threadContext: The engine thread context of the game thread, 0 if there is none.
         // note: Game thread only, before the ticks of the frame. Does nothing without the function or without a readable player mapping.
+        // It ends with the probe of VW.9a.x (TEMPORAL): while a POV is requested it writes to the log what the probe hooks noted and the state of
+        // the views when it changes ("[PovProbe]" lines). With no request it writes nothing. It never changes the game.
         auto Update(std::uintptr_t threadContext) -> void;
 
     private:
         Log& m_Log;
         AOBService& m_AOBService;
+        MemoryReaderService& m_Reader;
         PovRequestStore& m_RequestStore;
         PovStatusStore& m_StatusStore;
+        PovProbeStore& m_ProbeStore;
 
         std::atomic<PovAssignFunction> m_Assign{ nullptr };
 
@@ -99,5 +114,34 @@ export namespace Engine::Base::Pov::System
 
         // The engine function faulted: logs an ERROR once and forgets it, so the service stays off until the next Install.
         auto Disable() -> void;
+
+        // The view logic of Update, without the probe.
+        auto UpdateView(std::uintptr_t threadContext) -> void;
+
+        // TEMPORAL VW.9a.x: the probe. Game thread only.
+        auto Probe(std::uintptr_t threadContext) -> void;
+
+        // Writes one probe line through the limit of lines per second, counting the ones it drops.
+        auto ProbeEmit(const std::string& text) -> void;
+
+        // Writes the two loss counters ("ring lost" and "lines dropped") if they are not zero and starts them over.
+        auto ProbeFlushLosses() -> void;
+
+        // Forgets everything the probe kept (active flag, module ranges, last snapshot and cursor, counters), so nothing leaks into the next engine.
+        auto ProbeReset() -> void;
+
+        std::array<PovProbeEvent, k_PovProbeDrainBatch> m_ProbeEvents{};
+        std::string m_ProbeLastBody{};
+        PovProbeCursor m_ProbeLastCursor{};
+        std::uint64_t m_ProbeFrame{ 0 };
+        std::uint64_t m_ProbeModuleBase{ 0 };
+        std::uint64_t m_ProbeModuleSize{ 0 };
+        std::uint64_t m_ProbeOwnBase{ 0 };
+        std::uint64_t m_ProbeOwnSize{ 0 };
+        bool m_IsProbeRunning{ false };
+        std::chrono::steady_clock::time_point m_ProbeWindowStart{};
+        std::uint32_t m_ProbeLines{ 0 };
+        std::uint32_t m_ProbeLinesDropped{ 0 };
+        std::uint32_t m_ProbeRingLost{ 0 };
     };
 }

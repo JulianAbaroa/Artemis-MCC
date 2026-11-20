@@ -465,6 +465,25 @@ TEST(EngineLayerTests, PovServiceWithoutTheGameInstallsNothingAndDoesNothing)
     EXPECT_EQ(status.Faults, 0u);
 }
 
+TEST(EngineLayerTests, PovProbeDetoursWithoutTheGameInstallNothing)
+{
+    Services::Layer service{};
+    Engine::Base::Layer base{ service };
+
+    // No haloreach.dll in the process: no signature is found, nothing is hooked, and Uninstall of hooks that were never installed is a no-op.
+    EXPECT_FALSE(base.m_PovProbeDetours.Install());
+    base.m_PovProbeDetours.Uninstall();
+    EXPECT_FALSE(base.m_PovProbeStore.IsActive());
+
+    // An update with a request but no game does not turn the probe on, and nothing is left in the ring.
+    base.m_PovRequestStore.Publish(0x00030001);
+    base.m_PovService.Update(0);
+    EXPECT_FALSE(base.m_PovProbeStore.IsActive());
+
+    std::array<Engine::Base::Pov::Type::PovProbeEvent, 4> events{};
+    EXPECT_EQ(base.m_PovProbeStore.Drain(events).Count, 0u);
+}
+
 TEST(EngineLayerTests, SceneBlockerTakesTheHdrTargetOfTheGame)
 {
     using Engine::Render::System::RenderService;

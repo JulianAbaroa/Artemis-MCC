@@ -103,7 +103,12 @@
     <ClCompile Include="MapVariant\System\MapVariantDecodeService.cpp" />
     <ClCompile Include="MapVariant\System\MapVariantDecodeService.ixx" />
     <ClCompile Include="MapVariant\Type\Engine.Base.MapVariant.Type.ixx" />
+    <ClCompile Include="Pov\Engine.Base.Pov.Hook.ixx" />
     <ClCompile Include="Pov\Engine.Base.Pov.State.ixx" />
+    <ClCompile Include="Pov\Hook\PovProbeDetours.cpp" />
+    <ClCompile Include="Pov\Hook\PovProbeDetours.ixx" />
+    <ClCompile Include="Pov\State\PovProbeStore.cpp" />
+    <ClCompile Include="Pov\State\PovProbeStore.ixx" />
     <ClCompile Include="Pov\State\PovRequestStore.cpp" />
     <ClCompile Include="Pov\State\PovRequestStore.ixx" />
     <ClCompile Include="Pov\State\PovStatusStore.cpp" />
