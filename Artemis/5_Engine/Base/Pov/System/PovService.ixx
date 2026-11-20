@@ -10,14 +10,6 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_MaxLocalUsers;
-
-    using Engine::Base::Pov::Type::PovProbePlayerCopy;
-    using Engine::Base::Pov::Type::PovProbePlayerState;
-    using Engine::Base::Pov::Type::PovProbeReason;
-
-    using Engine::Base::Pov::Type::k_PovProbeDrainBatch;
-    using Engine::Base::Pov::Type::k_PovProbePlayerRoles;
-    using Engine::Base::Pov::Type::k_PovProbeStackTable;
 }
 
 export namespace Engine::Base::Pov::System
@@ -68,21 +60,15 @@ export namespace Engine::Base::Pov::System
         using Log = Common::Log::System::Log;
 
         using AOBService = Engine::Base::Memory::System::AOBService;
-        using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
 
         using PovAssignFunction = Engine::Base::Pov::Type::PovAssignFunction;
-        using PovProbeCursor = Engine::Base::Pov::Type::PovProbeCursor;
-        using PovProbeEvent = Engine::Base::Pov::Type::PovProbeEvent;
 
-        using PovProbeStore = Engine::Base::Pov::State::PovProbeStore;
         using PovRequestStore = Engine::Base::Pov::State::PovRequestStore;
         using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
 
     public:
-        PovService(Log& log, AOBService& aobService, MemoryReaderService& reader, PovRequestStore& requestStore, PovStatusStore& statusStore,
-            PovProbeStore& probeStore) :
-            m_Log(log), m_AOBService(aobService), m_Reader(reader), m_RequestStore(requestStore), m_StatusStore(statusStore),
-            m_ProbeStore(probeStore) {}
+        PovService(Log& log, AOBService& aobService, PovRequestStore& requestStore, PovStatusStore& statusStore) :
+            m_Log(log), m_AOBService(aobService), m_RequestStore(requestStore), m_StatusStore(statusStore) {}
         ~PovService() = default;
 
         PovService(const PovService&) = delete;
@@ -106,21 +92,16 @@ export namespace Engine::Base::Pov::System
         auto Release(std::chrono::milliseconds timeout) -> void;
 
         // Reads the request and the view of user 0 and assigns the player that DecidePovCall gives, if any. Publishes the status. While the view
-        // shows a requested player that no controller owns it also acknowledges his loadout (ShouldAckLoadout, one byte written in his datum).
+        // already shows a requested player that no controller owns it also acknowledges his loadout (ShouldAckLoadout, one byte written in his datum).
         // param threadContext: The engine thread context of the game thread, 0 if there is none.
         // note: Game thread only, before the ticks of the frame. Does nothing without the function or without a readable player mapping.
-        // It ends with the probe of VW.9a.x (TEMPORAL): while a POV is requested, or the player of the view of user 0 or of the input user 0 has
-        // no unit, it writes to the log what the probe hooks noted, the screens of the UI, the state of the views and of the two players when
-        // they change ("[PovProbe]" lines). Otherwise it writes nothing. It never changes the game.
         auto Update(std::uintptr_t threadContext) -> void;
 
     private:
         Log& m_Log;
         AOBService& m_AOBService;
-        MemoryReaderService& m_Reader;
         PovRequestStore& m_RequestStore;
         PovStatusStore& m_StatusStore;
-        PovProbeStore& m_ProbeStore;
 
         std::atomic<PovAssignFunction> m_Assign{ nullptr };
 
@@ -136,64 +117,5 @@ export namespace Engine::Base::Pov::System
 
         // The engine function faulted: logs an ERROR once and forgets it, so the service stays off until the next Install.
         auto Disable() -> void;
-
-        // The view logic of Update, without the probe.
-        auto UpdateView(std::uintptr_t threadContext) -> void;
-
-        // TEMPORAL VW.9a.x: the probe. Game thread only.
-        auto Probe(std::uintptr_t threadContext) -> void;
-
-        // Writes the lines of the events the hooks noted since the last update.
-        auto ProbeDrain(const std::string& tick) -> void;
-
-        // Gives the number of the stack of a screen creation, adding it to the table the first time.
-        // param isNew: Set to whether the stack was not known (its line must be written).
-        // return: The number from 1, or 0 when the stack has no frames or the table is full.
-        auto ProbeNoteStack(const PovProbeEvent& event, bool& isNew) -> std::uint32_t;
-
-        // Writes the "resp" line when the respawn state of the view player or of the local player changed more than the normal advance of the
-        // counters. param tickDelta: ticks since the last update.
-        auto ProbeResponse(const PovProbePlayerState& view, const PovProbePlayerState& local, const std::string& tick, std::uint32_t tickDelta) -> void;
-
-        // Writes one "pdiff" line per player (the view one and the local one, once if they are the same) with the words of its datum that changed
-        // since the last update.
-        auto ProbePlayerDiff(std::optional<std::uintptr_t> players, const PovProbePlayerState& view, const PovProbePlayerState& local,
-            const std::string& tick, std::uint32_t tickDelta) -> void;
-
-        // Writes one probe line through the limit of lines per second, counting the ones it drops.
-        // param isForced: Writes it past the limit (the line of a stack, which is written only once).
-        auto ProbeEmit(const std::string& text, bool isForced = false) -> void;
-
-        // Writes the loss counters ("ring lost", "create lost", "lines dropped" and the screen calls off the game thread) if they are not zero
-        // and starts them over.
-        auto ProbeFlushLosses() -> void;
-
-        // Forgets everything the probe kept (active flag, module ranges, last snapshot and cursor, counters), so nothing leaks into the next engine.
-        auto ProbeReset() -> void;
-
-        std::array<PovProbeEvent, k_PovProbeDrainBatch> m_ProbeEvents{};
-        std::string m_ProbeLastBody{};
-        PovProbeCursor m_ProbeLastCursor{};
-        std::uint64_t m_ProbeFrame{ 0 };
-        std::uint64_t m_ProbeModuleBase{ 0 };
-        std::uint64_t m_ProbeModuleSize{ 0 };
-        std::uint64_t m_ProbeOwnBase{ 0 };
-        std::uint64_t m_ProbeOwnSize{ 0 };
-        bool m_IsProbeRunning{ false };
-        std::chrono::steady_clock::time_point m_ProbeWindowStart{};
-        std::uint32_t m_ProbeLines{ 0 };
-        std::uint32_t m_ProbeLinesDropped{ 0 };
-        std::uint32_t m_ProbeRingLost{ 0 };
-        std::uint32_t m_ProbeCreateLost{ 0 };
-        std::uint32_t m_ProbeOffThread{ 0 };
-        PovProbeReason m_ProbeReason{ PovProbeReason::None };
-        std::array<std::uint64_t, k_PovProbeStackTable> m_ProbeStackHashes{};
-        std::size_t m_ProbeStackCount{ 0 };
-        bool m_IsProbeResponseKnown{ false };
-        PovProbePlayerState m_ProbeLastView{};
-        PovProbePlayerState m_ProbeLastLocal{};
-        std::string m_ProbeLastControllers{};
-        std::optional<std::uint32_t> m_ProbeLastTick{};
-        std::array<PovProbePlayerCopy, k_PovProbePlayerRoles> m_ProbeCopies{};
     };
 }
