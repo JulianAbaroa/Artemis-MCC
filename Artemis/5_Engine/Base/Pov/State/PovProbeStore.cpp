@@ -8,20 +8,42 @@ namespace
     using Engine::Base::Pov::Type::PovProbeCursor;
     using Engine::Base::Pov::Type::PovProbeDrain;
     using Engine::Base::Pov::Type::PovProbeEvent;
+    using Engine::Base::Pov::Type::PovProbeGoneScreen;
     using Engine::Base::Pov::Type::PovProbeKind;
+    using Engine::Base::Pov::Type::PovProbeScreen;
+    using Engine::Base::Pov::Type::PovProbeScreenField;
+    using Engine::Base::Pov::Type::PovProbeScreenSlot;
 
     using Engine::Base::Pov::Type::k_PovProbeMaxThis;
-    using Engine::Base::Pov::Type::k_PovProbeRingCapacity;
+    using Engine::Base::Pov::Type::k_PovProbeScreenFieldCount;
+    using Engine::Base::Pov::Type::k_PovProbeScreenMaxAge;
 
-    static_assert((k_PovProbeRingCapacity & (k_PovProbeRingCapacity - 1)) == 0, "The ring index is a mask: the capacity is a power of two.");
+    // A screen that is not in the table yet: every field counts as changed.
+    constexpr std::uint64_t k_AllFields{ (1ull << k_PovProbeScreenFieldCount) - 1 };
 
-    constexpr std::uint64_t k_RingMask{ k_PovProbeRingCapacity - 1 };
+    constexpr std::size_t k_VtableField{ static_cast<std::size_t>(PovProbeScreenField::Vtable) };
 
-    // Words of a slot: kind and thread id, the caller, the four arguments.
-    constexpr std::size_t k_WordMeta{ 0 };
-    constexpr std::size_t k_WordCaller{ 1 };
-    constexpr std::size_t k_WordArgs{ 2 };
-    constexpr std::uint32_t k_KindBits{ 8 };
+    // return: Whether the kind is a creation of a screen.
+    auto IsCreation(PovProbeKind kind) -> bool
+    {
+        return kind == PovProbeKind::ScreenCreate || kind == PovProbeKind::ScreenCreateAlt || kind == PovProbeKind::ScreenCreateEx;
+    }
+
+    // Puts a screen in a slot as a new one.
+    auto FillSlot(PovProbeScreenSlot& slot, std::uint64_t thisPointer, const PovProbeScreen& screen, std::uint64_t birth, std::uint32_t tick) -> void
+    {
+        slot.This.store(0, std::memory_order_relaxed);
+        for (std::size_t index{ 0 }; index < k_PovProbeScreenFieldCount; ++index)
+        {
+            slot.Values[index].store(screen.Values[index], std::memory_order_relaxed);
+        }
+
+        slot.Birth.store(birth, std::memory_order_relaxed);
+        slot.FirstTick.store(tick, std::memory_order_relaxed);
+        slot.LastTick.store(tick, std::memory_order_relaxed);
+        slot.Calls.store(1, std::memory_order_relaxed);
+        slot.This.store(thisPointer, std::memory_order_release);
+    }
 }
 
 namespace Engine::Base::Pov::State
@@ -46,23 +68,22 @@ namespace Engine::Base::Pov::State
         return m_GameThread.load(std::memory_order_relaxed);
     }
 
-    auto PovProbeStore::Record(PovProbeKind kind, std::uint32_t threadId, std::uint64_t caller, const std::array<std::uint64_t, 4>& args) -> void
+    auto PovProbeStore::SetOwnRange(std::uint64_t base, std::uint64_t size) -> void
     {
-        const std::uint64_t ticket{ m_Head.fetch_add(1, std::memory_order_relaxed) };
-        PovProbeSlot& slot{ m_Slots[ticket & k_RingMask] };
+        m_OwnBase.store(base, std::memory_order_relaxed);
+        m_OwnSize.store(size, std::memory_order_relaxed);
+    }
 
-        // The ticket goes to zero first, so a reader that meets the slot half written does not take it for the one it waits for.
-        slot.Ticket.store(0, std::memory_order_relaxed);
-        std::atomic_thread_fence(std::memory_order_release);
+    auto PovProbeStore::IsOwnAddress(std::uint64_t address) const -> bool
+    {
+        const std::uint64_t base{ m_OwnBase.load(std::memory_order_relaxed) };
+        return base != 0 && address >= base && address < base + m_OwnSize.load(std::memory_order_relaxed);
+    }
 
-        slot.Words[k_WordMeta].store(static_cast<std::uint64_t>(kind) | (static_cast<std::uint64_t>(threadId) << k_KindBits), std::memory_order_relaxed);
-        slot.Words[k_WordCaller].store(caller, std::memory_order_relaxed);
-        for (std::size_t index{ 0 }; index < args.size(); ++index)
-        {
-            slot.Words[k_WordArgs + index].store(args[index], std::memory_order_relaxed);
-        }
-
-        slot.Ticket.store(ticket + 1, std::memory_order_release);
+    auto PovProbeStore::Record(const PovProbeEvent& event) -> void
+    {
+        if (IsCreation(event.Kind)) m_Creations.Push(event);
+        else m_Calls.Push(event);
     }
 
     auto PovProbeStore::RecordCursor(std::uint64_t thisPointer, std::uint64_t firstValue) -> void
@@ -85,55 +106,152 @@ namespace Engine::Base::Pov::State
 
     auto PovProbeStore::Drain(std::span<PovProbeEvent> out) -> PovProbeDrain
     {
-        PovProbeDrain result{};
-        const std::uint64_t head{ m_Head.load(std::memory_order_acquire) };
+        return m_Calls.Drain(out);
+    }
 
-        // The writers lapped the reader: the oldest events are gone.
-        if (head - m_Tail > k_PovProbeRingCapacity)
-        {
-            result.Dropped += static_cast<std::uint32_t>(head - m_Tail - k_PovProbeRingCapacity);
-            m_Tail = head - k_PovProbeRingCapacity;
-        }
-
-        while (m_Tail < head && result.Count < out.size())
-        {
-            const PovProbeSlot& slot{ m_Slots[m_Tail & k_RingMask] };
-            const std::uint64_t expected{ m_Tail + 1 };
-            const std::uint64_t ticket{ slot.Ticket.load(std::memory_order_acquire) };
-
-            // A smaller ticket is a writer that took its number and has not published yet: read it in the next call.
-            if (ticket < expected) break;
-
-            PovProbeEvent event{};
-            bool isRead{ ticket == expected };
-
-            if (isRead)
-            {
-                const std::uint64_t meta{ slot.Words[k_WordMeta].load(std::memory_order_relaxed) };
-                event.Kind = static_cast<PovProbeKind>(meta & ((1ull << k_KindBits) - 1));
-                event.ThreadId = static_cast<std::uint32_t>(meta >> k_KindBits);
-                event.Caller = slot.Words[k_WordCaller].load(std::memory_order_relaxed);
-                for (std::size_t index{ 0 }; index < event.Args.size(); ++index)
-                {
-                    event.Args[index] = slot.Words[k_WordArgs + index].load(std::memory_order_relaxed);
-                }
-
-                std::atomic_thread_fence(std::memory_order_acquire);
-                isRead = slot.Ticket.load(std::memory_order_relaxed) == expected;
-            }
-
-            if (isRead) out[result.Count++] = event;
-            else ++result.Dropped;
-
-            ++m_Tail;
-        }
-
-        return result;
+    auto PovProbeStore::DrainCreations(std::span<PovProbeEvent> out) -> PovProbeDrain
+    {
+        return m_Creations.Drain(out);
     }
 
     auto PovProbeStore::Discard() -> void
     {
-        m_Tail = m_Head.load(std::memory_order_acquire);
+        m_Calls.Discard();
+        m_Creations.Discard();
+    }
+
+    auto PovProbeStore::SetTick(std::uint32_t tick) -> void
+    {
+        m_Tick.store(tick, std::memory_order_relaxed);
+    }
+
+    auto PovProbeStore::NoteScreen(std::uint64_t thisPointer, const PovProbeScreen& screen, std::uint32_t threadId, bool isAfter) -> void
+    {
+        const std::uint32_t tick{ m_Tick.load(std::memory_order_relaxed) };
+
+        PovProbeScreenSlot* found{ nullptr };
+        PovProbeScreenSlot* vacant{ nullptr };
+        PovProbeScreenSlot* leastRecent{ nullptr };
+        for (PovProbeScreenSlot& slot : m_Screens)
+        {
+            const std::uint64_t owner{ slot.This.load(std::memory_order_relaxed) };
+            if (owner == thisPointer)
+            {
+                found = &slot;
+                break;
+            }
+
+            if (owner == 0)
+            {
+                if (vacant == nullptr) vacant = &slot;
+            }
+            else if (leastRecent == nullptr || slot.LastTick.load(std::memory_order_relaxed) < leastRecent->LastTick.load(std::memory_order_relaxed) ||
+                (slot.LastTick.load(std::memory_order_relaxed) == leastRecent->LastTick.load(std::memory_order_relaxed) &&
+                    slot.Birth.load(std::memory_order_relaxed) < leastRecent->Birth.load(std::memory_order_relaxed)))
+            {
+                leastRecent = &slot;
+            }
+        }
+
+        // At the end of an update only a screen that was noted at its start matters.
+        if (isAfter && found == nullptr) return;
+
+        PovProbeEvent event{};
+        event.ThreadId = threadId;
+        event.ExtraCount = static_cast<std::uint32_t>(k_PovProbeScreenFieldCount);
+        std::copy(screen.Values.begin(), screen.Values.end(), event.Extra.begin());
+        event.Args[0] = thisPointer;
+
+        // A new screen, or a known address with another vtable (the old screen was destroyed and another took its place).
+        const bool isReborn{ found != nullptr && !isAfter && found->Values[k_VtableField].load(std::memory_order_relaxed) != screen.Values[k_VtableField] };
+        if (found == nullptr || isReborn)
+        {
+            PovProbeScreenSlot* slot{ found };
+            if (slot == nullptr && vacant != nullptr) slot = vacant;
+
+            if (slot == nullptr)
+            {
+                // The table is full: the screen called least recently leaves.
+                slot = leastRecent;
+                PovProbeEvent evict{};
+                evict.Kind = PovProbeKind::ScreenEvict;
+                evict.ThreadId = threadId;
+                evict.Args[0] = slot->This.load(std::memory_order_relaxed);
+                evict.Args[1] = ++m_ScreenEvictions;
+                this->Record(evict);
+            }
+
+            FillSlot(*slot, thisPointer, screen, ++m_ScreenBirths, tick);
+
+            event.Kind = PovProbeKind::ScreenNew;
+            event.Args[1] = k_AllFields;
+            this->Record(event);
+            return;
+        }
+
+        if (!isAfter)
+        {
+            found->Calls.fetch_add(1, std::memory_order_relaxed);
+            found->LastTick.store(tick, std::memory_order_relaxed);
+        }
+
+        std::uint64_t changed{ 0 };
+        for (std::size_t index{ 0 }; index < k_PovProbeScreenFieldCount; ++index)
+        {
+            if (found->Values[index].load(std::memory_order_relaxed) == screen.Values[index]) continue;
+
+            found->Values[index].store(screen.Values[index], std::memory_order_relaxed);
+            changed |= 1ull << index;
+        }
+
+        if (changed == 0) return;
+
+        event.Kind = isAfter ? PovProbeKind::ScreenChangePost : PovProbeKind::ScreenChange;
+        event.Args[1] = changed;
+        this->Record(event);
+    }
+
+    auto PovProbeStore::ForgetScreen(std::uint64_t thisPointer) -> void
+    {
+        for (PovProbeScreenSlot& slot : m_Screens)
+        {
+            if (slot.This.load(std::memory_order_relaxed) == thisPointer) slot.This.store(0, std::memory_order_release);
+        }
+    }
+
+    auto PovProbeStore::CountOffThread() -> void
+    {
+        m_OffThread.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    auto PovProbeStore::TakeOffThread() -> std::uint32_t
+    {
+        return m_OffThread.exchange(0, std::memory_order_relaxed);
+    }
+
+    auto PovProbeStore::ExpireScreens(std::uint32_t tick, std::span<PovProbeGoneScreen> out) -> std::size_t
+    {
+        std::size_t count{ 0 };
+        for (PovProbeScreenSlot& slot : m_Screens)
+        {
+            if (count >= out.size()) break;
+
+            const std::uint64_t owner{ slot.This.load(std::memory_order_acquire) };
+            const std::uint32_t lastTick{ slot.LastTick.load(std::memory_order_relaxed) };
+            if (owner == 0 || tick < lastTick || tick - lastTick < k_PovProbeScreenMaxAge) continue;
+
+            out[count++] = PovProbeGoneScreen{ .This = owner, .FirstTick = slot.FirstTick.load(std::memory_order_relaxed), .LastTick = lastTick,
+                .Calls = slot.Calls.load(std::memory_order_relaxed) };
+            slot.This.store(0, std::memory_order_release);
+        }
+
+        return count;
+    }
+
+    auto PovProbeStore::ResetScreens() -> void
+    {
+        for (PovProbeScreenSlot& slot : m_Screens) slot.This.store(0, std::memory_order_release);
+        m_OffThread.store(0, std::memory_order_relaxed);
     }
 
     auto PovProbeStore::TakeCursor() -> PovProbeCursor

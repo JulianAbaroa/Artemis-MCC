@@ -425,4 +425,42 @@ export namespace Engine::Base::Memory::Type::Signature
     // One uint32 per view in the game engine globals (*(thread context + 0x20)) that 0x104F34 sets to zero.
     inline constexpr std::uintptr_t k_ProbeGameEngineViewValue{ 0x35C4 };
     inline constexpr std::uintptr_t k_ProbeGameEngineViewStride{ 0x4 };
+
+    // TEMPORAL VW.9a.x (probe v2): the creators of UI screens, void* (context, int32 window, uint32 name, uint32 a4 [, a5]) -> screen. The
+    // first two share the 36 bytes of the prologue (two functions with the same start: the RVA tells them apart, window 0 so each match is exact).
+    inline constexpr Signature k_ScreenCreatePrologue
+    {
+        "ScreenCreatePrologue",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 56 41 57 48 83 EC 20 48 63 FA 33 DB 48 69 EF D0 05 00 00"
+    };
+
+    inline constexpr Signature k_ScreenCreateExPrologue
+    {
+        "ScreenCreateExPrologue",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 56 48 83 EC 20 48 63 FA 33 DB"
+    };
+
+    inline constexpr std::uint32_t k_ScreenCreateRva{ 0x2C9EFC };
+    inline constexpr std::uint32_t k_ScreenCreateAltRva{ 0x2C9F88 };
+    inline constexpr std::uint32_t k_ScreenCreateExRva{ 0x2CA014 };
+
+    // TEMPORAL VW.9a.x: fields of a c_gui_screen (the object of the update 0x2D2018): window (int32), mask of controllers (uint8), flags (uint32),
+    // state (uint8, 2 is open), int32 at 0x1AC (-1 none), uint32 at 0x154, and the uint32 pair 0x1C0 / 0x1C4 (the end of the exit animation).
+    inline constexpr std::uintptr_t k_ProbeScreenWindow{ 424 };  // 0x1A8, in decimal: another structure than the datums that have 0x1A8 (check D2).
+    inline constexpr std::uintptr_t k_ProbeScreenMask{ 0x160 };
+    inline constexpr std::uintptr_t k_ProbeScreenFlags{ 0x70 };
+    inline constexpr std::uintptr_t k_ProbeScreenState{ 0x28 };
+    inline constexpr std::uintptr_t k_ProbeScreenField1AC{ 0x1AC };
+    inline constexpr std::uintptr_t k_ProbeScreenField154{ 0x154 };
+    inline constexpr std::uintptr_t k_ProbeScreenField1C0{ 0x1C0 };
+    inline constexpr std::uintptr_t k_ProbeScreenField1C4{ 452 };  // 0x1C4, in decimal (check D2).
+
+    // TEMPORAL VW.9a.x: the controller globals of the game module, one entry per controller (uint32 at +0 is the state word).
+    inline constexpr std::uint32_t k_ProbeControllerGlobalsRva{ 0x2A03C50 };
+    inline constexpr std::uintptr_t k_ProbeControllerStride{ 0xAB8 };
+
+    // TEMPORAL VW.9a.x: two more fields of the player datum (uint16): the seconds of the respawn wait and the ticks elapsed. The ticks left are
+    // k_RespawnTicks of Blam.Layout.
+    inline constexpr std::uintptr_t k_ProbePlayerRespawnSeconds{ 456 };  // 0x1C8, in decimal (check D2).
+    inline constexpr std::uintptr_t k_ProbePlayerRespawnElapsed{ 0x1CC };
 }

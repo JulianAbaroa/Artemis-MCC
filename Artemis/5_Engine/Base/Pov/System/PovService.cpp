@@ -64,12 +64,28 @@ namespace
     using Engine::Base::Memory::Type::Signature::k_ProbeUiEntryStride;
     using Engine::Base::Memory::Type::Signature::k_ProbeUiFields;
     using Engine::Base::Memory::Type::Signature::k_ProbeUiViewBias;
+    using Engine::Base::Memory::Type::Signature::k_ProbeControllerGlobalsRva;
+    using Engine::Base::Memory::Type::Signature::k_ProbeControllerStride;
+    using Engine::Base::Memory::Type::Signature::k_ProbePlayerRespawnElapsed;
+    using Engine::Base::Memory::Type::Signature::k_ProbePlayerRespawnSeconds;
     using Engine::Base::Pov::Type::PovProbeCursor;
     using Engine::Base::Pov::Type::PovProbeDrain;
     using Engine::Base::Pov::Type::PovProbeEvent;
+    using Engine::Base::Pov::Type::PovProbeGoneScreen;
     using Engine::Base::Pov::Type::PovProbeKind;
+    using Engine::Base::Pov::Type::PovProbePlayerCopy;
+    using Engine::Base::Pov::Type::PovProbePlayerState;
+    using Engine::Base::Pov::Type::PovProbeReason;
+    using Engine::Base::Pov::Type::PovProbeScreenField;
+    using Blam::Layout::Player::Type::Offset::k_RespawnTicks;
 
+    using Engine::Base::Pov::Type::k_PovProbeControllers;
+    using Engine::Base::Pov::Type::k_PovProbeDiffWords;
     using Engine::Base::Pov::Type::k_PovProbeMaxLinesPerSecond;
+    using Engine::Base::Pov::Type::k_PovProbePlayerRoles;
+    using Engine::Base::Pov::Type::k_PovProbePlayerWords;
+    using Engine::Base::Pov::Type::k_PovProbeScreenFieldCount;
+    using Engine::Base::Pov::Type::k_PovProbeScreenSlots;
     using Engine::Base::Pov::Type::k_PovProbeUnreadable;
     using Engine::Base::Pov::Type::k_PovProbeViews;
 
@@ -93,12 +109,6 @@ namespace
     auto HexText(std::optional<std::uint64_t> value) -> std::string
     {
         return value ? std::format("{:X}", *value) : std::string{ "??" };
-    }
-
-    // return: The value in decimal, or "??" when it was not read.
-    auto DecimalText(std::optional<std::uint64_t> value) -> std::string
-    {
-        return value ? std::format("{}", *value) : std::string{ "??" };
     }
 
     // return: The count uint32 at base + first, base + first + stride, ..., in hex and separated by commas.
@@ -132,6 +142,134 @@ namespace
         return text.empty() ? std::string{ "-" } : text;
     }
 
+    // return: The base of the player table of the thread context, or nothing.
+    auto ReadPlayerTable(MemoryReaderService& reader, std::uintptr_t threadContext) -> std::optional<std::uintptr_t>
+    {
+        const std::optional<std::uintptr_t> telemetry{ ReadAt<std::uintptr_t>(reader, threadContext, k_ThreadContextTelemetryDataOffset) };
+        return ReadAt<std::uintptr_t>(reader, telemetry, k_TelemetryDataPlayerTableOffset);
+    }
+
+    // return: The address of the datum of a player in the table, or nothing for no handle, an index past the table or no table.
+    auto PlayerAddress(std::optional<std::uintptr_t> players, std::uint32_t handle) -> std::optional<std::uintptr_t>
+    {
+        if (!players || *players == 0 || handle == k_NoHandle) return std::nullopt;
+
+        const std::uint32_t index{ handle & k_HandleIndexMask };
+        if (index >= k_MaxPlayers) return std::nullopt;
+
+        return *players + (static_cast<std::uintptr_t>(index) * k_Base);
+    }
+
+    // return: The respawn state of a player: unit, ticks left, ticks elapsed and seconds of the wait (nothing for what cannot be read).
+    auto ReadPlayerState(MemoryReaderService& reader, std::optional<std::uintptr_t> players, std::uint32_t handle) -> PovProbePlayerState
+    {
+        PovProbePlayerState state{};
+        state.Handle = handle;
+
+        const std::optional<std::uintptr_t> address{ PlayerAddress(players, handle) };
+        state.Unit = ReadAt<std::uint32_t>(reader, address, k_AliveBipedHandle);
+        state.RespawnTicks = ReadAt<std::uint16_t>(reader, address, k_RespawnTicks);
+        state.RespawnElapsed = ReadAt<std::uint16_t>(reader, address, k_ProbePlayerRespawnElapsed);
+        state.RespawnSeconds = ReadAt<std::uint16_t>(reader, address, k_ProbePlayerRespawnSeconds);
+        return state;
+    }
+
+    // return: Whether the player exists and is known to have no unit.
+    auto HasNoUnit(const PovProbePlayerState& state) -> bool
+    {
+        return state.Handle != k_NoHandle && state.Unit && *state.Unit == k_NoHandle;
+    }
+
+    // return: Why the probe must be on, none when it must not.
+    auto DecideReason(bool isRequested, const PovProbePlayerState& view, const PovProbePlayerState& local) -> PovProbeReason
+    {
+        if (isRequested) return PovProbeReason::Pov;
+        if (HasNoUnit(view)) return PovProbeReason::ViewDead;
+        if (HasNoUnit(local)) return PovProbeReason::LocalDead;
+        return PovProbeReason::None;
+    }
+
+    // return: The reason as the log says it.
+    auto ReasonText(PovProbeReason reason) -> const char*
+    {
+        switch (reason)
+        {
+        case PovProbeReason::Pov: return "pov";
+        case PovProbeReason::ViewDead: return "view-dead";
+        case PovProbeReason::LocalDead: return "local-dead";
+        case PovProbeReason::None: return "none";
+        }
+
+        return "none";
+    }
+
+    // return: Whether a counter that moves with the ticks that passed (down when isCountdown, up otherwise) did only that, or did not move.
+    auto IsNormalAdvance(std::optional<std::uint16_t> previous, std::optional<std::uint16_t> current, std::uint32_t tickDelta, bool isCountdown) -> bool
+    {
+        if (previous == current) return true;
+        if (!previous || !current) return false;
+
+        if (isCountdown)
+        {
+            const std::uint32_t expected{ *previous > tickDelta ? *previous - tickDelta : 0 };
+            return *current == expected;
+        }
+
+        return *current == static_cast<std::uint16_t>(*previous + tickDelta);
+    }
+
+    // return: Whether the respawn state changed in something besides the normal advance of the ticks left and the ticks elapsed.
+    auto IsResponseChanged(const PovProbePlayerState& previous, const PovProbePlayerState& current, std::uint32_t tickDelta) -> bool
+    {
+        return previous.Handle != current.Handle || previous.Unit != current.Unit || previous.RespawnSeconds != current.RespawnSeconds ||
+            !IsNormalAdvance(previous.RespawnTicks, current.RespawnTicks, tickDelta, true) ||
+            !IsNormalAdvance(previous.RespawnElapsed, current.RespawnElapsed, tickDelta, false);
+    }
+
+    // return: The player as the "resp" line writes it: handle, unit, ticks left, ticks elapsed and seconds, all in hex.
+    auto ResponseText(const char* name, const PovProbePlayerState& state) -> std::string
+    {
+        return std::format("{}={:X} u={} 1bc={} 1cc={} 1c8={}", name, state.Handle, HexText(state.Unit), HexText(state.RespawnTicks),
+            HexText(state.RespawnElapsed), HexText(state.RespawnSeconds));
+    }
+
+    // return: The state word of every controller of the game module, in hex and separated by commas.
+    auto ControllersText(MemoryReaderService& reader, std::uint64_t moduleBase) -> std::string
+    {
+        if (moduleBase == 0) return "??";
+        return JoinU32(reader, static_cast<std::uintptr_t>(moduleBase + k_ProbeControllerGlobalsRva), 0, k_PovProbeControllers, k_ProbeControllerStride);
+    }
+
+    // return: The player diff of the words of two copies of a datum, without the tick and the frame: "off:old>new" in hex, up to the limit and then
+    // "+N", empty when nothing changed. The two counters of the respawn (ticks left and elapsed) are left out when they moved by the ticks that passed.
+    auto DiffText(const PovProbePlayerCopy& previous, const std::array<std::uint32_t, k_PovProbePlayerWords>& current, std::uint32_t tickDelta)
+        -> std::string
+    {
+        std::string text{};
+        std::size_t count{ 0 };
+        for (std::size_t index{ 0 }; index < current.size(); ++index)
+        {
+            const std::uint32_t before{ previous.Words[index] };
+            const std::uint32_t after{ current[index] };
+            if (before == after) continue;
+
+            const std::size_t offset{ index * sizeof(std::uint32_t) };
+            if (offset == k_RespawnTicks || offset == k_ProbePlayerRespawnElapsed)
+            {
+                const bool isSameHigh{ (before >> 16) == (after >> 16) };
+                const std::uint32_t low{ before & 0xFFFF };
+                const std::uint32_t lowNow{ after & 0xFFFF };
+                const std::uint32_t moved{ low > lowNow ? low - lowNow : lowNow - low };
+                if (isSameHigh && moved == (std::max)(tickDelta, 1u)) continue;
+            }
+
+            if (count < k_PovProbeDiffWords) text += std::format("{}0x{:X}:0x{:X}>0x{:X}", text.empty() ? "" : " ", offset, before, after);
+            ++count;
+        }
+
+        if (count > k_PovProbeDiffWords) text += std::format(" +{}", count - k_PovProbeDiffWords);
+        return text;
+    }
     // return: The snapshot of the state of the views, in one line without the tick and the frame. Fields are the ones of VW9ax_Sonda.txt.
     auto BuildSnapshot(MemoryReaderService& reader, std::uintptr_t threadContext, const PovStatus& status, std::uint32_t requested) -> std::string
     {
@@ -141,8 +279,7 @@ namespace
         const std::optional<std::uintptr_t> gameEngine{ ReadAt<std::uintptr_t>(reader, threadContext, k_ThreadContextGameEngineOffset) };
 
         // The unit of the requested player and the flags byte of that unit (bit 4 is the one the theater uses to know it can be watched).
-        const std::optional<std::uintptr_t> telemetry{ ReadAt<std::uintptr_t>(reader, threadContext, k_ThreadContextTelemetryDataOffset) };
-        const std::optional<std::uintptr_t> players{ ReadAt<std::uintptr_t>(reader, telemetry, k_TelemetryDataPlayerTableOffset) };
+        const std::optional<std::uintptr_t> players{ ReadPlayerTable(reader, threadContext) };
         const std::optional<std::uintptr_t> objectData{ ReadAt<std::uintptr_t>(reader, threadContext, k_ThreadContextObjectDataOffset) };
         const std::optional<std::uintptr_t> objects{ ReadAt<std::uintptr_t>(reader, objectData, k_ObjectDataTableOffset) };
 
@@ -182,11 +319,11 @@ namespace
             requested, unitText, flagsText, status.Calls, status.Reasserts);
     }
 
-    // return: The tick of the engine in decimal, or "??".
-    auto TickText(MemoryReaderService& reader, std::uintptr_t threadContext) -> std::string
+    // return: The tick of the engine, or nothing.
+    auto ReadTick(MemoryReaderService& reader, std::uintptr_t threadContext) -> std::optional<std::uint32_t>
     {
         const std::optional<std::uintptr_t> timeGlobals{ ReadAt<std::uintptr_t>(reader, threadContext, k_ThreadContextTimeGlobalsOffset) };
-        return DecimalText(ReadAt<std::uint32_t>(reader, timeGlobals, k_TimeGlobalsEngineTickOffset));
+        return ReadAt<std::uint32_t>(reader, timeGlobals, k_TimeGlobalsEngineTickOffset);
     }
 
     // Gives the base and the size of the image of a loaded module, or zeros when it is not a valid image.
@@ -261,11 +398,94 @@ namespace
         case PovProbeKind::PlayerAssignUnit:
             return std::format("t={} f={} call 45814(rcx=0x{:X}, rdx=0x{:X}, r8=0x{:X}, r9=0x{:X}) from={} game={}", tick, frame, event.Args[0],
                 event.Args[1], event.Args[2], event.Args[3], caller, isGameThread ? 1 : 0);
+        case PovProbeKind::ScreenCreate:
+        case PovProbeKind::ScreenCreateAlt:
+        case PovProbeKind::ScreenCreateEx:
+        case PovProbeKind::ScreenNew:
+        case PovProbeKind::ScreenChange:
+        case PovProbeKind::ScreenChangePost:
+        case PovProbeKind::ScreenEvict:
+            break;
         }
 
         return {};
     }
 
+    // return: The text of one field of a screen (the vtable as the caller is described, signed fields in decimal, the others in hex).
+    auto ScreenFieldText(PovProbeScreenField field, std::uint64_t value, std::uint64_t haloBase, std::uint64_t haloSize, std::uint64_t ownBase,
+        std::uint64_t ownSize) -> std::string
+    {
+        switch (field)
+        {
+        case PovProbeScreenField::Vtable: return std::format("vt={}", DescribeCaller(value, haloBase, haloSize, ownBase, ownSize));
+        case PovProbeScreenField::Window: return std::format("win={}", static_cast<std::int32_t>(value));
+        case PovProbeScreenField::Mask: return std::format("mask=0x{:X}", value);
+        case PovProbeScreenField::Flags: return std::format("flags=0x{:X}", value);
+        case PovProbeScreenField::State: return std::format("st={}", value);
+        case PovProbeScreenField::Field1AC: return std::format("1ac={}", static_cast<std::int32_t>(value));
+        case PovProbeScreenField::Field154: return std::format("154=0x{:X}", value);
+        case PovProbeScreenField::Field1C0: return std::format("1c0=0x{:X}", value);
+        case PovProbeScreenField::Field1C4: return std::format("1c4=0x{:X}", value);
+        }
+
+        return {};
+    }
+
+    // return: The line of a new screen (all its fields) or of a change (only the fields in the mask, args[1]), without the prefix.
+    auto FormatScreen(const PovProbeEvent& event, const std::string& tick, std::uint64_t frame, std::uint64_t haloBase, std::uint64_t haloSize,
+        std::uint64_t ownBase, std::uint64_t ownSize) -> std::string
+    {
+        const bool isNew{ event.Kind == PovProbeKind::ScreenNew };
+        std::string fields{};
+        for (std::size_t index{ 0 }; index < k_PovProbeScreenFieldCount && index < event.ExtraCount; ++index)
+        {
+            if (((event.Args[1] >> index) & 1) == 0) continue;
+
+            fields += ' ';
+            fields += ScreenFieldText(static_cast<PovProbeScreenField>(index), event.Extra[index], haloBase, haloSize, ownBase, ownSize);
+        }
+
+        const char* suffix{ event.Kind == PovProbeKind::ScreenChangePost ? " (post)" : "" };
+        return std::format("t={} f={} screen {} 0x{:X}{}{}", tick, frame, isNew ? "new" : "chg", event.Args[0], fields, suffix);
+    }
+
+    // return: The line of a screen creation, without the prefix. stackNumber is 0 when there is none.
+    auto FormatCreate(const PovProbeEvent& event, const std::string& tick, std::uint64_t frame, const std::string& caller, bool isGameThread,
+        std::uint32_t stackNumber) -> std::string
+    {
+        const char* name{ event.Kind == PovProbeKind::ScreenCreate ? "2c9efc" : (event.Kind == PovProbeKind::ScreenCreateAlt ? "2c9f88" : "2ca014") };
+        const std::string fifth{ event.Kind == PovProbeKind::ScreenCreateEx ? std::format(", a5=0x{:X}", event.Args[3]) : std::string{} };
+        const std::string stack{ stackNumber == 0 ? std::string{ "-" } : std::format("{}", stackNumber) };
+
+        return std::format("t={} f={} create {}(win={}, name=0x{:X}, a4=0x{:X}{}) -> 0x{:X} from={} game={} stack=#{}", tick, frame, name,
+            static_cast<std::int32_t>(event.Args[0]), event.Args[1], event.Args[2], fifth, event.Result, caller, isGameThread ? 1 : 0, stack);
+    }
+
+    // return: The line that writes in full the stack of a screen creation, without the prefix.
+    auto FormatStack(const PovProbeEvent& event, std::uint32_t number, std::uint64_t haloBase, std::uint64_t haloSize, std::uint64_t ownBase,
+        std::uint64_t ownSize) -> std::string
+    {
+        std::string frames{};
+        for (std::uint32_t index{ 0 }; index < event.ExtraCount; ++index)
+        {
+            if (index > 0) frames += " < ";
+            frames += DescribeCaller(event.Extra[index], haloBase, haloSize, ownBase, ownSize);
+        }
+
+        return std::format("stack #{} = {}", number, frames);
+    }
+
+    // return: A hash of the return addresses of an event.
+    auto HashFrames(const PovProbeEvent& event) -> std::uint64_t
+    {
+        std::uint64_t hash{ 14695981039346656037ull };
+        for (std::uint32_t index{ 0 }; index < event.ExtraCount; ++index)
+        {
+            hash = (hash ^ event.Extra[index]) * 1099511628211ull;
+        }
+
+        return hash;
+    }
     // return: Whether the cursor line must be written: the calls went from none to some or back, or with calls the list of this pointers or the
     // value read changed.
     auto IsCursorChanged(const PovProbeCursor& previous, const PovProbeCursor& current) -> bool
@@ -493,15 +713,34 @@ namespace Engine::Base::Pov::System
     auto PovService::Probe(std::uintptr_t threadContext) -> void
     {
         const std::optional<PovRequest> request{ m_IsReleased.load() ? std::nullopt : m_RequestStore.Read(k_PovRequestMaxAge) };
-        const bool isActive{ threadContext != 0 && request && request->PlayerHandle != k_NoHandle };
+        const std::uint32_t requested{ request ? request->PlayerHandle : k_NoHandle };
 
-        if (!isActive)
+        // Who is shown in the view of user 0 and who is the local player, and whether either has no unit.
+        PovProbeReason reason{ PovProbeReason::None };
+        std::optional<std::uintptr_t> players{};
+        PovProbePlayerState view{};
+        PovProbePlayerState local{};
+        if (threadContext != 0)
+        {
+            const std::optional<std::uintptr_t> mapping{ ReadAt<std::uintptr_t>(m_Reader, threadContext, k_ThreadContextMappingOffset) };
+            const std::uint32_t viewHandle{ ReadAt<std::uint32_t>(m_Reader, mapping, k_OutputUserPlayer + (k_PovUser * k_EntryStride)).value_or(k_NoHandle) };
+            const std::uint32_t localHandle{ ReadAt<std::uint32_t>(m_Reader, mapping, k_InputUserPlayer + (k_PovUser * k_EntryStride)).value_or(k_NoHandle) };
+
+            players = ReadPlayerTable(m_Reader, threadContext);
+            view = ReadPlayerState(m_Reader, players, viewHandle);
+            local = ReadPlayerState(m_Reader, players, localHandle);
+            reason = DecideReason(requested != k_NoHandle, view, local);
+        }
+
+        if (reason == PovProbeReason::None)
         {
             if (m_IsProbeRunning)
             {
                 m_ProbeStore.SetActive(false);
                 this->ProbeFlushLosses();
+                this->ProbeEmit("inactive");
                 m_IsProbeRunning = false;
+                m_ProbeReason = PovProbeReason::None;
             }
 
             return;
@@ -512,36 +751,53 @@ namespace Engine::Base::Pov::System
             m_ProbeStore.SetGameThread(::GetCurrentThreadId());
             m_ProbeStore.Discard();
             m_ProbeStore.TakeCursor();
+            m_ProbeStore.ResetScreens();
             m_ProbeLastBody.clear();
             m_ProbeLastCursor = PovProbeCursor{};
             m_ProbeLines = 0;
             m_ProbeLinesDropped = 0;
             m_ProbeRingLost = 0;
+            m_ProbeStackCount = 0;
+            m_IsProbeResponseKnown = false;
+            m_ProbeLastTick.reset();
+            for (PovProbePlayerCopy& copy : m_ProbeCopies) copy.IsValid = false;
             LocateHaloModule(m_ProbeModuleBase, m_ProbeModuleSize);
             LocateOwnModule(m_ProbeOwnBase, m_ProbeOwnSize);
+            m_ProbeStore.SetOwnRange(m_ProbeOwnBase, m_ProbeOwnSize);
+            m_ProbeOffThread = 0;
+            m_ProbeCreateLost = 0;
             m_ProbeStore.SetActive(true);
             m_IsProbeRunning = true;
+            m_ProbeReason = PovProbeReason::None;
         }
 
         ++m_ProbeFrame;
-        const std::string tick{ TickText(m_Reader, threadContext) };
-        const std::uint32_t gameThread{ m_ProbeStore.GetGameThread() };
+        const std::optional<std::uint32_t> tickValue{ ReadTick(m_Reader, threadContext) };
+        const std::string tick{ tickValue ? std::format("{}", *tickValue) : std::string{ "??" } };
 
-        // The noted calls, oldest first, in batches until the ring is empty.
-        for (;;)
+        if (reason != m_ProbeReason)
         {
-            const PovProbeDrain drain{ m_ProbeStore.Drain(m_ProbeEvents) };
-            m_ProbeRingLost += drain.Dropped;
+            m_ProbeReason = reason;
+            this->ProbeEmit(std::format("active reason={} t={} f={}", ReasonText(reason), tick, m_ProbeFrame));
+        }
 
-            for (std::size_t index{ 0 }; index < drain.Count; ++index)
+        // The hooks read this tick for the screens they follow.
+        m_ProbeStore.SetTick(tickValue.value_or(0));
+        const std::uint32_t tickDelta{ tickValue && m_ProbeLastTick && *tickValue > *m_ProbeLastTick ? *tickValue - *m_ProbeLastTick : 1 };
+
+        this->ProbeDrain(tick);
+        m_ProbeOffThread += m_ProbeStore.TakeOffThread();
+
+        // The screens whose update was not called for a while.
+        if (tickValue)
+        {
+            std::array<PovProbeGoneScreen, k_PovProbeScreenSlots> gone{};
+            const std::size_t goneCount{ m_ProbeStore.ExpireScreens(*tickValue, gone) };
+            for (std::size_t index{ 0 }; index < goneCount; ++index)
             {
-                const PovProbeEvent& event{ m_ProbeEvents[index] };
-                const std::string caller{ DescribeCaller(event.Caller, m_ProbeModuleBase, m_ProbeModuleSize, m_ProbeOwnBase, m_ProbeOwnSize) };
-                const std::string line{ FormatEvent(event, tick, m_ProbeFrame, caller, event.ThreadId == gameThread) };
-                if (!line.empty()) this->ProbeEmit(line);
+                this->ProbeEmit(std::format("t={} f={} screen gone 0x{:X} calls={} first={} last={}", tick, m_ProbeFrame, gone[index].This, gone[index].Calls,
+                    gone[index].FirstTick, gone[index].LastTick));
             }
-
-            if (drain.Count < m_ProbeEvents.size()) break;
         }
 
         const PovProbeCursor cursor{ m_ProbeStore.TakeCursor() };
@@ -549,16 +805,145 @@ namespace Engine::Base::Pov::System
         m_ProbeLastCursor = cursor;
 
         // The snapshot is written only when a field changed since the last one.
-        const std::string body{ BuildSnapshot(m_Reader, threadContext, m_StatusStore.Read(), request->PlayerHandle) };
+        const std::string body{ BuildSnapshot(m_Reader, threadContext, m_StatusStore.Read(), requested) };
         if (body != m_ProbeLastBody)
         {
             m_ProbeLastBody = body;
             this->ProbeEmit(std::format("t={} f={} {}", tick, m_ProbeFrame, body));
         }
+
+        this->ProbeResponse(view, local, tick, tickDelta);
+        this->ProbePlayerDiff(players, view, local, tick, tickDelta);
+        m_ProbeLastTick = tickValue;
     }
 
-    auto PovService::ProbeEmit(const std::string& text) -> void
+    auto PovService::ProbeDrain(const std::string& tick) -> void
     {
+        const std::uint32_t gameThread{ m_ProbeStore.GetGameThread() };
+
+        // The noted events, oldest first, in batches until the ring is empty: first the calls and screens, then the creations (their own ring).
+        for (const bool isCreationRing : { false, true })
+        {
+            for (;;)
+            {
+                const PovProbeDrain drain{ isCreationRing ? m_ProbeStore.DrainCreations(m_ProbeEvents) : m_ProbeStore.Drain(m_ProbeEvents) };
+                (isCreationRing ? m_ProbeCreateLost : m_ProbeRingLost) += drain.Dropped;
+
+                for (std::size_t index{ 0 }; index < drain.Count; ++index)
+                {
+                    const PovProbeEvent& event{ m_ProbeEvents[index] };
+                    const bool isGameThread{ event.ThreadId == gameThread };
+                    const std::string caller{ DescribeCaller(event.Caller, m_ProbeModuleBase, m_ProbeModuleSize, m_ProbeOwnBase, m_ProbeOwnSize) };
+
+                    if (event.Kind == PovProbeKind::ScreenNew || event.Kind == PovProbeKind::ScreenChange || event.Kind == PovProbeKind::ScreenChangePost)
+                    {
+                        this->ProbeEmit(FormatScreen(event, tick, m_ProbeFrame, m_ProbeModuleBase, m_ProbeModuleSize, m_ProbeOwnBase, m_ProbeOwnSize));
+                        continue;
+                    }
+
+                    if (event.Kind == PovProbeKind::ScreenEvict)
+                    {
+                        this->ProbeEmit(std::format("t={} f={} screen evict 0x{:X} total={}", tick, m_ProbeFrame, event.Args[0], event.Args[1]));
+                        continue;
+                    }
+
+                    if (isCreationRing)
+                    {
+                        bool isNewStack{ false };
+                        const std::uint32_t number{ this->ProbeNoteStack(event, isNewStack) };
+                        this->ProbeEmit(FormatCreate(event, tick, m_ProbeFrame, caller, isGameThread, number));
+
+                        // The line of a stack is written once, so it never goes through the limit of lines per second.
+                        if (isNewStack)
+                        {
+                            this->ProbeEmit(FormatStack(event, number, m_ProbeModuleBase, m_ProbeModuleSize, m_ProbeOwnBase, m_ProbeOwnSize), true);
+                        }
+
+                        continue;
+                    }
+
+                    const std::string line{ FormatEvent(event, tick, m_ProbeFrame, caller, isGameThread) };
+                    if (!line.empty()) this->ProbeEmit(line);
+                }
+
+                if (drain.Count < m_ProbeEvents.size()) break;
+            }
+        }
+    }
+
+    auto PovService::ProbeNoteStack(const PovProbeEvent& event, bool& isNew) -> std::uint32_t
+    {
+        isNew = false;
+        if (event.ExtraCount == 0) return 0;
+
+        const std::uint64_t hash{ HashFrames(event) };
+        for (std::size_t index{ 0 }; index < m_ProbeStackCount; ++index)
+        {
+            if (m_ProbeStackHashes[index] == hash) return static_cast<std::uint32_t>(index + 1);
+        }
+
+        if (m_ProbeStackCount >= m_ProbeStackHashes.size()) return 0;
+
+        m_ProbeStackHashes[m_ProbeStackCount++] = hash;
+        isNew = true;
+        return static_cast<std::uint32_t>(m_ProbeStackCount);
+    }
+
+    auto PovService::ProbeResponse(const PovProbePlayerState& view, const PovProbePlayerState& local, const std::string& tick, std::uint32_t tickDelta) -> void
+    {
+        const std::string controllers{ ControllersText(m_Reader, m_ProbeModuleBase) };
+
+        const bool isChanged{ !m_IsProbeResponseKnown || controllers != m_ProbeLastControllers || IsResponseChanged(m_ProbeLastView, view, tickDelta) ||
+            IsResponseChanged(m_ProbeLastLocal, local, tickDelta) };
+
+        m_IsProbeResponseKnown = true;
+        m_ProbeLastView = view;
+        m_ProbeLastLocal = local;
+        m_ProbeLastControllers = controllers;
+
+        if (!isChanged) return;
+
+        this->ProbeEmit(std::format("t={} f={} resp {} {} ctrl={}", tick, m_ProbeFrame, ResponseText("view", view), ResponseText("local", local), controllers));
+    }
+
+    auto PovService::ProbePlayerDiff(std::optional<std::uintptr_t> players, const PovProbePlayerState& view, const PovProbePlayerState& local,
+        const std::string& tick, std::uint32_t tickDelta) -> void
+    {
+        const std::array<std::uint32_t, k_PovProbePlayerRoles> handles{ view.Handle, local.Handle };
+
+        for (std::size_t role{ 0 }; role < handles.size(); ++role)
+        {
+            PovProbePlayerCopy& copy{ m_ProbeCopies[role] };
+            const std::optional<std::uintptr_t> address{ PlayerAddress(players, handles[role]) };
+
+            // The same player twice is one line: the second role keeps no copy until it is another player.
+            std::array<std::uint32_t, k_PovProbePlayerWords> words{};
+            const bool isRead{ address && !(role > 0 && handles[role] == handles[0]) && m_Reader.ReadRaw(*address, words.data(), sizeof(words)) };
+            if (!isRead)
+            {
+                copy.IsValid = false;
+                continue;
+            }
+
+            if (copy.IsValid && copy.Handle == handles[role])
+            {
+                const std::string diff{ DiffText(copy, words, tickDelta) };
+                if (!diff.empty()) this->ProbeEmit(std::format("t={} f={} pdiff {:X} {}", tick, m_ProbeFrame, handles[role], diff));
+            }
+
+            copy.IsValid = true;
+            copy.Handle = handles[role];
+            copy.Words = words;
+        }
+    }
+    auto PovService::ProbeEmit(const std::string& text, bool isForced) -> void
+    {
+        if (isForced)
+        {
+            m_Log.Message("[PovProbe] INFO: {}", text);
+            return;
+        }
+
         const steady_clock::time_point now{ steady_clock::now() };
 
         // A new second of the clock: say how many lines the last one dropped and start the count over.
@@ -582,8 +967,12 @@ namespace Engine::Base::Pov::System
     auto PovService::ProbeFlushLosses() -> void
     {
         if (m_ProbeRingLost > 0) m_Log.Message("[PovProbe] INFO: ring lost {}", m_ProbeRingLost);
+        if (m_ProbeCreateLost > 0) m_Log.Message("[PovProbe] INFO: create lost {}", m_ProbeCreateLost);
+        if (m_ProbeOffThread > 0) m_Log.Message("[PovProbe] INFO: screen offthread {}", m_ProbeOffThread);
         if (m_ProbeLinesDropped > 0) m_Log.Message("[PovProbe] INFO: lines dropped {}", m_ProbeLinesDropped);
         m_ProbeRingLost = 0;
+        m_ProbeCreateLost = 0;
+        m_ProbeOffThread = 0;
         m_ProbeLinesDropped = 0;
     }
 
@@ -601,6 +990,16 @@ namespace Engine::Base::Pov::System
         m_ProbeLinesDropped = 0;
         m_ProbeRingLost = 0;
         m_ProbeWindowStart = {};
+        m_ProbeReason = PovProbeReason::None;
+        m_ProbeCreateLost = 0;
+        m_ProbeOffThread = 0;
+        m_ProbeStackCount = 0;
+        m_IsProbeResponseKnown = false;
+        m_ProbeLastView = PovProbePlayerState{};
+        m_ProbeLastLocal = PovProbePlayerState{};
+        m_ProbeLastControllers.clear();
+        m_ProbeLastTick.reset();
+        for (PovProbePlayerCopy& copy : m_ProbeCopies) copy.IsValid = false;
     }
 
     auto PovService::RestoreView(std::uintptr_t threadContext) -> void
