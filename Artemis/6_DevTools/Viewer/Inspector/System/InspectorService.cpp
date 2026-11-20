@@ -22,7 +22,6 @@ namespace
     using DevTools::Viewer::Inspector::System::ObjectName;
 
     using Views::View::System::FindObservedView;
-    using Views::View::System::ObservedPlayerOf;
 
     using DevTools::Gui::Format::System::HexFormater;
     using DevTools::Gui::Format::System::TeamFormater;
@@ -54,7 +53,10 @@ namespace DevTools::Viewer::Inspector::System
     auto InspectorService::Draw() -> void
     {
         const std::uint32_t handle{ m_SelectionStore.GetSelected() };
-        if (handle == k_NoHandle)
+
+        // The selection follows the player (VW.9a B6): without a biped (dead, before the first spawn) only the sections of the player are drawn.
+        const std::uint32_t playerHandle{ m_SelectionStore.GetSelectedPlayer() };
+        if (handle == k_NoHandle && playerHandle == k_NoHandle)
         {
             ImGui::TextDisabled("Nothing selected");
             return;
@@ -71,8 +73,25 @@ namespace DevTools::Viewer::Inspector::System
 
         const Entity* entity{ EntitySection::Find(tick, handle) };
 
-        const std::uint32_t playerHandle{ tick.Players ? ObservedPlayerOf(*tick.Players, handle) : k_NoHandle };
-        const Player* player{ playerHandle != k_NoHandle ? tick.Players->Find(playerHandle) : nullptr };
+        const Player* player{ playerHandle != k_NoHandle && tick.Players ? tick.Players->Find(playerHandle) : nullptr };
+
+        if (handle == k_NoHandle)
+        {
+            if (!player)
+            {
+                ImGui::TextDisabled("No data");
+                return;
+            }
+
+            ImGui::PushID("Inspector");
+            ImGui::TextUnformatted(player->Name.c_str());
+            ImGui::TextDisabled("No biped");
+            PlayerSection::Draw(tick, *player);
+            ActionSection::Draw(*player, m_PlayerActionStore, m_BotStore);
+            ImGui::PopID();
+            return;
+        }
+
         const Perception::Players::Type::Body* body{ player && player->Body ? &*player->Body : nullptr };
         const bool isLocalBiped{ player && player->LocalIndex == k_PrimaryLocalUser };
 

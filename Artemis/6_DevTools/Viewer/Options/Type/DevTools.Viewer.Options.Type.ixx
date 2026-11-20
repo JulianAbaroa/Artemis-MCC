@@ -107,6 +107,7 @@ export namespace DevTools::Viewer::Options::Type
         OverlayWireframe,
         HideGameHud,
         HideFirstPerson,
+        WatchPov,
 
         Count
     };
@@ -385,6 +386,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::HideFirstPerson, Group::Camera, Layer::Count, Level::Full, "HideFirstPerson", "Hide first person",
             "Skips the game's first person arms and weapon. With the free camera they are always hidden and the game draws the player's body.", false },
+
+        { Flag::WatchPov, Group::Camera, Layer::Count, Level::Full, "WatchPov", "Watch POV",
+            "The game shows the selected player in first person, with its HUD (engine player mapping, D340).", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

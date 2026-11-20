@@ -134,7 +134,9 @@ export namespace Mod
             .m_VirtualInputStore = m_Control.m_VirtualInputStore,
             .m_PlayerActionStore = m_Control.m_PlayerActionStore,
             .m_BotStore = m_Control.m_BotStore,
-            .m_BridgeService = m_Transport.m_BridgeService };
+            .m_BridgeService = m_Transport.m_BridgeService,
+            .m_PovRequestStore = m_Base.m_PovRequestStore,
+            .m_PovStatusStore = m_Base.m_PovStatusStore };
 
         Blam::Map::Layer m_Map{ m_Service.m_Log };
         Blam::MapModel::Layer m_Resolved{ m_Service.m_Log, m_Map };
@@ -161,6 +163,9 @@ export namespace Mod
         std::jthread m_DumpThread{};
 
         static constexpr milliseconds k_RenderShutdownTimeout{ 500 };
+
+        // Longest wait for the game thread to give the view back to the local player at the unload (VW.9a).
+        static constexpr milliseconds k_PovReleaseTimeout{ 250 };
 
         // Connects the action source and the lifecycle callbacks of the engine, before the tools and the pure layers register
         // theirs (OnEngineInitialized, OnUnhook, OnCleanup, Render OnInitialized, OnShutdown, in that order).

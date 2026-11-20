@@ -33,6 +33,11 @@ export namespace DevTools::Viewer::Selection::System
         auto Update(const Ray& ray, const std::shared_ptr<const Collidables>& collidables) -> void;
 
         auto GetSelected() const -> std::uint32_t;
+        auto GetSelectedPlayer() const -> std::uint32_t;
+
+        // Selects a player and its current biped (VW.9a B6).
+        auto Follow(std::uint32_t playerHandle, std::uint32_t bipedHandle) -> void;
+
         auto Clear() -> void;
 
         // Drops the cached boxes. The next update rebuilds them.

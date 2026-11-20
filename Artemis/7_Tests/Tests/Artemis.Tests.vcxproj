@@ -109,6 +109,9 @@
     <ClCompile Include="Blam\RaycasterTests.cpp" />
     <ClCompile Include="Engine\TickProducerTests.cpp" />
     <ClCompile Include="Viewer\OptionsStoreTests.cpp" />
+    <ClCompile Include="Viewer\SelectionStoreTests.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Options\Type\DevTools.Viewer.Options.Type.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Options\State\OptionsStore.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Options\State\OptionsStore.cpp" />
@@ -143,6 +146,7 @@
     <ClCompile Include="Engine\EngineLayerTests.cpp" />
     <ClCompile Include="Engine\FrameClockTests.cpp" />
     <ClCompile Include="Engine\GameCameraTests.cpp" />
+    <ClCompile Include="Engine\PovTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MapVariantServiceTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />

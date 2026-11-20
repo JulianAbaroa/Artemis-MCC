@@ -40,6 +40,7 @@ namespace Engine::Capture::Hook
         self->ApplyTimeScale();
         self->ApplyEndRound();
         self->ApplyMatchSetup();
+        self->ApplyPov();
 
         // A pause runs the frame without ticks (D143): the engine returns at once when asked for none, and the time left is dropped
         // as its own pause check does, so nothing piles up for the frames after it.
@@ -117,6 +118,11 @@ namespace Engine::Capture::Hook
     auto SimulationTicksDetour::ApplyMatchSetup() -> void
     {
         m_MatchSetupService.UpdateBreak(m_CaptureStore.GetThreadContext());
+    }
+
+    auto SimulationTicksDetour::ApplyPov() -> void
+    {
+        m_PovService.Update(m_CaptureStore.GetThreadContext());
     }
 
     auto SimulationTicksDetour::Install() -> void

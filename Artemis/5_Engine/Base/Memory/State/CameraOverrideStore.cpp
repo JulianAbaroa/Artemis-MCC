@@ -9,6 +9,8 @@ import std;
 
 namespace
 {
+    using Engine::Base::Memory::Type::Store::k_SlotReadAttempts;
+
     auto NowNanoseconds() -> std::int64_t
     {
         return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
@@ -61,7 +63,7 @@ namespace Engine::Base::Memory::State
 
     auto CameraOverrideStore::Read(std::chrono::nanoseconds maxAge) const -> std::optional<CameraOverride>
     {
-        for (int attempt{ 0 }; attempt < k_ReadAttempts; ++attempt)
+        for (int attempt{ 0 }; attempt < k_SlotReadAttempts; ++attempt)
         {
             const CameraOverrideSlot& slot{ m_Slots[m_Current.load(std::memory_order_acquire) & 1u] };
 

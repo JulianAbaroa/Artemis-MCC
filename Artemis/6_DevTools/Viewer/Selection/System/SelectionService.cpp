@@ -23,6 +23,16 @@ namespace DevTools::Viewer::Selection::System
         return m_SelectionStore.GetSelected();
     }
 
+    auto SelectionService::GetSelectedPlayer() const -> std::uint32_t
+    {
+        return m_SelectionStore.GetSelectedPlayer();
+    }
+
+    auto SelectionService::Follow(std::uint32_t playerHandle, std::uint32_t bipedHandle) -> void
+    {
+        m_SelectionStore.Follow(playerHandle, bipedHandle);
+    }
+
     auto SelectionService::Clear() -> void
     {
         m_SelectionStore.Clear();

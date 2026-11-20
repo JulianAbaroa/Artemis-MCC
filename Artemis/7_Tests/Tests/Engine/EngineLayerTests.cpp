@@ -19,6 +19,7 @@ import Bridge.Transport.Type;
 import Engine.Control.Input.State;
 import Engine.Control.Input.Hook;
 import Engine.Base.Memory.System;
+import Engine.Base.Pov.Type;
 import Engine.Base.Hook.System;
 import Engine.Control.Simulation.State;
 import Engine.Control.Simulation.System;
@@ -211,12 +212,19 @@ TEST(EngineLayerTests, RenderStoreFirstPersonFlagAndThirdPersonFrame)
 
     // The same for the true answers of the first person test for user 0 (VW.6b.1).
     EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
-    store.CountFirstPersonUnit();
+    EXPECT_EQ(store.GetFirstPersonUnitObjectLastFrame(), 0xFFFFFFFFu);
+    store.CountFirstPersonUnit(0x00050007);
+    store.CountFirstPersonUnit(0x00050009);
     EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
+    EXPECT_EQ(store.GetFirstPersonUnitObjectLastFrame(), 0xFFFFFFFFu);
     store.EndFrame();
     EXPECT_TRUE(store.WasFirstPersonUnitLastFrame());
+
+    // The object of the frame is the first one the game answered for (VW.9a: the unit of the watched player).
+    EXPECT_EQ(store.GetFirstPersonUnitObjectLastFrame(), 0x00050007u);
     store.EndFrame();
     EXPECT_FALSE(store.WasFirstPersonUnitLastFrame());
+    EXPECT_EQ(store.GetFirstPersonUnitObjectLastFrame(), 0xFFFFFFFFu);
 }
 
 TEST(EngineLayerTests, MaskPlanCreatesReplacesAndReleasesTheTexturesOnlyWhenNeeded)
@@ -433,6 +441,28 @@ TEST(EngineLayerTests, ObserverCameraDetourWithoutTheGameInstallsNothing)
     EXPECT_TRUE(base.m_CameraOverrideStore.IsActive());
     base.m_GameCameraService.ClearOverride();
     EXPECT_FALSE(base.m_CameraOverrideStore.IsActive());
+}
+
+TEST(EngineLayerTests, PovServiceWithoutTheGameInstallsNothingAndDoesNothing)
+{
+    Services::Layer service{};
+    Engine::Base::Layer base{ service };
+
+    // No haloreach.dll in the process: the function is not found, the status says so, and Update and Restore do nothing.
+    EXPECT_FALSE(base.m_PovService.Install());
+    EXPECT_FALSE(base.m_PovStatusStore.Read().IsInstalled);
+
+    base.m_PovRequestStore.Publish(0x00030001);
+    base.m_PovService.Update(0);
+    base.m_PovService.Update(1);
+    base.m_PovService.Release(std::chrono::milliseconds{ 5 });
+    base.m_PovService.Uninstall();
+
+    const Engine::Base::Pov::Type::PovStatus status{ base.m_PovStatusStore.Read() };
+    EXPECT_EQ(status.RequestedHandle, 0xFFFFFFFFu);
+    EXPECT_EQ(status.Calls, 0u);
+    EXPECT_EQ(status.Reasserts, 0u);
+    EXPECT_EQ(status.Faults, 0u);
 }
 
 TEST(EngineLayerTests, SceneBlockerTakesTheHdrTargetOfTheGame)

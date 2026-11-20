@@ -13,6 +13,7 @@ import Engine.Render.Window.System;
 import Engine.Control.Simulation.State;
 import Engine.Base.Memory.System;
 import Engine.Base.Memory.Hook;
+import Engine.Base.Pov.State;
 import Engine.Capture.State;
 import Engine.Capture.Oracle.State;
 import Bridge.Transport.System;
@@ -40,6 +41,8 @@ namespace
     using Engine::Base::Memory::System::GameCameraService;
     using Engine::Base::Memory::Hook::FrameClockReader;
     using Engine::Base::Memory::System::MemoryReaderService;
+    using Engine::Base::Pov::State::PovRequestStore;
+    using Engine::Base::Pov::State::PovStatusStore;
     using Engine::Capture::State::CaptureStore;
     using Engine::Capture::Oracle::State::OracleStore;
     using Bridge::Transport::System::BridgeService;
@@ -76,5 +79,7 @@ export namespace DevTools::Viewer::Access::Type
         PlayerActionStore& m_PlayerActionStore;
         BotStore& m_BotStore;
         BridgeService& m_BridgeService;
+        PovRequestStore& m_PovRequestStore;
+        PovStatusStore& m_PovStatusStore;
     };
 }

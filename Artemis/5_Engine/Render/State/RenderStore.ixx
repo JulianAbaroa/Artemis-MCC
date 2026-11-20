@@ -5,11 +5,14 @@ module;
 
 export module Engine.Render.State;
 
+import Common.Engine.Type;
 import Engine.Render.Type;
 import std;
 
 namespace
 {
+    using Common::Engine::Type::k_NoHandle;
+
     using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::MaskTextures;
@@ -106,12 +109,17 @@ export namespace Engine::Render::State
         // return: Whether the last completed frame (closed by EndFrame) turned the first person test to false at least once.
         auto WasThirdPersonLastFrame() const -> bool;
 
-        // Counts one answer true of the first person test for user 0, as the game receives it (Drive turns it to false, those are not counted).
+        // Counts one answer true of the first person test for user 0, as the game receives it (Drive turns it to false, those are not counted),
+        // and keeps the object it answered for when it is the first of the frame.
         // note: Any thread, no allocation. The game hides the unit of the player when it answers true.
-        auto CountFirstPersonUnit() -> void;
+        auto CountFirstPersonUnit(std::uint32_t objectHandle) -> void;
 
         // return: Whether the last completed frame (closed by EndFrame) got at least one true answer of the first person test for user 0.
         auto WasFirstPersonUnitLastFrame() const -> bool;
+
+        // return: The object of the first true answer of the first person test for user 0 in the last completed frame, or 0xFFFFFFFF when there
+        // was none. With the POV it is the unit of the watched player, without it the one of the local player (VW.9a).
+        auto GetFirstPersonUnitObjectLastFrame() const -> std::uint32_t;
 
         // Overlay mask of the first person arms (VW.6.y.2 B). The Viewer requests it, any thread.
         auto IsFirstPersonMaskRequested() const -> bool;
@@ -248,6 +256,8 @@ export namespace Engine::Render::State
         std::atomic<std::uint32_t> m_ThirdPersonLastFrame{ 0 };
         std::atomic<std::uint32_t> m_FirstPersonUnitCalls{ 0 };
         std::atomic<std::uint32_t> m_FirstPersonUnitLastFrame{ 0 };
+        std::atomic<std::uint32_t> m_FirstPersonUnitObject{ k_NoHandle };
+        std::atomic<std::uint32_t> m_FirstPersonUnitObjectLastFrame{ k_NoHandle };
         std::atomic<std::uint32_t> m_PresentThread{ 0 };
 
         // Number of Present frames completed, which is the index of the one in progress. The scene call mark holds that index plus one (0 = never).

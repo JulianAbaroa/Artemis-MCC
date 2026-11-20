@@ -127,7 +127,7 @@ namespace Engine::Render::Hook
 
         if (!FirstPersonDetour::IsThirdPersonShown(user, self->IsDriveActive(), original))
         {
-            self->m_RenderStore.CountFirstPersonUnit();
+            self->m_RenderStore.CountFirstPersonUnit(objectHandle);
             return original;
         }
 

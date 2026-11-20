@@ -229,6 +229,12 @@ TEST(OptionsStoreTests, TheKeysOfTheFlagsOfALayerAreIgnoredOnLoadAndALevelOutOfR
     store.Load("HideFirstPerson", "1");
     EXPECT_TRUE(store.IsEnabled(Flag::HideGameHud));
     EXPECT_TRUE(store.IsEnabled(Flag::HideFirstPerson));
+
+    // Watch POV (VW.9a) is off by default and has its own key.
+    EXPECT_FALSE(OptionsStore{}.IsEnabled(Flag::WatchPov));
+    store.Load("WatchPov", "1");
+    EXPECT_TRUE(store.IsEnabled(Flag::WatchPov));
+    EXPECT_NE(Snapshot(store).find("Viewer_WatchPov=1"), std::string::npos);
 }
 
 TEST(OptionsStoreTests, TheAgentCardLayerHasNoFlagsAndIsSavedByItsKey)

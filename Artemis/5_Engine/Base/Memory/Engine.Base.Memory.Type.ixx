@@ -4,3 +4,4 @@ export import :Signature;
 export import :GameCamera;
 export import :FrameClock;
 export import :ObserverCamera;
+export import :Store;

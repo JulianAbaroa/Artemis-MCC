@@ -9,6 +9,9 @@ export namespace Blam::Layout::Player::Type::Mapping
     // Input user of every player (int32 by table index), or -1 when the player is not local.
     constexpr std::uintptr_t k_PlayerInputUser{ 0x74 };
 
+    // Player handle of every input user (uint32 by user index), or 0xFFFFFFFF without one (A9 sec. 11.1).
+    constexpr std::uintptr_t k_InputUserPlayer{ 0x04 };
+
     // Player handle of every output user (uint32 by view index), or 0xFFFFFFFF without one.
     constexpr std::uintptr_t k_OutputUserPlayer{ 0xB8 };
 

@@ -138,12 +138,20 @@ namespace Mod
 
             // The camera of the game is built by code of the game module too: its hook goes in and out with the engine.
             m_Base.m_ObserverCameraDetour.Install();
+
+            // The view assignment is called, not hooked, and it is code of the game module too.
+            m_Base.m_PovService.Install();
         });
 
         // The bridge stops first, so a Lockstep wait of the game thread ends before the PlayerAction hook drains.
         m_Base.m_LifecycleService.OnUnhook([this] {
             m_Transport.m_BridgeService.Stop();
             this->UninstallHostHooks();
+
+            // The view goes back to the local player before the engine is destroyed and before the tick hook goes out: on the game thread at once,
+            // from another thread by the game thread in its next frames (the tick hook is removed last, below).
+            m_Base.m_PovService.Release(k_PovReleaseTimeout);
+            m_Base.m_PovService.Uninstall();
             m_Base.m_ObserverCameraDetour.Uninstall();
             m_Render.m_FirstPersonDetour.Uninstall();
             m_Render.m_ChudDetour.Uninstall();

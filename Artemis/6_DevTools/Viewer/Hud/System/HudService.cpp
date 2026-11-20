@@ -4,9 +4,11 @@ module;
 
 module DevTools.Viewer.Hud.System;
 
+import Common.Engine.Type;
 import Engine.Base.Memory.Type;
-import Engine.Base.Memory.Type;
+import Engine.Base.Pov.Type;
 import Engine.Render.Type;
+import Perception.Players.Type;
 import DevTools.Viewer.Latency.Type;
 import std;
 
@@ -18,6 +20,10 @@ namespace
     using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::SceneStatus;
+    using Engine::Base::Pov::Type::PovStatus;
+    using Perception::Players::Type::Player;
+
+    using Common::Engine::Type::k_NoHandle;
 
     using DevTools::Viewer::Latency::Type::LatencyReport;
     using DevTools::Viewer::Latency::Type::LatencySample;
@@ -164,6 +170,7 @@ namespace DevTools::Viewer::Hud::System
 
         this->DrawOverride();
         this->DrawFirstPersonHook();
+        this->DrawPov(tick);
         this->DrawFirstPersonMask();
         this->DrawLatency();
     }
@@ -236,6 +243,30 @@ namespace DevTools::Viewer::Hud::System
             isUnitHooked ? "yes" : "no", isDepthPassHooked ? "yes" : "no", isOpaqueHooked ? "yes" : "no", m_RenderStore.WasThirdPersonLastFrame() ? "yes" : "no",
             m_RenderStore.WasFirstPersonUnitLastFrame() ? "yes" : "no");
 
+    }
+
+    auto HudService::DrawPov(const std::shared_ptr<const Tick>& tick) -> void
+    {
+        const PovStatus status{ m_PovStatusStore.Read() };
+
+        ImGui::Text("POV hook:");
+        ImGui::SameLine();
+        ImGui::TextColored(status.IsInstalled ? k_Green : k_Orange, "%s", status.IsInstalled ? "installed" : "not found");
+
+        ImGui::Text("POV:");
+        ImGui::SameLine();
+
+        if (status.RequestedHandle == k_NoHandle)
+        {
+            ImGui::TextDisabled("off");
+            return;
+        }
+
+        const Player* player{ tick && tick->Players ? tick->Players->Find(status.RequestedHandle) : nullptr };
+
+        ImGui::TextColored(status.Faults == 0 ? k_Info : k_Red, "%s req 0x%08X engine 0x%08X local 0x%08X calls %u reasserts %u faults %u%s",
+            player ? player->Name.c_str() : "?", status.RequestedHandle, status.EngineHandle, status.LocalHandle, status.Calls, status.Reasserts, status.Faults,
+            m_SceneService.IsPovPlayerDead(status) ? " dead, HUD hidden" : "");
     }
 
     auto HudService::DrawFirstPersonMask() -> void

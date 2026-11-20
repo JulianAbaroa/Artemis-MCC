@@ -4,6 +4,8 @@ import Common.Math.Type;
 import Services.Observed.State;
 import Services.Settings.State;
 import Engine.Base.Memory.Type;
+import Engine.Base.Pov.Type;
+import Engine.Base.Pov.State;
 import Engine.Render.State;
 import Views.View.Type;
 import Bridge.Codec.Tick.Type;
@@ -28,6 +30,7 @@ export namespace DevTools::Viewer::Scene::System
         using View = Views::View::Type::View;
         using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
+        using PovRequestStore = Engine::Base::Pov::State::PovRequestStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
@@ -43,9 +46,9 @@ export namespace DevTools::Viewer::Scene::System
 
     public:
         SceneService(SettingsStore& settingsStore, ObservedPlayerStore& observedStore, CameraStore& cameraStore,
-            CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore) :
+            CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore, PovRequestStore& povRequestStore) :
             m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_CameraStore(cameraStore),
-            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore) {}
+            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore), m_PovRequestStore(povRequestStore) {}
         ~SceneService() = default;
 
         SceneService(const SceneService&) = delete;
@@ -54,7 +57,8 @@ export namespace DevTools::Viewer::Scene::System
         // return: True if the free camera is active.
         auto IsActive() const -> bool;
 
-        // Makes the camera place itself on the local player the next time it is activated.
+        // Makes the camera place itself on the local player the next time it is activated, and withdraws the POV request so the game view goes
+        // back to the local player (VW.9a).
         auto Deactivate() -> void;
 
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
@@ -77,15 +81,20 @@ export namespace DevTools::Viewer::Scene::System
         // note: Valid as long as the tick is.
         auto GetObservedView(const Tick& tick) const -> const View*;
 
-        // return: The handles of the biped of the local player and of the objects hanging from it (weapons in hand), when the camera is in its eyes.
-        // Empty with the free camera, without the unit hook, or with a View without a biped.
-        // note: Computed once per frame by Update. In Game mode it is the primary local player when the game hid its unit in the last closed
-        // frame (RenderStore::WasFirstPersonUnitLastFrame, one frame behind), so in a vehicle or turret nothing is hidden when the game draws the body. Without
-        // the unit hook nothing is hidden (the telemetry shows whether it is installed). Drawn, that biped and its aim spheres cover the scene.
+        // return: The handles of the unit the game hid in first person and of the objects hanging from it (weapons in hand), when the camera is in its eyes.
+        // Empty with the free camera, without the unit hook, or when the game hid nothing.
+        // note: Computed once per frame by Update. In Game mode it is the object the first person test of the game answered true for user 0 in the last
+        // closed frame (RenderStore::GetFirstPersonUnitObjectLastFrame, one frame behind): the local player, or the watched player with the POV. In a
+        // vehicle or turret nothing is hidden when the game draws the body. Without the unit hook nothing is hidden (the telemetry shows whether it is
+        // installed). Drawn, that biped and its aim spheres cover the scene.
         auto GetHiddenHandles() const -> const std::unordered_set<std::uint32_t>&;
 
         // return: The distance from the game camera to the eye of the View of the local player, or nothing without a valid game camera or a View body.
         auto GetEyeDistance(const Tick& tick) const -> std::optional<float>;
+
+        // return: Whether the game view shows the requested player (status) and that player has no live body in the scene of the frame: the game
+        // repeats its loadout screen then, and the Viewer hides the game HUD (VW.9a B7).
+        auto IsPovPlayerDead(const Engine::Base::Pov::Type::PovStatus& status) const -> bool;
 
         // return: The eye of the View of the local player in the tick, or nothing without a View body.
         auto GetLocalEye(const Tick& tick) const -> std::optional<Vec3>;
@@ -139,6 +148,10 @@ export namespace DevTools::Viewer::Scene::System
         FramePoses m_FramePoses{};
         bool m_IsFrameUpdated{ false };
 
+        // Resolves the selection to a player (VW.9a B6) and rewrites the selected object as the current biped of that player.
+        // return: The player the selection follows, or 0xFFFFFFFF: the selection is not a player, or the tick has no players (the follow is kept).
+        auto FollowSelectedPlayer(const std::shared_ptr<const Tick>& tick) -> std::uint32_t;
+
         // Builds the hidden set of GetHiddenHandles.
         auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;
 
@@ -148,6 +161,7 @@ export namespace DevTools::Viewer::Scene::System
         CameraService& m_CameraService;
         SelectionService& m_SelectionService;
         const RenderStore& m_RenderStore;
+        PovRequestStore& m_PovRequestStore;
 
         PaletteService m_PaletteService{};
     };

@@ -1,5 +1,6 @@
 export module DevTools.Viewer.Layer;
 
+import Common.Engine.Type;
 import Services.Layer;
 import Services.Observed.State;
 import Services.Preferences.System;
@@ -26,6 +27,11 @@ import DevTools.Viewer.Hud.System;
 import DevTools.Viewer.Inspector.System;
 import DevTools.Viewer.Scene.System;
 import std;
+
+namespace
+{
+    using Common::Engine::Type::k_NoHandle;
+}
 
 export namespace DevTools::Viewer
 {
@@ -72,11 +78,11 @@ export namespace DevTools::Viewer
             m_SelectionService(m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService,
-                engine.m_RenderStore),
+                engine.m_RenderStore, engine.m_PovRequestStore),
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SceneService,
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, m_CollidableStore, m_OverlayStore, m_SceneService,
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
             m_AgentCardService(m_CollidableStore, m_SceneService, m_OptionsStore, m_SelectionStore, engine.m_BotStore),
@@ -89,7 +95,10 @@ export namespace DevTools::Viewer
                 [this](std::string_view key, std::string_view value) { m_OptionsStore.Load(key, value); });
 
             engine.m_RenderService.OnFrame([this, &gui, &engine, &service](const FrameContext&) {
-                engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
+                // While the game shows a watched player with no live body it repeats its loadout screen in the view of user 0: the HUD is hidden
+                // whatever the option says (VW.9a B7). The view and the camera stay as they are.
+                const bool isPovPlayerDead{ m_SceneService.IsPovPlayerDead(engine.m_PovStatusStore.Read()) };
+                engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud) || isPovPlayerDead);
                 engine.m_RenderStore.SetFirstPersonHidden(m_OptionsStore.IsEnabled(Flag::HideFirstPerson));
 
                 // note: The overlay needs the depth copies of the first person mask, and the scene point draws only for an active Viewer. Without
@@ -97,6 +106,17 @@ export namespace DevTools::Viewer
                 const bool isActive{ m_SceneService.IsActive() };
                 engine.m_RenderStore.SetFirstPersonMaskRequested(isActive);
                 engine.m_RenderStore.SetSceneDrawRequested(isActive);
+
+                // The game shows the observed player in the view of user 0 while the Viewer is active and the option is on. Without a request (the
+                // option off, no player selected) the request is withdrawn so the view goes back to the local player in the next frame of the game.
+                // An inactive Viewer withdraws it in Deactivate.
+                if (isActive)
+                {
+                    const std::uint32_t observed{ service.m_ObservedPlayerStore.Get() };
+
+                    if (m_OptionsStore.IsEnabled(Flag::WatchPov) && observed != k_NoHandle) engine.m_PovRequestStore.Publish(observed);
+                    else engine.m_PovRequestStore.Clear();
+                }
 
                 // The scene point does not run for an inactive Viewer, so the reset (override, flying state, scene, poses, observed player) is made
                 // here. It is idempotent and on the same thread as the scene point.

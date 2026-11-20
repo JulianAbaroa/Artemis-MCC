@@ -44,8 +44,6 @@ export namespace Engine::Base::Memory::State
         auto GetFaultCount() const -> std::uint32_t;
 
     private:
-        static constexpr int k_ReadAttempts{ 4 };
-
         std::array<CameraOverrideSlot, 2> m_Slots{};
         std::atomic<std::uint32_t> m_Current{ 0 };
         std::atomic<std::uint32_t> m_FaultCount{ 0 };

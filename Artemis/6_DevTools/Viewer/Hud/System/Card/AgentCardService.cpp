@@ -32,7 +32,6 @@ namespace
     using Perception::Players::Type::Player;
     using Bridge::Codec::Tick::Type::Tick;
 
-    using Views::View::System::ObservedPlayerOf;
     using DevTools::Gui::Format::System::TeamFormater;
     using DevTools::Viewer::Hud::System::ShortTagName;
     using DevTools::Viewer::Format::System::PlayerFormater;
@@ -141,16 +140,16 @@ namespace DevTools::Viewer::Hud::System
         const Level level{ m_OptionsStore.GetLevel(Layer::Card) };
         if (level == Level::Off) return;
 
-        const std::uint32_t selected{ m_SelectionStore.GetSelected() };
-        if (selected == k_NoHandle) return;
+        // The selection follows the player (VW.9a B6): dead or respawning, the card stays on it.
+        const std::uint32_t playerHandle{ m_SelectionStore.GetSelectedPlayer() };
+        if (playerHandle == k_NoHandle) return;
 
         const auto scene{ m_SceneService.GetFrameScene(m_CollidableStore) };
         if (!scene || !scene->Tick || !scene->Tick->Players) return;
 
         const Tick& tick{ *scene->Tick };
 
-        const std::uint32_t playerHandle{ ObservedPlayerOf(*tick.Players, selected) };
-        const Player* player{ playerHandle != k_NoHandle ? tick.Players->Find(playerHandle) : nullptr };
+        const Player* player{ tick.Players->Find(playerHandle) };
         if (!player) return;
 
         m_BotStore.CopyBots(m_Bots);

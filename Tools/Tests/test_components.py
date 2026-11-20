@@ -676,8 +676,8 @@ def test_the_match_window_and_input_modules_import_in_one_direction():
 # ---- M6c.2: the engine in five projects (D216, D217, D221)
 
 ENGINE_PLATFORM = {
-    "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "MatchSetup"},
-    "Artemis/5_Engine/Capture": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Capture"},
+    "Artemis/5_Engine/Base": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "MatchSetup", "Pov"},
+    "Artemis/5_Engine/Capture": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "Capture", "Pov"},
     "Artemis/5_Engine/Control": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MatchSetup", "Input", "Simulation"},
     "Artemis/5_Engine/Match": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "MapVariant", "MatchSetup", "Match"},
     "Artemis/5_Engine/Render": {"Hook", "Memory", "Host", "Lifecycle", "Preset", "Render", "Window"},

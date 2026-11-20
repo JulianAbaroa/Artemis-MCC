@@ -103,6 +103,14 @@
     <ClCompile Include="MapVariant\System\MapVariantDecodeService.cpp" />
     <ClCompile Include="MapVariant\System\MapVariantDecodeService.ixx" />
     <ClCompile Include="MapVariant\Type\Engine.Base.MapVariant.Type.ixx" />
+    <ClCompile Include="Pov\Engine.Base.Pov.State.ixx" />
+    <ClCompile Include="Pov\State\PovRequestStore.cpp" />
+    <ClCompile Include="Pov\State\PovRequestStore.ixx" />
+    <ClCompile Include="Pov\State\PovStatusStore.cpp" />
+    <ClCompile Include="Pov\State\PovStatusStore.ixx" />
+    <ClCompile Include="Pov\System\PovService.cpp" />
+    <ClCompile Include="Pov\System\PovService.ixx" />
+    <ClCompile Include="Pov\Type\Engine.Base.Pov.Type.ixx" />
     <ClCompile Include="Preset\Engine.Base.Preset.State.ixx" />
     <ClCompile Include="Preset\Engine.Base.Preset.System.ixx" />
     <ClCompile Include="Preset\State\PresetStore.cpp" />
@@ -129,6 +137,7 @@
     <ClCompile Include="Memory\Type\FrameClock.ixx" />
     <ClCompile Include="Memory\Type\GameCamera.ixx" />
     <ClCompile Include="Memory\Type\ObserverCamera.ixx" />
+    <ClCompile Include="Memory\Type\MemoryStore.ixx" />
     <ClCompile Include="Memory\Type\MemorySignature.ixx" />
   </ItemGroup>
   <ItemGroup>

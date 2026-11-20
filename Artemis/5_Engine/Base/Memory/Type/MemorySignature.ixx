@@ -299,6 +299,17 @@ export namespace Engine::Base::Memory::Type::Signature
 
     inline constexpr std::uint32_t k_ObserverCameraRva{ 0xC9CF8 };
 
+    // The function that makes an output user (view) show a player (A21 sec. 9, VW.9a, D340): void(uint32 outputUser, uint32 playerHandle). The
+    // theater uses it to change who a view watches. It is called, not hooked. Found by RVA like the HUD passes.
+    // Read from haloreach.dll MD5 012f4079...
+    inline constexpr Signature k_AssignOutputUserPrologue
+    {
+        "AssignOutputUserPrologue",
+        "48 89 5C 24 08 48 89 6C 24 10 48 89 74 24 18 57 41 54 41 55 41 56 41 57"
+    };
+
+    inline constexpr std::uint32_t k_AssignOutputUserRva{ 0x53D7C };
+
     // The first person model pass (A21 sec. 8, D331): void(void* camera, uint32 user, uint8 pass). It draws the arms and the weapon of the
     // local player in first person. Hooked to skip it (option Hide first person, or while Drive moves the camera).
     // Read from haloreach.dll MD5 012f4079...
@@ -352,4 +363,7 @@ export namespace Engine::Base::Memory::Type::Signature
 
     // Same rule for the first person functions.
     inline constexpr std::uint32_t k_FirstPersonWindow{ 0 };
+
+    // Same rule for the view assignment.
+    inline constexpr std::uint32_t k_AssignOutputUserWindow{ 0 };
 }

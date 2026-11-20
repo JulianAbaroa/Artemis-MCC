@@ -11,6 +11,7 @@ export import :Labels;
 export import :AgentCard;
 
 import Services.Telemetry.State;
+import Engine.Base.Pov.State;
 import Engine.Render.Type;
 import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
@@ -30,6 +31,7 @@ export namespace DevTools::Viewer::Hud::System
 
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
+        using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
@@ -37,9 +39,9 @@ export namespace DevTools::Viewer::Hud::System
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
 
     public:
-        HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, CollidableStore& collidableStore,
+        HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, const PovStatusStore& povStatusStore, CollidableStore& collidableStore,
             OverlayStore& overlayStore, SceneService& sceneService, LatencyService& latencyService) :
-            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_CollidableStore(collidableStore),
+            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_PovStatusStore(povStatusStore), m_CollidableStore(collidableStore),
             m_OverlayStore(overlayStore), m_SceneService(sceneService), m_LatencyService(latencyService) {}
         ~HudService() = default;
 
@@ -53,6 +55,7 @@ export namespace DevTools::Viewer::Hud::System
     private:
         TelemetryStore& m_TelemetryStore;
         RenderStore& m_RenderStore;
+        const PovStatusStore& m_PovStatusStore;
         CollidableStore& m_CollidableStore;
         OverlayStore& m_OverlayStore;
         SceneService& m_SceneService;
@@ -67,6 +70,10 @@ export namespace DevTools::Viewer::Hud::System
         // local player. It answers whether the overlay lines up (D323).
         auto DrawGameCamera(const std::shared_ptr<const Tick>& tick) -> void;
         auto DrawFirstPersonHook() -> void;
+
+        // Draws the POV: whether the view assignment of the engine was found, and while a player is requested who it is, the handles of the
+        // request, of the view of the game and of the local player, and the calls, reasserts and faults (VW.9a, D340).
+        auto DrawPov(const std::shared_ptr<const Tick>& tick) -> void;
 
         // Draws whether the first person mask of the overlay was copied in the last frame (VW.6.y.2 B).
         auto DrawFirstPersonMask() -> void;

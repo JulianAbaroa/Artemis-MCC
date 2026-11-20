@@ -7,6 +7,7 @@ import Services.Telemetry.State;
 import Engine.Base.Memory.System;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.MatchSetup.System;
+import Engine.Base.Pov.System;
 import Engine.Capture.Type;
 import Engine.Capture.State;
 import std;
@@ -14,7 +15,7 @@ import std;
 export namespace Engine::Capture::Hook
 {
     // Hooks the engine function that runs the logic ticks of one frame. Marks the engine as running, keeps the engine speed requested by
-    // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), applies the match setup requested between rounds (D286), records the telemetry of the call
+    // Artemis, holds the ticks while a pause is requested (D143), ends the round when asked (D144), applies the match setup requested between rounds (D286), gives the POV its turn (D340), records the telemetry of the call
     // and closes its last tick (ExecuteGameFrameDetour closes the others).
     // note: Without the ExecuteGameFrame hook it produces once per call that advanced ticks, so only the last tick of a frame is seen.
     // note: Game main thread only.
@@ -29,6 +30,7 @@ export namespace Engine::Capture::Hook
         using AOBService = Engine::Base::Memory::System::AOBService;
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
+        using PovService = Engine::Base::Pov::System::PovService;
         using CaptureStore = Engine::Capture::State::CaptureStore;
         using SimulationTicksFunction = Engine::Capture::Type::SimulationTicksFunction;
         using EndRoundFunction = Engine::Capture::Type::EndRoundFunction;
@@ -36,10 +38,10 @@ export namespace Engine::Capture::Hook
     public:
         SimulationTicksDetour(Log& log, TelemetryStore& telemetryStore, AOBService& aobService,
             LifecycleStore& lifecycleStore, CaptureStore& captureStore, MatchSetupService& matchSetupService,
-            ExecuteGameFrameDetour& executeGameFrameDetour) :
+            PovService& povService, ExecuteGameFrameDetour& executeGameFrameDetour) :
             m_Log(log), m_TelemetryStore(telemetryStore), m_AOBService(aobService),
             m_LifecycleStore(lifecycleStore), m_CaptureStore(captureStore),
-            m_MatchSetupService(matchSetupService), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
+            m_MatchSetupService(matchSetupService), m_PovService(povService), m_ExecuteGameFrameDetour(executeGameFrameDetour) {}
         ~SimulationTicksDetour() = default;
 
         // Finds the target by signature and installs the hook. Does nothing if already installed.
@@ -55,6 +57,7 @@ export namespace Engine::Capture::Hook
         LifecycleStore& m_LifecycleStore;
         CaptureStore& m_CaptureStore;
         MatchSetupService& m_MatchSetupService;
+        PovService& m_PovService;
         ExecuteGameFrameDetour& m_ExecuteGameFrameDetour;
 
         static inline SimulationTicksDetour* s_Instance{ nullptr };
@@ -85,5 +88,10 @@ export namespace Engine::Capture::Hook
         // does the checks and the writing, this only gives it the thread context.
         // note: Runs after ApplyEndRound, so a request made with an end of round is served in the frame the round ends. Also in a pause.
         auto ApplyMatchSetup() -> void;
+
+        // Makes the view of user 0 show the player the Viewer asks for, or the local player when nobody asks (VW.9a, D340). The service compares
+        // the view with the wanted player and calls the engine only when they differ.
+        // note: Runs after ApplyMatchSetup, before the ticks of the frame. Also in a pause.
+        auto ApplyPov() -> void;
     };
 }

@@ -7,6 +7,8 @@ module Engine.Render.State;
 
 namespace
 {
+    using Common::Engine::Type::k_NoHandle;
+
     using Engine::Render::Type::DrawPlace;
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::MaskTextures;
@@ -181,9 +183,18 @@ namespace Engine::Render::State
         return m_ThirdPersonLastFrame.load(std::memory_order_relaxed) != 0;
     }
 
-    auto RenderStore::CountFirstPersonUnit() -> void
+    auto RenderStore::CountFirstPersonUnit(std::uint32_t objectHandle) -> void
     {
         m_FirstPersonUnitCalls.fetch_add(1, std::memory_order_relaxed);
+
+        // The first object of the frame stays: a later answer finds the slot taken.
+        std::uint32_t expected{ k_NoHandle };
+        m_FirstPersonUnitObject.compare_exchange_strong(expected, objectHandle, std::memory_order_relaxed);
+    }
+
+    auto RenderStore::GetFirstPersonUnitObjectLastFrame() const -> std::uint32_t
+    {
+        return m_FirstPersonUnitObjectLastFrame.load(std::memory_order_relaxed);
     }
 
     auto RenderStore::WasFirstPersonUnitLastFrame() const -> bool
@@ -205,6 +216,7 @@ namespace Engine::Render::State
     {
         m_ThirdPersonLastFrame.store(m_ThirdPersonCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
         m_FirstPersonUnitLastFrame.store(m_FirstPersonUnitCalls.exchange(0, std::memory_order_relaxed), std::memory_order_relaxed);
+        m_FirstPersonUnitObjectLastFrame.store(m_FirstPersonUnitObject.exchange(k_NoHandle, std::memory_order_relaxed), std::memory_order_relaxed);
 
         for (std::size_t i{ 0 }; i < k_MaskPairCount; ++i)
         {

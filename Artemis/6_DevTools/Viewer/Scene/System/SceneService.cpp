@@ -2,6 +2,9 @@ module DevTools.Viewer.Scene.System;
 
 import Common.Engine.Type;
 import Common.Math.System;
+import Engine.Base.Pov.System;
+import Blam.MapModel.Definitions.Type;
+import Perception.Entities.Type;
 import Perception.ObjectGraph.Type;
 import Perception.Players.Type;
 import Views.View.System;
@@ -13,7 +16,11 @@ import std;
 namespace
 {
     using DevTools::Viewer::Camera::Type::Mode;
+    using Blam::MapModel::Definitions::Type::Object::ObjectKind;
+    using Engine::Base::Pov::System::IsPovOnOtherPlayer;
     using Perception::ObjectGraph::Type::ObjectNode;
+    using Perception::Players::Type::Player;
+    using Perception::ObjectGraph::Type::k_MaxParentDepth;
 
     using Views::View::System::FindObservedView;
     using Views::View::System::ObservedPlayerOf;
@@ -22,6 +29,28 @@ namespace
     using DevTools::Viewer::Collidable::Type::ShareObjects;
 
     using Common::Engine::Type::k_NoHandle;
+
+    // return: The first biped on the chain of parents of the object (the object itself included) in the graph of the tick, none when there is
+    // none (a vehicle or a turret is not hidden), or the object as it is when the tick has no graph or no entities. The game may answer the first
+    // person test for a weapon before its unit.
+    auto UnitOf(const Bridge::Codec::Tick::Type::Tick& tick, std::uint32_t handle) -> std::uint32_t
+    {
+        if (!tick.ObjectGraph || !tick.Entities) return handle;
+
+        std::uint32_t current{ handle };
+        for (int depth{ 0 }; depth < k_MaxParentDepth; ++depth)
+        {
+            const auto* entity{ tick.Entities->Find(current) };
+            if (entity && entity->Kind == ObjectKind::Biped) return current;
+
+            const ObjectNode* node{ tick.ObjectGraph->Find(current) };
+            if (!node || node->ParentHandle == k_NoHandle || node->ParentHandle == current) break;
+
+            current = node->ParentHandle;
+        }
+
+        return k_NoHandle;
+    }
 }
 
 namespace DevTools::Viewer::Scene::System
@@ -115,16 +144,21 @@ namespace DevTools::Viewer::Scene::System
         std::unordered_set<std::uint32_t> hidden{};
         if (!tick.Views) return hidden;
 
-        // note: Only the Game mode hides the biped of the local player, and only when the unit hook says the game hid it. Without the hook nothing is
-        // hidden (no fallback). The free camera hides nothing: the game draws the body.
+        // note: Only the Game mode hides the unit, and only when the unit hook says the game hid it: the object it answered true for, which is the
+        // biped of the local player or, with the POV, the one of the watched player. Without the hook nothing is hidden (no fallback). The free camera
+        // hides nothing: the game draws the body.
         if (m_CameraStore.GetMode() != Mode::Game || !m_RenderStore.IsFirstPersonUnitHooked() || !m_RenderStore.WasFirstPersonUnitLastFrame()) return hidden;
 
-        const View* view{ FindObservedView(*tick.Views, k_NoHandle) };
-        if (!view || view->Head.BipedHandle == k_NoHandle) return hidden;
+        // The unit above the answered object, so a weapon that answered first still hides the body that holds it.
+        const std::uint32_t answered{ m_RenderStore.GetFirstPersonUnitObjectLastFrame() };
+        if (answered == k_NoHandle) return hidden;
 
-        hidden.insert(view->Head.BipedHandle);
+        const std::uint32_t unit{ UnitOf(tick, answered) };
+        if (unit == k_NoHandle) return hidden;
 
-        const ObjectNode* node{ tick.ObjectGraph ? tick.ObjectGraph->Find(view->Head.BipedHandle) : nullptr };
+        hidden.insert(unit);
+
+        const ObjectNode* node{ tick.ObjectGraph ? tick.ObjectGraph->Find(unit) : nullptr };
         if (node)
         {
             for (const std::uint32_t child : tick.ObjectGraph->ChildrenOf(*node)) hidden.insert(child);
@@ -138,6 +172,7 @@ namespace DevTools::Viewer::Scene::System
         m_Scene.reset();
         m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
+        m_PovRequestStore.Clear();
         m_CameraService.Deactivate();
     }
 
@@ -154,9 +189,8 @@ namespace DevTools::Viewer::Scene::System
         const bool acceptInput = !m_SettingsStore.IsMenuVisible();
         m_CameraService.Update(tick, viewport, acceptInput);
 
-        // note: The watched player is the one of the selected biped, else the local player.
-        const std::uint32_t selected = m_SelectionService.GetSelected();
-        m_ObservedStore.Set(tick && tick->Players ? ObservedPlayerOf(*tick->Players, selected) : k_NoHandle);
+        // note: The watched player is the one the selection follows, else the local player.
+        m_ObservedStore.Set(this->FollowSelectedPlayer(tick));
 
         m_Hidden = tick ? this->HiddenHandlesOf(*tick) : std::unordered_set<std::uint32_t>{};
 
@@ -165,6 +199,35 @@ namespace DevTools::Viewer::Scene::System
         m_SelectionService.Update(m_CameraService.GetCenterRay(), ShareObjects(scene));
 
         m_IsFrameUpdated = m_CameraService.HasRenderPose();
+    }
+
+    auto SceneService::FollowSelectedPlayer(const std::shared_ptr<const Tick>& tick) -> std::uint32_t
+    {
+        if (!tick || !tick->Players) return k_NoHandle;
+
+        // A new pick holds only the object: its player is found by its current biped.
+        std::uint32_t playerHandle{ m_SelectionService.GetSelectedPlayer() };
+        if (playerHandle == k_NoHandle) playerHandle = ObservedPlayerOf(*tick->Players, m_SelectionService.GetSelected());
+        if (playerHandle == k_NoHandle) return k_NoHandle;
+
+        // A player that left the table ends the selection. A player without a biped keeps it.
+        const Player* player{ tick->Players->Find(playerHandle) };
+        if (!player)
+        {
+            m_SelectionService.Clear();
+            return k_NoHandle;
+        }
+
+        m_SelectionService.Follow(playerHandle, player->BipedHandle);
+        return playerHandle;
+    }
+
+    auto SceneService::IsPovPlayerDead(const Engine::Base::Pov::Type::PovStatus& status) const -> bool
+    {
+        if (!IsPovOnOtherPlayer(status) || !m_Scene || !m_Scene->Tick || !m_Scene->Tick->Players) return false;
+
+        const Player* player{ m_Scene->Tick->Players->Find(status.RequestedHandle) };
+        return player != nullptr && !player->Body;
     }
 
     auto SceneService::HasFrameUpdate() const -> bool

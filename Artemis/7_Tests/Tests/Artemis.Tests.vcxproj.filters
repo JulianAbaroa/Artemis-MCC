@@ -57,6 +57,9 @@
     <ClCompile Include="Engine\GameCameraTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\PovTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\BotRosterTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -187,6 +190,15 @@
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Viewer\OptionsStoreTests.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="Viewer\SelectionStoreTests.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.cpp">
       <Filter>Viewer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\6_DevTools\Viewer\Options\Type\DevTools.Viewer.Options.Type.ixx">

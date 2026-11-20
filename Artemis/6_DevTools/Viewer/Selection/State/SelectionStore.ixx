@@ -10,8 +10,10 @@ namespace
 
 export namespace DevTools::Viewer::Selection::State
 {
-    // Holds the selected object handle and the pending pick request.
+    // Holds the selected object handle, the player it follows and the pending pick request.
     // The values are atomic because the input writes them and the render frame reads them.
+    // note: Selecting the biped of a player follows the player (VW.9a B6): the object is the current biped of that player, which the scene service
+    // rewrites at every update, and the player stays when the biped dies, respawns or is replaced.
     class SelectionStore
     {
     public:
@@ -22,7 +24,14 @@ export namespace DevTools::Viewer::Selection::State
         auto operator=(const SelectionStore&) -> SelectionStore& = delete;
 
         auto GetSelected() const -> std::uint32_t;
+        // Selects an object, which follows no player. A pick uses it.
         auto SetSelected(std::uint32_t handle) -> void;
+
+        // Selects a player and its current biped (none while it has none).
+        auto Follow(std::uint32_t playerHandle, std::uint32_t bipedHandle) -> void;
+
+        // return: The player the selection follows, or 0xFFFFFFFF when the selection is not a player or there is none.
+        auto GetSelectedPlayer() const -> std::uint32_t;
         auto HasSelection() const -> bool;
         auto Clear() -> void;
 
@@ -34,6 +43,7 @@ export namespace DevTools::Viewer::Selection::State
 
     private:
         std::atomic<std::uint32_t> m_Selected{ k_NoHandle };
+        std::atomic<std::uint32_t> m_SelectedPlayer{ k_NoHandle };
         std::atomic<bool> m_IsPickPending{ false };
     };
 }

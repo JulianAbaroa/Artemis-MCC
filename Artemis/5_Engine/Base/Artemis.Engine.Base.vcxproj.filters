@@ -25,6 +25,18 @@
     <Filter Include="Hook\Type">
       <UniqueIdentifier>{01d06faa-8783-5710-9766-4475350fd512}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Pov">
+      <UniqueIdentifier>{3ffbc611-01d7-4533-9f0f-2c8252708de6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pov\State">
+      <UniqueIdentifier>{286158c9-4ae0-4cb4-9672-b7c7479ea339}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pov\System">
+      <UniqueIdentifier>{663add78-3743-410f-8e1e-4b511d01371c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pov\Type">
+      <UniqueIdentifier>{809686de-c555-49e4-9496-ce5940baff9d}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Host">
       <UniqueIdentifier>{b9d41866-45f2-5184-9af0-474226956631}</UniqueIdentifier>
     </Filter>
@@ -307,10 +319,37 @@
     <ClCompile Include="Memory\State\CameraOverrideStore.cpp">
       <Filter>Memory\State</Filter>
     </ClCompile>
+    <ClCompile Include="Pov\Engine.Base.Pov.State.ixx">
+      <Filter>Pov</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\State\PovRequestStore.cpp">
+      <Filter>Pov\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\State\PovRequestStore.ixx">
+      <Filter>Pov\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\State\PovStatusStore.cpp">
+      <Filter>Pov\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\State\PovStatusStore.ixx">
+      <Filter>Pov\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\System\PovService.cpp">
+      <Filter>Pov\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\System\PovService.ixx">
+      <Filter>Pov\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Pov\Type\Engine.Base.Pov.Type.ixx">
+      <Filter>Pov\Type</Filter>
+    </ClCompile>
     <ClCompile Include="Memory\State\CameraOverrideStore.ixx">
       <Filter>Memory\State</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Type\ObserverCamera.ixx">
+      <Filter>Memory\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\Type\MemoryStore.ixx">
       <Filter>Memory\Type</Filter>
     </ClCompile>
     <ClCompile Include="Memory\Engine.Base.Memory.System.ixx">

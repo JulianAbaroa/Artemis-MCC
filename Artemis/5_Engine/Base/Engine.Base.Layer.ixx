@@ -16,11 +16,13 @@ import Engine.Base.MatchSetup.State;
 import Engine.Base.MatchSetup.System;
 import Engine.Base.Preset.State;
 import Engine.Base.Preset.System;
+import Engine.Base.Pov.State;
+import Engine.Base.Pov.System;
 
 export namespace Engine::Base
 {
     // The base of the engine: lifecycle of the game, host (MCC) local users and session checks, signature search and memory reads, and the
-    // gametype presets (D264), map variants and the match setup that applies them with the bots (D286).
+    // gametype presets (D264), map variants and the match setup that applies them with the bots (D286), and the POV of the view of user 0 (D340).
     // note: Owner only: it has no callbacks and installs nothing. The one that composes it connects the lifecycle and installs the hooks.
     class Layer
     {
@@ -54,6 +56,10 @@ export namespace Engine::Base
         using MatchSetupService = Engine::Base::MatchSetup::System::MatchSetupService;
         using PresetService = Engine::Base::Preset::System::PresetService;
 
+        using PovRequestStore = Engine::Base::Pov::State::PovRequestStore;
+        using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
+        using PovService = Engine::Base::Pov::System::PovService;
+
     public:
         explicit Layer(Services::Layer& service) :
             m_LifecycleService(service.m_Log, m_LifecycleStore),
@@ -64,6 +70,7 @@ export namespace Engine::Base
             m_MapVariantService(service.m_Log, m_MapVariantStore),
             m_MapVariantDecodeService(service.m_Log, m_AOBService),
             m_MatchSetupService(service.m_Log, m_LifecycleStore, m_MatchSetupStore, m_PresetService, m_MapVariantService),
+            m_PovService(service.m_Log, m_AOBService, m_PovRequestStore, m_PovStatusStore),
             m_EngineInitializeDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_DestroySubsystemsDetour(service.m_Log, m_AOBService, m_LifecycleStore, m_LifecycleService),
             m_OpenMapDetour(service.m_Log, m_AOBService, m_LifecycleService),
@@ -87,6 +94,8 @@ export namespace Engine::Base
         MapVariantStore m_MapVariantStore{};
         MatchSetupStore m_MatchSetupStore{};
         CameraOverrideStore m_CameraOverrideStore{};
+        PovRequestStore m_PovRequestStore{};
+        PovStatusStore m_PovStatusStore{};
 
         // --- System ---
         LifecycleService m_LifecycleService;
@@ -98,6 +107,7 @@ export namespace Engine::Base
         MapVariantService m_MapVariantService;
         MapVariantDecodeService m_MapVariantDecodeService;
         MatchSetupService m_MatchSetupService;
+        PovService m_PovService;
 
         // --- Hook ---
         EngineInitializeDetour m_EngineInitializeDetour;
