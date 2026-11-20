@@ -95,10 +95,8 @@ export namespace DevTools::Viewer
                 [this](std::string_view key, std::string_view value) { m_OptionsStore.Load(key, value); });
 
             engine.m_RenderService.OnFrame([this, &gui, &engine, &service](const FrameContext&) {
-                // While the game shows a watched player with no live body it repeats its loadout screen in the view of user 0: the HUD is hidden
-                // whatever the option says (VW.9a B7). The view and the camera stay as they are.
-                const bool isPovPlayerDead{ m_SceneService.IsPovPlayerDead(engine.m_PovStatusStore.Read()) };
-                engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud) || isPovPlayerDead);
+                // note: The HUD of a dead watched player is not hidden (D346): hiding it showed the first frames of the death text animation.
+                engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
                 engine.m_RenderStore.SetFirstPersonHidden(m_OptionsStore.IsEnabled(Flag::HideFirstPerson));
 
                 // note: The overlay needs the depth copies of the first person mask, and the scene point draws only for an active Viewer. Without

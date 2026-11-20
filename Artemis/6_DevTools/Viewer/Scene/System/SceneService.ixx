@@ -93,7 +93,7 @@ export namespace DevTools::Viewer::Scene::System
         auto GetEyeDistance(const Tick& tick) const -> std::optional<float>;
 
         // return: Whether the game view shows the requested player (status) and that player has no live body in the scene of the frame: the game
-        // repeats its loadout screen then, and the Viewer hides the game HUD (VW.9a B7).
+        // shows its death screen for that player then (VW.9a B7). Only the telemetry reads it, the HUD is not hidden (D346).
         auto IsPovPlayerDead(const Engine::Base::Pov::Type::PovStatus& status) const -> bool;
 
         // return: The eye of the View of the local player in the tick, or nothing without a View body.
