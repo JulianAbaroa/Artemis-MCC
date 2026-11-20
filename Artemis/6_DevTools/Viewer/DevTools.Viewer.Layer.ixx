@@ -58,6 +58,7 @@ export namespace DevTools::Viewer
         using MapService = DevTools::Viewer::Map::System::MapService;
         using HudService = DevTools::Viewer::Hud::System::HudService;
         using LabelService = DevTools::Viewer::Hud::System::LabelService;
+        using AgentCardService = DevTools::Viewer::Hud::System::AgentCardService;
         using InspectorService = DevTools::Viewer::Inspector::System::InspectorService;
 
     public:
@@ -78,6 +79,7 @@ export namespace DevTools::Viewer
             m_HudService(service.m_TelemetryStore, engine.m_RenderStore, m_CollidableStore, m_OverlayStore, m_SceneService,
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
+            m_AgentCardService(m_CollidableStore, m_SceneService, m_OptionsStore, m_SelectionStore, engine.m_BotStore),
             m_InspectorService(m_SceneService, m_CollidableStore, m_SelectionStore, engine.m_PlayerActionStore, engine.m_BotStore)
         {
             auto& lifecycle = engine.m_LifecycleService;
@@ -117,7 +119,13 @@ export namespace DevTools::Viewer
 
                 if (!gui.m_BackendGuiService.IsReady()) return;
 
-                if (isSceneUpdated) m_LabelService.Draw();
+                // The card has the gate of the labels: the same scene update, so never the data of another frame.
+                if (isSceneUpdated)
+                {
+                    m_LabelService.Draw();
+                    m_AgentCardService.Draw();
+                }
+
                 m_HudService.Draw();
             });
 
@@ -174,6 +182,7 @@ export namespace DevTools::Viewer
         MapService m_MapService;
         HudService m_HudService;
         LabelService m_LabelService;
+        AgentCardService m_AgentCardService;
         InspectorService m_InspectorService;
     };
 }

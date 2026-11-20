@@ -231,6 +231,29 @@ TEST(OptionsStoreTests, TheKeysOfTheFlagsOfALayerAreIgnoredOnLoadAndALevelOutOfR
     EXPECT_TRUE(store.IsEnabled(Flag::HideFirstPerson));
 }
 
+TEST(OptionsStoreTests, TheAgentCardLayerHasNoFlagsAndIsSavedByItsKey)
+{
+    const auto& info{ k_Layers[static_cast<std::size_t>(Layer::Card)] };
+    EXPECT_STREQ(info.Key, "LayerCard");
+    EXPECT_EQ(info.Default, Level::Minimal);
+    EXPECT_FALSE(std::ranges::any_of(k_Flags, [](const FlagInfo& flag) { return flag.Owner == Layer::Card; }));
+
+    OptionsStore store{};
+    EXPECT_EQ(store.GetLevel(Layer::Card), Level::Minimal);
+
+    store.SetLevel(Layer::Card, Level::Full);
+    const std::string saved{ Snapshot(store) };
+    EXPECT_NE(saved.find("Viewer_LayerCard=2\n"), std::string::npos);
+
+    OptionsStore restored{};
+    restored.Load("LayerCard", "0");
+    EXPECT_EQ(restored.GetLevel(Layer::Card), Level::Off);
+    restored.Load("LayerCard", "2");
+    EXPECT_EQ(restored.GetLevel(Layer::Card), Level::Full);
+    restored.Load("LayerCard", "7");
+    EXPECT_EQ(restored.GetLevel(Layer::Card), Level::Minimal);
+}
+
 TEST(OptionsStoreTests, ResetToDefaultsPutsTheLevelsBack)
 {
     OptionsStore store{};

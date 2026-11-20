@@ -8,6 +8,7 @@ export import :HealthLabels;
 export import :InteractionLabels;
 export import :FixtureLabels;
 export import :Labels;
+export import :AgentCard;
 
 import Services.Telemetry.State;
 import Engine.Render.Type;

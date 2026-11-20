@@ -115,6 +115,8 @@
     <ClCompile Include="Control\System\ControlService.ixx" />
     <ClCompile Include="Geometry\System\ZoneGeometry.cpp" />
     <ClCompile Include="Geometry\System\ZoneGeometry.ixx" />
+    <ClCompile Include="Hud\System\Card\AgentCardService.cpp" />
+    <ClCompile Include="Hud\System\Card\AgentCardService.ixx" />
     <ClCompile Include="Hud\System\HudService.cpp" />
     <ClCompile Include="Hud\System\HudService.ixx" />
     <ClCompile Include="Hud\Type\DevTools.Viewer.Hud.Type.ixx" />

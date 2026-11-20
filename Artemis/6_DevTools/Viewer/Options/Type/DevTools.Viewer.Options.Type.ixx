@@ -23,6 +23,7 @@ export namespace DevTools::Viewer::Options::Type
         Fixtures,
         World,
         Health,
+        Card,
 
         Count
     };
@@ -199,6 +200,8 @@ export namespace DevTools::Viewer::Options::Type
             "The collision wireframe and the volumes and surfaces that limit the map." },
         { Layer::Health, "LayerHealth", "Health",
             "Health bars over the damage sections." },
+        { Layer::Card, "LayerCard", "Agent card",
+            "Card of the selected player at the bottom left of the frame, with no flags of its own.\nMinimal: name, health and shield bars, weapon in the hands.\nFull adds: other weapon, grenades, armor ability and energy, powerup, flag, zoom." },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags

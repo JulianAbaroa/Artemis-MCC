@@ -70,6 +70,10 @@ namespace
         }
 
         std::string text{ layer.Tooltip };
+
+        // note: A layer without flags (the agent card) describes its levels in its own tooltip.
+        if (minimal.empty() && added.empty() && dropped.empty()) return text;
+
         text += "\nMinimal: " + minimal + ".";
         if (!added.empty()) text += "\nFull adds: " + added + ".";
         if (!dropped.empty()) text += "\nFull drops: " + dropped + ".";

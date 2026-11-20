@@ -61,6 +61,9 @@
     <Filter Include="Hud\System">
       <UniqueIdentifier>{d4747710-ee29-57ac-90ee-6867d07e0701}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Hud\System\Card">
+      <UniqueIdentifier>{5b0c7a52-3f1e-5a64-8d3b-2c9e41a7d6f0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Hud\System\Label">
       <UniqueIdentifier>{d2140e8f-abd4-5783-8b78-6104c7f7ac99}</UniqueIdentifier>
     </Filter>
@@ -213,6 +216,12 @@
     </ClCompile>
     <ClCompile Include="Geometry\System\ZoneGeometry.ixx">
       <Filter>Geometry\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Card\AgentCardService.cpp">
+      <Filter>Hud\System\Card</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Card\AgentCardService.ixx">
+      <Filter>Hud\System\Card</Filter>
     </ClCompile>
     <ClCompile Include="Hud\System\HudService.cpp">
       <Filter>Hud\System</Filter>
