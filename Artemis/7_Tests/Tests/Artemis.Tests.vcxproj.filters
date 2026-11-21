@@ -60,6 +60,9 @@
     <ClCompile Include="Engine\PovTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\ViewActionTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\BotRosterTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

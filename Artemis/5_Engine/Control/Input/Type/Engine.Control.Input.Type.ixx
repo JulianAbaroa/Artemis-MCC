@@ -240,4 +240,8 @@ export namespace Engine::Control::Input::Type
     // Signature of the engine function that clears an action to the empty action of the engine (haloreach.dll rva 0x46a34).
     // note: Empty means no unit, no weapon, grenade or zoom request, no interaction and no aim assist target (A17 sec. 4).
     using ClearPlayerActionFunction = auto(__fastcall*)(void* action) -> void;
+
+    // Signature of the engine function that copies an action into the input of a view (haloreach.dll rva 0x62fcc).
+    // note: Moves the aim, zoom, weapon and buttons of the input of the view, which the first person camera reads (A21 sec. 9.2).
+    using CopyActionToViewFunction = auto(__fastcall*)(std::int32_t view, const void* action) -> void;
 }

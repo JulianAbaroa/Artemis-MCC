@@ -5,12 +5,16 @@ module;
 module Engine.Control.Input.Hook;
 import :PlayerAction;
 
+import Common.Engine.Type;
 import Control.Action.Type;
 import Control.Action.System;
 import Engine.Base.Hook.System;
 import Engine.Base.Memory.Type;
+import Engine.Control.Input.System;
 import Engine.Control.Simulation.Type;
 import Blam.Layout.Action.Type;
+import Blam.Layout.Object.Type;
+import Blam.Layout.Player.Type;
 import std;
 
 namespace
@@ -28,8 +32,19 @@ namespace
     using ::Control::Action::Type::PlayerActionHistory;
     using ::Control::Action::Type::UnitClientState;
 
+    using Common::Engine::Type::k_MaxLocalUsers;
+
+    using Engine::Control::Input::System::FindViewActionPlayer;
+
     using Engine::Control::Input::Type::PlayerActions;
     using Engine::Control::Input::Type::ShadowField;
+
+    using Blam::Layout::Object::Type::Constant::k_GameGlobalsTheaterOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameModeOffset;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextMappingOffset;
+    using Blam::Layout::Player::Type::Mapping::k_EntryStride;
+    using Blam::Layout::Player::Type::Mapping::k_OutputUserPlayer;
+    using Blam::Layout::Player::Type::Mapping::k_PlayerInputUser;
 
     using Blam::Layout::Action::Type::k_HoldLanes;
     using Blam::Layout::Action::Type::k_NoZoomLevel;
@@ -85,10 +100,11 @@ namespace Engine::Control::Input::Hook
     {
         Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
+        const std::uintptr_t threadContext{ update != nullptr ? s_Instance->GetThreadContext() : 0 };
+
         if (update != nullptr)
         {
             auto* bytes{ static_cast<std::uint8_t*>(update) };
-            const std::uintptr_t threadContext{ s_Instance->GetThreadContext() };
 
             s_Instance->m_MatchSetupService.UpdateLoad(threadContext);
             s_Instance->m_BotService.Update(threadContext);
@@ -98,6 +114,41 @@ namespace Engine::Control::Input::Hook
         }
 
         s_OriginalFunction(update);
+
+        if (update != nullptr)
+        {
+            s_Instance->CopyActionsToViews(static_cast<const std::uint8_t*>(update), threadContext);
+        }
+    }
+
+    auto PlayerActionDetour::CopyActionsToViews(const std::uint8_t* update, std::uintptr_t threadContext) -> void
+    {
+        if (!m_CopyActionToView || threadContext == 0) return;
+
+        const std::uintptr_t mapping{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextMappingOffset) };
+        const std::uintptr_t gameGlobals{ *reinterpret_cast<const std::uintptr_t*>(threadContext + k_ThreadContextGameModeOffset) };
+        if (mapping == 0 || gameGlobals == 0) return;
+
+        const bool isTheater{ *reinterpret_cast<const std::uint8_t*>(gameGlobals + k_GameGlobalsTheaterOffset) != 0 };
+
+        // note: The mask after ApplyOverrides, the one the engine just used to apply the actions.
+        std::uint32_t mask{ 0 };
+        std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
+
+        std::array<std::int32_t, k_MaxActionPlayers> inputUsers{};
+        std::memcpy(inputUsers.data(), reinterpret_cast<const void*>(mapping + k_PlayerInputUser), sizeof(inputUsers));
+
+        for (std::size_t view{ 0 }; view < k_MaxLocalUsers; ++view)
+        {
+            std::uint32_t viewPlayer{ 0 };
+            std::memcpy(&viewPlayer, reinterpret_cast<const void*>(mapping + k_OutputUserPlayer + (view * k_EntryStride)),
+                sizeof(viewPlayer));
+
+            const std::optional<std::size_t> player{ FindViewActionPlayer(viewPlayer, mask, inputUsers, isTheater) };
+            if (!player) continue;
+
+            m_CopyActionToView(static_cast<std::int32_t>(view), update + k_UpdateActionsOffset + (*player * k_PlayerActionSize));
+        }
     }
 
     auto PlayerActionDetour::ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void
@@ -386,6 +437,13 @@ namespace Engine::Control::Input::Hook
         {
             m_Log.Message("[PlayerActionDetour] ERROR: Failed to find ClearPlayerAction. No action override will be"
                 " applied.");
+        }
+
+        m_CopyActionToView = reinterpret_cast<CopyActionToViewFunction>(m_AOBService.FindPattern(Signature::k_CopyActionToView));
+        if (!m_CopyActionToView)
+        {
+            m_Log.Message("[PlayerActionDetour] ERROR: Failed to find CopyActionToView. The view of a non local player (Watch POV) will not"
+                " turn.");
         }
 
         const std::uintptr_t tagLoad{ m_AOBService.FindPattern(Signature::k_PlayerControlTagLoad) };

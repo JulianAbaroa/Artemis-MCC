@@ -151,6 +151,7 @@
     <ClCompile Include="Engine\FrameClockTests.cpp" />
     <ClCompile Include="Engine\GameCameraTests.cpp" />
     <ClCompile Include="Engine\PovTests.cpp" />
+    <ClCompile Include="Engine\ViewActionTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />
     <ClCompile Include="Engine\MapVariantServiceTests.cpp" />
     <ClCompile Include="Engine\MatchConfigTests.cpp" />

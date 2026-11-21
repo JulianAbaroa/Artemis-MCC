@@ -4,7 +4,12 @@ Group `5_Engine` - static library inside the game process - applies the actions 
 
 ## Responsibility
 - `PlayerActionDetour`: once per tick on the game thread, writes the overrides into the action of any player (local or bot) and
-  publishes the actions. It asks the `ActionSource` port for the overrides of the client's players.
+  publishes the actions. It asks the `ActionSource` port for the overrides of the client's players. After the engine applied the actions it
+  also calls the engine function `CopyActionToView` (0x62fcc) on the game thread for every view that shows a non local player, outside the
+  theater and only if that player has an action in the tick (after the overrides), as the engine does in the theater: the camera, zoom and
+  weapon of a view that watches a bot (Watch POV) follow it tick by tick (VW.9a.y, D349). The decision is the pure `FindViewActionPlayer`. A
+  view of a local player is never touched (the engine moves it every frame) and without POV no view shows a non local player, so it is
+  never called.
 - Virtual input: `InputUpdateDetour` gives MCC the state of a virtual gamepad for local players switched to Artemis.
 - Bots: players on machines only Artemis knows, added like players that join in progress (`BotService`, `SetMachinesDetour`) and
   removed with the "left" and "remove" player updates of the engine (LS.1, D284); it also implements `Control`'s `UnitRules` with the
@@ -26,7 +31,7 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `Engine.Control.Layer` | The facade: input, action and bot stores, services and detours. Owner only. |
 | `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `ReadAction` (a field of a `PlayerAction` by offset). |
-| `Engine.Control.Input.System` | The `ActionSource` port and the input services. |
+| `Engine.Control.Input.System` | The `ActionSource` port, the input services and the pure `FindViewActionPlayer` (which player's action goes into the input of a view). |
 | `Engine.Control.Simulation.Type`, `Engine.Control.Simulation.State` | Machines and players of the simulation, the pure `PlanRoster` (bots to move, remove and add to reach a count per team; the `Roster` type comes from `Engine.Base.MatchSetup.Type`), `FindFreeBotNumber` (lowest free bot number), `MakePlayerUpdate` (buffer of the player update), `BotStore` (bot, team and remove requests, session snapshot; bots are added only by a roster, `BotService::AddBot` through `ApplyRoster`, there is no request to add one). `BotService` is the `RosterPort` of `MatchSetupService`. |
 
 ## Depends on
@@ -41,7 +46,8 @@ Game thread for the hooks and the engine functions. `ActionSource::Prepare` may 
 for the UI and the bench.
 
 ## Errors
-An engine function with a changed signature logs an ERROR, never silently. Without the player update function (0x418ff8) bots are
+An engine function with a changed signature logs an ERROR, never silently. Without `CopyActionToView` the log says "Failed to find
+CopyActionToView" and the view of a non local player does not turn; the rest works. Without the player update function (0x418ff8) bots are
 still added but never removed. A bot that cannot be removed (the engine refuses a step, the slot stays taken) logs the step and stays
 in the `BotStore`; a retry resumes where it stopped. Only the bots Artemis added are removed, never a local or real player. `PlayerActionDetour` without an action source does not
 install. A lost client gives its players back to the engine.
@@ -50,6 +56,7 @@ install. A lost client gives its players back to the engine.
 Local players with an override and bots receive the same action.
 
 ## Tests
-`EngineLayerTests` (builds without the game; refuses to install the action hook without a source) and `BotRosterTests` (roster plan,
+`ViewActionTests` (which action goes into the view of a non local player), `EngineLayerTests` (builds without the game; refuses to
+install the action hook without a source) and `BotRosterTests` (roster plan,
 bot numbers, update buffer, remove requests, what the setup service does on a tick) in `Artemis.Tests`. In game:
 `Agent/scripts/bridge_check.py` (`run`, `turn`) and the bots stress scenario of the bench.

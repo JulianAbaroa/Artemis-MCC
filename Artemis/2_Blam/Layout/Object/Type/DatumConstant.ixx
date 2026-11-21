@@ -22,6 +22,9 @@ export namespace Blam::Layout::Object::Type::Constant
     constexpr std::uintptr_t k_ThreadContextGameModeOffset{ 0x48 };
     constexpr std::uintptr_t k_GameModeTypeOffset{ 0x10 };
 
+    // Byte of the game globals that is not zero in the theater (+0x1DA, IsGameSessionReady in the Ghidra names, A8, VW.9a.y, D349).
+    constexpr std::uintptr_t k_GameGlobalsTheaterOffset{ 0x1DA };
+
     // Bytes the engine registers for the game globals (FUN_180056a88), copied whole into the snapshot (D249).
     constexpr std::size_t k_GameGlobalsSize{ 0x1F0E0 };
 

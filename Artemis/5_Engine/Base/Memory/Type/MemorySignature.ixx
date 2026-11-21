@@ -111,6 +111,16 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 08 57 48 83 EC 20 48 8D 59 7B 33 D2 41 B8 A8 00 00 00 48 83 E3 FC 48 8B F9 E8 ?? ?? ?? ?? 41 83 C8 FF C6 47 04 FF 66 44 89 47 44"
     };
 
+    // Copies the action of a player into the input of a view: void(view, action) (haloreach.dll rva 0x62fcc, A21 sec. 9.2).
+    // ApplyPlayerActions calls it for the view of the player it shows, but only in the theater (game globals +0x1DA). The four bytes of the
+    // index of the thread local storage (rip-relative) are wildcards (VW.9a.y, D349). Unique in the live haloreach.dll of 2026-11-20 (1 hit).
+    // note: Artemis calls it after the original 0x47050: the update is not written by it, so the action is the validated one (0x46ac8).
+    inline constexpr Signature k_CopyActionToView
+    {
+        "CopyActionToView",
+        "48 89 5C 24 08 57 48 83 EC 20 44 8B 05 ?? ?? ?? ?? 48 8B DA 65 48 8B 04 25 58 00 00 00 BA D8 00 00 00 4E 8B 0C C0 48 63 C1 48 69 C8 B0 00 00 00"
+    };
+
     // Place in 0x5df80 (player control of a local player) that loads the player control tag of the globals: mov rcx, [table]
     // (rel32 at +3), add rcx, 0x418, then call the tag address resolver (0x15918, rel32 at +0x30). Its field +0x48 is the hold
     // threshold of buttons in seconds (A17 sec. 8, D121).

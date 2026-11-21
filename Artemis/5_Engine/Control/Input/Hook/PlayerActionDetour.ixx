@@ -38,6 +38,7 @@ export namespace Engine::Control::Input::Hook
 
         using ApplyPlayerActionsFunction = Engine::Control::Input::Type::ApplyPlayerActionsFunction;
         using ClearPlayerActionFunction = Engine::Control::Input::Type::ClearPlayerActionFunction;
+        using CopyActionToViewFunction = Engine::Control::Input::Type::CopyActionToViewFunction;
         using ResolveTagAddressFunction = Engine::Control::Input::Type::ResolveTagAddressFunction;
         using ShadowField = Engine::Control::Input::Type::ShadowField;
         using ShadowPlayer = Engine::Control::Input::Type::ShadowPlayer;
@@ -102,6 +103,10 @@ export namespace Engine::Control::Input::Hook
         // Engine function that clears an action, or null if not found (then no override is applied).
         ClearPlayerActionFunction m_ClearPlayerAction{ nullptr };
 
+        // Engine function that copies an action into the input of a view, or null if not found (then the view of a non local player
+        // does not turn).
+        CopyActionToViewFunction m_CopyActionToView{ nullptr };
+
         // Variable of the engine that holds the thread local storage index of its thread context, or null if not found.
         const std::uint32_t* m_EngineTlsIndex{ nullptr };
 
@@ -111,6 +116,12 @@ export namespace Engine::Control::Input::Hook
         // note: The action starts from the empty action of the engine, then the unit slot, the override and the interaction (D119).
         // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
+
+        // Does what the engine does in the theater for the views that show a non local player: copies the action of that player into the
+        // input of the view, so the camera, zoom and weapon follow a bot tick by tick (VW.9a.y, D349).
+        // note: Game thread only, after the engine applied the actions. Resolves every pointer from the thread context each tick. Does
+        // nothing in the theater, without the function, or without the thread context, the mapping or the game globals.
+        auto CopyActionsToViews(const std::uint8_t* update, std::uintptr_t threadContext) -> void;
 
         // Shadow check (D122): for every local player without an override, compares the client fields Artemis would send for its
         // unit with the ones the engine built this tick, and counts the results in the store.
