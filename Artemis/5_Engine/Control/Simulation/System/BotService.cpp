@@ -30,9 +30,16 @@ namespace
     using Engine::Control::Simulation::Type::UnitSelectorFunction;
     using Engine::Control::Simulation::Type::NextZoomLevelFunction;
     using Engine::Control::Simulation::Type::CanUnitZoomFunction;
+    using Engine::Control::Simulation::Type::UnitCheckFunction;
+    using Engine::Control::Simulation::Type::UnitFunctions;
+    using Engine::Control::Simulation::Type::TagGlobals;
+    using Engine::Control::Simulation::Type::DecodeTagGlobals;
+    using Engine::Control::Simulation::System::UnitFactPort;
+    using Engine::Control::Simulation::System::BuildUnitContext;
     using ::Control::Action::Type::UnitClientState;
+    using ::Control::Client::Type::ClientContextSource;
+    using ::Control::Client::Type::ClientSettings;
     using ::Control::Client::Type::UnitContext;
-    using ::Control::Client::Type::UnitFact;
 
     using Engine::Base::MatchSetup::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
@@ -86,6 +93,16 @@ namespace
     using Engine::Control::Simulation::Type::k_InteractionRecordSize;
     using Engine::Control::Simulation::Type::k_InteractionRecordObject;
     using Engine::Control::Simulation::Type::k_UnitWeaponSlot;
+    using Engine::Control::Simulation::Type::k_ObjectHeaderType;
+    using Engine::Control::Simulation::Type::k_GameOptionsSlot;
+    using Engine::Control::Simulation::Type::k_GameFeatureBits;
+    using Engine::Control::Simulation::Type::k_TagMapEntrySize;
+    using Engine::Control::Simulation::Type::k_TagMapIndexOffset;
+    using Engine::Control::Simulation::Type::k_TagSegmentShift;
+    using Engine::Control::Simulation::Type::k_TagIndexScale;
+    using Engine::Control::Simulation::Type::k_FrameTransformSize;
+    using Engine::Control::Simulation::Type::k_TagSegmentsLoadOffset;
+    using Engine::Control::Simulation::Type::k_TagLoadSize;
     using Engine::Control::Simulation::Type::k_UnitInventoryVersion;
     using Engine::Control::Simulation::Type::k_UnitGrenadeType;
     using Engine::Control::Simulation::Type::k_UnitZoomLevel;
@@ -153,10 +170,10 @@ namespace
         return PlayerSlot{ .Datum = datum, .Salt = salt };
     }
 
-    // return: The address of the data of the object, or 0 if the handle is not a live object.
-    auto GetObjectData(std::uintptr_t threadContext, std::uint32_t handle) -> std::uintptr_t
+    // return: The address of the header of the object, or 0 if the handle is not a live object.
+    auto GetObjectHeader(std::uintptr_t threadContext, std::uint32_t handle) -> std::uintptr_t
     {
-        if (handle == 0xFFFFFFFF) return 0;
+        if (handle == 0xFFFFFFFF || threadContext == 0) return 0;
 
         const auto objects{ Read<std::uintptr_t>(threadContext + k_ObjectsSlot) };
         if (objects == 0) return 0;
@@ -168,8 +185,150 @@ namespace
         const auto headers{ Read<std::uintptr_t>(objects + k_DataArrayData) };
         if (headers == 0) return 0;
 
-        return Read<std::uintptr_t>(headers + (index * k_ObjectHeaderSize) + k_ObjectHeaderData);
+        return headers + (index * k_ObjectHeaderSize);
     }
+
+    // return: The address of the data of the object, or 0 if the handle is not a live object.
+    auto GetObjectData(std::uintptr_t threadContext, std::uint32_t handle) -> std::uintptr_t
+    {
+        const std::uintptr_t header{ GetObjectHeader(threadContext, handle) };
+        return header != 0 ? Read<std::uintptr_t>(header + k_ObjectHeaderData) : 0;
+    }
+
+    // Reads the memory and calls the engine functions behind the unit facts of the client, for one call on the game thread.
+    class EngineUnitFacts final : public UnitFactPort
+    {
+    public:
+        EngineUnitFacts(std::uintptr_t threadContext, const UnitFunctions& functions) :
+            m_ThreadContext(threadContext), m_Functions(functions) {}
+
+        auto ReadObject(std::uint32_t handle, std::size_t offset, std::span<std::uint8_t> bytes) const -> bool override
+        {
+            return CopyFrom(GetObjectData(m_ThreadContext, handle), offset, bytes);
+        }
+
+        auto GetObjectType(std::uint32_t handle) const -> std::optional<std::uint8_t> override
+        {
+            const std::uintptr_t header{ GetObjectHeader(m_ThreadContext, handle) };
+            if (header == 0 || Read<std::uintptr_t>(header + k_ObjectHeaderData) == 0) return std::nullopt;
+            return Read<std::uint8_t>(header + k_ObjectHeaderType);
+        }
+
+        auto ReadPlayer(std::uint32_t handle, std::size_t offset, std::span<std::uint8_t> bytes) const -> bool override
+        {
+            if (m_ThreadContext == 0 || handle == k_NoHandle) return false;
+
+            const auto players{ Read<std::uintptr_t>(m_ThreadContext + k_PlayersSlot) };
+            return players != 0 && CopyFrom(GetPlayerDatum(players, handle & 0xFFFF), offset, bytes);
+        }
+
+        auto ReadTag(std::uint32_t tag, std::size_t offset, std::span<std::uint8_t> bytes) const -> bool override
+        {
+            if (m_Functions.Tags.Map == 0) return false;
+
+            const auto map{ Read<std::uintptr_t>(m_Functions.Tags.Map) };
+            if (map == 0) return false;
+
+            const auto index{ Read<std::uint32_t>(map + ((tag & 0xFFFF) * k_TagMapEntrySize) + k_TagMapIndexOffset) };
+            return this->ReadBlock(index, offset, bytes);
+        }
+
+        auto ReadBlock(std::uint32_t index, std::size_t offset, std::span<std::uint8_t> bytes) const -> bool override
+        {
+            if (m_Functions.Tags.Segments == 0 || index == k_NoHandle) return false;
+
+            const auto segment{ Read<std::uintptr_t>(m_Functions.Tags.Segments + ((index >> k_TagSegmentShift) * sizeof(std::uintptr_t))) };
+            return segment != 0 && CopyFrom(segment + (static_cast<std::size_t>(index) * k_TagIndexScale), offset, bytes);
+        }
+
+        auto IsFeatureOn(std::uint32_t bit) const -> std::optional<bool> override
+        {
+            const auto options{ m_ThreadContext != 0 ? Read<std::uintptr_t>(m_ThreadContext + k_GameOptionsSlot) : 0 };
+            if (options == 0) return std::nullopt;
+            return ((Read<std::uint64_t>(options + k_GameFeatureBits) >> bit) & 1u) != 0;
+        }
+
+        auto GetZoomMagnification(std::uint32_t unit, std::int16_t level) const -> std::optional<float> override
+        {
+            if (!m_Functions.ZoomMagnification) return std::nullopt;
+            return m_Functions.ZoomMagnification(unit, level);
+        }
+
+        auto GetMovePenalty(std::uint32_t weapon, bool isForward, bool isZoomed) const -> std::optional<float> override
+        {
+            if (!m_Functions.MovePenalty) return std::nullopt;
+            return m_Functions.MovePenalty(weapon, isForward ? 1 : 0, isZoomed ? 1 : 0);
+        }
+
+        auto IsCrouchGate(std::uint32_t unit) const -> std::optional<bool> override
+        {
+            return Check(m_Functions.CrouchGate, unit);
+        }
+
+        auto IsForcedCrouch(std::uint32_t unit) const -> std::optional<bool> override
+        {
+            return Check(m_Functions.ForcedCrouch, unit);
+        }
+
+        auto IsCrouchToggleBlocked(std::uint32_t unit) const -> std::optional<bool> override
+        {
+            return Check(m_Functions.CrouchToggleBlocked, unit);
+        }
+
+        auto GetNextZoomLevel(std::uint32_t weapon) const -> std::optional<std::int16_t> override
+        {
+            if (!m_Functions.WeaponNextZoom) return std::nullopt;
+            return m_Functions.WeaponNextZoom(weapon, -1);
+        }
+
+        auto GetFrameOfReference(std::uint32_t unit) const -> std::optional<std::uint32_t> override
+        {
+            if (!m_Functions.FrameOfReference) return std::nullopt;
+
+            alignas(16) std::array<std::uint8_t, k_FrameTransformSize> transform{};
+            return m_Functions.FrameOfReference(unit, transform.data());
+        }
+
+        auto IsControlsLocked(std::int32_t inputUser, std::uint32_t localIndex) const -> std::optional<bool> override
+        {
+            if (!m_Functions.ControlsLocked) return std::nullopt;
+            return m_Functions.ControlsLocked(inputUser, localIndex, 0, nullptr);
+        }
+
+        auto IsLookOffset(std::uint32_t player, float deltaTime) const -> std::optional<bool> override
+        {
+            if (!m_Functions.LookOffset) return std::nullopt;
+
+            std::array<float, 2> offset{};
+            std::array<float, 2> scaled{};
+            return m_Functions.LookOffset(player, deltaTime, offset.data(), scaled.data());
+        }
+
+        auto IsAltControl(std::uint32_t player) const -> std::optional<bool> override
+        {
+            if (!m_Functions.AltControl) return std::nullopt;
+            return m_Functions.AltControl(player, nullptr, 0);
+        }
+
+    private:
+        std::uintptr_t m_ThreadContext{ 0 };
+        const UnitFunctions& m_Functions;
+
+        // return: False if the base is null.
+        static auto CopyFrom(std::uintptr_t base, std::size_t offset, std::span<std::uint8_t> bytes) -> bool
+        {
+            if (base == 0) return false;
+
+            std::memcpy(bytes.data(), reinterpret_cast<const void*>(base + offset), bytes.size());
+            return true;
+        }
+
+        static auto Check(UnitCheckFunction function, std::uint32_t unit) -> std::optional<bool>
+        {
+            if (!function) return std::nullopt;
+            return function(unit);
+        }
+    };
 
     // Replaces every copy of the gamertag inside a player configuration with the name of the bot.
     // return: How many copies were replaced (the configuration of Reach has two, at +0x00 and +0x58).
@@ -697,6 +856,14 @@ namespace Engine::Control::Simulation::System
         return true;
     }
 
+    auto BotService::GetPlayerHandle(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint32_t>
+    {
+        const auto slot{ FindPlayerSlot(threadContext, playerIndex) };
+        if (!slot) return std::nullopt;
+
+        return MakePlayerHandle(slot->Salt, playerIndex);
+    }
+
     auto BotService::GetUnitClientState(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<UnitClientState>
     {
         const auto slot{ FindPlayerSlot(threadContext, playerIndex) };
@@ -749,10 +916,11 @@ namespace Engine::Control::Simulation::System
         return static_cast<std::int8_t>(m_NextZoomLevel(state.Unit, state.ZoomLevel));
     }
 
-    auto BotService::GetClientContext(const UnitClientState& state) const -> UnitContext
+    auto BotService::GetClientContext(const UnitClientState& state, const ClientContextSource& source, const ClientSettings& settings,
+        float deltaTime) const -> UnitContext
     {
-        constexpr std::uint32_t known{ static_cast<std::uint32_t>(UnitFact::HasUnit) | static_cast<std::uint32_t>(UnitFact::IsSeated) };
-        return UnitContext{ .Known = known, .HasUnit = state.Unit != k_NoHandle, .IsSeated = state.IsSeated };
+        const EngineUnitFacts facts{ source.ThreadContext, m_UnitFunctions };
+        return BuildUnitContext(facts, state, source, settings, deltaTime);
     }
 
     auto BotService::ResolveFunctions() -> bool
@@ -807,6 +975,60 @@ namespace Engine::Control::Simulation::System
             }
         }
 
+        if (!m_IsUnitFactsResolved) this->ResolveUnitFacts();
+
         return m_IsResolved && m_ApplyPlayerUpdate && m_IsInteractionResolved && m_IsClientResolved;
+    }
+
+    auto BotService::ResolveUnitFacts() -> void
+    {
+        UnitFunctions functions{};
+        std::vector<std::string_view> missing{};
+
+        const auto find = [&](const Signature::Signature& signature, std::string_view name) -> std::uintptr_t
+        {
+            const std::uintptr_t address{ m_AOBService.FindPattern(signature) };
+            if (address == 0) missing.push_back(name);
+            return address;
+        };
+
+        functions.ZoomMagnification = reinterpret_cast<Engine::Control::Simulation::Type::ZoomMagnificationFunction>(
+            find(Signature::k_WeaponZoomMagnification, "WeaponZoomMagnification"));
+        functions.MovePenalty = reinterpret_cast<Engine::Control::Simulation::Type::MovePenaltyFunction>(
+            find(Signature::k_WeaponMovePenalty, "WeaponMovePenalty"));
+        functions.CrouchGate = reinterpret_cast<Engine::Control::Simulation::Type::UnitCheckFunction>(
+            find(Signature::k_UnitCrouchGate, "UnitCrouchGate"));
+        functions.ForcedCrouch = reinterpret_cast<Engine::Control::Simulation::Type::UnitCheckFunction>(
+            find(Signature::k_UnitForcedCrouch, "UnitForcedCrouch"));
+        functions.CrouchToggleBlocked = reinterpret_cast<Engine::Control::Simulation::Type::UnitCheckFunction>(
+            find(Signature::k_UnitCrouchToggleBlocked, "UnitCrouchToggleBlocked"));
+        functions.WeaponNextZoom = reinterpret_cast<Engine::Control::Simulation::Type::WeaponZoomFunction>(
+            find(Signature::k_WeaponNextZoomLevel, "WeaponNextZoomLevel"));
+        functions.FrameOfReference = reinterpret_cast<Engine::Control::Simulation::Type::FrameOfReferenceFunction>(
+            find(Signature::k_UnitFrameOfReference, "UnitFrameOfReference"));
+        functions.ControlsLocked = reinterpret_cast<Engine::Control::Simulation::Type::ControlsLockedFunction>(
+            find(Signature::k_ControlsLocked, "ControlsLocked"));
+        functions.LookOffset = reinterpret_cast<Engine::Control::Simulation::Type::LookOffsetFunction>(
+            find(Signature::k_PlayerLookOffset, "PlayerLookOffset"));
+        functions.AltControl = reinterpret_cast<Engine::Control::Simulation::Type::AltControlFunction>(
+            find(Signature::k_PlayerAltControl, "PlayerAltControl"));
+
+        // note: The tag flag test is not called. Its first bytes load the two tag globals, which is how the tag memory is read.
+        const std::uintptr_t tagTest{ m_AOBService.FindPattern(Signature::k_TagFlagTest) };
+        if (tagTest != 0)
+        {
+            const std::span<const std::uint8_t> bytes{ reinterpret_cast<const std::uint8_t*>(tagTest), k_TagSegmentsLoadOffset + k_TagLoadSize };
+            const std::optional<TagGlobals> tags{ DecodeTagGlobals(tagTest, bytes) };
+            if (tags) functions.Tags = *tags;
+        }
+
+        if (functions.Tags.Map == 0) missing.push_back("TagFlagTest globals");
+
+        m_UnitFunctions = functions;
+        m_IsUnitFactsResolved = true;
+        for (const std::string_view name : missing)
+        {
+            m_Log.Message("[BotService] ERROR: Failed to find {}. The unit facts that need it stay unknown.", name);
+        }
     }
 }

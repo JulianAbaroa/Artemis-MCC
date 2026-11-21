@@ -48,6 +48,10 @@ block or allocate on the hot path.
 `StepClient` with a mode other than keyboard and mouse (or a table without the mouse state) does not run: the state comes back unchanged and
 `ClientStatus` says why. A branch of 0x5df80 that needs engine state the context does not carry (flinch, trigger curve, frame of reference,
 selection list, ability button, menu look scale) is not guessed: `Output.Unsupported` gets its bit and the step is not comparable.
+`ClientContextSource` (VW.9c.2) carries what the engine side needs to resolve the facts: the thread context, the input user and local index, the
+player handle of the user, the zoom level of the client block and the dual wield restrictions byte (the ticks per second come from `ClientSettings` and the dt from the call, passed to `GetClientContext` next to the source). The
+kind 1 ability only goes through the engine (`Unsupported::AbilityButton`) when its tag asks for it (`Ability.NeedsEngine`) and the setting
+`IsJumpFlag` is on.
 A fact of the unit the context does not know (`UnitContext::Known` lacks its `UnitFact` bit) is read as its default, and the step says so:
 `Output.UnknownRead` holds the bits of the unknown facts the branches that ran actually read, and a step with a bit set is not comparable.
 Not ported on purpose: the controller path (+0x6F8 = 0), the aim assist (D109), the interaction records (D118), the seat turn limits and aim

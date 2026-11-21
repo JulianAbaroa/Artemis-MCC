@@ -81,6 +81,116 @@ export namespace Engine::Control::Simulation::Type
     // Desired aim of a unit: 3 floats, the direction its aim turns toward (unit datum, measured).
     inline constexpr std::uintptr_t k_UnitDesiredAim{ 0x208 };
 
+    // Facts of a unit that the client asks (0x5df80, VW.9c.2). Object type byte of the header (0 biped, 1 vehicle) and the tag handle (uint16)
+    // at the start of the object data.
+    inline constexpr std::uintptr_t k_ObjectHeaderType{ 0x04 };
+    inline constexpr std::uintptr_t k_ObjectTag{ 0x00 };
+
+    // Second weapon slot of a unit (int8, -1 none: both slots set means dual wield) and the inventory handles (uint32 per slot, from the
+    // weapon slot). Object held by the unit (uint32, the carried object or the ability: a flag, equipment), the damping of its aim (float)
+    // and the offset of its state block (int16, the state uint32 is at that offset from the unit).
+    inline constexpr std::uintptr_t k_UnitWeaponSlotSecond{ 0x34B };
+    inline constexpr std::uintptr_t k_UnitInventory{ 0x350 };
+    inline constexpr std::uintptr_t k_UnitCarried{ 0x374 };
+    inline constexpr std::uintptr_t k_UnitAimDamp{ 0x4D4 };
+    inline constexpr std::uintptr_t k_UnitStateOffset{ 0x1B2 };
+
+    // Block of a unit found by an int16 offset: its flags (bit 2 says the kind word is valid) and its kind word. Crouch cannot toggle
+    // when the kind is k_KindNoCrouchToggle.
+    inline constexpr std::uintptr_t k_UnitKindBlockOffset{ 0x18E };
+    inline constexpr std::uintptr_t k_KindBlockFlags{ 0x160 };
+    inline constexpr std::uint32_t k_KindBlockValidBit{ 2 };
+    inline constexpr std::uintptr_t k_KindBlockKind{ 0x204 };
+    inline constexpr std::uint32_t k_KindNoCrouchToggle{ 0xB9 };
+
+    // Offsets inside the data of a unit the jump assist reads (a 64 bit flag set and a signed counter) and its largest sane block offset.
+    inline constexpr std::uintptr_t k_UnitJumpFlags{ 0x1D8 };
+    inline constexpr std::uint32_t k_UnitJumpFlagA{ 1 };
+    inline constexpr std::uint32_t k_UnitJumpFlagB{ 0xE };
+    inline constexpr std::uintptr_t k_UnitJumpCounter{ 0xA29 };
+    inline constexpr std::int32_t k_MaxBlockOffset{ 0xFF0 };
+
+    // Held object of a unit that is carried: its state uint32 is not -1.
+    inline constexpr std::uintptr_t k_ObjectHeldState{ 0x1D8 };
+
+    // Byte of the parent object the alternate pitch asks (its low five bits must be 1).
+    inline constexpr std::uintptr_t k_ParentAltPitchByte{ 0x8E };
+    inline constexpr std::uint8_t k_AltPitchMask{ 0x1F };
+
+    // Player datum: the accessibility look rates byte.
+    inline constexpr std::uintptr_t k_PlayerLookRated{ 0x310 };
+
+    // Game options slot: 64 feature bits (the jump assist needs bit 0x28).
+    inline constexpr std::uintptr_t k_GameFeatureBits{ 0x1EAC8 };
+    inline constexpr std::uint32_t k_JumpAssistFeature{ 0x28 };
+
+    // Tag data of the unit, weapon and seat tags. Flags at the tag: weapon bit 12 (the weapon asks not to toggle the crouch) and bit 18
+    // (trigger flag), unit bit 27 (the zoom trigger goes through a curve). Floats and bytes: aim damping, ability kind.
+    inline constexpr std::uintptr_t k_TagWeaponFlags{ 0x204 };
+    inline constexpr std::uint32_t k_TagWeaponCrouchBit{ 12 };
+    inline constexpr std::uint32_t k_TagWeaponTriggerBit{ 18 };
+    inline constexpr std::uintptr_t k_TagUnitFlags{ 0x5A * sizeof(std::uint32_t) };
+    inline constexpr std::uint32_t k_TagTriggerCurveBit{ 27 };
+    inline constexpr std::uintptr_t k_TagAimDamp{ 0x304 };
+    inline constexpr std::uintptr_t k_TagAbilityKind{ 0x24A };
+
+    // Flag table of a tag: one word every 12 bytes. Flag 0x16 makes a carried object droppable with the ability button, 0x14 resets the
+    // zoom, 0x11 sends the kind 1 ability through the engine.
+    inline constexpr std::uintptr_t k_TagFlagTable{ 0x28C };
+    inline constexpr std::size_t k_TagFlagStride{ 12 };
+    inline constexpr std::int32_t k_FlagCarriedDrop{ 0x16 };
+    inline constexpr std::int32_t k_FlagCarriedZoomReset{ 0x14 };
+    inline constexpr std::int32_t k_FlagAbilityEngine{ 0x11 };
+
+    // Kind table of an object tag: the index of the first of 15 entries (one word every 12 bytes) that is not zero, 16 if none. Kind 2
+    // is the seat parent that takes the jump and crouch events from the alternate events.
+    inline constexpr std::uintptr_t k_TagKindTable{ 0x4D0 };
+    inline constexpr std::size_t k_TagKindCount{ 15 };
+    inline constexpr std::uint32_t k_KindNone{ 16 };
+    inline constexpr std::uint32_t k_KindSeatAlternate{ 2 };
+
+    // Kinds whose seats can ask for the alternate pitch (bit mask over the kind).
+    inline constexpr std::uint32_t k_AltPitchKinds{ 0x2924 };
+
+    // Seat table of an object tag: the count (int32) and the block index (uint32) of the seats. Each seat has 0x4B words, the first one
+    // is its flags: bit 2 asks the alternate pitch and the alternate seat events (and the tag of the parent for the trigger curve), bit
+    // 3 asks the weapon of the parent for the zoom item (0005.c).
+    inline constexpr std::uintptr_t k_TagSeatCount{ 0x444 };
+    inline constexpr std::uintptr_t k_TagSeatBlock{ 0x448 };
+    inline constexpr std::size_t k_SeatSize{ 0x4B * sizeof(std::uint32_t) };
+    inline constexpr std::uint32_t k_SeatFlagAlternate{ 2 };
+    inline constexpr std::uint32_t k_SeatFlagParentWeapon{ 3 };
+
+    // Selection list of an object tag: its first word is the count of entries. The biped list and the vehicle list.
+    inline constexpr std::uintptr_t k_TagSelectionBiped{ 0x4F4 };
+    inline constexpr std::uintptr_t k_TagSelectionVehicle{ 0x5D8 };
+    inline constexpr std::uint8_t k_ObjectTypeBiped{ 0 };
+    inline constexpr std::uint8_t k_ObjectTypeVehicle{ 1 };
+
+    // Largest chain of parents followed to find the root of a unit.
+    inline constexpr std::size_t k_MaxParentChain{ 16 };
+
+    // Ticks per second divided by this gives the half limit of the jump assist counter.
+    inline constexpr std::int32_t k_JumpAssistTicksDivisor{ 30 };
+
+    // Bytes the frame of reference function writes into its transform (the engine writes about 0x34).
+    inline constexpr std::size_t k_FrameTransformSize{ 0x120 };
+
+    // Tag globals read from the first bytes of the tag flag test (0x4c6b34): "mov rax, [rip + map]" and "lea rax, [rip + segments]".
+    inline constexpr std::size_t k_TagMapLoadOffset{ 0 };
+    inline constexpr std::size_t k_TagSegmentsLoadOffset{ 29 };
+    inline constexpr std::size_t k_TagLoadSize{ 7 };
+    inline constexpr std::size_t k_TagLoadOpcodeSize{ 3 };
+    inline constexpr std::array<std::uint8_t, 3> k_TagMapLoadOpcode{ 0x48, 0x8B, 0x05 };
+    inline constexpr std::array<std::uint8_t, 3> k_TagSegmentsLoadOpcode{ 0x48, 0x8D, 0x05 };
+
+    // Tag memory: the node map (per tag: data index at +4, 8 bytes each) and the segment base pointers (index >> 28). The data of a
+    // tag is at segment + index * 4.
+    inline constexpr std::size_t k_TagMapEntrySize{ 8 };
+    inline constexpr std::size_t k_TagMapIndexOffset{ 4 };
+    inline constexpr std::uint32_t k_TagSegmentShift{ 28 };
+    inline constexpr std::size_t k_TagIndexScale{ 4 };
+
     // Players globals: machine mask (uint32), machine identifiers (17 x 6 bytes) and local machine index (int32).
     inline constexpr std::uintptr_t k_MachineMask{ 0x04 };
     inline constexpr std::uintptr_t k_MachineIdentifiers{ 0x08 };
@@ -242,6 +352,82 @@ export namespace Engine::Control::Simulation::Type
 
     // Signature of the engine check of whether a unit can zoom now (0x4852a0).
     using CanUnitZoomFunction = auto(__fastcall*)(std::uint32_t unit) -> bool;
+
+    // Signatures of the engine functions behind the unit facts of the client (VW.9c.2). Handles are uint32 with salt, the functions
+    // use the low 16 bits as the index.
+    // Magnification of the weapon of a unit at a zoom level (0x4856b8), 1.0 when it has none.
+    using ZoomMagnificationFunction = auto(__fastcall*)(std::uint32_t unit, std::int16_t level) -> float;
+
+    // Fraction a weapon takes off a move axis (0x4bc51c): forward axis = 1, side = 0.
+    using MovePenaltyFunction = auto(__fastcall*)(std::uint32_t weapon, std::uint8_t isForward, std::uint8_t isZoomed) -> float;
+
+    // Yes-no question of a unit (crouch gate 0x4ac810, forced crouch 0x4abee8, crouch toggle blocked 0x48be48).
+    using UnitCheckFunction = auto(__fastcall*)(std::uint32_t unit) -> bool;
+
+    // Next zoom level of a weapon (0x4bc624): -1 at the end of the cycle or when it has no levels.
+    using WeaponZoomFunction = auto(__fastcall*)(std::uint32_t weapon, std::int16_t level) -> std::int16_t;
+
+    // Frame of reference of a unit (0x5dddc): the handle of the object it looks from or 0xFFFFFFFF. Writes its transform.
+    using FrameOfReferenceFunction = auto(__fastcall*)(std::uint32_t unit, void* transform) -> std::uint32_t;
+
+    // Controls locked for an input user (0x61830). The last two arguments are zero.
+    using ControlsLockedFunction = auto(__fastcall*)(std::int32_t inputUser, std::uint32_t localIndex, std::uint64_t zero,
+        void* secondZero) -> bool;
+
+    // Look offset of a player (0xda824): true when a flinch or shake is active. The two outputs are two floats each.
+    using LookOffsetFunction = auto(__fastcall*)(std::uint32_t player, float deltaTime, float* offset, float* scaledOffset) -> bool;
+
+    // Alternate control mode of a player (0x715ac). The output may be null.
+    using AltControlFunction = auto(__fastcall*)(std::uint32_t player, std::uint32_t* output, std::uint64_t zero) -> bool;
+
+    // Addresses of the two tag globals of the engine: the pointer to the node map and the array of segment base pointers.
+    struct TagGlobals
+    {
+        std::uintptr_t Map{ 0 };
+        std::uintptr_t Segments{ 0 };
+    };
+
+    // Engine functions and tag globals behind the unit facts of the client (VW.9c.2). A function not found stays null and the facts it
+    // gives stay unknown. Without the tag globals the tag memory cannot be read.
+    struct UnitFunctions
+    {
+        ZoomMagnificationFunction ZoomMagnification{ nullptr };
+        MovePenaltyFunction MovePenalty{ nullptr };
+        UnitCheckFunction CrouchGate{ nullptr };
+        UnitCheckFunction ForcedCrouch{ nullptr };
+        UnitCheckFunction CrouchToggleBlocked{ nullptr };
+        WeaponZoomFunction WeaponNextZoom{ nullptr };
+        FrameOfReferenceFunction FrameOfReference{ nullptr };
+        ControlsLockedFunction ControlsLocked{ nullptr };
+        LookOffsetFunction LookOffset{ nullptr };
+        AltControlFunction AltControl{ nullptr };
+        TagGlobals Tags{};
+    };
+
+    // return: The two tag globals a function loads in its first bytes (a load of the node map pointer and a lea of the segment array,
+    // both relative to the instruction pointer), or nullopt if the bytes are not those two instructions.
+    // param address: Address of the first byte.
+    // param bytes: The first k_TagSegmentsLoadOffset + k_TagLoadSize bytes of the function.
+    auto DecodeTagGlobals(std::uintptr_t address, std::span<const std::uint8_t> bytes) -> std::optional<TagGlobals>
+    {
+        if (bytes.size() < k_TagSegmentsLoadOffset + k_TagLoadSize) return std::nullopt;
+
+        const auto matches = [&](std::size_t offset, const std::array<std::uint8_t, 3>& opcode)
+        {
+            return std::equal(opcode.begin(), opcode.end(), bytes.begin() + static_cast<std::ptrdiff_t>(offset));
+        };
+
+        if (!matches(k_TagMapLoadOffset, k_TagMapLoadOpcode) || !matches(k_TagSegmentsLoadOffset, k_TagSegmentsLoadOpcode)) return std::nullopt;
+
+        const auto target = [&](std::size_t offset)
+        {
+            std::int32_t displacement{ 0 };
+            std::memcpy(&displacement, bytes.data() + offset + k_TagLoadOpcodeSize, sizeof(displacement));
+            return address + offset + k_TagLoadSize + static_cast<std::uintptr_t>(static_cast<std::intptr_t>(displacement));
+        };
+
+        return TagGlobals{ .Map = target(k_TagMapLoadOffset), .Segments = target(k_TagSegmentsLoadOffset) };
+    }
 
     // Signature of the two steps that fill the interaction of a player (handle with salt) once it was cleared (0x4ef34, 0x4eb54).
     using GatherInteractionsFunction = auto(__fastcall*)(std::uint32_t player, void* interaction) -> void;

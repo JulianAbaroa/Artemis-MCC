@@ -150,7 +150,8 @@ export namespace Control::Client::Type
         // Byte +0x24A of its tag: 0 = hold lane, 1 = button.
         std::uint8_t Kind{ 0 };
 
-        // The kind 1 ability depends on state the port cannot give (setting +0x69 and a tag test): not ported.
+        // Bit 0x11 of the ability tag flags. Together with the setting +0x69 (ClientSettings::IsJumpFlag) the kind 1 ability takes a path
+        // that needs state the pure client does not have: not ported.
         bool NeedsEngine{ false };
     };
 
@@ -287,6 +288,32 @@ export namespace Control::Client::Type
         std::uint32_t SelectionEntries{ 0 };
 
         JumpAssistContext JumpAssist{};
+    };
+
+    // Who the unit facts are asked for: the engine ids the user-level facts need (the control lock, the look offset, the alternate
+    // control mode, the accessibility look rates, the dual wield restrictions) and the client state the unit facts depend on. The unit
+    // itself comes in the UnitClientState (VW.9c.2).
+    // note: The oracle fills it from the call it watches. The possession fills it with the user of input user 0 and the unit of the bot.
+    struct ClientContextSource
+    {
+        // Thread context of the game thread that asks (the engine functions behind the facts read it from the TLS, the memory reads
+        // need it).
+        std::uintptr_t ThreadContext{ 0 };
+
+        // Input user and local index the 0x5df80 call was made for.
+        std::int32_t InputUser{ 0 };
+        std::uint32_t LocalIndex{ 0 };
+
+        // Player handle of the user (accessibility, look offset and alternate control mode are read from it), 0xFFFFFFFF without one.
+        std::uint32_t PlayerHandle{ 0xFFFFFFFF };
+
+        // Zoom level of the client block (+0x46), k_NoZoom when not zoomed. The magnification and the move penalty depend on it.
+        std::int16_t ClientZoomLevel{ k_NoZoom };
+
+        // Dual wield restrictions byte of the user settings (1 no throw, 2 no zoom, 4 no zoom in), nullopt when it could not be read.
+        // note: The ticks per second come from ClientSettings and the seconds of the call from the dt of StepClient, both are passed
+        // to the context builder, so each concept has one name.
+        std::optional<std::uint8_t> DualWieldFlags{ 0 };
     };
 
     // Settings of the user the client uses. Passed in, never read inside (D359).

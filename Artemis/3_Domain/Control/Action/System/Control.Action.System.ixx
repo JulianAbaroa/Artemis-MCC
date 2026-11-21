@@ -11,6 +11,8 @@ namespace
     using Control::Action::Type::ClientRequests;
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
+    using Control::Client::Type::ClientContextSource;
+    using Control::Client::Type::ClientSettings;
     using Control::Client::Type::UnitContext;
 
     using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
@@ -34,10 +36,14 @@ export namespace Control::Action::System
         // return: The next zoom level of the weapon in the hands (-1 = not zoomed), or nullopt if the unit cannot zoom now.
         virtual auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> = 0;
 
-        // return: What the client of the player asks of the unit in the state (D356): the engine facts the pure client needs, asked of that
-        // unit and not of the unit of a local player.
-        // note: A fact the engine side does not resolve yet stays at its default, which the client reads as "no".
-        virtual auto GetClientContext(const UnitClientState& state) const -> UnitContext = 0;
+        // return: What the client asks of the unit in the state (D356, VW.9c.2): the engine facts the pure client needs, asked of that
+        // unit and not of the unit of a local player. UnitContext::Known has the facts it resolved.
+        // param source: The user-level ids and the client zoom (see ClientContextSource).
+        // param settings: The settings of the client (the ticks per second set the jump assist limit).
+        // param deltaTime: Seconds of the call (the look offset function takes them), the same dt StepClient gets.
+        // note: A fact the engine side cannot resolve stays outside Known. Game thread only.
+        virtual auto GetClientContext(const UnitClientState& state, const ClientContextSource& source, const ClientSettings& settings,
+            float deltaTime) const -> UnitContext = 0;
     };
 
     // Converts the hold threshold of the player control tag to ticks.

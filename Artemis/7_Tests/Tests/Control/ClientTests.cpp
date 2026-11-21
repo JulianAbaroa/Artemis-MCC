@@ -302,6 +302,25 @@ TEST(ClientTests, TheAbilityOfTheHoldKindSetsLaneThirtyOne)
     EXPECT_NE(step.Output.Lanes & (1u << 12), 0u);
 }
 
+TEST(ClientTests, TheAbilityButtonKindGoesThroughTheEngineOnlyWithTheJumpFlag)
+{
+    InputFrame frame{};
+    Hold(frame, InputEvent::Ability);
+    UnitContext unit{ OnFoot() };
+    unit.Ability.IsPresent = true;
+    unit.Ability.Kind = 1;
+    unit.Ability.NeedsEngine = true;
+
+    const ClientStep plain{ RunClient(frame, unit) };
+    EXPECT_EQ(plain.Output.Unsupported & static_cast<std::uint32_t>(Unsupported::AbilityButton), 0u);
+    EXPECT_NE(plain.Output.Buttons & Bit(8), 0u);
+
+    ClientSettings settings{};
+    settings.IsJumpFlag = true;
+    const ClientStep flagged{ RunClient(frame, unit, settings) };
+    EXPECT_NE(flagged.Output.Unsupported & static_cast<std::uint32_t>(Unsupported::AbilityButton), 0u);
+}
+
 TEST(ClientTests, ACarriedDropSetsTheAbilityButtonAndResetsTheZoom)
 {
     UnitContext unit{ OnFoot() };

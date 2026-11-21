@@ -16,13 +16,29 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   the pure `StepClient` on the copy and compares output and state bit by bit (`CompareClient`). Counters are the `Client ...` fields of the
   shadow check (calls compared, calls that differ, by output field and by context: on foot, seated, zoomed, no unit; calls not compared).
   A call that read a unit fact the context does not know (`UnitContext::Known`, `ClientOutput::UnknownRead`) is NOT counted in those fields:
-  it only goes to `Client partial`, so a gap in the context is never counted as a bug of the port (the bot service knows only HasUnit and
-  IsSeated for now). The first differences go to the log. Every difference is a line of `%LOCALAPPDATA%\Artemis\client_oracle.txt`
+  it only goes to `Client partial`, so a gap in the context is never counted as a bug of the port (VW.9c.2: the bot service resolves every
+  `UnitFact`, see `UnitContext` below, so a call is partial only when an engine function was not found or a read failed). The first differences go to the log. Every difference is a line of `%LOCALAPPDATA%\Artemis\client_oracle.txt`
   (`diff user= dt= unknown= move= look= trig= tail= buttons= events= lanes= state= table= block=`, the table and the client block as hex) to turn
   into an offline test. The game thread never does file I/O: the hook only formats the line into a bounded buffer (`k_ClientBufferLines`, a
   full buffer drops the line and counts it, `k_ClientMaxFileLines` per session) and the Main thread writes it (`Flush`, every second from
   `MainThread`, and on `Uninstall`). It writes nothing of the game. With the switch off the hook costs one atomic load. The control tag
   locator, the input user to player search and the thread context read are shared with `PlayerActionDetour` (`Engine.Control.Input.System`).
+- Unit facts of the client (VW.9c.2, D356): `BotService::GetClientContext(state, source, settings, dt)` resolves every `UnitFact` of the unit it is
+  given (the local's in the oracle, the bot's in the possession) as far as the memory and the functions answer: what it cannot resolve is out of
+  `Known` and the step says so. The pure `BuildUnitContext` (`Engine.Control.Simulation.System:UnitContext`)
+  decides each fact over the `UnitFactPort` (object, player and tag memory reads and the engine calls), so it is tested with bytes. A read or a
+  call that cannot be done leaves the fact out of `UnitContext::Known`, never a guessed value. `BotService` implements the port (`EngineUnitFacts`):
+  memory by handle (`GetObjectData` rules: the low 16 bits index the object, the thread context is the one of the game thread), tag memory
+  through the two tag globals decoded from the first bytes of the tag flag test (`DecodeTagGlobals`, `k_TagFlagTest`: the tag data of a tag
+  is `segment[index >> 28] + index * 4`), and ten engine functions found by signature in `ResolveFunctions` (zoom magnification 0x4856b8, move
+  penalty 0x4bc51c, crouch gate 0x4ac810, forced crouch 0x4abee8, crouch toggle blocked 0x48be48, next weapon zoom level 0x4bc624, frame of
+  reference 0x5dddc, controls locked 0x61830, look offset 0xda824, alternate control 0x715ac). All of them only read (the look offset and
+  frame functions write their own outputs into buffers of the port). A function not found is one ERROR and only its facts stay unknown.
+  The user-level facts (controls lock, look offset, alternate control, look rates, dual wield restrictions) are asked with the ids of the
+  `ClientContextSource` the caller gives: the oracle fills it from its call (`GetPlayerHandle`, the zoom level of the client block, the
+  restrictions byte read by rva by `ReadDualWieldFlags`; without the module base it is absent and DualWield stays unknown), plus the
+  `ClientSettings` and the dt of the call. A unit in a seat reads the trigger curve from the parent tag (seat flag bit 2) and the zoom item from
+  the parent weapon (seat flag bit 3), like 0005.c. A unit that is not a biped has no jump assist object. Game thread only.
 - Virtual input: `InputUpdateDetour` gives MCC the state of a virtual gamepad for local players switched to Artemis.
 - Bots: players on machines only Artemis knows, added like players that join in progress (`BotService`, `SetMachinesDetour`) and
   removed with the "left" and "remove" player updates of the engine (LS.1, D284); it also implements `Control`'s `UnitRules` with the
@@ -46,6 +62,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `ReadAction` (a field of a `PlayerAction` by offset). |
 | `Engine.Control.Input.System` | The `ActionSource` port, the input services, the pure `FindViewActionPlayer` (which player's action goes into the input of a view) and the pure `ReadInputFrame`, `ReadClientState`, `CompareClient`, `CountClient`, `FormatClientLine` and `FormatClientStateFields` of the client oracle, and the control tag helpers (`LocateControlTag`, `ReadControlTag`, `FindInputPlayer`, `GetEngineThreadContext`). |
 | `Engine.Control.Simulation.Type`, `Engine.Control.Simulation.State` | Machines and players of the simulation, the pure `PlanRoster` (bots to move, remove and add to reach a count per team; the `Roster` type comes from `Engine.Base.MatchSetup.Type`), `FindFreeBotNumber` (lowest free bot number), `MakePlayerUpdate` (buffer of the player update), `BotStore` (bot, team and remove requests, session snapshot; bots are added only by a roster, `BotService::AddBot` through `ApplyRoster`, there is no request to add one). `BotService` is the `RosterPort` of `MatchSetupService`. |
+| `Engine.Control.Simulation.System` | `BotService` and its partition `:UnitContext`: the `UnitFactPort` (memory and engine calls behind the unit facts of the client) and the pure `BuildUnitContext` (VW.9c.2). |
 
 ## Depends on
 `Common`, `Services`, `Engine.Base`, `Control`, `Blam.Layout`.

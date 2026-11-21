@@ -394,6 +394,15 @@ export namespace Engine::Control::Input::Type
     inline constexpr std::uintptr_t k_CrouchToggleRva{ 0x287FF7A };
     inline constexpr std::uintptr_t k_MeleeHoldsUseRva{ 0x4E2FCB1 };
 
+    // Dual wield restrictions byte of the user (1 no throw, 2 no zoom, 4 no zoom in), by rva (VW.9c.2): with the keyboard and mouse
+    // one global, with a pad one byte in the settings of the local user. The mode of each local user (0 pad, 1 keyboard and mouse) is
+    // an int32 array of four.
+    inline constexpr std::uintptr_t k_InputModeRva{ 0x2DFBE74 };
+    inline constexpr std::uint32_t k_InputModeCount{ 4 };
+    inline constexpr std::uintptr_t k_DualWieldKeyboardRva{ 0x287FF90 };
+    inline constexpr std::uintptr_t k_DualWieldPadRva{ 0x287F668 };
+    inline constexpr std::uintptr_t k_DualWieldPadStride{ 0x7C };
+
     // Fields of the control tag (the hold threshold is k_HoldThresholdOffset): zoom cancel threshold and jump timer seconds.
     inline constexpr std::size_t k_ControlTagZoomCancelOffset{ 0x4C };
     inline constexpr std::size_t k_ControlTagJumpTimerOffset{ 0x88 };

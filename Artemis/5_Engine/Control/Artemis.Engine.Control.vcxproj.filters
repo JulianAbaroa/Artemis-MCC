@@ -112,6 +112,12 @@
     <ClCompile Include="Simulation\System\BotService.ixx">
       <Filter>Simulation\System</Filter>
     </ClCompile>
+    <ClCompile Include="Simulation\System\UnitContext.cpp">
+      <Filter>Simulation\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation\System\UnitContext.ixx">
+      <Filter>Simulation\System</Filter>
+    </ClCompile>
     <ClCompile Include="Simulation\Type\Engine.Control.Simulation.Type.ixx">
       <Filter>Simulation\Type</Filter>
     </ClCompile>

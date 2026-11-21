@@ -22,6 +22,7 @@ namespace
     using ::Control::Action::Type::ActionOverride;
     using ::Control::Action::Type::UnitClientState;
     using ::Control::Client::System::StepClient;
+    using ::Control::Client::Type::ClientContextSource;
     using ::Control::Client::Type::ClientSettings;
     using ::Control::Client::Type::ClientState;
     using ::Control::Client::Type::ClientStep;
@@ -32,6 +33,7 @@ namespace
     using ::Control::Client::Type::k_NoZoom;
 
     using Common::Engine::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_NoHandle;
 
     using Engine::Base::Hook::System::k_DrainTimeout;
 
@@ -64,6 +66,11 @@ namespace
     using Engine::Control::Input::Type::k_ControlBlockStride;
     using Engine::Control::Input::Type::k_ControlGlobalsSlot;
     using Engine::Control::Input::Type::k_ControlSettingsDefaultBit;
+    using Engine::Control::Input::Type::k_DualWieldKeyboardRva;
+    using Engine::Control::Input::Type::k_DualWieldPadRva;
+    using Engine::Control::Input::Type::k_DualWieldPadStride;
+    using Engine::Control::Input::Type::k_InputModeCount;
+    using Engine::Control::Input::Type::k_InputModeRva;
     using Engine::Control::Input::Type::k_ControlSettingsDefaultRva;
     using Engine::Control::Input::Type::k_ControlSettingsRva;
     using Engine::Control::Input::Type::k_ControlSettingsStride;
@@ -190,8 +197,16 @@ namespace Engine::Control::Input::Hook
         }
 
         const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, playerIndex) };
-        const UnitContext context{ unitState ? m_BotService.GetClientContext(*unitState) : UnitContext{ .Known = 0 } };
         const ClientState state{ ReadClientState(std::span<const std::uint8_t, k_ClientBlockWindow>{ blockBefore }) };
+
+        const ClientContextSource source{
+            .ThreadContext = threadContext,
+            .InputUser = inputUser,
+            .LocalIndex = localIndex,
+            .PlayerHandle = m_BotService.GetPlayerHandle(threadContext, playerIndex).value_or(k_NoHandle),
+            .ClientZoomLevel = state.ZoomLevel,
+            .DualWieldFlags = this->ReadDualWieldFlags(localIndex) };
+        const UnitContext context{ unitState ? m_BotService.GetClientContext(*unitState, source, *settings, deltaTime) : UnitContext{ .Known = 0 } };
 
         const ClientStep step{ StepClient(frame, state, context, *settings, deltaTime) };
         if (step.Status != ClientStatus::Ran || step.Output.Unsupported != 0)
@@ -313,6 +328,18 @@ namespace Engine::Control::Input::Hook
         settings.TicksPerSecond = ReadMemory<std::int16_t>(clock + k_ClockTicksPerSecondOffset);
         settings.TickSeconds = ReadMemory<float>(clock + k_ClockTickSecondsOffset);
         return settings;
+    }
+
+    auto ClientOracleDetour::ReadDualWieldFlags(std::uint32_t localIndex) const -> std::optional<std::uint8_t>
+    {
+        if (m_ModuleBase == 0) return std::nullopt;
+
+        // note: A local index past the array reads the mode of the first user, like the engine does.
+        const std::uint32_t modeIndex{ localIndex < k_InputModeCount ? localIndex : 0 };
+        const auto mode{ ReadMemory<std::int32_t>(m_ModuleBase + k_InputModeRva + (modeIndex * sizeof(std::int32_t))) };
+        if (mode != 0) return ReadMemory<std::uint8_t>(m_ModuleBase + k_DualWieldKeyboardRva);
+
+        return ReadMemory<std::uint8_t>(m_ModuleBase + k_DualWieldPadRva + (static_cast<std::uintptr_t>(localIndex) * k_DualWieldPadStride));
     }
 
     auto ClientOracleDetour::Install() -> bool

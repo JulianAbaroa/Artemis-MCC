@@ -81,6 +81,8 @@
     <ClCompile Include="Simulation\State\BotStore.ixx" />
     <ClCompile Include="Simulation\System\BotService.cpp" />
     <ClCompile Include="Simulation\System\BotService.ixx" />
+    <ClCompile Include="Simulation\System\UnitContext.cpp" />
+    <ClCompile Include="Simulation\System\UnitContext.ixx" />
     <ClCompile Include="Simulation\Type\Engine.Control.Simulation.Type.ixx" />
   </ItemGroup>
   <ItemGroup>

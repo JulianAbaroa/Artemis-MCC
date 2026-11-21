@@ -516,7 +516,7 @@ namespace Control::Client::System
             }
             else if (unit.Ability.Kind == 1)
             {
-                if (unit.Ability.NeedsEngine) output.Unsupported |= static_cast<std::uint32_t>(Unsupported::AbilityButton);
+                if (unit.Ability.NeedsEngine && settings.IsJumpFlag) output.Unsupported |= static_cast<std::uint32_t>(Unsupported::AbilityButton);
                 else SetBit(output.Buttons, 8, IsDown(frame, InputEvent::Ability));
             }
         }

@@ -228,6 +228,84 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56 41 57 48 83 EC 20 8B 15 ?? ?? ?? ?? 41 83 CF FF 65 48 8B 04 25 58 00 00 00 40 B7 01 41 BC 10 00 00 00 8B D9"
     };
 
+    // Functions: unit facts of the client (VW.9c.2). Each is 1 hit in haloreach.dll build 1.3528, MD5 012f4079af9a8bb0f624c178af8e0753.
+    // WeaponZoomMagnification (0x4856b8): float(unit, zoom level int16): the magnification of the weapon in the hands at that level, 1.0 when it has none (A17 sec. 9.1, VW.9c.2).
+    inline constexpr Signature k_WeaponZoomMagnification
+    {
+        "WeaponZoomMagnification",
+        "48 89 5C 24 10 48 89 6C 24 18 56 57 41 54 41 56 41 57 48 83 EC 30 0F 29 74 24 20 0F B7 DA F3 0F"
+    };
+
+    // WeaponMovePenalty (0x4bc51c): float(weapon, is forward byte, is zoomed byte): the fraction the weapon takes off a move axis (forward = 1, side = 0) (VW.9c.2).
+    inline constexpr Signature k_WeaponMovePenalty
+    {
+        "WeaponMovePenalty",
+        "40 53 48 83 EC 20 44 8B 0D ?? ?? ?? ?? 41 8A D8 65 48 8B 04 25 58 00 00 00 41 BA 10 00 00 00 44"
+    };
+
+    // UnitCrouchGate (0x4ac810): bool(unit): the unit object kind says crouch is gated (the toggle does not apply). The kind table gives the check, it is a dispatch (VW.9c.2).
+    inline constexpr Signature k_UnitCrouchGate
+    {
+        "UnitCrouchGate",
+        "48 83 EC 28 8B 15 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 41 B9 10 00 00 00 44 8B D1 48 8B 04 D0 0F B7 D1 4E 8B 0C 08 4C 8D 04 52 49 8B 41 50 4A 8B 54 C0 10 48 0F BF 82 B2 01 00 00 4C 63 04 10 33 D2 41 83 F8 FF 74 0D 48 8D 0D ?? ?? ?? ?? 4A 8B 0C C1 EB 03 48 8B CA 48 8B 41 38"
+    };
+
+    // UnitForcedCrouch (0x4abee8): bool(unit): the unit is forced to crouch (VW.9c.2).
+    inline constexpr Signature k_UnitForcedCrouch
+    {
+        "UnitForcedCrouch",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 54 41 56 41 57 48 83 EC 20 8B 15 ?? ?? ?? ?? 4C 8D 25 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 33"
+    };
+
+    // UnitCrouchToggleBlocked (0x48be48): bool(unit): the crouch toggle is cleared for this unit (VW.9c.2).
+    inline constexpr Signature k_UnitCrouchToggleBlocked
+    {
+        "UnitCrouchToggleBlocked",
+        "48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 41 56 48 83 EC 20 8B 15 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 44"
+    };
+
+    // WeaponNextZoomLevel (0x4bc624): int16(weapon, level): the next zoom level of a weapon, -1 at the end of the cycle or when it has no levels (VW.9c.2).
+    inline constexpr Signature k_WeaponNextZoomLevel
+    {
+        "WeaponNextZoomLevel",
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 44 8B 05 ?? ?? ?? ?? 48 8D 35 ?? ?? ?? ?? 65 48 8B 04 25 58 00 00 00 0F"
+    };
+
+    // UnitFrameOfReference (0x5dddc): int32(unit, out transform): the handle of the object whose frame the unit looks from, -1 if none. It writes the transform (VW.9c.2).
+    inline constexpr Signature k_UnitFrameOfReference
+    {
+        "UnitFrameOfReference",
+        "48 89 5C 24 08 48 89 74 24 10 48 89 7C 24 18 41 56 48 83 EC 20 48 8B FA 44 8B F1 E8 ?? ?? ?? ??"
+    };
+
+    // ControlsLocked (0x61830): bool(input user, local index, 0, 0): the controls of the user are locked (VW.9c.2).
+    inline constexpr Signature k_ControlsLocked
+    {
+        "ControlsLocked",
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 44 8B 05 ?? ?? ?? ?? 8B FA 65 48 8B 04 25 58 00 00"
+    };
+
+    // PlayerLookOffset (0xda824): bool(player, dt float, out 2 floats, out 2 floats): the player is pushed off its aim (flinch, shake). The outputs are only written (VW.9c.2).
+    inline constexpr Signature k_PlayerLookOffset
+    {
+        "PlayerLookOffset",
+        "48 8B C4 48 89 58 08 4C 89 48 20 55 56 57 41 54 41 55 41 56 41 57 48 81 EC C0 00 00 00 0F 29 70"
+    };
+
+    // PlayerAltControl (0x715ac): bool(player, uint32* out, 0): the alternate control mode of the player, where the zoom comes from event 0x28 (VW.9c.2).
+    inline constexpr Signature k_PlayerAltControl
+    {
+        "PlayerAltControl",
+        "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 45 32 C9 44 8B D1 48 8B DA 83 F9 FF 0F 84 ?? ?? ??"
+    };
+
+    // TagFlagTest (0x4c6b34): bool(tag handle uint16, flag int32): a flag word of the tag. Its first bytes load the two tag globals (the node to data index map and the segment base pointers), so the engine tag memory is read through them (VW.9c.2).
+    inline constexpr Signature k_TagFlagTest
+    {
+        "TagFlagTest",
+        "48 8B 05 ?? ?? ?? ?? 0F B7 C9 44 8B 44 C8 04 48 63 CA 49 8D 04 48 49 C1 E8 1C 48 03 C8 48 8D 05"
+    };
+
     // Second step of the interaction of a player (0x4eb54): objects inside a cone of its weapon. Same arguments (A9 M5d).
     inline constexpr Signature k_GatherAimedInteractions
     {

@@ -21,6 +21,8 @@ namespace
     using Control::Action::Type::ClientRequests;
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
+    using Control::Client::Type::ClientContextSource;
+    using Control::Client::Type::ClientSettings;
     using Control::Client::Type::UnitContext;
     using Control::Action::System::UnitRules;
     using Control::Action::System::BuildAction;
@@ -121,7 +123,7 @@ namespace
             return std::nullopt;
         }
 
-        auto GetClientContext(const UnitClientState& state) const -> UnitContext override
+        auto GetClientContext(const UnitClientState& state, const ClientContextSource&, const ClientSettings&, float) const -> UnitContext override
         {
             return UnitContext{ .HasUnit = state.Unit != k_NoHandle, .IsSeated = state.IsSeated };
         }

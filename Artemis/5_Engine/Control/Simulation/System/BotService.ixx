@@ -1,5 +1,7 @@
 export module Engine.Control.Simulation.System;
 
+export import :UnitContext;
+
 import Common.Log.System;
 import Control.Action.Type;
 import Control.Action.System;
@@ -34,6 +36,9 @@ export namespace Engine::Control::Simulation::System
         using UnitSelectorFunction = Engine::Control::Simulation::Type::UnitSelectorFunction;
         using NextZoomLevelFunction = Engine::Control::Simulation::Type::NextZoomLevelFunction;
         using CanUnitZoomFunction = Engine::Control::Simulation::Type::CanUnitZoomFunction;
+        using UnitFunctions = Engine::Control::Simulation::Type::UnitFunctions;
+        using ClientContextSource = ::Control::Client::Type::ClientContextSource;
+        using ClientSettings = ::Control::Client::Type::ClientSettings;
         using UnitClientState = ::Control::Action::Type::UnitClientState;
         using UnitContext = ::Control::Client::Type::UnitContext;
         using Bot = Engine::Control::Simulation::Type::Bot;
@@ -73,6 +78,10 @@ export namespace Engine::Control::Simulation::System
         auto WriteInteraction(std::uintptr_t threadContext, std::size_t playerIndex, std::span<std::uint8_t> interaction) const
             -> bool;
 
+        // return: The handle (with salt) of the player in the slot, or nullopt if the slot is free.
+        // note: Game thread only.
+        auto GetPlayerHandle(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint32_t>;
+
         // return: The client state of the unit of the player, or nullopt if the player is gone or has no live unit.
         // note: Game thread only.
         auto GetUnitClientState(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<UnitClientState>;
@@ -92,10 +101,12 @@ export namespace Engine::Control::Simulation::System
         // note: Game thread only.
         auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> override;
 
-        // return: What the client asks of the unit in the state (D356): it has a unit, and sits or not. The other facts need an engine
-        // function not found yet: Known says so, and a step that reads one is not comparable with the engine.
-        // note: Game thread only.
-        auto GetClientContext(const UnitClientState& state) const -> UnitContext override;
+        // return: What the client asks of the unit in the state (D356, VW.9c.2): every fact of UnitFact, resolved with the memory of the
+        // unit, its weapon, its parent and their tags and with the engine functions the decompiled 0x5df80 calls (see BuildUnitContext).
+        // A fact whose function was not found or whose memory is not there stays outside UnitContext::Known.
+        // note: Game thread only. The source carries the thread context.
+        auto GetClientContext(const UnitClientState& state, const ClientContextSource& source, const ClientSettings& settings,
+            float deltaTime) const -> UnitContext override;
 
         // return: Why the roster does not fit the match as it is now (more bots than k_MaxBots or than the free slots of the player table,
         // or the team of the local player when it has auto bots), or nothing. Nothing is changed.
@@ -108,11 +119,12 @@ export namespace Engine::Control::Simulation::System
         // note: Game thread only.
         auto ApplyRoster(std::uintptr_t threadContext, const Roster& roster) -> RosterApplication override;
 
-        // Finds the engine functions by signature, in three sets: the ones that add and remove bots, the ones that build the
-        // interaction and the client selectors (weapon, grenade, zoom).
+        // Finds the engine functions by signature, in four sets: the ones that add and remove bots, the ones that build the
+        // interaction, the client selectors (weapon, grenade, zoom) and the ones behind the unit facts of the client (VW.9c.2).
         // return: False if one is not found. The cause is logged. Without the first set no bot can be added (without only the player
         // update function, bots are added but not removed), without the second the agents keep the interaction the engine built (none
         // for a bot), without the third the agents cannot switch weapon, grenade or zoom.
+        // A function of the fourth set that is not found is one ERROR and only its facts stay unknown: it does not change the result.
         // note: Call it before the SetMachines hook is installed: the hook overwrites the bytes the signature matches.
         auto ResolveFunctions() -> bool;
 
@@ -141,6 +153,12 @@ export namespace Engine::Control::Simulation::System
         NextZoomLevelFunction m_NextZoomLevel{ nullptr };
         CanUnitZoomFunction m_CanUnitZoom{ nullptr };
         bool m_IsClientResolved{ false };
+
+        UnitFunctions m_UnitFunctions{};
+        bool m_IsUnitFactsResolved{ false };
+
+        // Finds the engine functions and the tag globals behind the unit facts of the client. Each one not found is logged.
+        auto ResolveUnitFacts() -> void;
 
         // Reads the machines, the players and the game options of the engine into the store.
         auto PublishSnapshot(std::uintptr_t threadContext) -> void;

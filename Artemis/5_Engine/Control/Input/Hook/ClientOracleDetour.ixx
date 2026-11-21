@@ -108,6 +108,10 @@ export namespace Engine::Control::Input::Hook
         // return: The settings of the local user the client reads, or nullopt when the control tag cannot be read.
         auto ReadSettings(std::uint32_t localIndex, std::uintptr_t threadContext) const -> std::optional<ClientSettings>;
 
+        // return: The dual wield restrictions byte of the local user: the keyboard and mouse global, or the byte of its pad settings.
+        // nullopt without the module base (the DualWield fact then stays unknown).
+        auto ReadDualWieldFlags(std::uint32_t localIndex) const -> std::optional<std::uint8_t>;
+
         // Adds the counts of the call to the store and logs the first mismatches. A mismatch also queues its line for the file.
         auto Report(const ClientStep& step, const ClientDifferences& differences, const UnitContext& context, bool isZoomed,
             std::int32_t inputUser, float deltaTime, std::span<const std::uint8_t> table, std::span<const std::uint8_t> blockBefore) -> void;
