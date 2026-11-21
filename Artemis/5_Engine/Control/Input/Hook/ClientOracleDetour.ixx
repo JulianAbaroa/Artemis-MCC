@@ -93,6 +93,9 @@ export namespace Engine::Control::Input::Hook
         // m_BufferMutex.
         std::uint64_t m_AcceptedLines{ 0 };
 
+        // Lines accepted per kind of difference (k_ClientLinesPerKind). Guarded by m_BufferMutex.
+        std::unordered_map<std::string, std::uint32_t> m_LinesPerKind{};
+
         static auto __fastcall HookedPlayerControl(std::int32_t inputUser, std::uint32_t localIndex, float deltaTime, float unused,
             void* tableOut, float* output) -> void;
 

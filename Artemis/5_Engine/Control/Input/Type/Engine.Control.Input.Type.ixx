@@ -410,6 +410,10 @@ export namespace Engine::Control::Input::Type
     // buffer drops the line and counts it).
     inline constexpr std::uint64_t k_ClientMaxFileLines{ 5000 };
     inline constexpr std::size_t k_ClientBufferLines{ 64 };
+
+    // Lines kept per kind of difference (the line without the dt, the table and the block): one systematic difference (a unit fact not
+    // resolved yet) would otherwise fill the file in seconds and hide the rest.
+    inline constexpr std::uint32_t k_ClientLinesPerKind{ 20 };
     inline constexpr const char* k_ClientOracleFile{ "client_oracle.txt" };
 
     // Fields of ClientState the oracle compares, one bit each in ClientDifferences::StateFields.

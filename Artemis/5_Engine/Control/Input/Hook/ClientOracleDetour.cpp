@@ -53,6 +53,7 @@ namespace
     using Engine::Control::Input::Type::k_ClientInputUsers;
     using Engine::Control::Input::Type::k_ClientLogLimit;
     using Engine::Control::Input::Type::k_ClientBufferLines;
+    using Engine::Control::Input::Type::k_ClientLinesPerKind;
     using Engine::Control::Input::Type::k_ClientMaxFileLines;
     using Engine::Control::Input::Type::k_ClientOracleFile;
     using Engine::Control::Input::Type::k_ClientOutputCompared;
@@ -244,6 +245,16 @@ namespace Engine::Control::Input::Hook
 
         if (m_OraclePath.empty() || m_AcceptedLines >= k_ClientMaxFileLines) return;
 
+        // note: The kind is what differs (from "unknown=" to " table="), without the dt and the bytes.
+        const std::size_t kindStart{ line.find(" unknown=") };
+        const std::size_t kindEnd{ line.find(" table=") };
+        if (kindStart != std::string::npos && kindEnd != std::string::npos && kindEnd > kindStart)
+        {
+            std::uint32_t& kindLines{ m_LinesPerKind[line.substr(kindStart, kindEnd - kindStart)] };
+            if (kindLines >= k_ClientLinesPerKind) return;
+            ++kindLines;
+        }
+
         if (m_BufferedLines.size() >= k_ClientBufferLines)
         {
             ++m_DroppedLines;
@@ -335,6 +346,7 @@ namespace Engine::Control::Input::Hook
             m_BufferedLines.clear();
             m_DroppedLines = 0;
             m_AcceptedLines = 0;
+            m_LinesPerKind.clear();
         }
 
         void* functionAddress{ reinterpret_cast<void*>(function) };
