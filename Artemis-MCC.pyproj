@@ -86,6 +86,7 @@
     <Compile Include="Agent\scripts\train_stage0.py" />
     <Compile Include="Agent\scripts\net_probe.py" />
     <Compile Include="Agent\scripts\pov_probe.py" />
+    <Compile Include="Agent\scripts\possess_probe.py" />
     <Compile Include="Agent\scripts\variant_poke.py" />
     <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
     <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
