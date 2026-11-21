@@ -52,6 +52,9 @@ selection list, ability button, menu look scale) is not guessed: `Output.Unsuppo
 player handle of the user, the zoom level of the client block and the dual wield restrictions byte (the ticks per second come from `ClientSettings` and the dt from the call, passed to `GetClientContext` next to the source). The
 kind 1 ability only goes through the engine (`Unsupported::AbilityButton`) when its tag asks for it (`Ability.NeedsEngine`) and the setting
 `IsJumpFlag` is on.
+The raw down byte of an event (`EventSample::DownCount`, 1 on the first frame) decides the zoom press, the two zoom steps, the crouch toggle and the
+ability lane (kind 0): the engine compares it with 1 (0x5d31c), so they act on the first frame of a press and not on every frame it stays down.
+The held bits (zoom held, lanes) use any non zero byte.
 A fact of the unit the context does not know (`UnitContext::Known` lacks its `UnitFact` bit) is read as its default, and the step says so:
 `Output.UnknownRead` holds the bits of the unknown facts the branches that ran actually read, and a step with a bit set is not comparable.
 Not ported on purpose: the controller path (+0x6F8 = 0), the aim assist (D109), the interaction records (D118), the seat turn limits and aim

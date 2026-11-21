@@ -153,6 +153,7 @@
     <ClCompile Include="Engine\GameCameraTests.cpp" />
     <ClCompile Include="Engine\PovTests.cpp" />
     <ClCompile Include="Engine\ClientFrameTests.cpp" />
+    <ClCompile Include="Engine\ClientReplayTests.cpp" />
     <ClCompile Include="Engine\UnitContextTests.cpp" />
     <ClCompile Include="Engine\ViewActionTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />

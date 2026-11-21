@@ -72,6 +72,12 @@ namespace
         return Sample(frame, event).IsDown;
     }
 
+    // The engine compares the raw down byte with 1 (0x5d31c): only the first frame of a press counts, not every frame it stays down.
+    auto IsPressed(const InputFrame& frame, InputEvent event) -> bool
+    {
+        return Sample(frame, event).DownCount == 1;
+    }
+
     // Clamp the way the engine does it: below the low value gives the low value, at or above the high value gives the high value.
     auto ClampRange(float value, float low, float high) -> float
     {
@@ -252,9 +258,11 @@ namespace
             return;
         }
 
+        // note: The toggle flips on the first frame of the press only, a hold sets the crouch on that frame and clears it when released.
+        const bool isCrouchPress{ IsPressed(frame, InputEvent::Crouch) };
         if (settings.IsCrouchToggle && !isGate)
         {
-            if (isCrouch) state.IsCrouchToggled = !state.IsCrouchToggled;
+            if (isCrouchPress) state.IsCrouchToggled = !state.IsCrouchToggled;
 
             const std::int32_t holdTicks{ (settings.TicksPerSecond / k_CrouchHoldBase) * k_CrouchHoldTicks };
             const float holdSeconds{ static_cast<float>(holdTicks) * settings.TickSeconds };
@@ -264,7 +272,8 @@ namespace
             return;
         }
 
-        state.IsCrouchToggled = isCrouch;
+        if (isCrouchPress) state.IsCrouchToggled = true;
+        else if (!isCrouch) state.IsCrouchToggled = false;
     }
 
     // Zoom events: press, hold, step in and step out, with the limits of dual wield and of weapons without zoom.
@@ -273,22 +282,25 @@ namespace
     {
         if (unit.IsSeated) return;
 
+        // note: The held bit is any non zero down byte, the press and the two steps are the first frame only (0x5fefd: byte == 1).
         bool isHeld{ false };
+        bool isPress{ false };
         bool isIn{ false };
         bool isOut{ false };
         Need(unit, unknown, UnitFact::AltControl);
         if (!unit.IsAltControl)
         {
             isHeld = IsDown(frame, InputEvent::Zoom);
-            isIn = IsDown(frame, InputEvent::ZoomIn);
-            isOut = IsDown(frame, InputEvent::ZoomOut);
+            isPress = IsPressed(frame, InputEvent::Zoom);
+            isIn = IsPressed(frame, InputEvent::ZoomIn);
+            isOut = IsPressed(frame, InputEvent::ZoomOut);
         }
         else
         {
             isHeld = IsDown(frame, InputEvent::ZoomAlt);
+            isPress = IsPressed(frame, InputEvent::ZoomAlt);
         }
 
-        bool isPress{ isHeld };
         if (isPress || isIn) Need(unit, unknown, UnitFact::DualWield);
         if (isPress && unit.IsDualWield) isPress = (unit.DualWieldFlags & 2) == 0;
         if (isIn && unit.IsDualWield && (unit.DualWieldFlags & 4) != 0) isIn = false;
@@ -512,7 +524,7 @@ namespace Control::Client::System
         {
             if (unit.Ability.Kind == 0)
             {
-                if (IsDown(frame, InputEvent::Ability)) output.Lanes |= 1u << k_LaneAbility;
+                if (IsPressed(frame, InputEvent::Ability)) output.Lanes |= 1u << k_LaneAbility;
             }
             else if (unit.Ability.Kind == 1)
             {

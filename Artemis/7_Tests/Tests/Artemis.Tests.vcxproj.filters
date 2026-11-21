@@ -66,6 +66,9 @@
     <ClCompile Include="Engine\ClientFrameTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\ClientReplayTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\UnitContextTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

@@ -66,7 +66,7 @@ namespace
         return value;
     }
 
-    // The same test as 0x5d31c, 0x5d358 and 0x5d374: an entry that is blocked, or whose link does not match, reads as zero.
+    // The same test as 0x5d31c (which returns the raw down byte), 0x5d358 and 0x5d374: an entry that is blocked, or whose link does not match, reads as zero.
     auto ReadEntry(std::span<const std::uint8_t> table, std::size_t offset) -> EventSample
     {
         const bool isBlocked{ (ReadAt<std::uint8_t>(table, offset + k_EventFlagsOffset) & 1) != 0 };
@@ -74,7 +74,8 @@ namespace
         const std::uint32_t linkAny{ ReadAt<std::uint32_t>(table, offset + k_EventLinkAnyOffset) };
         if (isBlocked || (linkAny != k_EventLinkAny && linkAny != link)) return EventSample{};
 
-        return EventSample{ .IsDown = ReadAt<std::uint8_t>(table, offset + k_EventDownOffset) != 0,
+        const std::uint8_t down{ ReadAt<std::uint8_t>(table, offset + k_EventDownOffset) };
+        return EventSample{ .IsDown = down != 0, .DownCount = down,
             .HeldMs = ReadAt<std::uint16_t>(table, offset + k_EventHeldOffset), .Value = ReadAt<float>(table, offset + k_EventValueOffset) };
     }
 

@@ -39,7 +39,13 @@ namespace
 
     auto Hold(InputFrame& frame, InputEvent event, std::uint16_t heldMs = 1, float value = 1.0f) -> void
     {
-        frame.Events[static_cast<std::size_t>(event)] = EventSample{ .IsDown = true, .HeldMs = heldMs, .Value = value };
+        frame.Events[static_cast<std::size_t>(event)] = EventSample{ .IsDown = true, .DownCount = 1, .HeldMs = heldMs, .Value = value };
+    }
+
+    // An event that has been down for a number of frames (1 is the first one).
+    auto HoldFrames(InputFrame& frame, InputEvent event, std::uint8_t frames) -> void
+    {
+        frame.Events[static_cast<std::size_t>(event)] = EventSample{ .IsDown = true, .DownCount = frames, .HeldMs = 100, .Value = 1.0f };
     }
 
     auto Bit(std::uint32_t bit) -> std::uint64_t { return 1ull << bit; }

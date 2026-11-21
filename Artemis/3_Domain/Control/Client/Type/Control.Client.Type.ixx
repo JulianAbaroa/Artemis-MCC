@@ -64,6 +64,10 @@ export namespace Control::Client::Type
     {
         bool IsDown{ false };
 
+        // The raw "down" byte (+2 of the entry): the number of frames the event has been down, 1 on the first one. 0x5d31c returns it as it
+        // is, and the zoom press, zoom steps, the crouch toggle and the ability lane only act on 1 (the first frame), unlike IsDown.
+        std::uint8_t DownCount{ 0 };
+
         // Milliseconds held.
         std::uint16_t HeldMs{ 0 };
 
