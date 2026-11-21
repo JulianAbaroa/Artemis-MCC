@@ -10,6 +10,15 @@
     <Filter Include="Action\Type">
       <UniqueIdentifier>{47072fdf-e93d-5ae1-8129-9d200b3f1814}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Client">
+      <UniqueIdentifier>{1a792113-d08c-538c-9229-3569e384ada3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client\System">
+      <UniqueIdentifier>{9a577e1b-b650-5a5c-93a1-0c5d6fdd8c6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Client\Type">
+      <UniqueIdentifier>{13bb48fc-3dac-5126-8ff0-bac0055e9e44}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Lockstep">
       <UniqueIdentifier>{ce5af450-6f6d-5bcd-88e4-e5f59ec90f91}</UniqueIdentifier>
     </Filter>
@@ -29,6 +38,15 @@
     </ClCompile>
     <ClCompile Include="Action\Type\Control.Action.Type.ixx">
       <Filter>Action\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\System\Control.Client.System.cpp">
+      <Filter>Client\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\System\Control.Client.System.ixx">
+      <Filter>Client\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Client\Type\Control.Client.Type.ixx">
+      <Filter>Client\Type</Filter>
     </ClCompile>
     <ClCompile Include="Lockstep\System\Control.Lockstep.System.cpp">
       <Filter>Lockstep\System</Filter>

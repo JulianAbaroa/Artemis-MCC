@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
+import Common.Engine.Type;
 import Common.Math.System;
 import Control.Action.Type;
 import Control.Action.System;
+import Control.Client.Type;
 import Blam.Layout.Action.Type;
 import std;
 
@@ -11,6 +13,7 @@ import std;
 
 namespace
 {
+    using Common::Engine::Type::k_NoHandle;
     using Common::Math::System::TurnToward;
     using Common::Math::System::MoveToward;
 
@@ -18,6 +21,7 @@ namespace
     using Control::Action::Type::ClientRequests;
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
+    using Control::Client::Type::UnitContext;
     using Control::Action::System::UnitRules;
     using Control::Action::System::BuildAction;
     using Control::Action::System::GetHoldThresholdTicks;
@@ -115,6 +119,11 @@ namespace
             if (FixedZoom) return *FixedZoom;
             if (state.ZoomLevel < 2) return static_cast<std::int8_t>(state.ZoomLevel + 1);
             return std::nullopt;
+        }
+
+        auto GetClientContext(const UnitClientState& state) const -> UnitContext override
+        {
+            return UnitContext{ .HasUnit = state.Unit != k_NoHandle, .IsSeated = state.IsSeated };
         }
     };
 

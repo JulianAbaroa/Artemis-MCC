@@ -25,7 +25,9 @@ namespace
 
     using Engine::Base::Hook::System::k_DrainTimeout;
 
-    using Engine::Base::Hook::System::ResolveRelative;
+    using Engine::Control::Input::System::GetEngineThreadContext;
+    using Engine::Control::Input::System::LocateControlTag;
+    using Engine::Control::Input::System::ReadControlTag;
 
     using ::Control::Action::Type::ActionOverride;
     using ::Control::Action::Type::ClientRequests;
@@ -62,12 +64,7 @@ namespace
     using Blam::Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
 
-    using Engine::Control::Input::Type::k_PlayerControlTagOffset;
     using Engine::Control::Input::Type::k_HoldThresholdOffset;
-    using Engine::Control::Input::Type::k_TagLoadTableRelOffset;
-    using Engine::Control::Input::Type::k_TagLoadTableNextOffset;
-    using Engine::Control::Input::Type::k_TagLoadCallRelOffset;
-    using Engine::Control::Input::Type::k_TagLoadCallNextOffset;
     using Engine::Control::Input::Type::k_ShadowFieldNames;
     using Engine::Control::Input::Type::k_ControlGlobalsSlot;
     using Engine::Control::Input::Type::k_ControlBlockStride;
@@ -100,7 +97,7 @@ namespace Engine::Control::Input::Hook
     {
         Engine::Base::Hook::System::InFlightScope scope(s_InFlight);
 
-        const std::uintptr_t threadContext{ update != nullptr ? s_Instance->GetThreadContext() : 0 };
+        const std::uintptr_t threadContext{ update != nullptr ? GetEngineThreadContext(s_Instance->m_EngineTlsIndex) : 0 };
 
         if (update != nullptr)
         {
@@ -371,27 +368,11 @@ namespace Engine::Control::Input::Hook
 
     auto PlayerActionDetour::GetHoldThresholdTicks() const -> std::optional<std::uint32_t>
     {
-        if (!m_PlayerControlTable || !m_ResolveTagAddress) return std::nullopt;
-
-        const std::uintptr_t table{ *m_PlayerControlTable };
-        if (table == 0) return std::nullopt;
-
-        // note: Between maps the address can be empty. Resolving it would give a pointer to nothing.
-        const auto* address{ reinterpret_cast<const std::uint32_t*>(table + k_PlayerControlTagOffset) };
-        if (*address == 0 || *address == 0xFFFFFFFF) return std::nullopt;
-
-        const std::uintptr_t tag{ m_ResolveTagAddress(address) };
+        const std::uintptr_t tag{ ReadControlTag(m_ControlTag) };
         if (tag == 0) return std::nullopt;
 
         const float seconds{ *reinterpret_cast<const float*>(tag + k_HoldThresholdOffset) };
         return ::Control::Action::System::GetHoldThresholdTicks(seconds);
-    }
-
-    auto PlayerActionDetour::GetThreadContext() const -> std::uintptr_t
-    {
-        if (!m_EngineTlsIndex) return 0;
-
-        return Engine::Base::Hook::System::ReadThreadContext(*m_EngineTlsIndex);
     }
 
     auto PlayerActionDetour::FindEngineTlsIndex() -> const std::uint32_t*
@@ -449,10 +430,7 @@ namespace Engine::Control::Input::Hook
         const std::uintptr_t tagLoad{ m_AOBService.FindPattern(Signature::k_PlayerControlTagLoad) };
         if (tagLoad != 0)
         {
-            m_PlayerControlTable = reinterpret_cast<const std::uintptr_t*>(
-                ResolveRelative(tagLoad, k_TagLoadTableRelOffset, k_TagLoadTableNextOffset));
-            m_ResolveTagAddress = reinterpret_cast<ResolveTagAddressFunction>(
-                ResolveRelative(tagLoad, k_TagLoadCallRelOffset, k_TagLoadCallNextOffset));
+            m_ControlTag = LocateControlTag(tagLoad);
         }
         else
         {

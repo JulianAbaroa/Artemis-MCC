@@ -42,6 +42,9 @@
     <ClCompile Include="Control\ActionTests.cpp">
       <Filter>Control</Filter>
     </ClCompile>
+    <ClCompile Include="Control\ClientTests.cpp">
+      <Filter>Control</Filter>
+    </ClCompile>
     <ClCompile Include="Control\LockstepTests.cpp">
       <Filter>Control</Filter>
     </ClCompile>
@@ -58,6 +61,9 @@
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Engine\PovTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\ClientFrameTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
     <ClCompile Include="Engine\ViewActionTests.cpp">

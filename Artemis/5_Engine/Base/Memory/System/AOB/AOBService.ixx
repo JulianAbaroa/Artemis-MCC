@@ -33,8 +33,10 @@ export namespace Engine::Base::Memory::System
         // return: Address of the function (module base + rva), or 0 if the module is not loaded, the pattern does not begin within the
         // window or the unwind table of the module does not say a function begins exactly at the rva (the game was updated). The cause is
         // logged.
+        // param matchAddress: If not null, receives the address where the anchor matched (inside the function when the anchor is not its
+        // prologue), so the caller can read the bytes around it without a second scan of the module.
         auto FindFunctionAtRva(const Signature& anchor, std::uint32_t rva, std::uint32_t window,
-            const wchar_t* moduleName = L"haloreach.dll") -> std::uintptr_t;
+            const wchar_t* moduleName = L"haloreach.dll", std::uintptr_t* matchAddress = nullptr) -> std::uintptr_t;
 
     private:
         Log& m_Log;

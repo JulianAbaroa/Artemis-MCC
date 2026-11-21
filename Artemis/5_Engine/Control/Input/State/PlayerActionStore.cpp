@@ -113,14 +113,12 @@ namespace Engine::Control::Input::State
 
     auto PlayerActionStore::SetShadowEnabled(bool isEnabled) -> void
     {
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        m_IsShadowEnabled = isEnabled;
+        m_IsShadowEnabled.store(isEnabled);
     }
 
     auto PlayerActionStore::IsShadowEnabled() const -> bool
     {
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        return m_IsShadowEnabled;
+        return m_IsShadowEnabled.load();
     }
 
     auto PlayerActionStore::AddShadow(ShadowField field, bool isMatch) -> std::uint64_t

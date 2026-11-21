@@ -120,6 +120,7 @@ namespace Mod
         m_Base.m_LifecycleService.OnEngineInitialized([this] {
             m_Transport.m_BridgeService.BeginMatch();
             m_Control.m_PlayerActionDetour.Install();
+            m_Control.m_ClientOracleDetour.Install();
             m_Control.m_BotService.ResolveFunctions();
             m_Control.m_SetMachinesDetour.Install();
             this->InstallHostHooks();
@@ -156,6 +157,7 @@ namespace Mod
             m_Render.m_FirstPersonDetour.Uninstall();
             m_Render.m_ChudDetour.Uninstall();
             m_Control.m_SetMachinesDetour.Uninstall();
+            m_Control.m_ClientOracleDetour.Uninstall();
             m_Control.m_PlayerActionDetour.Uninstall();
             m_Base.m_OpenMapDetour.Uninstall();
             m_Capture.m_SimulationTicksDetour.Uninstall();

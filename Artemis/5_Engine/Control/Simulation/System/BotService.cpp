@@ -3,6 +3,7 @@ module Engine.Control.Simulation.System;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
+import Control.Client.Type;
 import Engine.Base.Memory.Type;
 import Blam.Layout.Object.Type;
 import std;
@@ -30,9 +31,12 @@ namespace
     using Engine::Control::Simulation::Type::NextZoomLevelFunction;
     using Engine::Control::Simulation::Type::CanUnitZoomFunction;
     using ::Control::Action::Type::UnitClientState;
+    using ::Control::Client::Type::UnitContext;
+    using ::Control::Client::Type::UnitFact;
 
     using Engine::Base::MatchSetup::Type::k_MaxMachines;
     using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_NoHandle;
     using Engine::Base::MatchSetup::Type::k_MaxPlayersPerMachine;
     using Engine::Control::Simulation::Type::k_ObjectsSlot;
     using Engine::Control::Simulation::Type::k_PlayersSlot;
@@ -743,6 +747,12 @@ namespace Engine::Control::Simulation::System
         if (!m_IsClientResolved || !m_CanUnitZoom(state.Unit)) return std::nullopt;
 
         return static_cast<std::int8_t>(m_NextZoomLevel(state.Unit, state.ZoomLevel));
+    }
+
+    auto BotService::GetClientContext(const UnitClientState& state) const -> UnitContext
+    {
+        constexpr std::uint32_t known{ static_cast<std::uint32_t>(UnitFact::HasUnit) | static_cast<std::uint32_t>(UnitFact::IsSeated) };
+        return UnitContext{ .Known = known, .HasUnit = state.Unit != k_NoHandle, .IsSeated = state.IsSeated };
     }
 
     auto BotService::ResolveFunctions() -> bool

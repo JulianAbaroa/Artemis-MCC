@@ -122,6 +122,17 @@ export namespace Engine::Control::Input::Type
     // Signature of the engine function that turns a tag address into a pointer (haloreach.dll rva 0x15918).
     using ResolveTagAddressFunction = auto(__fastcall*)(const std::uint32_t* address) -> std::uintptr_t;
 
+    // Where the engine keeps the player control tag: the variable that points to the globals table that holds its address, and the
+    // function that resolves a tag address. Both null when the match was not found.
+    struct ControlTagLocator
+    {
+        const std::uintptr_t* Table{ nullptr };
+        ResolveTagAddressFunction Resolve{ nullptr };
+
+        // return: Whether both were found.
+        constexpr auto IsValid() const -> bool { return Table != nullptr && Resolve != nullptr; }
+    };
+
     // Command of one player for one tick, as the simulation applies it.
     // note: Opaque except the offsets of Blam.Layout.Action.Type. The engine builds it once per frame from the player control of each local player.
     struct PlayerAction
@@ -176,6 +187,30 @@ export namespace Engine::Control::Input::Type
         // Zoom level asked for (+0x4A) when it differs from the current one and is not "no zoom".
         Zoom,
 
+        // Client oracle (VW.9c.1, D356): calls of the engine client compared with the pure client, by output field. Checked counts the
+        // calls compared, Mismatched the calls where the field differs. The bits and values go to the log and the oracle file.
+        ClientMove,
+        ClientLook,
+        ClientTriggers,
+        ClientButtons,
+        ClientEvents,
+        ClientLanes,
+        ClientState,
+
+        // Calls that read a fact of the unit the port does not know (ClientOutput::UnknownRead). They are NOT counted in the fields above:
+        // Checked counts them, Mismatched the ones where something also differs. A mismatch here may come from the missing fact.
+        ClientPartial,
+
+        // Calls not compared: the table is not the keyboard and mouse one, the pure client reported a branch it does not run, the output
+        // was not clean, or the context was not readable. Checked counts them, Mismatched stays 0.
+        ClientNotComparable,
+
+        // Calls compared by context of the unit, and the calls of each that differed: on foot, in a seat, with zoom and without a unit.
+        ClientOnFoot,
+        ClientSeated,
+        ClientZoomed,
+        ClientNoUnit,
+
         Count
     };
 
@@ -190,6 +225,39 @@ export namespace Engine::Control::Input::Type
         "Weapon",
         "Grenade",
         "Zoom",
+        "Client move",
+        "Client look",
+        "Client triggers",
+        "Client buttons",
+        "Client events",
+        "Client lanes",
+        "Client state",
+        "Client partial",
+        "Client not comparable",
+        "Client on foot",
+        "Client seated",
+        "Client zoomed",
+        "Client no unit",
+    };
+
+    // One count of the shadow check: the field and whether the call matched on it.
+    struct ClientCount
+    {
+        ShadowField Field{ ShadowField::ClientMove };
+        bool IsMatch{ true };
+    };
+
+    // The counts one compared call adds. At most 10: the 7 output fields, the context of the unit and the zoom.
+    struct ClientCounts
+    {
+        std::array<ClientCount, 10> Items{};
+        std::size_t Size{ 0 };
+
+        constexpr auto Add(ShadowField field, bool isMatch) -> void
+        {
+            Items[Size] = ClientCount{ field, isMatch };
+            ++Size;
+        }
     };
 
     // Mismatches of each field the shadow check logs. The rest are only counted.
@@ -231,6 +299,163 @@ export namespace Engine::Control::Input::Type
         // Bytes that differed from the reference at some tick, and the last value they had then.
         std::array<bool, k_PlayerActionSize> IsChanged{};
         PlayerAction LastChanged{};
+    };
+
+    // Player control of a local player (haloreach.dll rva 0x5df80): reads the event table of the input user and fills the output (0x60
+    // bytes the caller clears) and the client block. The client oracle hooks it (VW.9c.1, D356).
+    // note: The two floats are the seconds of the tick (xmm2) and a value the caller passes along (xmm3). The table pointer is written
+    // through the fifth argument.
+    using PlayerControlFunction = auto(__fastcall*)(std::int32_t inputUser, std::uint32_t localIndex, float deltaTime, float unused,
+        void* tableOut, float* output) -> void;
+
+    inline constexpr std::uint32_t k_PlayerControlRva{ 0x5DF80 };
+
+    // How far from the function start the PlayerControlTagLoad match may begin (it begins at +0x8C).
+    inline constexpr std::uint32_t k_PlayerControlAnchorWindow{ 0x90 };
+
+    // Event table of the input users (g_InputEventTable_Player0, A17 sec. 9): rva, bytes per input user, input users the client handles.
+    // note: The oracle compares only input user 0: the client fields of a block reach +0x1E2 past the 0x180 stride of 0x5df80, so the
+    // block of users 1-3 overlaps the next one and user 3 would read past the last block (unconfirmed in game, VW.9c.1 report).
+    inline constexpr std::uintptr_t k_InputEventTableRva{ 0x287FF94 };
+    inline constexpr std::size_t k_InputTableSize{ 0x700 };
+    inline constexpr std::size_t k_ClientInputUsers{ 1 };
+
+    // Event entries of the table in the keyboard and mouse mode (+0x224 + 0x10 * event) and their fields.
+    inline constexpr std::size_t k_InputEventsOffset{ 0x224 };
+    inline constexpr std::size_t k_InputEventSize{ 0x10 };
+    inline constexpr std::size_t k_EventHeldOffset{ 0x0 };
+    inline constexpr std::size_t k_EventDownOffset{ 0x2 };
+    inline constexpr std::size_t k_EventFlagsOffset{ 0x3 };
+    inline constexpr std::size_t k_EventValueOffset{ 0x4 };
+    inline constexpr std::size_t k_EventLinkOffset{ 0x8 };
+    inline constexpr std::size_t k_EventLinkAnyOffset{ 0xC };
+    inline constexpr std::uint32_t k_EventLinkAny{ 0x7F };
+
+    // Tail of the table: move axes, look deltas, the tail value and the mouse flag.
+    inline constexpr std::size_t k_InputMoveForwardOffset{ 0x6BC };
+    inline constexpr std::size_t k_InputMoveSideOffset{ 0x6C0 };
+    inline constexpr std::size_t k_InputYawDeltaOffset{ 0x6C4 };
+    inline constexpr std::size_t k_InputPitchDeltaOffset{ 0x6C8 };
+    inline constexpr std::size_t k_InputPitchDeltaAltOffset{ 0x6CC };
+    inline constexpr std::size_t k_InputTailOffset{ 0x6D0 };
+    inline constexpr std::size_t k_InputMouseFlagOffset{ 0x6F8 };
+
+    // Control block of an input user: the client block starts at +0x80 of it (the pointer 0x5df80 uses), and this many bytes of it are
+    // kept for the oracle: the highest field the port reads (the grenade latch, +0x162) rounded up to 4.
+    // note: The fields past +0x100 of the client block land beyond k_ControlBlockStride (0x80 + 0x168 > 0x180). The stride of the task file
+    // and the offsets of the decompile do not agree: one of them is wrong. Only user 0 is certain (it does not depend on the stride).
+    inline constexpr std::uintptr_t k_ClientBlockOffset{ 0x80 };
+    inline constexpr std::size_t k_ClientBlockWindow{ 0x168 };
+
+    // Output of 0x5df80 (0x60 bytes, cleared by the caller). The oracle compares the first 0x34 bytes: the interaction records come
+    // after.
+    inline constexpr std::size_t k_ClientOutputSize{ 0x60 };
+    inline constexpr std::size_t k_ClientOutputCompared{ 0x34 };
+
+    // Fields of that output: move axes, triggers, look delta, buttons, event bits, hold lanes and the tail value.
+    inline constexpr std::size_t k_OutputMoveOffset{ 0x00 };
+    inline constexpr std::size_t k_OutputFireTriggerOffset{ 0x08 };
+    inline constexpr std::size_t k_OutputZoomTriggerOffset{ 0x0C };
+    inline constexpr std::size_t k_OutputTrigger4Offset{ 0x10 };
+    inline constexpr std::size_t k_OutputLookOffset{ 0x14 };
+    inline constexpr std::size_t k_OutputButtonsOffset{ 0x20 };
+    inline constexpr std::size_t k_OutputEventsOffset{ 0x28 };
+    inline constexpr std::size_t k_OutputLanesOffset{ 0x2C };
+    inline constexpr std::size_t k_OutputTailOffset{ 0x30 };
+
+    // Fields of the client block (offsets from its start) the oracle reads and compares.
+    inline constexpr std::size_t k_ClientSelectionIndexOffset{ 0x48 };
+    inline constexpr std::size_t k_ClientSelectionKindOffset{ 0x4C };
+    inline constexpr std::size_t k_ClientYawOffset{ 0x14 };
+    inline constexpr std::size_t k_ClientZoomLevelOffset{ 0x46 };
+    inline constexpr std::size_t k_ClientLookRateActiveOffset{ 0x9C };
+    inline constexpr std::size_t k_ClientLookRateYawOffset{ 0xA0 };
+    inline constexpr std::size_t k_ClientLookRemainderYawOffset{ 0xB0 };
+    inline constexpr std::size_t k_ClientFrameHandleOffset{ 0x114 };
+    inline constexpr std::size_t k_ClientJumpTimerOffset{ 0x138 };
+    inline constexpr std::size_t k_ClientAimAssistOffset{ 0x140 };
+    inline constexpr std::size_t k_ClientCrouchOffset{ 0x14C };
+    inline constexpr std::size_t k_ClientCrouchHeldOffset{ 0x150 };
+    inline constexpr std::size_t k_ClientSwitchWeaponOffset{ 0x15C };
+    inline constexpr std::size_t k_ClientGrenadeOffset{ 0x15F };
+    static_assert(k_ClientGrenadeOffset + 4 <= k_ClientBlockWindow, "The window must cover the highest client field the port reads");
+
+    // Settings of the local users the client reads (A17 sec. 8 and 9.1): rva of the array of settings blocks, bytes of each, the block used
+    // when bit 14 of the first word says "default", and the fields of a block: aim scale with zoom and in a seat, and the jump flag.
+    inline constexpr std::uintptr_t k_ControlSettingsRva{ 0x2A03C58 };
+    inline constexpr std::uintptr_t k_ControlSettingsStride{ 0xAB8 };
+    inline constexpr std::uintptr_t k_ControlSettingsDefaultRva{ 0x2A06910 };
+    inline constexpr std::uint32_t k_ControlSettingsDefaultBit{ 14 };
+    inline constexpr std::size_t k_SettingsAimZoomedOffset{ 0x60 };
+    inline constexpr std::size_t k_SettingsAimSeatedOffset{ 0x64 };
+    inline constexpr std::size_t k_SettingsJumpFlagOffset{ 0x69 };
+
+    // Globals the client reads: the crouch toggle byte and the byte that makes melee count for the use lane, by rva.
+    inline constexpr std::uintptr_t k_CrouchToggleRva{ 0x287FF7A };
+    inline constexpr std::uintptr_t k_MeleeHoldsUseRva{ 0x4E2FCB1 };
+
+    // Fields of the control tag (the hold threshold is k_HoldThresholdOffset): zoom cancel threshold and jump timer seconds.
+    inline constexpr std::size_t k_ControlTagZoomCancelOffset{ 0x4C };
+    inline constexpr std::size_t k_ControlTagJumpTimerOffset{ 0x88 };
+
+    // Clock of the thread context: pointer slot, ticks per second (int16) and seconds of a tick (float).
+    inline constexpr std::uintptr_t k_ClockSlot{ 0xA0 };
+    inline constexpr std::size_t k_ClockTicksPerSecondOffset{ 0x06 };
+    inline constexpr std::size_t k_ClockTickSecondsOffset{ 0x08 };
+
+    // Mismatching calls of the client oracle the log shows, and the file of AppData that gets one line per mismatch.
+    inline constexpr std::uint64_t k_ClientLogLimit{ 30 };
+
+    // Lines the oracle file takes at most per session, and lines the buffer between the game thread and the Main thread holds (a full
+    // buffer drops the line and counts it).
+    inline constexpr std::uint64_t k_ClientMaxFileLines{ 5000 };
+    inline constexpr std::size_t k_ClientBufferLines{ 64 };
+    inline constexpr const char* k_ClientOracleFile{ "client_oracle.txt" };
+
+    // Fields of ClientState the oracle compares, one bit each in ClientDifferences::StateFields.
+    enum class ClientStateField : std::uint8_t
+    {
+        Selection = 0,
+        LookRates,
+        Zoom,
+        AimAssist,
+        Frame,
+        Jump,
+        Crouch,
+        SwitchWeapon,
+        Grenade,
+
+        Count
+    };
+
+    inline constexpr std::array<const char*, static_cast<std::size_t>(ClientStateField::Count)> k_ClientStateFieldNames
+    {
+        "selection", "look rates", "zoom level", "aim assist", "frame of reference", "jump timer", "crouch", "switch weapon", "grenade",
+    };
+
+    // What differs between the engine client and the pure client in one call.
+    struct ClientDifferences
+    {
+        bool IsMove{ false };
+        bool IsLook{ false };
+        bool IsTriggers{ false };
+
+        // Bits that differ in the buttons, the events and the lanes.
+        std::uint64_t Buttons{ 0 };
+        std::uint32_t Events{ 0 };
+        std::uint32_t Lanes{ 0 };
+
+        // The tail value (+0x30) differs.
+        bool IsTail{ false };
+
+        // One bit per ClientStateField.
+        std::uint32_t StateFields{ 0 };
+
+        // return: Whether nothing differs.
+        constexpr auto IsEmpty() const -> bool
+        {
+            return !IsMove && !IsLook && !IsTriggers && !IsTail && Buttons == 0 && Events == 0 && Lanes == 0 && StateFields == 0;
+        }
     };
 
     // Signature of the engine function that applies the player actions of one tick (haloreach.dll rva 0x47050).

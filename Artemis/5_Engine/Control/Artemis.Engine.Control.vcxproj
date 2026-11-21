@@ -67,6 +67,11 @@
     <ClCompile Include="Input\State\VirtualInputStore.cpp" />
     <ClCompile Include="Input\State\VirtualInputStore.ixx" />
     <ClCompile Include="Input\System\ActionSource.ixx" />
+    <ClCompile Include="Input\Hook\ClientOracleDetour.cpp" />
+    <ClCompile Include="Input\Hook\ClientOracleDetour.ixx" />
+    <ClCompile Include="Input\System\ClientFrame.ixx" />
+    <ClCompile Include="Input\System\ClientReport.ixx" />
+    <ClCompile Include="Input\System\ControlTag.ixx" />
     <ClCompile Include="Input\System\ViewAction.ixx" />
     <ClCompile Include="Input\Type\Engine.Control.Input.Type.ixx" />
     <ClCompile Include="Simulation\Hook\SetMachinesDetour.cpp" />

@@ -70,6 +70,21 @@
     <ClCompile Include="Input\System\ActionSource.ixx">
       <Filter>Input\System</Filter>
     </ClCompile>
+    <ClCompile Include="Input\System\ClientFrame.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\ClientReport.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\ControlTag.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Hook\ClientOracleDetour.cpp">
+      <Filter>Input\Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\Hook\ClientOracleDetour.ixx">
+      <Filter>Input\Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Input\System\ViewAction.ixx">
       <Filter>Input\System</Filter>
     </ClCompile>

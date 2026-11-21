@@ -38,8 +38,8 @@ export namespace Engine::Control::Input::Hook
 
         using ApplyPlayerActionsFunction = Engine::Control::Input::Type::ApplyPlayerActionsFunction;
         using ClearPlayerActionFunction = Engine::Control::Input::Type::ClearPlayerActionFunction;
+        using ControlTagLocator = Engine::Control::Input::Type::ControlTagLocator;
         using CopyActionToViewFunction = Engine::Control::Input::Type::CopyActionToViewFunction;
-        using ResolveTagAddressFunction = Engine::Control::Input::Type::ResolveTagAddressFunction;
         using ShadowField = Engine::Control::Input::Type::ShadowField;
         using ShadowPlayer = Engine::Control::Input::Type::ShadowPlayer;
 
@@ -95,10 +95,8 @@ export namespace Engine::Control::Input::Hook
         // What the shadow check remembers of each local player (D122). Reset while the check is off. Game thread only.
         std::array<ShadowPlayer, k_MaxActionPlayers> m_ShadowPlayers{};
 
-        // Variable of the engine that points to the globals table with the player control tag, and the engine function that resolves
-        // a tag address. Null if not found (then no lane is ever held).
-        const std::uintptr_t* m_PlayerControlTable{ nullptr };
-        ResolveTagAddressFunction m_ResolveTagAddress{ nullptr };
+        // Where the player control tag is (the shared locator). Invalid if not found (then no lane is ever held).
+        ControlTagLocator m_ControlTag{};
 
         // Engine function that clears an action, or null if not found (then no override is applied).
         ClearPlayerActionFunction m_ClearPlayerAction{ nullptr };
@@ -139,10 +137,6 @@ export namespace Engine::Control::Input::Hook
         // cannot be read.
         // note: Game thread only. Read every tick: the globals belong to the map.
         auto GetHoldThresholdTicks() const -> std::optional<std::uint32_t>;
-
-        // return: Thread context of the engine, or 0 if it is not found.
-        // note: Reads the thread local storage of the current thread. Call it from the game thread.
-        auto GetThreadContext() const -> std::uintptr_t;
 
         // return: Variable that holds the engine thread local storage index, or null if the signature is not found.
         auto FindEngineTlsIndex() -> const std::uint32_t*;

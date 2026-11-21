@@ -10,6 +10,19 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   weapon of a view that watches a bot (Watch POV) follow it tick by tick (VW.9a.y, D349). The decision is the pure `FindViewActionPlayer`. A
   view of a local player is never touched (the engine moves it every frame) and without POV no view shows a non local player, so it is
   never called.
+- `ClientOracleDetour` (VW.9c.1, D356): development oracle, off unless the shadow check switch of `PlayerActionStore` is on. It hooks the player
+  control of the engine (0x5df80, found by its rva with the control tag anchor and the unwind table, no prologue bytes) and, for a local human
+  player without an override, copies the event table (0x700 bytes), the client block and the output at the entry, calls the original, runs
+  the pure `StepClient` on the copy and compares output and state bit by bit (`CompareClient`). Counters are the `Client ...` fields of the
+  shadow check (calls compared, calls that differ, by output field and by context: on foot, seated, zoomed, no unit; calls not compared).
+  A call that read a unit fact the context does not know (`UnitContext::Known`, `ClientOutput::UnknownRead`) is NOT counted in those fields:
+  it only goes to `Client partial`, so a gap in the context is never counted as a bug of the port (the bot service knows only HasUnit and
+  IsSeated for now). The first differences go to the log. Every difference is a line of `%LOCALAPPDATA%\Artemis\client_oracle.txt`
+  (`diff user= dt= unknown= move= look= trig= tail= buttons= events= lanes= state= table= block=`, the table and the client block as hex) to turn
+  into an offline test. The game thread never does file I/O: the hook only formats the line into a bounded buffer (`k_ClientBufferLines`, a
+  full buffer drops the line and counts it, `k_ClientMaxFileLines` per session) and the Main thread writes it (`Flush`, every second from
+  `MainThread`, and on `Uninstall`). It writes nothing of the game. With the switch off the hook costs one atomic load. The control tag
+  locator, the input user to player search and the thread context read are shared with `PlayerActionDetour` (`Engine.Control.Input.System`).
 - Virtual input: `InputUpdateDetour` gives MCC the state of a virtual gamepad for local players switched to Artemis.
 - Bots: players on machines only Artemis knows, added like players that join in progress (`BotService`, `SetMachinesDetour`) and
   removed with the "left" and "remove" player updates of the engine (LS.1, D284); it also implements `Control`'s `UnitRules` with the
@@ -31,7 +44,7 @@ Other projects may import only these modules; everything else in the project is 
 |---|---|
 | `Engine.Control.Layer` | The facade: input, action and bot stores, services and detours. Owner only. |
 | `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `ReadAction` (a field of a `PlayerAction` by offset). |
-| `Engine.Control.Input.System` | The `ActionSource` port, the input services and the pure `FindViewActionPlayer` (which player's action goes into the input of a view). |
+| `Engine.Control.Input.System` | The `ActionSource` port, the input services, the pure `FindViewActionPlayer` (which player's action goes into the input of a view) and the pure `ReadInputFrame`, `ReadClientState`, `CompareClient`, `CountClient`, `FormatClientLine` and `FormatClientStateFields` of the client oracle, and the control tag helpers (`LocateControlTag`, `ReadControlTag`, `FindInputPlayer`, `GetEngineThreadContext`). |
 | `Engine.Control.Simulation.Type`, `Engine.Control.Simulation.State` | Machines and players of the simulation, the pure `PlanRoster` (bots to move, remove and add to reach a count per team; the `Roster` type comes from `Engine.Base.MatchSetup.Type`), `FindFreeBotNumber` (lowest free bot number), `MakePlayerUpdate` (buffer of the player update), `BotStore` (bot, team and remove requests, session snapshot; bots are added only by a roster, `BotService::AddBot` through `ApplyRoster`, there is no request to add one). `BotService` is the `RosterPort` of `MatchSetupService`. |
 
 ## Depends on
@@ -47,7 +60,7 @@ for the UI and the bench.
 
 ## Errors
 An engine function with a changed signature logs an ERROR, never silently. Without `CopyActionToView` the log says "Failed to find
-CopyActionToView" and the view of a non local player does not turn; the rest works. Without the player update function (0x418ff8) bots are
+CopyActionToView" and the view of a non local player does not turn; the rest works. Without the player control (rva 0x5DF80 not at the start of a function, or the control tag or thread context not found) the log says "Failed to find the player control" and the client oracle stays off, nothing else changes. Without the player update function (0x418ff8) bots are
 still added but never removed. A bot that cannot be removed (the engine refuses a step, the slot stays taken) logs the step and stays
 in the `BotStore`; a retry resumes where it stopped. Only the bots Artemis added are removed, never a local or real player. `PlayerActionDetour` without an action source does not
 install. A lost client gives its players back to the engine.
@@ -56,7 +69,7 @@ install. A lost client gives its players back to the engine.
 Local players with an override and bots receive the same action.
 
 ## Tests
-`ViewActionTests` (which action goes into the view of a non local player), `EngineLayerTests` (builds without the game; refuses to
+`ClientFrameTests` (the table and block bytes the oracle reads, the comparison), `ViewActionTests` (which action goes into the view of a non local player), `EngineLayerTests` (builds without the game; refuses to
 install the action hook without a source) and `BotRosterTests` (roster plan,
 bot numbers, update buffer, remove requests, what the setup service does on a tick) in `Artemis.Tests`. In game:
 `Agent/scripts/bridge_check.py` (`run`, `turn`) and the bots stress scenario of the bench.

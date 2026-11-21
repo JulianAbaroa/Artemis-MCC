@@ -47,6 +47,7 @@ namespace Mod::Thread::System
         {
             this->CheckHooksHealth();
             m_Service.m_TelemetryService.Update();
+            m_Control.m_ClientOracleDetour.Flush();
 
             if (lifecycle.GetStatus() == Status::Destroyed)
             {

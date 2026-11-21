@@ -5,6 +5,9 @@ Group `3_Domain` - pure static library - the logic of the player action and of t
 ## Responsibility
 - Action: from the decision of an agent to the fields Artemis writes into the 0xA8-byte action of a tick (buttons, hold lanes with
   the engine's threshold, limited turn of the aim, weapon/grenade/zoom requests of a client).
+- Client: the engine client of a local player (0x5df80, keyboard and mouse) as a pure function (VW.9c.1, D356): from the event table of an
+  input user, the state of its client block, the context of the unit and the settings of the user to the output the engine builds
+  (move axes, triggers, look delta, buttons, event bits and hold lanes) and the new state (crouch toggle, jump timer, look rates, latches).
 - Lockstep: the policy of the bridge: which control is in effect for what the client asked, when a decision is due, how long to
   wait, when to suspend after timeouts, how a bridge action becomes a sanitized override, and the clock of decision ticks.
 
@@ -25,7 +28,9 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Control.Action.Type` | `ActionOverride`, `AppliedFacing`, `ClientRequests`, `UnitClientState`, `PlayerActionHistory`. |
-| `Control.Action.System` | `BuildAction`, `GetHoldThresholdTicks` and the `UnitRules` port. |
+| `Control.Action.System` | `BuildAction`, `GetHoldThresholdTicks` and the `UnitRules` port (also `GetClientContext`: the unit facts the client asks, VW.9c.1). |
+| `Control.Client.Type` | `InputFrame` (the table of one input user, already resolved), `ClientState` (the client block fields kept between calls, with their offsets), `UnitContext` (what the client asks of the unit), `ClientSettings` (passed in, D359), `ClientOutput`, `ClientStep`, `ClientStatus`, `Unsupported` and the event, button and event bit constants. |
+| `Control.Client.System` | `StepClient` (one call of 0x5df80) and `IntegrateAim` (adds the look delta to yaw and pitch with the pitch limit). |
 | `Control.Lockstep.Type` | Limits and defaults of the lockstep (decision period N, latency d, timeouts) and `BridgeControlState`. |
 | `Control.Lockstep.System` | `DecideControl`, `ApplyConnection`, `BuildOverride`, `GetDueDecision`, `RecordWait`, `ResumeIfAnswered`, `GetApplyTiming`, `GetReleasedOverride`, `ReadClock`, `IsDecisionTick`, `IsSparse` (Q101: the client asked for sparse, is connected and nobody needs every tick, pure). |
 
@@ -40,6 +45,13 @@ Called on the game thread (the PlayerAction hook builds the action) and on the b
 block or allocate on the hot path.
 
 ## Errors
+`StepClient` with a mode other than keyboard and mouse (or a table without the mouse state) does not run: the state comes back unchanged and
+`ClientStatus` says why. A branch of 0x5df80 that needs engine state the context does not carry (flinch, trigger curve, frame of reference,
+selection list, ability button, menu look scale) is not guessed: `Output.Unsupported` gets its bit and the step is not comparable.
+A fact of the unit the context does not know (`UnitContext::Known` lacks its `UnitFact` bit) is read as its default, and the step says so:
+`Output.UnknownRead` holds the bits of the unknown facts the branches that ran actually read, and a step with a bit set is not comparable.
+Not ported on purpose: the controller path (+0x6F8 = 0), the aim assist (D109), the interaction records (D118), the seat turn limits and aim
+follow of 0x6375c and the pause/lock side effects on the table.
 Out-of-range requests are clamped (N, d) or sanitized (`BuildOverride`); nothing throws.
 
 ## Requirements

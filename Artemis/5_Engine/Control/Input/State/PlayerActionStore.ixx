@@ -85,7 +85,8 @@ export namespace Engine::Control::Input::State
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> m_Overrides{};
         std::array<ClientRequests, k_MaxActionPlayers> m_ClientRequests{};
         std::array<ShadowCount, k_ShadowFieldCount> m_Shadow{};
-        bool m_IsShadowEnabled{ false };
+        // Atomic: the hooks read it on every call and must not take the mutex while the check is off.
+        std::atomic<bool> m_IsShadowEnabled{ false };
 
         mutable std::mutex m_Mutex{};
     };

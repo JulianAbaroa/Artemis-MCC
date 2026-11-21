@@ -3,6 +3,7 @@ export module Engine.Control.Simulation.System;
 import Common.Log.System;
 import Control.Action.Type;
 import Control.Action.System;
+import Control.Client.Type;
 import Engine.Base.MatchSetup.Type;
 import Engine.Base.MatchSetup.System;
 import Engine.Base.Memory.System;
@@ -34,6 +35,7 @@ export namespace Engine::Control::Simulation::System
         using NextZoomLevelFunction = Engine::Control::Simulation::Type::NextZoomLevelFunction;
         using CanUnitZoomFunction = Engine::Control::Simulation::Type::CanUnitZoomFunction;
         using UnitClientState = ::Control::Action::Type::UnitClientState;
+        using UnitContext = ::Control::Client::Type::UnitContext;
         using Bot = Engine::Control::Simulation::Type::Bot;
         using TeamRequest = Engine::Control::Simulation::Type::TeamRequest;
         using RosterPlan = Engine::Control::Simulation::Type::RosterPlan;
@@ -89,6 +91,11 @@ export namespace Engine::Control::Simulation::System
         // now (0x4852a0) (D120).
         // note: Game thread only.
         auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> override;
+
+        // return: What the client asks of the unit in the state (D356): it has a unit, and sits or not. The other facts need an engine
+        // function not found yet: Known says so, and a step that reads one is not comparable with the engine.
+        // note: Game thread only.
+        auto GetClientContext(const UnitClientState& state) const -> UnitContext override;
 
         // return: Why the roster does not fit the match as it is now (more bots than k_MaxBots or than the free slots of the player table,
         // or the team of the local player when it has auto bots), or nothing. Nothing is changed.

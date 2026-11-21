@@ -19,6 +19,7 @@ export namespace Engine::Control
         using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
         using InputUpdateDetour = Engine::Control::Input::Hook::InputUpdateDetour;
+        using ClientOracleDetour = Engine::Control::Input::Hook::ClientOracleDetour;
         using PlayerActionDetour = Engine::Control::Input::Hook::PlayerActionDetour;
 
         using BotStore = Engine::Control::Simulation::State::BotStore;
@@ -30,6 +31,7 @@ export namespace Engine::Control
             m_BotService(service.m_Log, base.m_AOBService, m_BotStore, m_PlayerActionStore),
             m_InputUpdateDetour(service.m_Log, base.m_HostService, m_VirtualInputStore),
             m_PlayerActionDetour(service.m_Log, base.m_AOBService, base.m_MatchSetupService, m_PlayerActionStore, m_BotService),
+            m_ClientOracleDetour(service.m_Log, base.m_AOBService, m_PlayerActionStore, m_BotService),
             m_SetMachinesDetour(service.m_Log, base.m_AOBService, m_BotStore) {}
         ~Layer() = default;
 
@@ -48,6 +50,7 @@ export namespace Engine::Control
         // --- Hook ---
         InputUpdateDetour m_InputUpdateDetour;
         PlayerActionDetour m_PlayerActionDetour;
+        ClientOracleDetour m_ClientOracleDetour;
         SetMachinesDetour m_SetMachinesDetour;
     };
 }

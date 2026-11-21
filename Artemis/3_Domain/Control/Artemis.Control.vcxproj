@@ -51,6 +51,9 @@
     <ClCompile Include="Action\System\Control.Action.System.cpp" />
     <ClCompile Include="Action\System\Control.Action.System.ixx" />
     <ClCompile Include="Action\Type\Control.Action.Type.ixx" />
+    <ClCompile Include="Client\System\Control.Client.System.cpp" />
+    <ClCompile Include="Client\System\Control.Client.System.ixx" />
+    <ClCompile Include="Client\Type\Control.Client.Type.ixx" />
     <ClCompile Include="Lockstep\System\Control.Lockstep.System.cpp" />
     <ClCompile Include="Lockstep\System\Control.Lockstep.System.ixx" />
     <ClCompile Include="Lockstep\Type\Control.Lockstep.Type.ixx" />

@@ -72,7 +72,7 @@ namespace Engine::Base::Memory::System
     }
 
     auto AOBService::FindFunctionAtRva(const Signature& anchor, std::uint32_t rva, std::uint32_t window,
-        const wchar_t* moduleName) -> std::uintptr_t
+        const wchar_t* moduleName, std::uintptr_t* matchAddress) -> std::uintptr_t
     {
         std::uintptr_t baseAddress{ 0 };
         std::size_t sizeOfImage{ 0 };
@@ -86,7 +86,8 @@ namespace Engine::Base::Memory::System
         }
 
         const std::uintptr_t start{ baseAddress + rva };
-        if (this->Scan(start, window + patternSize, anchor.Pattern, anchor.Name) == 0)
+        const std::uintptr_t match{ this->Scan(start, window + patternSize, anchor.Pattern, anchor.Name) };
+        if (match == 0)
         {
             m_Log.Message("[AOBService] ERROR: The prologue of '{}' does not begin within {} bytes of rva {:X}.", anchor.Name, window, rva);
             return 0;
@@ -102,6 +103,7 @@ namespace Engine::Base::Memory::System
             return 0;
         }
 
+        if (matchAddress != nullptr) *matchAddress = match;
         return start;
     }
 

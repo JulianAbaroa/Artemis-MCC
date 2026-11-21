@@ -150,7 +150,7 @@ export namespace Mod
         DevTools::Viewer::Layer m_Viewer{ m_Service, m_EngineAccess, m_Environment, m_Gui, m_Preferences };
         DevTools::Workbench::Layer m_UI{ m_Service, m_EngineAccess, m_Map, m_Resolved, m_Tables, m_Export, m_Gui, m_Viewer, m_Preferences };
 
-        MainThread m_Main{ m_Service, m_Base, m_Match, m_Render };
+        MainThread m_Main{ m_Service, m_Base, m_Control, m_Match, m_Render };
         AIThread m_AI{ m_Service, m_Base, m_Capture, m_Transport, m_Map, m_Resolved, m_Tables, m_Environment, m_Egocentric, m_Export, m_TickQueue };
         BenchThread m_Bench{ m_Service, m_Base, m_UI.m_BenchUIService };
         BridgeThread m_Bridge{ m_Service, m_Base, m_Transport, m_Export };
