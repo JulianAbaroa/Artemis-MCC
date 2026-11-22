@@ -42,6 +42,9 @@
     <ClCompile Include="Control\ActionTests.cpp">
       <Filter>Control</Filter>
     </ClCompile>
+    <ClCompile Include="Control\AgentInputTests.cpp">
+      <Filter>Control</Filter>
+    </ClCompile>
     <ClCompile Include="Control\ClientTests.cpp">
       <Filter>Control</Filter>
     </ClCompile>

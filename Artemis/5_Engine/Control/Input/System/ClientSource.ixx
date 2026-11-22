@@ -11,6 +11,8 @@ namespace
 
     using Common::Engine::Type::k_MaxLocalUsers;
 
+    using Control::Client::Type::k_MillisecondsPerSecond;
+
     using Engine::Control::Input::Type::ControlTagLocator;
     using Engine::Control::Input::Type::k_ClockSlot;
     using Engine::Control::Input::Type::k_ClockTickSecondsOffset;
@@ -34,9 +36,6 @@ namespace
     using Engine::Control::Input::Type::k_SettingsAimSeatedOffset;
     using Engine::Control::Input::Type::k_SettingsAimZoomedOffset;
     using Engine::Control::Input::Type::k_SettingsJumpFlagOffset;
-
-    // Milliseconds per second, to turn the hold threshold of the tag into the one the engine compares.
-    constexpr float k_MillisecondsPerSecond{ 1000.0f };
 
     template<typename T>
     auto ReadRaw(std::uintptr_t address) -> T
@@ -66,7 +65,7 @@ export namespace Engine::Control::Input::System
         if (((ReadRaw<std::uint32_t>(block) >> k_ControlSettingsDefaultBit) & 1u) != 0) block = moduleBase + k_ControlSettingsDefaultRva;
 
         ClientSettings settings{};
-        settings.HoldThresholdMs = static_cast<std::int32_t>(ReadRaw<float>(tag + k_HoldThresholdOffset) * k_MillisecondsPerSecond);
+        settings.HoldThresholdMs = static_cast<std::int32_t>(ReadRaw<float>(tag + k_HoldThresholdOffset) * static_cast<float>(k_MillisecondsPerSecond));
         settings.ZoomCancelThreshold = ReadRaw<float>(tag + k_ControlTagZoomCancelOffset);
         settings.JumpTimerSeconds = ReadRaw<float>(tag + k_ControlTagJumpTimerOffset);
         settings.AimScaleZoomed = ReadRaw<float>(block + k_SettingsAimZoomedOffset);

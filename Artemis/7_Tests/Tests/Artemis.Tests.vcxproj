@@ -145,6 +145,7 @@
     <ClCompile Include="Common\SnapshotTests.cpp" />
     <ClCompile Include="Common\TextTests.cpp" />
     <ClCompile Include="Control\ActionTests.cpp" />
+    <ClCompile Include="Control\AgentInputTests.cpp" />
     <ClCompile Include="Control\ClientTests.cpp" />
     <ClCompile Include="Control\LockstepTests.cpp" />
     <ClCompile Include="Engine\BotRosterTests.cpp" />

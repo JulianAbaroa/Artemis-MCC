@@ -26,6 +26,7 @@ export namespace Control::Client::Type
         SeatJumpAlt = 0x0F,
         LaneMelee = 0x10,
         Button11 = 0x11,
+        Button13 = 0x13,
         Button16 = 0x16,
         Button17 = 0x17,
         Button18 = 0x18,
@@ -33,8 +34,15 @@ export namespace Control::Client::Type
         Chord1A = 0x1A,
         Reload = 0x1E,
         ThrowGrenade = 0x1F,
+        Button20 = 0x20,
+        Button22 = 0x22,
+        Button23 = 0x23,
+        Button24 = 0x24,
         ZoomValueAlt = 0x26,
+        Button27 = 0x27,
         ZoomAlt = 0x28,
+        Button2F = 0x2F,
+        Button31 = 0x31,
         Pause = 0x35,
         LaneSwitchAlt = 0x36,
         LaneHold = 0x37,
@@ -42,10 +50,18 @@ export namespace Control::Client::Type
         ZoomIn = 0x3C,
         ZoomOut = 0x3D,
         LaneButton = 0x3E,
+        Button3F = 0x3F,
+        Button40 = 0x40,
+        Button41 = 0x41,
+        Button42 = 0x42,
+        Button44 = 0x44,
         Button46 = 0x46,
         Button47 = 0x47,
         Button48 = 0x48,
     };
+
+    // Milliseconds per second. The client and the agent frames keep hold times in whole milliseconds.
+    inline constexpr std::uint32_t k_MillisecondsPerSecond{ 1000 };
 
     // Events of the table of one input user (0x49).
     inline constexpr std::size_t k_EventCount{ 0x49 };
@@ -398,6 +414,11 @@ export namespace Control::Client::Type
         float YawDelta{ 0.0f };
         float PitchDelta{ 0.0f };
 
+        // The look the table asked for this call, before the zoom (or seat) factor and the aim damp of the unit, which the client applies.
+        // An agent reducer adds it up to say how much the player asked to turn in a window (D364). Not part of the engine output.
+        float LookYawRequested{ 0.0f };
+        float LookPitchRequested{ 0.0f };
+
         // +0x20 buttons, +0x28 event bits (A17 sec. 6: 0 switch weapon, 1 switch grenade, 2 zoom, 3 zoom held, 4 and 5 zoom steps, 6 and 7
         // buttons 17 and 18, 8 reload, 9 throw grenade), +0x2C hold lanes (A17 sec. 8), +0x30 tail value.
         std::uint64_t Buttons{ 0 };
@@ -454,4 +475,122 @@ export namespace Control::Client::Type
     // Events of one frame only (a press, a step): switch weapon, switch grenade, zoom press, zoom steps in and out, reload and throw. A consumer that
     // runs less often than the client (the ticks of a possessed bot, D360) latches them until it delivers them once. The held ones (3, 6, 7) are not.
     inline constexpr std::uint32_t k_EventPulses{ 0x337u };
+
+    // Controls of an agent, in the order of the bits of AgentInput::Level and Edge (D362). The value is the bit number.
+    enum class AgentControl : std::uint8_t
+    {
+        Jump = 0,
+        Crouch = 1,
+        Fire = 2,
+        Zoom = 3,
+        ZoomIn = 4,
+        ZoomOut = 5,
+        Melee = 6,
+        Ability = 7,
+        ThrowGrenade = 8,
+        Use = 9,
+        SwitchWeapon = 10,
+        SwitchGrenade = 11,
+        Reload = 12,
+    };
+
+    inline constexpr std::uint32_t k_AgentControlCount{ 13 };
+
+    // The bits of Level and Edge an agent can use. A bit outside it is dropped.
+    inline constexpr std::uint32_t k_AgentControlMask{ (1u << k_AgentControlCount) - 1u };
+
+    // What an agent decides for a window of ticks (D362). Build it sane with SanitizeAgentInput.
+    struct AgentInput
+    {
+        // Move axes in [-1, 1]: forward is positive and left is positive (the client's MoveSide, +1 is the A key).
+        float MoveForward{ 0.0f };
+        float MoveLeft{ 0.0f };
+
+        // Look in radians for the whole window, before the zoom factor and the aim damp, which the client applies (D358). Pitch is what
+        // was asked: the pitch limit of the engine is applied by the client when the look is played, not here.
+        float YawDelta{ 0.0f };
+        float PitchDelta{ 0.0f };
+
+        // One bit per AgentControl: down at the end of the window, and a press (down count 1) inside it.
+        std::uint32_t Level{ 0 };
+        std::uint32_t Edge{ 0 };
+    };
+
+    // One event of the table that a control raises, and the analog value it carries while down.
+    struct AgentEventLink
+    {
+        InputEvent Event{ InputEvent::Jump };
+        float Value{ 0.0f };
+    };
+
+    // The event a control is (the primary one) and the others the same key raises with the default binds of MCC (A17 sec. 9).
+    struct AgentControlEvents
+    {
+        AgentEventLink Primary{};
+        std::array<AgentEventLink, 5> Secondary{};
+        std::uint8_t SecondaryCount{ 0 };
+    };
+
+    // Events of each control, indexed by AgentControl. The secondary 0x35 of Jump is the Pause event, as measured.
+    inline constexpr std::array<AgentControlEvents, k_AgentControlCount> k_AgentControlEvents{ {
+        { .Primary = { InputEvent::Jump }, .Secondary = { AgentEventLink{ InputEvent::SeatJump }, AgentEventLink{ InputEvent::Pause },
+            AgentEventLink{ InputEvent::Button41 } }, .SecondaryCount = 3 },
+        { .Primary = { InputEvent::Crouch }, .Secondary = { AgentEventLink{ InputEvent::SeatCrouch }, AgentEventLink{ InputEvent::Button27 } },
+            .SecondaryCount = 2 },
+        { .Primary = { InputEvent::Fire, 1.0f }, .Secondary = { AgentEventLink{ InputEvent::Button17 }, AgentEventLink{ InputEvent::Button22 } },
+            .SecondaryCount = 2 },
+        { .Primary = { InputEvent::Zoom }, .Secondary = { AgentEventLink{ InputEvent::ZoomValue, 1.0f }, AgentEventLink{ InputEvent::Button13 },
+            AgentEventLink{ InputEvent::ZoomAlt }, AgentEventLink{ InputEvent::Button31 }, AgentEventLink{ InputEvent::Button42 } },
+            .SecondaryCount = 5 },
+        { .Primary = { InputEvent::ZoomIn }, .Secondary = { AgentEventLink{ InputEvent::Button3F } }, .SecondaryCount = 1 },
+        { .Primary = { InputEvent::ZoomOut }, .Secondary = { AgentEventLink{ InputEvent::Button24 }, AgentEventLink{ InputEvent::Button2F } },
+            .SecondaryCount = 2 },
+        { .Primary = { InputEvent::Melee }, .SecondaryCount = 0 },
+        { .Primary = { InputEvent::Ability }, .Secondary = { AgentEventLink{ InputEvent::ZoomValueAlt }, AgentEventLink{ InputEvent::Button40 } },
+            .SecondaryCount = 2 },
+        { .Primary = { InputEvent::Throw }, .Secondary = { AgentEventLink{ InputEvent::ThrowGrenade } }, .SecondaryCount = 1 },
+        { .Primary = { InputEvent::Use }, .SecondaryCount = 0 },
+        { .Primary = { InputEvent::SwitchWeapon }, .Secondary = { AgentEventLink{ InputEvent::Button20 } }, .SecondaryCount = 1 },
+        { .Primary = { InputEvent::SwitchGrenade }, .Secondary = { AgentEventLink{ InputEvent::Button23 } }, .SecondaryCount = 1 },
+        { .Primary = { InputEvent::Reload }, .Secondary = { AgentEventLink{ InputEvent::LaneButton }, AgentEventLink{ InputEvent::Button44 } },
+            .SecondaryCount = 2 },
+    } };
+
+    // What the synthesizer remembers of one agent between ticks: how long each control has been down, whether it was down at the end of
+    // the previous window, and whether it was at the start of this one.
+    struct AgentInputState
+    {
+        std::array<std::uint8_t, k_AgentControlCount> DownCount{};
+        std::array<std::uint32_t, k_AgentControlCount> TicksDown{};
+        std::uint32_t DownMask{ 0 };
+        std::uint32_t StartMask{ 0 };
+    };
+
+    // Adds up the frames of one window of a possessed client into one AgentInput (D364). The caller keeps it and passes it in.
+    struct AgentInputReducer
+    {
+        // Controls down in the last frame added. It stays after Close, so a window without frames repeats it.
+        std::uint32_t Level{ 0 };
+        std::uint32_t Edge{ 0 };
+        float MoveForward{ 0.0f };
+        float MoveLeft{ 0.0f };
+
+        // Sum of the look asked in the window. Not cut by the pitch limit: it is what the user asked, as AgentInput says.
+        float LookYaw{ 0.0f };
+        float LookPitch{ 0.0f };
+    };
+
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Jump)].Primary.Event == InputEvent::Jump);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Crouch)].Primary.Event == InputEvent::Crouch);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Fire)].Primary.Event == InputEvent::Fire);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Zoom)].Primary.Event == InputEvent::Zoom);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::ZoomIn)].Primary.Event == InputEvent::ZoomIn);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::ZoomOut)].Primary.Event == InputEvent::ZoomOut);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Melee)].Primary.Event == InputEvent::Melee);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Ability)].Primary.Event == InputEvent::Ability);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::ThrowGrenade)].Primary.Event == InputEvent::Throw);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Use)].Primary.Event == InputEvent::Use);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::SwitchWeapon)].Primary.Event == InputEvent::SwitchWeapon);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::SwitchGrenade)].Primary.Event == InputEvent::SwitchGrenade);
+    static_assert(k_AgentControlEvents[static_cast<std::size_t>(AgentControl::Reload)].Primary.Event == InputEvent::Reload);
 }

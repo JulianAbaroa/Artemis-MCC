@@ -8,6 +8,11 @@ namespace
 {
     using Common::Engine::Type::k_NoHandle;
 
+    using Control::Client::Type::AgentControlEvents;
+    using Control::Client::Type::AgentEventLink;
+    using Control::Client::Type::AgentInput;
+    using Control::Client::Type::AgentInputReducer;
+    using Control::Client::Type::AgentInputState;
     using Control::Client::Type::ClientOutput;
     using Control::Client::Type::ClientSettings;
     using Control::Client::Type::ClientState;
@@ -20,6 +25,9 @@ namespace
     using Control::Client::Type::UnitFact;
     using Control::Client::Type::Unsupported;
 
+    using Control::Client::Type::k_AgentControlCount;
+    using Control::Client::Type::k_AgentControlEvents;
+    using Control::Client::Type::k_AgentControlMask;
     using Control::Client::Type::k_ButtonCrouch;
     using Control::Client::Type::k_ButtonFire;
     using Control::Client::Type::k_ButtonJump;
@@ -36,10 +44,18 @@ namespace
     using Control::Client::Type::k_EventZoomHeld;
     using Control::Client::Type::k_EventZoomPress;
     using Control::Client::Type::k_KeyboardMouseMode;
+    using Control::Client::Type::k_MillisecondsPerSecond;
     using Control::Client::Type::k_NoZoom;
     using Control::Client::Type::k_PitchLimit;
 
     constexpr float k_TwoPi{ 6.2831855f };
+
+    // Radians the client turns per unit of the raw mouse delta of the table, before the zoom factor and the aim damp (StepLook passes the
+    // delta through).
+    constexpr float k_RadiansPerRawLook{ 1.0f };
+
+    // Most milliseconds a held control reports: the table keeps them in a u16.
+    constexpr long k_MaxHeldMs{ 65535 };
 
     // Seconds of look rate the accessibility accumulators hold at most, and the scale of one frame.
     constexpr float k_LookRateLimit{ 7.0f };
@@ -185,6 +201,32 @@ namespace
         return factor;
     }
 
+    // Axis of an agent: finite and inside [-1, 1].
+    auto SanitizeAxis(float value) -> float
+    {
+        return std::isfinite(value) ? std::clamp(value, -1.0f, 1.0f) : 0.0f;
+    }
+
+    auto SanitizeDelta(float value) -> float
+    {
+        return std::isfinite(value) ? value : 0.0f;
+    }
+
+    // Per tick look of an agent cut to the turn limit. A limit of zero or less (or NaN) cuts nothing.
+    auto LimitTurn(float perTick, float turnLimit) -> float
+    {
+        return turnLimit > 0.0f ? std::clamp(perTick, -turnLimit, turnLimit) : perTick;
+    }
+
+    // Whether a control is down at tick tick of a window (D362). startDown: it was down at the end of the previous window.
+    // note: A press of a control that was down is up at tick 0 and down from tick 1 (a tap, only at tick 1).
+    auto IsAgentControlDown(bool isLevel, bool isEdge, bool startDown, std::int32_t tick) -> bool
+    {
+        if (isLevel) return !(isEdge && startDown) || 1 <= tick;
+        if (isEdge) return tick == (startDown ? 1 : 0);
+        return false;
+    }
+
     // Look part of 0x5df80 with the mouse: the delta of the table, scaled by the zoom and the unit, to this call.
     auto StepLook(ClientStep& step, const InputFrame& frame, const UnitContext& unit, const ClientSettings& settings, float dt,
         std::uint32_t& unknown) -> void
@@ -217,6 +259,8 @@ namespace
         const float factor{ GetAimFactor(state, unit, settings, unknown) };
         float pitchOut{ factor * pitchRate };
         float yawOut{ factor * yawRate };
+        const float yawAsked{ yawRate * dt };
+        const float pitchAsked{ dt * pitchRate };
 
         if (unit.HasUnit)
         {
@@ -231,6 +275,8 @@ namespace
 
         output.YawDelta = yawOut * dt;
         output.PitchDelta = dt * pitchOut;
+        output.LookYawRequested = yawAsked;
+        output.LookPitchRequested = pitchAsked;
         output.Tail30 = frame.Tail6D0;
     }
 
@@ -432,6 +478,95 @@ namespace
 
 namespace Control::Client::System
 {
+    auto SanitizeAgentInput(const AgentInput& input) -> AgentInput
+    {
+        return AgentInput{
+            .MoveForward = SanitizeAxis(input.MoveForward),
+            .MoveLeft = SanitizeAxis(input.MoveLeft),
+            .YawDelta = SanitizeDelta(input.YawDelta),
+            .PitchDelta = SanitizeDelta(input.PitchDelta),
+            .Level = input.Level & k_AgentControlMask,
+            .Edge = input.Edge & k_AgentControlMask };
+    }
+
+    auto MakeAgentFrame(const AgentInput& input, std::int32_t tickInWindow, std::int32_t windowTicks, const ClientSettings& settings,
+        float turnLimit, AgentInputState& state) -> InputFrame
+    {
+        const AgentInput clean{ SanitizeAgentInput(input) };
+        const std::int32_t length{ (std::max)(windowTicks, 1) };
+        const std::int32_t tick{ (std::max)(tickInWindow, 0) };
+        if (tick == 0) state.StartMask = state.DownMask;
+
+        InputFrame frame{};
+        frame.MoveForward = clean.MoveForward;
+        frame.MoveSide = clean.MoveLeft;
+
+        const float yaw{ LimitTurn(clean.YawDelta / static_cast<float>(length), turnLimit) };
+        const float pitch{ LimitTurn(clean.PitchDelta / static_cast<float>(length), turnLimit) };
+        frame.YawDelta = yaw / k_RadiansPerRawLook;
+        frame.PitchDelta = pitch / k_RadiansPerRawLook;
+        frame.PitchDeltaAlt = frame.PitchDelta;
+
+        std::uint32_t downMask{ 0 };
+        for (std::uint32_t control{ 0 }; control < k_AgentControlCount; ++control)
+        {
+            const std::uint32_t bit{ 1u << control };
+            const bool isDown{ IsAgentControlDown((clean.Level & bit) != 0, (clean.Edge & bit) != 0, (state.StartMask & bit) != 0, tick) };
+            if (!isDown)
+            {
+                state.DownCount[control] = 0;
+                state.TicksDown[control] = 0;
+                continue;
+            }
+
+            downMask |= bit;
+            if (state.DownCount[control] < 255) ++state.DownCount[control];
+            if (state.TicksDown[control] < (std::numeric_limits<std::uint32_t>::max)()) ++state.TicksDown[control];
+
+            const float heldMs{ static_cast<float>(state.TicksDown[control]) * settings.TickSeconds *
+                static_cast<float>(k_MillisecondsPerSecond) };
+            const EventSample sample{ .IsDown = true, .DownCount = state.DownCount[control],
+                .HeldMs = static_cast<std::uint16_t>(std::clamp(std::lround(heldMs), 0L, k_MaxHeldMs)) };
+
+            const AgentControlEvents& events{ k_AgentControlEvents[control] };
+            auto write = [&](const AgentEventLink& link) {
+                EventSample& slot{ frame.Events[static_cast<std::size_t>(link.Event)] };
+                slot = sample;
+                slot.Value = link.Value;
+            };
+            write(events.Primary);
+            for (std::uint8_t i{ 0 }; i < events.SecondaryCount; ++i) write(events.Secondary[i]);
+        }
+
+        state.DownMask = downMask;
+        return frame;
+    }
+
+    auto AddAgentFrame(AgentInputReducer& reducer, const InputFrame& frame, float lookYaw, float lookPitch) -> void
+    {
+        std::uint32_t level{ 0 };
+        for (std::uint32_t control{ 0 }; control < k_AgentControlCount; ++control)
+        {
+            const EventSample& primary{ Sample(frame, k_AgentControlEvents[control].Primary.Event) };
+            if (primary.IsDown) level |= 1u << control;
+            if (primary.DownCount == 1) reducer.Edge |= 1u << control;
+        }
+
+        reducer.Level = level;
+        reducer.MoveForward = frame.MoveForward;
+        reducer.MoveLeft = frame.MoveSide;
+        reducer.LookYaw += lookYaw;
+        reducer.LookPitch += lookPitch;
+    }
+
+    auto CloseAgentInput(AgentInputReducer& reducer) -> AgentInput
+    {
+        const AgentInput result{ SanitizeAgentInput(AgentInput{ .MoveForward = reducer.MoveForward, .MoveLeft = reducer.MoveLeft,
+            .YawDelta = reducer.LookYaw, .PitchDelta = reducer.LookPitch, .Level = reducer.Level, .Edge = reducer.Edge }) };
+        reducer = AgentInputReducer{ .Level = reducer.Level };
+        return result;
+    }
+
     auto StepClient(const InputFrame& frame, const ClientState& state, const UnitContext& unit, const ClientSettings& settings, float dt)
         -> ClientStep
     {

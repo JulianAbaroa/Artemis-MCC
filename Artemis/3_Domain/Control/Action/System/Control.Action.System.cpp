@@ -19,6 +19,7 @@ namespace
     using Control::Client::Type::k_EventSwitchGrenade;
     using Control::Client::Type::k_EventSwitchWeapon;
     using Control::Client::Type::k_EventZoomPress;
+    using Control::Client::Type::k_MillisecondsPerSecond;
     using Control::Action::Type::UnitClientState;
     using Control::Action::Type::WeaponRequest;
     using Control::Action::System::UnitRules;
@@ -65,9 +66,6 @@ namespace
 
     // Sanity limit of the hold threshold read from the engine. Anything outside (0, limit) is not a threshold.
     constexpr float k_MaxHoldThresholdSeconds{ 5.0f };
-
-    // Milliseconds per second. The local client keeps the hold time and the threshold in whole milliseconds (0x5df80).
-    constexpr std::uint32_t k_MillisecondsPerSecond{ 1000 };
 
     // return: True if use is down in the use test at that tick.
     auto IsUseTestDown(std::uint64_t tick) -> bool
