@@ -131,6 +131,17 @@ export namespace Engine::Control::Simulation::Type
     inline constexpr std::uint32_t k_TagWeaponTriggerBit{ 18 };
     inline constexpr std::uintptr_t k_TagUnitFlags{ 0x5A * sizeof(std::uint32_t) };
     inline constexpr std::uint32_t k_TagTriggerCurveBit{ 27 };
+
+    // Tag flags word of the boost: bit 0 makes a positive boost push the unit forward. The tag function of the boost sits at +0x498.
+    inline constexpr std::uintptr_t k_TagTriggerCurveFlags{ 0x47C };
+    inline constexpr std::uint32_t k_TriggerCurveForwardBit{ 0 };
+    inline constexpr std::uintptr_t k_TagTriggerCurveFunction{ 0x498 };
+
+    // Control profile table of the game engine globals (0x70ed0): one entry of 300 bytes per player index, whose word at +0x1754 is 1 when the
+    // boost comes from the alternate event.
+    inline constexpr std::uintptr_t k_ProfileTable{ 0x1754 };
+    inline constexpr std::uintptr_t k_ProfileStride{ 300 };
+    inline constexpr std::int32_t k_ProfileAltBoost{ 1 };
     inline constexpr std::uintptr_t k_TagAimDamp{ 0x304 };
     inline constexpr std::uintptr_t k_TagAbilityKind{ 0x24A };
 
@@ -380,6 +391,12 @@ export namespace Engine::Control::Simulation::Type
     // Alternate control mode of a player (0x715ac). The output may be null.
     using AltControlFunction = auto(__fastcall*)(std::uint32_t player, std::uint32_t* output, std::uint64_t zero) -> bool;
 
+    // Value of a tag function at an input (0x174ed8): the tag function structure, the input and the previous value (zero for the boost).
+    using TagFunctionEvaluateFunction = auto(__fastcall*)(const void* function, float input, float previous) -> float;
+
+    // Scale of a tag function value to its range (0x175524): the same structure and the value 0x174ed8 gave.
+    using TagFunctionScaleFunction = auto(__fastcall*)(const void* function, float value) -> float;
+
     // Addresses of the two tag globals of the engine: the pointer to the node map and the array of segment base pointers.
     struct TagGlobals
     {
@@ -401,6 +418,8 @@ export namespace Engine::Control::Simulation::Type
         ControlsLockedFunction ControlsLocked{ nullptr };
         LookOffsetFunction LookOffset{ nullptr };
         AltControlFunction AltControl{ nullptr };
+        TagFunctionEvaluateFunction TagFunctionEvaluate{ nullptr };
+        TagFunctionScaleFunction TagFunctionScale{ nullptr };
         TagGlobals Tags{};
     };
 

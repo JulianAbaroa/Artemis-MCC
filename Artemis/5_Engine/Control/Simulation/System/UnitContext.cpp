@@ -57,6 +57,8 @@ namespace
     using Engine::Control::Simulation::Type::k_TagSelectionBiped;
     using Engine::Control::Simulation::Type::k_TagSelectionVehicle;
     using Engine::Control::Simulation::Type::k_TagTriggerCurveBit;
+    using Engine::Control::Simulation::Type::k_TagTriggerCurveFlags;
+    using Engine::Control::Simulation::Type::k_TriggerCurveForwardBit;
     using Engine::Control::Simulation::Type::k_TagUnitFlags;
     using Engine::Control::Simulation::Type::k_TagWeaponCrouchBit;
     using Engine::Control::Simulation::Type::k_TagWeaponFlags;
@@ -240,6 +242,17 @@ namespace
         }
 
         if (source.DualWieldFlags) context.DualWieldFlags = *source.DualWieldFlags;
+
+        // note: Without a player the engine would index the profile table with 0xFFFF, so the boost uses the default event.
+        if (source.PlayerHandle == k_NoHandle)
+        {
+            context.IsBoostAltEvent = false;
+            resolver.Mark(UnitFact::BoostAltEvent);
+        }
+        else
+        {
+            resolver.Take(UnitFact::BoostAltEvent, port.IsBoostAltEvent(source.PlayerHandle), context.IsBoostAltEvent);
+        }
     }
 
     // Seat facts: the parent of the unit, the alternate pitch and the alternate seat events.
@@ -429,6 +442,41 @@ namespace
         }
     }
 
+    // Boost facts of the tag that holds the trigger curve: the forward push flag and the value of this call through the tag function.
+    // note: Without the curve bit they are the defaults, the client does not read them. The engine only runs the function for a raw value
+    // that is not zero. The event the raw value comes from depends on the control profile, so the value stays unknown without it.
+    auto ResolveBoost(Resolver& resolver, std::uint32_t curveTag) -> void
+    {
+        const UnitFactPort& port{ resolver.Port };
+        UnitContext& context{ resolver.Context };
+
+        if (!context.IsTriggerCurve)
+        {
+            resolver.Mark(UnitFact::TriggerCurveValue);
+            resolver.Mark(UnitFact::TriggerCurveForward);
+            return;
+        }
+
+        const std::optional<std::uint32_t> flags{ ReadTagValue<std::uint32_t>(port, curveTag, k_TagTriggerCurveFlags) };
+        if (flags)
+        {
+            context.IsTriggerCurveForward = IsBitSet(*flags, k_TriggerCurveForwardBit);
+            resolver.Mark(UnitFact::TriggerCurveForward);
+        }
+
+        if ((resolver.Known & static_cast<std::uint32_t>(UnitFact::BoostAltEvent)) == 0) return;
+
+        const float raw{ context.IsBoostAltEvent ? resolver.Source.BoostAltValue : resolver.Source.BoostValue };
+        if (raw == 0.0f)
+        {
+            context.TriggerCurveValue = 0.0f;
+            resolver.Mark(UnitFact::TriggerCurveValue);
+            return;
+        }
+
+        resolver.Take(UnitFact::TriggerCurveValue, port.EvaluateTriggerCurve(curveTag, raw), context.TriggerCurveValue);
+    }
+
     // Facts of the tag of the unit: trigger curve, aim damping and the selection list of its root.
     auto ResolveUnitTag(Resolver& resolver, std::uint32_t unit) -> void
     {
@@ -455,6 +503,7 @@ namespace
             {
                 context.IsTriggerCurve = IsBitSet(*flags, k_TagTriggerCurveBit);
                 resolver.Mark(UnitFact::TriggerCurve);
+                ResolveBoost(resolver, *curveTag);
             }
         }
 
@@ -567,7 +616,7 @@ namespace Engine::Control::Simulation::System
                 UnitFact::MovePenalty, UnitFact::TriggerCurve, UnitFact::AimDamp, UnitFact::CrouchGate, UnitFact::WeaponCrouchFlag,
                 UnitFact::ForcedCrouch, UnitFact::CrouchToggleBlocked, UnitFact::Carried, UnitFact::Ability, UnitFact::DualWield,
                 UnitFact::ZoomItem, UnitFact::WeaponTriggerFlag, UnitFact::FrameOfReference, UnitFact::SelectionEntries,
-                UnitFact::JumpAssist })
+                UnitFact::JumpAssist, UnitFact::TriggerCurveValue, UnitFact::TriggerCurveForward })
             {
                 resolver.Mark(fact);
             }

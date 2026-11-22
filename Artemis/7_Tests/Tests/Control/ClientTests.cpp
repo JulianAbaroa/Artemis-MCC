@@ -384,6 +384,86 @@ TEST(ClientTests, ABranchThatNeedsTheEngineIsReportedNotGuessed)
     EXPECT_NE(step.Output.Unsupported & static_cast<std::uint32_t>(Unsupported::SelectionList), 0u);
 }
 
+namespace
+{
+    // A unit with the boost curve whose engine value is the given one.
+    auto Boosting(float value, bool isForward) -> UnitContext
+    {
+        UnitContext unit{ OnFoot() };
+        unit.IsTriggerCurve = true;
+        unit.TriggerCurveValue = value;
+        unit.IsTriggerCurveForward = isForward;
+        return unit;
+    }
+}
+
+TEST(ClientTests, ABoostValueOfZeroTouchesNothing)
+{
+    InputFrame frame{};
+    frame.MoveForward = -0.5f;
+
+    const ClientStep step{ RunClient(frame, Boosting(0.0f, true)) };
+    EXPECT_EQ(step.Output.Trigger4, 0.0f);
+    EXPECT_EQ(step.Output.MoveForward, -0.5f);
+    EXPECT_EQ(step.Output.Unsupported, 0u);
+    EXPECT_EQ(step.Output.UnknownRead, 0u);
+}
+
+TEST(ClientTests, TheBoostFillsTheFourthTriggerClampedToOne)
+{
+    EXPECT_EQ(RunClient(InputFrame{}, Boosting(0.25f, false)).Output.Trigger4, 0.25f);
+    EXPECT_EQ(RunClient(InputFrame{}, Boosting(3.0f, false)).Output.Trigger4, 1.0f);
+    EXPECT_EQ(RunClient(InputFrame{}, Boosting(-2.0f, false)).Output.Trigger4, 0.0f);
+}
+
+TEST(ClientTests, TheBoostClampGivesPlusZeroForNaNAndMinusZeroAsTheEngine)
+{
+    const float nan{ RunClient(InputFrame{}, Boosting(std::numeric_limits<float>::quiet_NaN(), false)).Output.Trigger4 };
+    EXPECT_EQ(nan, 0.0f);
+    EXPECT_FALSE(std::signbit(nan));
+
+    const float minusZero{ RunClient(InputFrame{}, Boosting(-0.0f, false)).Output.Trigger4 };
+    EXPECT_FALSE(std::signbit(minusZero));
+}
+
+TEST(ClientTests, TheBoostPushesForwardOnlyWithTheFlagOfTheTag)
+{
+    InputFrame frame{};
+    frame.MoveForward = 0.5f;
+
+    EXPECT_EQ(RunClient(frame, Boosting(0.25f, false)).Output.MoveForward, 0.5f);
+    EXPECT_EQ(RunClient(frame, Boosting(0.25f, true)).Output.MoveForward, 1.0f);
+
+    frame.MoveForward = -0.75f;
+    EXPECT_EQ(RunClient(frame, Boosting(0.25f, true)).Output.MoveForward, 0.25f);
+}
+
+TEST(ClientTests, TheBoostPushRunsAfterTheMovePenalty)
+{
+    InputFrame frame{};
+    frame.MoveForward = 1.0f;
+    UnitContext unit{ Boosting(0.5f, true) };
+    unit.MovePenaltyForward = 0.5f;
+    EXPECT_EQ(RunClient(frame, unit).Output.MoveForward, 1.0f);
+
+    frame.MoveForward = -1.0f;
+    EXPECT_EQ(RunClient(frame, unit).Output.MoveForward, 0.5f);
+}
+
+TEST(ClientTests, TheBoostFactsAreReadOnlyWithTheCurve)
+{
+    UnitContext plain{ OnFoot() };
+    plain.Known = k_AllUnitFacts & ~(static_cast<std::uint32_t>(UnitFact::TriggerCurveValue)
+        | static_cast<std::uint32_t>(UnitFact::BoostAltEvent));
+    EXPECT_EQ(RunClient(InputFrame{}, plain).Output.UnknownRead, 0u);
+
+    UnitContext curve{ Boosting(0.5f, false) };
+    curve.Known = plain.Known;
+    const std::uint32_t unknown{ RunClient(InputFrame{}, curve).Output.UnknownRead };
+    EXPECT_NE(unknown & static_cast<std::uint32_t>(UnitFact::TriggerCurveValue), 0u);
+    EXPECT_NE(unknown & static_cast<std::uint32_t>(UnitFact::BoostAltEvent), 0u);
+}
+
 TEST(ClientTests, TheSameInputsGiveTheSameStep)
 {
     InputFrame frame{};

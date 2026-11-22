@@ -53,7 +53,10 @@ namespace
         std::optional<bool> ControlsLocked{};
         std::optional<bool> LookOffset{};
         std::optional<bool> AltControl{};
+        std::optional<bool> BoostAlt{};
+        std::optional<float> Curve{};
 
+        mutable std::vector<std::pair<std::uint32_t, float>> CurveCalls{};
         mutable std::int16_t LastMagnificationLevel{ 0 };
         mutable std::uint32_t LastZoomWeapon{ 0 };
         mutable std::vector<std::array<bool, 2>> PenaltyCalls{};
@@ -112,6 +115,12 @@ namespace
         auto IsControlsLocked(std::int32_t, std::uint32_t) const -> std::optional<bool> override { return ControlsLocked; }
         auto IsLookOffset(std::uint32_t, float) const -> std::optional<bool> override { return LookOffset; }
         auto IsAltControl(std::uint32_t) const -> std::optional<bool> override { return AltControl; }
+        auto IsBoostAltEvent(std::uint32_t) const -> std::optional<bool> override { return BoostAlt; }
+        auto EvaluateTriggerCurve(std::uint32_t tag, float value) const -> std::optional<float> override
+        {
+            CurveCalls.emplace_back(tag, value);
+            return Curve;
+        }
 
     private:
         static auto Copy(const std::map<std::uint32_t, std::vector<std::uint8_t>>& memory, std::uint32_t key, std::size_t offset,
@@ -146,6 +155,7 @@ namespace
         port.ControlsLocked = false;
         port.LookOffset = false;
         port.AltControl = false;
+        port.BoostAlt = false;
 
         std::vector<std::uint8_t> unit(k_ObjectSize, 0);
         Put<std::uint16_t>(unit, 0x00, 0x0010);
@@ -475,6 +485,124 @@ TEST(UnitContextTests, TheUnitTagGivesTheTriggerCurveAndTheAimDamping)
     EXPECT_TRUE(context.IsTriggerCurve);
     EXPECT_EQ(context.AimDampTag, 0.5f);
     EXPECT_EQ(context.AimDampUnit, 0.25f);
+}
+
+namespace
+{
+    // The unit tag with the trigger curve bit, the forward flag as given and a curve that answers the value.
+    auto MakeBoostPort(bool isForward, float curve) -> FakePort
+    {
+        FakePort port{ MakePort() };
+        Put<std::uint32_t>(port.Tags[0x0010], 0x168, (1u << 27));
+        Put<std::uint32_t>(port.Tags[0x0010], 0x47C, isForward ? 1u : 0u);
+        port.Curve = curve;
+        return port;
+    }
+
+    auto MakeBoostSource(float value, float altValue) -> ClientContextSource
+    {
+        ClientContextSource source{ MakeSource() };
+        source.BoostValue = value;
+        source.BoostAltValue = altValue;
+        return source;
+    }
+}
+
+TEST(UnitContextTests, TheBoostValueGoesThroughTheTagFunctionOfTheUnitTag)
+{
+    FakePort port{ MakeBoostPort(true, 0.75f) };
+
+    const UnitContext context{ Build(port, MakeState(), MakeBoostSource(0.5f, 0.25f)) };
+    EXPECT_TRUE(context.IsTriggerCurve);
+    EXPECT_TRUE(context.IsTriggerCurveForward);
+    EXPECT_FALSE(context.IsBoostAltEvent);
+    EXPECT_EQ(context.TriggerCurveValue, 0.75f);
+    EXPECT_EQ(context.Known, k_AllUnitFacts);
+    ASSERT_EQ(port.CurveCalls.size(), 1u);
+    EXPECT_EQ(port.CurveCalls[0].first & 0xFFFF, 0x0010u);
+    EXPECT_EQ(port.CurveCalls[0].second, 0.5f);
+}
+
+TEST(UnitContextTests, ARawBoostOfZeroNeverCallsTheEngine)
+{
+    FakePort port{ MakeBoostPort(false, 0.75f) };
+
+    const UnitContext context{ Build(port, MakeState(), MakeBoostSource(0.0f, 0.25f)) };
+    EXPECT_EQ(context.TriggerCurveValue, 0.0f);
+    EXPECT_FALSE(context.IsTriggerCurveForward);
+    EXPECT_TRUE(IsKnown(context, UnitFact::TriggerCurveValue));
+    EXPECT_TRUE(port.CurveCalls.empty());
+}
+
+TEST(UnitContextTests, TheAlternateProfileTakesTheValueOfTheAlternateEvent)
+{
+    FakePort port{ MakeBoostPort(false, 0.5f) };
+    port.BoostAlt = true;
+
+    const UnitContext context{ Build(port, MakeState(), MakeBoostSource(0.0f, 0.25f)) };
+    EXPECT_TRUE(context.IsBoostAltEvent);
+    EXPECT_TRUE(IsKnown(context, UnitFact::BoostAltEvent));
+    EXPECT_EQ(context.TriggerCurveValue, 0.5f);
+    ASSERT_EQ(port.CurveCalls.size(), 1u);
+    EXPECT_EQ(port.CurveCalls[0].second, 0.25f);
+}
+
+TEST(UnitContextTests, WithoutTheCurveBitTheBoostFactsAreKnownAndTheEngineIsNotCalled)
+{
+    FakePort port{ MakePort() };
+
+    const UnitContext context{ Build(port, MakeState(), MakeBoostSource(0.5f, 0.5f)) };
+    EXPECT_FALSE(context.IsTriggerCurve);
+    EXPECT_EQ(context.TriggerCurveValue, 0.0f);
+    EXPECT_EQ(context.Known, k_AllUnitFacts);
+    EXPECT_TRUE(port.CurveCalls.empty());
+}
+
+TEST(UnitContextTests, TheBoostValueStaysUnknownWhenTheEngineOrTheProfileCannotAnswer)
+{
+    FakePort noCurve{ MakeBoostPort(true, 0.5f) };
+    noCurve.Curve.reset();
+    const UnitContext withoutCurve{ Build(noCurve, MakeState(), MakeBoostSource(0.5f, 0.0f)) };
+    EXPECT_FALSE(IsKnown(withoutCurve, UnitFact::TriggerCurveValue));
+    EXPECT_TRUE(IsKnown(withoutCurve, UnitFact::TriggerCurveForward));
+
+    FakePort noProfile{ MakeBoostPort(true, 0.5f) };
+    noProfile.BoostAlt.reset();
+    const UnitContext withoutProfile{ Build(noProfile, MakeState(), MakeBoostSource(0.5f, 0.5f)) };
+    EXPECT_FALSE(IsKnown(withoutProfile, UnitFact::BoostAltEvent));
+    EXPECT_FALSE(IsKnown(withoutProfile, UnitFact::TriggerCurveValue));
+    EXPECT_TRUE(noProfile.CurveCalls.empty());
+}
+
+TEST(UnitContextTests, WithoutAPlayerTheBoostUsesTheDefaultEvent)
+{
+    FakePort port{ MakeBoostPort(false, 0.5f) };
+    port.BoostAlt.reset();
+    ClientContextSource source{ MakeBoostSource(0.5f, 0.5f) };
+    source.PlayerHandle = 0xFFFFFFFF;
+
+    const UnitContext context{ Build(port, MakeState(), source) };
+    EXPECT_FALSE(context.IsBoostAltEvent);
+    EXPECT_TRUE(IsKnown(context, UnitFact::BoostAltEvent));
+    EXPECT_TRUE(IsKnown(context, UnitFact::TriggerCurveValue));
+}
+
+TEST(UnitContextTests, ASeatWithTheFlagBit2EvaluatesTheCurveOfTheParentTag)
+{
+    UnitClientState state{ MakeState() };
+    state.IsSeated = true;
+
+    FakePort port{ MakePort() };
+    SeatUnit(port, 5, 0x4, 1);
+    Put<std::uint32_t>(port.Tags[0x0040], 0x168, (1u << 27));
+    Put<std::uint32_t>(port.Tags[0x0040], 0x47C, 1u);
+    port.Curve = 0.5f;
+
+    const UnitContext context{ Build(port, state, MakeBoostSource(1.0f, 0.0f)) };
+    EXPECT_TRUE(context.IsTriggerCurveForward);
+    EXPECT_EQ(context.TriggerCurveValue, 0.5f);
+    ASSERT_EQ(port.CurveCalls.size(), 1u);
+    EXPECT_EQ(port.CurveCalls[0].first & 0xFFFF, 0x0040u);
 }
 
 TEST(UnitContextTests, TheCrouchFactsCombineTheCallsAndTheKindWord)

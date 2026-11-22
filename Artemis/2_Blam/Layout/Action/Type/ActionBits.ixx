@@ -30,6 +30,9 @@ export namespace Blam::Layout::Action::Type
     // copies the zoom level every tick unless this bit is set). The local client never sets it.
     inline constexpr std::uint64_t k_ActionKeepZoomButton{ 1ull << 25 };
 
+    // Button the client raises for the weapon switch key while the unit is seated (0x61a38): the vehicle reads it to change its weapon.
+    inline constexpr std::uint64_t k_ActionSeatWeaponSwitchButton{ 1ull << 44 };
+
     // Zoom level of a unit that is not zoomed.
     inline constexpr std::int8_t k_NoZoomLevel{ -1 };
 }

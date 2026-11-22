@@ -110,6 +110,7 @@ export namespace Engine::Control::Simulation::System
         // now (0x4852a0) (D120).
         // note: Game thread only.
         auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> override;
+        auto CanZoom(const UnitClientState& state) const -> bool override;
 
         // return: What the client asks of the unit in the state (D356, VW.9c.2): every fact of UnitFact, resolved with the memory of the
         // unit, its weapon, its parent and their tags and with the engine functions the decompiled 0x5df80 calls (see BuildUnitContext).

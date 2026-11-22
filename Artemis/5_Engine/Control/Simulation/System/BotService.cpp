@@ -45,6 +45,7 @@ namespace
     using ::Control::Client::Type::UnitContext;
 
     using Engine::Base::MatchSetup::Type::k_MaxMachines;
+    using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
     using Engine::Base::MatchSetup::Type::k_MaxPlayersPerMachine;
@@ -109,6 +110,11 @@ namespace
     using Engine::Control::Simulation::Type::k_UnitInventoryVersion;
     using Engine::Control::Simulation::Type::k_UnitGrenadeType;
     using Engine::Control::Simulation::Type::k_UnitZoomLevel;
+    using Engine::Control::Simulation::Type::k_TagTriggerCurveFunction;
+    using Engine::Control::Simulation::Type::k_ProfileTable;
+    using Engine::Control::Simulation::Type::k_ProfileStride;
+    using Engine::Control::Simulation::Type::k_ProfileAltBoost;
+    using Blam::Layout::Object::Type::Constant::k_ThreadContextGameEngineOffset;
     using Engine::Control::Simulation::Type::k_ObjectParent;
     using Engine::Control::Simulation::Type::k_UnitSeat;
     using Engine::Control::Simulation::Type::k_UnitDesiredAim;
@@ -227,21 +233,12 @@ namespace
 
         auto ReadTag(std::uint32_t tag, std::size_t offset, std::span<std::uint8_t> bytes) const -> bool override
         {
-            if (m_Functions.Tags.Map == 0) return false;
-
-            const auto map{ Read<std::uintptr_t>(m_Functions.Tags.Map) };
-            if (map == 0) return false;
-
-            const auto index{ Read<std::uint32_t>(map + ((tag & 0xFFFF) * k_TagMapEntrySize) + k_TagMapIndexOffset) };
-            return this->ReadBlock(index, offset, bytes);
+            return CopyFrom(this->GetTagData(tag), offset, bytes);
         }
 
         auto ReadBlock(std::uint32_t index, std::size_t offset, std::span<std::uint8_t> bytes) const -> bool override
         {
-            if (m_Functions.Tags.Segments == 0 || index == k_NoHandle) return false;
-
-            const auto segment{ Read<std::uintptr_t>(m_Functions.Tags.Segments + ((index >> k_TagSegmentShift) * sizeof(std::uintptr_t))) };
-            return segment != 0 && CopyFrom(segment + (static_cast<std::size_t>(index) * k_TagIndexScale), offset, bytes);
+            return CopyFrom(this->GetBlockData(index), offset, bytes);
         }
 
         auto IsFeatureOn(std::uint32_t bit) const -> std::optional<bool> override
@@ -313,9 +310,51 @@ namespace
             return m_Functions.AltControl(player, nullptr, 0);
         }
 
+        auto IsBoostAltEvent(std::uint32_t player) const -> std::optional<bool> override
+        {
+            // note: The engine indexes the table with the 16 bits of the handle, the table has one entry per player.
+            const std::uint32_t index{ player & k_HandleIndexMask };
+            if (m_ThreadContext == 0 || index >= k_MaxPlayers) return std::nullopt;
+
+            const auto engine{ Read<std::uintptr_t>(m_ThreadContext + k_ThreadContextGameEngineOffset) };
+            if (engine == 0) return std::nullopt;
+            return Read<std::int32_t>(engine + k_ProfileTable + (index * k_ProfileStride)) == k_ProfileAltBoost;
+        }
+
+        auto EvaluateTriggerCurve(std::uint32_t tag, float value) const -> std::optional<float> override
+        {
+            if (!m_Functions.TagFunctionEvaluate || !m_Functions.TagFunctionScale) return std::nullopt;
+
+            const std::uintptr_t data{ this->GetTagData(tag) };
+            if (data == 0) return std::nullopt;
+
+            const auto* function{ reinterpret_cast<const void*>(data + k_TagTriggerCurveFunction) };
+            return m_Functions.TagFunctionScale(function, m_Functions.TagFunctionEvaluate(function, value, 0.0f));
+        }
+
     private:
         std::uintptr_t m_ThreadContext{ 0 };
         const UnitFunctions& m_Functions;
+
+        // return: The address of the data of a tag, or 0 if the tag globals are not known or the tag is not loaded.
+        auto GetTagData(std::uint32_t tag) const -> std::uintptr_t
+        {
+            if (m_Functions.Tags.Map == 0) return 0;
+
+            const auto map{ Read<std::uintptr_t>(m_Functions.Tags.Map) };
+            if (map == 0) return 0;
+
+            return this->GetBlockData(Read<std::uint32_t>(map + ((tag & k_HandleIndexMask) * k_TagMapEntrySize) + k_TagMapIndexOffset));
+        }
+
+        // return: The address of a block of the tag segments, or 0 if the index is not valid.
+        auto GetBlockData(std::uint32_t index) const -> std::uintptr_t
+        {
+            if (m_Functions.Tags.Segments == 0 || index == k_NoHandle) return 0;
+
+            const auto segment{ Read<std::uintptr_t>(m_Functions.Tags.Segments + ((index >> k_TagSegmentShift) * sizeof(std::uintptr_t))) };
+            return segment != 0 ? segment + (static_cast<std::size_t>(index) * k_TagIndexScale) : 0;
+        }
 
         // return: False if the base is null.
         static auto CopyFrom(std::uintptr_t base, std::size_t offset, std::span<std::uint8_t> bytes) -> bool
@@ -937,6 +976,11 @@ namespace Engine::Control::Simulation::System
         return static_cast<std::int8_t>(m_NextZoomLevel(state.Unit, state.ZoomLevel));
     }
 
+    auto BotService::CanZoom(const UnitClientState& state) const -> bool
+    {
+        return m_IsClientResolved && m_CanUnitZoom(state.Unit);
+    }
+
     auto BotService::GetClientContext(const UnitClientState& state, const ClientContextSource& source, const ClientSettings& settings,
         float deltaTime) const -> UnitContext
     {
@@ -1033,6 +1077,10 @@ namespace Engine::Control::Simulation::System
             find(Signature::k_PlayerLookOffset, "PlayerLookOffset"));
         functions.AltControl = reinterpret_cast<Engine::Control::Simulation::Type::AltControlFunction>(
             find(Signature::k_PlayerAltControl, "PlayerAltControl"));
+        functions.TagFunctionEvaluate = reinterpret_cast<Engine::Control::Simulation::Type::TagFunctionEvaluateFunction>(
+            find(Signature::k_TagFunctionEvaluate, "TagFunctionEvaluate"));
+        functions.TagFunctionScale = reinterpret_cast<Engine::Control::Simulation::Type::TagFunctionScaleFunction>(
+            find(Signature::k_TagFunctionScale, "TagFunctionScale"));
 
         // note: The tag flag test is not called. Its first bytes load the two tag globals, which is how the tag memory is read.
         const std::uintptr_t tagTest{ m_AOBService.FindPattern(Signature::k_TagFlagTest) };

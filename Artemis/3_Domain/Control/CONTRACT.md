@@ -14,8 +14,8 @@ Group `3_Domain` - pure static library - the logic of the player action and of t
 ## Does not
 - Write memory or call engine functions: `Engine.Control` applies the action.
 - Transport anything: `Bridge.Transport` calls the lockstep policy.
-- Answer questions only the engine knows (next weapon, next grenade, next zoom level): it asks the `UnitRules` port, which
-  `Engine.Control` implements.
+- Answer questions only the engine knows (next weapon, next grenade, next zoom level, whether the unit can zoom): it asks the `UnitRules`
+  port, which `Engine.Control` implements.
 
 ## Input and output
 - Input: an `ActionOverride` (from the bridge), the client state of the unit, the previous `PlayerActionHistory`, the control
@@ -46,7 +46,7 @@ block or allocate on the hot path.
 
 ## Errors
 `StepClient` with a mode other than keyboard and mouse (or a table without the mouse state) does not run: the state comes back unchanged and
-`ClientStatus` says why. A branch of 0x5df80 that needs engine state the context does not carry (flinch, trigger curve, frame of reference,
+`ClientStatus` says why. A branch of 0x5df80 that needs engine state the context does not carry (flinch, frame of reference,
 selection list, ability button, menu look scale) is not guessed: `Output.Unsupported` gets its bit and the step is not comparable.
 `ClientContextSource` (VW.9c.2) carries what the engine side needs to resolve the facts: the thread context, the input user and local index, the
 player handle of the user, the zoom level of the client block and the dual wield restrictions byte (the ticks per second come from `ClientSettings` and the dt from the call, passed to `GetClientContext` next to the source). The
@@ -55,6 +55,17 @@ kind 1 ability only goes through the engine (`Unsupported::AbilityButton`) when 
 The raw down byte of an event (`EventSample::DownCount`, 1 on the first frame) decides the zoom press, the two zoom steps, the crouch toggle and the
 ability lane (kind 0): the engine compares it with 1 (0x5d31c), so they act on the first frame of a press and not on every frame it stays down.
 The held bits (zoom held, lanes) use any non zero byte.
+The boost (VW.9c.2 C): a unit whose tag (or parent tag, seat flag bit 2) has the trigger curve bit takes `Trigger4` = the clamp to [0, 1] of
+`UnitContext::TriggerCurveValue`, which the engine side already ran through the tag function for the raw value of this call, and, with
+`IsTriggerCurveForward` and a value above 0, the forward axis is pushed (below 0 it grows by 1, else it is 1), after the move penalty. A value
+the engine side could not resolve is outside `Known` (`TriggerCurveValue`, `BoostAltEvent`, `TriggerCurveForward`), so the step says it read an
+unknown. `ClientContextSource` carries the raw boost value and the raw value of the alternate event 0x26: the builder picks one by the control
+profile of the player (`IsBoostAltEvent`). `Unsupported::TriggerCurve` no longer exists.
+The zoom of a possessed or agent unit (VW.9c.2 C, 0x61a38): the zoom press goes to the next level of the weapon and back to none after the last
+(`ClientRequests::IsZoom`), the zoom in step to the larger of the current and the next level (the last level stays, `IsZoomIn`), the zoom out step
+to one level down and never below none (`IsZoomOut`). Both steps need `UnitRules::CanZoom` and ask nothing without it. A weapon switch pending wins over
+all of them. A weapon switch of a seated unit raises the button 44 (`k_ActionSeatWeaponSwitchButton`) for the tick and asks no slot (the Banshee
+cannons and bomb). Pending: the slot change of a seat with the unit weapon -1 and the seat flag bit 5, and the button 21 (toggle +0x1E3).
 A fact of the unit the context does not know (`UnitContext::Known` lacks its `UnitFact` bit) is read as its default, and the step says so:
 `Output.UnknownRead` holds the bits of the unknown facts the branches that ran actually read, and a step with a bit set is not comparable.
 Not ported on purpose: the controller path (+0x6F8 = 0), the aim assist (D109), the interaction records (D118), the seat turn limits and aim

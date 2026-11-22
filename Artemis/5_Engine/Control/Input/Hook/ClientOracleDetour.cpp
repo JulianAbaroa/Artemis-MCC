@@ -27,6 +27,7 @@ namespace
     using ::Control::Client::Type::ClientState;
     using ::Control::Client::Type::ClientStep;
     using ::Control::Client::Type::ClientStatus;
+    using ::Control::Client::Type::InputEvent;
     using ::Control::Client::Type::InputFrame;
     using ::Control::Client::Type::UnitContext;
 
@@ -201,7 +202,9 @@ namespace Engine::Control::Input::Hook
             .LocalIndex = localIndex,
             .PlayerHandle = m_BotService.GetPlayerHandle(threadContext, playerIndex).value_or(k_NoHandle),
             .ClientZoomLevel = state.ZoomLevel,
-            .DualWieldFlags = this->ReadDualWieldFlags(localIndex) };
+            .DualWieldFlags = this->ReadDualWieldFlags(localIndex),
+            .BoostValue = frame.Events[static_cast<std::size_t>(InputEvent::ZoomValue)].Value,
+            .BoostAltValue = frame.Events[static_cast<std::size_t>(InputEvent::ZoomValueAlt)].Value };
         const UnitContext context{ unitState ? m_BotService.GetClientContext(*unitState, source, *settings, deltaTime) : UnitContext{ .Known = 0 } };
 
         const ClientStep step{ StepClient(frame, state, context, *settings, deltaTime) };

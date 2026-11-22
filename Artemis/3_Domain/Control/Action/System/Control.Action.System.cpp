@@ -31,6 +31,7 @@ namespace
     using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
     using Blam::Layout::Action::Type::k_UseLane;
     using Blam::Layout::Action::Type::k_ActionKeepZoomButton;
+    using Blam::Layout::Action::Type::k_ActionSeatWeaponSwitchButton;
     using Blam::Layout::Action::Type::k_NoZoomLevel;
     using Blam::Layout::Action::Type::Offset::k_ActionButtonsOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionFacingOffset;
@@ -48,8 +49,9 @@ namespace
     // The client buttons the host accepts: bits 48 to 63 of the action must be zero (A17 sec. 2).
     constexpr std::uint64_t k_ValidButtons{ (1ull << 48) - 1 };
 
-    // Event bit of the zoom step in (A17 sec. 6), and the shift of the reload and throw bits to the events word of the action.
+    // Event bits of the zoom step in and out (A17 sec. 6), and the shift of the reload and throw bits to the events word of the action.
     constexpr std::uint32_t k_EventZoomIn{ 1u << 4 };
+    constexpr std::uint32_t k_EventZoomOut{ 1u << 5 };
     constexpr std::uint32_t k_EventsWordShift{ 8 };
     constexpr std::uint32_t k_EventsWordMask{ 3 };
 
@@ -105,8 +107,17 @@ namespace
         if (!unit)
         {
             weaponRequest.reset();
-            return;
         }
+
+        // note: A seated unit has no slot to pick: 0x61a38 raises this button for the vehicle weapon instead (the Banshee cannons and
+        // bomb), and clears it on every other call, so buttons of an override never keep it raised.
+        std::uint64_t seatButtons{ 0 };
+        std::memcpy(&seatButtons, action.data() + k_ActionButtonsOffset, sizeof(seatButtons));
+        seatButtons &= ~k_ActionSeatWeaponSwitchButton;
+        if (unit && requests.IsWeaponSwitch && unit->IsSeated) seatButtons |= k_ActionSeatWeaponSwitchButton;
+        std::memcpy(action.data() + k_ActionButtonsOffset, &seatButtons, sizeof(seatButtons));
+
+        if (!unit) return;
 
         const UnitClientState& state{ *unit };
 
@@ -116,7 +127,7 @@ namespace
             weaponRequest.reset();
         }
 
-        if (requests.IsWeaponSwitch)
+        if (requests.IsWeaponSwitch && !state.IsSeated)
         {
             // note: A second press while a request is pending goes on from the requested slot, as a double tap does.
             UnitClientState from{ state };
@@ -145,6 +156,20 @@ namespace
         else if (requests.IsZoom)
         {
             zoomLevel = rules.GetNextZoomLevel(state);
+        }
+        else if ((requests.IsZoomIn || requests.IsZoomOut) && rules.CanZoom(state))
+        {
+            // note: 0x61a38 steps from the zoom of the unit: in takes the larger of the level and the next one (the last level stays),
+            // out takes one below and never goes under no zoom.
+            if (requests.IsZoomIn)
+            {
+                const std::optional<std::int8_t> next{ rules.GetNextZoomLevel(state) };
+                if (next) zoomLevel = (std::max)(state.ZoomLevel, *next);
+            }
+            else
+            {
+                zoomLevel = static_cast<std::int8_t>((std::max)(state.ZoomLevel - 1, static_cast<int>(k_NoZoomLevel)));
+            }
         }
 
         if (requests.IsGrenadeSwitch)
@@ -204,7 +229,9 @@ namespace Control::Action::System
 
         action.Requests.IsWeaponSwitch = (output.Events & k_EventSwitchWeapon) != 0;
         action.Requests.IsGrenadeSwitch = (output.Events & k_EventSwitchGrenade) != 0;
-        action.Requests.IsZoom = (output.Events & (k_EventZoomPress | k_EventZoomIn)) != 0;
+        action.Requests.IsZoom = (output.Events & k_EventZoomPress) != 0;
+        action.Requests.IsZoomIn = (output.Events & k_EventZoomIn) != 0;
+        action.Requests.IsZoomOut = (output.Events & k_EventZoomOut) != 0;
         return action;
     }
 

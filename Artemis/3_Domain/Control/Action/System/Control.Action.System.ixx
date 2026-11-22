@@ -38,6 +38,9 @@ export namespace Control::Action::System
         // return: The next zoom level of the weapon in the hands (-1 = not zoomed), or nullopt if the unit cannot zoom now.
         virtual auto GetNextZoomLevel(const UnitClientState& state) const -> std::optional<std::int8_t> = 0;
 
+        // return: Whether the unit can zoom now (0x4852a0). The zoom steps ask for nothing when it cannot.
+        virtual auto CanZoom(const UnitClientState& state) const -> bool = 0;
+
         // return: What the client asks of the unit in the state (D356, VW.9c.2): the engine facts the pure client needs, asked of that
         // unit and not of the unit of a local player. UnitContext::Known has the facts it resolved.
         // param source: The user-level ids and the client zoom (see ClientContextSource).
@@ -60,7 +63,7 @@ export namespace Control::Action::System
     // param pitch: Absolute pitch, radians.
     // return: The buttons below bit 48, the lanes without held bits (BuildAction counts them), the move axes, the triggers and the events word
     // of the reload and the grenade throw, with no turn limit (a human, not an agent). The events of the output become requests: switch weapon,
-    // switch grenade and zoom (press or step in). The zoom step out has no request.
+    // switch grenade and zoom (press, step in and step out, each its own request).
     auto MakePossessedAction(const ClientOutput& output, float yaw, float pitch) -> PossessedAction;
 
     // return: The override of a player that does nothing: no buttons, no throttle, no lanes, looking where its unit looks (the facing of the

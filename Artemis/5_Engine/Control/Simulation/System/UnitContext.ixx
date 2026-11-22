@@ -62,6 +62,14 @@ export namespace Engine::Control::Simulation::System
 
         // return: Whether the player is in the alternate control mode (0x715ac).
         virtual auto IsAltControl(std::uint32_t player) const -> std::optional<bool> = 0;
+
+        // return: Whether the control profile of the player makes the boost come from the alternate event (0x70ed0).
+        virtual auto IsBoostAltEvent(std::uint32_t player) const -> std::optional<bool> = 0;
+
+        // return: The raw boost value after the tag function at +0x498 of the tag (0x174ed8 then 0x175524), or nullopt if it cannot be run.
+        // param tag: Handle of the unit tag, or of the parent tag for a seat with the flag bit 2.
+        // param value: Raw boost value, not zero.
+        virtual auto EvaluateTriggerCurve(std::uint32_t tag, float value) const -> std::optional<float> = 0;
     };
 
     // Resolves every fact of the unit the client asks (D356, VW.9c.2) with the port. The facts of the unit come from its memory, its

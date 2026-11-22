@@ -468,12 +468,30 @@ namespace Control::Client::System
 
         if (unit.HasUnit)
         {
-            Need(unit, unknown, UnitFact::TriggerCurve);
             Need(unit, unknown, UnitFact::MovePenalty);
-            if (unit.IsTriggerCurve) output.Unsupported |= static_cast<std::uint32_t>(Unsupported::TriggerCurve);
 
             output.MoveForward = (1.0f - unit.MovePenaltyForward) * output.MoveForward;
             output.MoveSide = (1.0f - unit.MovePenaltySide) * output.MoveSide;
+
+            // note: The boost goes through the tag function of the unit, and a flagged tag also pushes forward. It runs after the move
+            // penalty, as 0x5df80 does.
+            Need(unit, unknown, UnitFact::TriggerCurve);
+            if (unit.IsTriggerCurve)
+            {
+                Need(unit, unknown, UnitFact::BoostAltEvent);
+                Need(unit, unknown, UnitFact::TriggerCurveValue);
+                Need(unit, unknown, UnitFact::TriggerCurveForward);
+
+                const float boost{ unit.TriggerCurveValue };
+                // note: As 0x5ebef (maxss with 0, then the compare with 1): NaN and -0 give +0, unlike std::max.
+                float trigger{ boost > 0.0f ? boost : 0.0f };
+                if (trigger - 1.0f >= 0.0f) trigger = 1.0f;
+                output.Trigger4 = trigger;
+                if (unit.IsTriggerCurveForward && boost > 0.0f)
+                {
+                    output.MoveForward = output.MoveForward < 0.0f ? output.MoveForward + 1.0f : 1.0f;
+                }
+            }
         }
 
         StepLook(step, frame, unit, settings, dt, unknown);

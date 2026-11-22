@@ -61,6 +61,11 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   restrictions byte read by rva by `ReadDualWieldFlags`; without the module base it is absent and DualWield stays unknown), plus the
   `ClientSettings` and the dt of the call. A unit in a seat reads the trigger curve from the parent tag (seat flag bit 2) and the zoom item from
   the parent weapon (seat flag bit 3), like 0005.c. A unit that is not a biped has no jump assist object. Game thread only.
+  The boost (VW.9c.2 C): `EngineUnitFacts::EvaluateTriggerCurve` runs the tag function at +0x498 of the tag with the two engine functions 0x174ed8
+  (evaluate) and 0x175524 (scale) of `UnitFunctions`, only for a raw value that is not zero, once per call of a unit with the trigger curve bit, on the
+  game thread. The raw value comes from the `ClientContextSource` (events 0x0A and 0x26 of the table of the call, both read by the oracle and the
+  possession). `IsBoostAltEvent` (0x70ed0) is read from memory: the game engine globals +0x1754 + player index * 300 equals 1, with the player of the
+  source (without one the default event). The functions are not ported: without them the value stays outside `Known`.
 - Virtual input: `InputUpdateDetour` gives MCC the state of a virtual gamepad for local players switched to Artemis.
 - Bots: players on machines only Artemis knows, added like players that join in progress (`BotService`, `SetMachinesDetour`) and
   removed with the "left" and "remove" player updates of the engine (LS.1, D284); it also implements `Control`'s `UnitRules` with the

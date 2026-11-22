@@ -102,6 +102,8 @@ namespace Engine::Control::Input::State
         pending.IsWeaponSwitch = pending.IsWeaponSwitch || requests.IsWeaponSwitch;
         pending.IsGrenadeSwitch = pending.IsGrenadeSwitch || requests.IsGrenadeSwitch;
         pending.IsZoom = pending.IsZoom || requests.IsZoom;
+        pending.IsZoomIn = pending.IsZoomIn || requests.IsZoomIn;
+        pending.IsZoomOut = pending.IsZoomOut || requests.IsZoomOut;
     }
 
     auto PlayerActionStore::TakeClientRequests(std::array<ClientRequests, k_MaxActionPlayers>& out) -> void

@@ -32,6 +32,7 @@ namespace
     using Control::Action::System::GetHoldThresholdTicks;
 
     using Blam::Layout::Action::Type::k_ActionKeepZoomButton;
+    using Blam::Layout::Action::Type::k_ActionSeatWeaponSwitchButton;
     using Blam::Layout::Action::Type::k_HoldLanes;
     using Blam::Layout::Action::Type::k_UseLane;
     using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
@@ -100,6 +101,7 @@ namespace
         std::optional<std::optional<std::int8_t>> FixedWeapon{};
         std::optional<std::optional<std::int8_t>> FixedGrenade{};
         std::optional<std::optional<std::int8_t>> FixedZoom{};
+        bool IsZoomAllowed{ true };
 
         auto GetNextWeaponSlot(const UnitClientState& state) const -> std::optional<std::int8_t> override
         {
@@ -124,6 +126,11 @@ namespace
             if (FixedZoom) return *FixedZoom;
             if (state.ZoomLevel < 2) return static_cast<std::int8_t>(state.ZoomLevel + 1);
             return std::nullopt;
+        }
+
+        auto CanZoom(const UnitClientState&) const -> bool override
+        {
+            return IsZoomAllowed;
         }
 
         auto GetClientContext(const UnitClientState& state, const ClientContextSource&, const ClientSettings&, float) const -> UnitContext override
@@ -529,10 +536,115 @@ TEST(ActionTests, ThePossessedActionTurnsTheGrenadeThrowAndTheZoomStepIntoTheirF
     EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
 
     output.Events = 1u << 4;
-    EXPECT_TRUE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+    EXPECT_TRUE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomIn);
+    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomOut);
 
     output.Events = 1u << 5;
     EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomIn);
+    EXPECT_TRUE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomOut);
+}
+
+namespace
+{
+    // Zoom level the action of one tick asks for, or nullopt if it keeps the zoom of the unit.
+    auto TickZoom(Agent& agent, std::int8_t level, ClientRequests requests) -> std::optional<int>
+    {
+        agent.Unit->ZoomLevel = level;
+        agent.Requests = requests;
+        agent.Tick();
+        if (HasBits(ReadButtons(agent.Last), k_ActionKeepZoomButton)) return std::nullopt;
+        return static_cast<std::int16_t>(ReadZoomLevel(agent.Last));
+    }
+}
+
+TEST(ActionTests, TheZoomPressGoesRoundTheLevelsAndBackToNoZoom)
+{
+    Agent agent{};
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ 0 };
+    EXPECT_EQ(TickZoom(agent, -1, ClientRequests{ .IsZoom = true }), 0);
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ 1 };
+    EXPECT_EQ(TickZoom(agent, 0, ClientRequests{ .IsZoom = true }), 1);
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ -1 };
+    EXPECT_EQ(TickZoom(agent, 1, ClientRequests{ .IsZoom = true }), -1);
+}
+
+TEST(ActionTests, TheZoomInStepGoesUpAndStaysInTheLastLevel)
+{
+    Agent agent{};
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ 0 };
+    EXPECT_EQ(TickZoom(agent, -1, ClientRequests{ .IsZoomIn = true }), 0);
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ 1 };
+    EXPECT_EQ(TickZoom(agent, 0, ClientRequests{ .IsZoomIn = true }), 1);
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ -1 };
+    EXPECT_EQ(TickZoom(agent, 1, ClientRequests{ .IsZoomIn = true }), 1);
+}
+
+TEST(ActionTests, TheZoomOutStepGoesDownAndStaysOutOfTheZoom)
+{
+    Agent agent{};
+    EXPECT_EQ(TickZoom(agent, 1, ClientRequests{ .IsZoomOut = true }), 0);
+    EXPECT_EQ(TickZoom(agent, 0, ClientRequests{ .IsZoomOut = true }), -1);
+    EXPECT_EQ(TickZoom(agent, -1, ClientRequests{ .IsZoomOut = true }), -1);
+    EXPECT_EQ(agent.Rules.ZoomCalls, 0);
+}
+
+TEST(ActionTests, TheZoomStepsAskForNothingWhenTheUnitCannotZoom)
+{
+    Agent agent{};
+    agent.Rules.IsZoomAllowed = false;
+    EXPECT_FALSE(TickZoom(agent, 0, ClientRequests{ .IsZoomIn = true }).has_value());
+    EXPECT_FALSE(TickZoom(agent, 1, ClientRequests{ .IsZoomOut = true }).has_value());
+}
+
+TEST(ActionTests, ThePendingWeaponSwitchWinsOverTheZoomSteps)
+{
+    Agent agent{};
+    EXPECT_EQ(TickZoom(agent, 1, ClientRequests{ .IsWeaponSwitch = true, .IsZoomOut = true }), -1);
+    EXPECT_EQ(ReadWeaponSlot(agent.Last), 1);
+    agent.Rules.FixedZoom = std::optional<std::int8_t>{ 1 };
+    EXPECT_EQ(TickZoom(agent, 0, ClientRequests{ .IsZoomIn = true }), -1);
+}
+
+TEST(ActionTests, TheWeaponSwitchOfASeatedUnitRaisesTheSeatButtonAndAsksNoSlot)
+{
+    Agent agent{};
+    agent.Unit->IsSeated = true;
+    agent.Requests = ClientRequests{ .IsWeaponSwitch = true };
+    agent.Tick();
+
+    EXPECT_TRUE(HasBits(ReadButtons(agent.Last), k_ActionSeatWeaponSwitchButton));
+    EXPECT_EQ(ReadWeaponSlot(agent.Last), 0xFF);
+    EXPECT_EQ(agent.Rules.WeaponCalls, 0);
+
+    // The button lasts the tick of the request.
+    agent.Requests = ClientRequests{};
+    agent.Tick();
+    EXPECT_FALSE(HasBits(ReadButtons(agent.Last), k_ActionSeatWeaponSwitchButton));
+}
+
+TEST(ActionTests, TheWeaponSwitchOnFootDoesNotRaiseTheSeatButton)
+{
+    Agent agent{};
+    agent.Requests = ClientRequests{ .IsWeaponSwitch = true };
+    agent.Tick();
+
+    EXPECT_FALSE(HasBits(ReadButtons(agent.Last), k_ActionSeatWeaponSwitchButton));
+    EXPECT_EQ(ReadWeaponSlot(agent.Last), 1);
+}
+
+TEST(ActionTests, TheSeatButtonOfTheOverrideIsClearedWithoutASeatedSwitch)
+{
+    Agent agent{};
+    agent.Override.Buttons = k_ActionSeatWeaponSwitchButton;
+    agent.Unit->IsSeated = true;
+    agent.Tick();
+    EXPECT_FALSE(HasBits(ReadButtons(agent.Last), k_ActionSeatWeaponSwitchButton));
+
+    agent.Unit.reset();
+    agent.Tick();
+    EXPECT_FALSE(HasBits(ReadButtons(agent.Last), k_ActionSeatWeaponSwitchButton));
 }
 
 TEST(ActionTests, TheEventsAndTheTriggersOfTheOverrideGoToTheActionOnlyWhenTheyAreNotZero)

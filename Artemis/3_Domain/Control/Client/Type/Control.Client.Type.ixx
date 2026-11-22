@@ -33,6 +33,7 @@ export namespace Control::Client::Type
         Chord1A = 0x1A,
         Reload = 0x1E,
         ThrowGrenade = 0x1F,
+        ZoomValueAlt = 0x26,
         ZoomAlt = 0x28,
         Pause = 0x35,
         LaneSwitchAlt = 0x36,
@@ -205,10 +206,13 @@ export namespace Control::Client::Type
         FrameOfReference = 1u << 22,
         SelectionEntries = 1u << 23,
         JumpAssist = 1u << 24,
+        BoostAltEvent = 1u << 25,
+        TriggerCurveValue = 1u << 26,
+        TriggerCurveForward = 1u << 27,
     };
 
     // Every fact known: what a context built by hand (a test) means.
-    inline constexpr std::uint32_t k_AllUnitFacts{ (1u << 25) - 1u };
+    inline constexpr std::uint32_t k_AllUnitFacts{ (1u << 28) - 1u };
 
     // What the client asks about the unit it controls. The engine port fills it (Engine.Control) with the engine functions against the
     // unit it is given.
@@ -246,8 +250,17 @@ export namespace Control::Client::Type
         // The player is pushed off its aim by a flinch (0x1da824): not ported.
         bool IsLookOffset{ false };
 
-        // Bit 27 of the unit tag: the zoom trigger goes through a curve: not ported.
+        // Bit 27 of the unit tag (the tag of the parent for a seat with the flag bit 2): the boost trigger goes through a tag function.
         bool IsTriggerCurve{ false };
+
+        // The control profile of the player makes the boost come from the alternate event (0x70ed0).
+        bool IsBoostAltEvent{ false };
+
+        // The boost value of this call after the tag function (0x174ed8 and 0x175524), 0 when the raw value is 0.
+        float TriggerCurveValue{ 0.0f };
+
+        // Bit 0 of the tag flags at +0x47C: a positive boost also pushes the unit forward.
+        bool IsTriggerCurveForward{ false };
 
         // Aim damping: 1 - tag +0x304 * unit +0x4D4.
         float AimDampTag{ 0.0f };
@@ -318,6 +331,11 @@ export namespace Control::Client::Type
         // note: The ticks per second come from ClientSettings and the seconds of the call from the dt of StepClient, both are passed
         // to the context builder, so each concept has one name.
         std::optional<std::uint8_t> DualWieldFlags{ 0 };
+
+        // Raw value (already valid, as the zoom trigger) of the boost event of this call, and of its alternate event 0x26. The context
+        // builder picks the one the control profile asks for and runs it through the tag function.
+        float BoostValue{ 0.0f };
+        float BoostAltValue{ 0.0f };
     };
 
     // Settings of the user the client uses. Passed in, never read inside (D359).
@@ -354,11 +372,11 @@ export namespace Control::Client::Type
 
     // Branches of 0x5df80 the client did not run because they need state the pure function does not have. A step with any bit set is
     // not comparable with the engine.
+    // note: Bit 1 was the trigger curve, now resolved by the engine through the context (VW.9c.2 C). Its value is not reused.
     enum class Unsupported : std::uint32_t
     {
         None = 0,
         LookOffset = 1u << 0,
-        TriggerCurve = 1u << 1,
         FrameOfReference = 1u << 2,
         SelectionList = 1u << 3,
         AbilityButton = 1u << 4,

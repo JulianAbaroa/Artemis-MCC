@@ -299,6 +299,21 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 89 5C 24 08 48 89 74 24 10 57 48 83 EC 20 45 32 C9 44 8B D1 48 8B DA 83 F9 FF 0F 84 ?? ?? ??"
     };
 
+    // TagFunctionEvaluate (0x174ed8): float(tag function data*, input float, previous float): the generic tag function evaluator. The
+    // client calls it with the trigger curve of the unit tag (+0x498), the raw boost value and 0 (VW.9c.2 C).
+    inline constexpr Signature k_TagFunctionEvaluate
+    {
+        "TagFunctionEvaluate",
+        "48 8B C4 48 89 58 08 48 89 68 10 48 89 70 18 48 89 78 20 41 57 48 81 EC 90 00 00 00 8B 59 0C 4C 8D 3D ?? ?? ?? ?? 0F 29 70 E8 8B EB 0F 29 78 D8 0F 57 F6"
+    };
+
+    // TagFunctionScale (0x175524): float(tag function data*, value float): maps the evaluated value to the range of the function (VW.9c.2 C).
+    inline constexpr Signature k_TagFunctionScale
+    {
+        "TagFunctionScale",
+        "8B 51 0C 48 8D 0D ?? ?? ?? ?? 8B C2 48 C1 E8 1C 48 8B 0C C1 80 7C 91 02 00 75 43 F6 44 91 01 04 F3 0F 10 54 91 08"
+    };
+
     // TagFlagTest (0x4c6b34): bool(tag handle uint16, flag int32): a flag word of the tag. Its first bytes load the two tag globals (the node to data index map and the segment base pointers), so the engine tag memory is read through them (VW.9c.2).
     inline constexpr Signature k_TagFlagTest
     {

@@ -65,8 +65,14 @@ export namespace Control::Action::Type
         // Switch to the next grenade type with grenades left.
         bool IsGrenadeSwitch{ false };
 
-        // Go to the next zoom level of the weapon in the hands, or back to no zoom after the last one.
+        // Go to the next zoom level of the weapon in the hands, or back to no zoom after the last one (the zoom button).
         bool IsZoom{ false };
+
+        // Step to the next zoom level and stay in the last one (the zoom in key).
+        bool IsZoomIn{ false };
+
+        // Step to the previous zoom level and stay out of the zoom below the first (the zoom out key).
+        bool IsZoomOut{ false };
     };
 
     // What the client of a possessed bot asks of its unit in one tick: the override and the one-tick requests (VW.9c.2 B).
