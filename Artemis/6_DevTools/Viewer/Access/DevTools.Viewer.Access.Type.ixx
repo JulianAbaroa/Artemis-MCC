@@ -36,6 +36,8 @@ namespace
     using Engine::Base::Host::State::LocalUserStore;
     using Engine::Control::Input::State::VirtualInputStore;
     using Engine::Control::Input::State::PlayerActionStore;
+    using Engine::Control::Input::State::PossessRequestStore;
+    using Engine::Control::Input::State::PossessionStore;
     using Engine::Render::Window::System::InputService;
     using Engine::Control::Simulation::State::BotStore;
     using Engine::Base::Memory::System::GameCameraService;
@@ -81,5 +83,9 @@ export namespace DevTools::Viewer::Access::Type
         BridgeService& m_BridgeService;
         PovRequestStore& m_PovRequestStore;
         PovStatusStore& m_PovStatusStore;
+
+        // The bot the Viewer asks to possess and what the client keeps for it (VW.9c.2 B). The Viewer writes the request, the game thread owns the state.
+        PossessRequestStore& m_PossessRequestStore;
+        PossessionStore& m_PossessionStore;
     };
 }

@@ -69,6 +69,9 @@
     <ClCompile Include="Engine\ClientReplayTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\PossessionTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\UnitContextTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
@@ -208,6 +211,9 @@
       <Filter>Viewer</Filter>
     </ClCompile>
     <ClCompile Include="Viewer\RosterOrderTests.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="Viewer\PossessDecisionTests.cpp">
       <Filter>Viewer</Filter>
     </ClCompile>
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\Type\DevTools.Viewer.Roster.Type.ixx">

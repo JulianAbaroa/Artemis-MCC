@@ -23,6 +23,28 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   full buffer drops the line and counts it, `k_ClientMaxFileLines` per session) and the Main thread writes it (`Flush`, every second from
   `MainThread`, and on `Uninstall`). It writes nothing of the game. With the switch off the hook costs one atomic load. The control tag
   locator, the input user to player search and the thread context read are shared with `PlayerActionDetour` (`Engine.Control.Input.System`).
+- Possession of a bot (VW.9c.2 B, D350-D354, D358-D361): the client of the user runs per FRAME and the ticks copy its result. The hook of the player
+  control (0x5df80, `ClientOracleDetour`) is a PRODUCTION hook now: it is installed always (the oracle part stays off behind the shadow check
+  switch), and if the hook or its anchors are not found it logs one ERROR and no bot can be possessed. For input user 0, while a bot is possessed, it
+  calls `PossessionService::StepFrame` (`Engine.Control.Input.System`, the hook only detours) with the event table of that frame, the dt of the frame
+  and the settings of the user (`ReadClientSettings`, D359). `StepFrame` runs the pure `StepClient` against the client state of the BOT (its unit and
+  zoom, `GetUnitClientState` and `GetClientContext`, user level facts from the player of input user 0, no turn limit, D358) and the pure
+  `AccumulateFrame` adds it to the `PossessedBot` of the `PossessionStore`: the look goes into the absolute aim (`IntegrateAim`), the output becomes the held
+  state and what lasts one frame (buttons, lanes, pulse events `k_EventPulses`, triggers) waits in `Pending`. Every frame counts once whatever the
+  ticks do, so 0, 1 or several ticks per frame lose and repeat nothing. `PlayerActionDetour::ApplyPossession` runs once per tick, after the overrides
+  are copied: it resolves the request (`PossessRequestStore`, one atomic word of this project because `Engine.Control` does not import Pov, written by the
+  Viewer render thread, read with `k_PossessRequestMaxAge`, 100 ms like Watch POV, signed age) against `BotService::GetBotPlayerHandles` (only an Artemis
+  bot, never a human, the salt must match: pure `FindPossessedBot`) and the pure `TakeTickAction` copies the accumulated aim, the held state and the
+  pending pulses to the action, clearing them (delivered once), as 0x628b0 copies the block. The result goes through the SAME path as an agent
+  (`MakePossessedAction`: `ActionOverride` plus `ClientRequests`; `BuildAction`, `UnitRules`, hold lanes D121, interaction D118 and the unit slot are the
+  existing ones). The Python override of the possessed bot is discarded (D351). While a bot is possessed the human local player of input user 0 gets a
+  neutral override (`MakeNeutralOverride`, no write to its control block, D361) whether it has a unit or not, only when it has an engine action and no
+  override of an agent (a local agent is never touched, D350): pure `ShouldNeutralizeLocal`. No request, a human or a gone bot releases the possession the
+  same tick. A tick whose unit is missing, or that no frame has served yet, gives the bot a neutral action and counts; one WARNING per possession for a
+  missing unit. `ReadClientSettings`, `ReadDualWieldRestrictions` and `ReadInputTable` (`Input.System:ClientSource`) are what the client of the engine reads
+  about a user: the oracle and the possession both use them. `UnitContext` never passes an input user outside 0..3 to 0x61830. A request is dropped when
+  the Viewer stops publishing for more than 100 ms (stalled Presents), which releases the bot. The bot is shared by the frame thread and the tick thread without a lock, so `StepFrame` checks that it runs on the thread that began the possession (`PossessionStore::IsTickThread`): on another thread it logs one ERROR and `Disable`s the possession. A bot with no new frame for more than `k_PossessMaxStaleTicks` ticks gets a neutral action and forgets its held state (`TickFrameAge`). `SetPossession` of both detours connects the stores
+  (before Install: without it nobody is possessed). The tick marks the possessed player: see `Bridge.Codec` (domain only, not in the bridge yet).
 - Unit facts of the client (VW.9c.2, D356): `BotService::GetClientContext(state, source, settings, dt)` resolves every `UnitFact` of the unit it is
   given (the local's in the oracle, the bot's in the possession) as far as the memory and the functions answer: what it cannot resolve is out of
   `Known` and the step says so. The pure `BuildUnitContext` (`Engine.Control.Simulation.System:UnitContext`)
@@ -59,8 +81,8 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Engine.Control.Layer` | The facade: input, action and bot stores, services and detours. Owner only. |
-| `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `ReadAction` (a field of a `PlayerAction` by offset). |
-| `Engine.Control.Input.System` | The `ActionSource` port, the input services, the pure `FindViewActionPlayer` (which player's action goes into the input of a view) and the pure `ReadInputFrame`, `ReadClientState`, `CompareClient`, `CountClient`, `FormatClientLine` and `FormatClientStateFields` of the client oracle, and the control tag helpers (`LocateControlTag`, `ReadControlTag`, `FindInputPlayer`, `GetEngineThreadContext`). |
+| `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `PossessionStore`, `PossessRequestStore` (`PossessedBot` and `PossessStatus` are in the Type module), `ReadAction` (a field of a `PlayerAction` by offset). |
+| `Engine.Control.Input.System` | The pure `FindPossessedBot`, `ShouldNeutralizeLocal`, `PrepareFrame`, `AccumulateFrame`, `TakeTickAction`, `PossessionService` (the client per frame of the possessed bot) and the client source reads `ReadClientSettings`, `ReadDualWieldRestrictions`, `ReadInputTable` (VW.9c.2 B), the `ActionSource` port, the input services, the pure `FindViewActionPlayer` (which player's action goes into the input of a view) and the pure `ReadInputFrame`, `ReadClientState`, `CompareClient`, `CountClient`, `FormatClientLine` and `FormatClientStateFields` of the client oracle, and the control tag helpers (`LocateControlTag`, `ReadControlTag`, `FindInputPlayer`, `GetEngineThreadContext`). |
 | `Engine.Control.Simulation.Type`, `Engine.Control.Simulation.State` | Machines and players of the simulation, the pure `PlanRoster` (bots to move, remove and add to reach a count per team; the `Roster` type comes from `Engine.Base.MatchSetup.Type`), `FindFreeBotNumber` (lowest free bot number), `MakePlayerUpdate` (buffer of the player update), `BotStore` (bot, team and remove requests, session snapshot; bots are added only by a roster, `BotService::AddBot` through `ApplyRoster`, there is no request to add one). `BotService` is the `RosterPort` of `MatchSetupService`. |
 | `Engine.Control.Simulation.System` | `BotService` and its partition `:UnitContext`: the `UnitFactPort` (memory and engine calls behind the unit facts of the client) and the pure `BuildUnitContext` (VW.9c.2). |
 

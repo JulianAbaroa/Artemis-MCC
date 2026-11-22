@@ -1,5 +1,6 @@
 export module Engine.Control.Input.Type;
 
+import Control.Client.Type;
 import Blam.Layout.Action.Type;
 import std;
 
@@ -469,6 +470,64 @@ export namespace Engine::Control::Input::Type
         {
             return !IsMove && !IsLook && !IsTriggers && !IsTail && Buttons == 0 && Events == 0 && Lanes == 0 && StateFields == 0;
         }
+    };
+
+    // What the Viewer panel shows of the possession of a bot (VW.9c.2 B, D352): a counter, nothing is compared (the oracle compares the
+    // local player). Written by the game thread, read by the UI.
+    struct PossessStatus
+    {
+        // Handle of the bot that is possessed, 0xFFFFFFFF when none.
+        std::uint32_t Player{ 0xFFFFFFFF };
+
+        // Ticks the bot was possessed, and the ones whose action came from the client of the user (the others had a neutral action: the
+        // unit of the bot or the table of the user was missing).
+        std::uint64_t Ticks{ 0 };
+        std::uint64_t Delivered{ 0 };
+
+        // The client had a branch it does not port in the last delivered tick (see Unsupported).
+        std::uint64_t Unsupported{ 0 };
+
+        // The unit of the possessed bot was missing in some tick (one WARNING in the log per possession).
+        bool IsUnitMissing{ false };
+    };
+
+    // The input user whose table and settings drive the possessed bot, and the local player the possession leaves still (VW.9c.2 B, D353, D359).
+    inline constexpr std::int32_t k_PossessInputUser{ 0 };
+
+    // A possess request older than this is no request. The Viewer asks at every Present, so an older one means nobody asks any more (the Viewer was
+    // turned off, a stalled Present, a map load) and the bot must be given back.
+    inline constexpr std::chrono::milliseconds k_PossessRequestMaxAge{ 100 };
+
+    // Ticks a possessed bot may go without a new frame of the client before it gets a neutral action and forgets its held state (D360). Two ticks at
+    // x1.0 are about 66 ms: a frame that did not run (table not in the mouse state, no settings, input user 0 unmapped) must not repeat its last output.
+    inline constexpr std::uint32_t k_PossessMaxStaleTicks{ 2 };
+
+    // What the client keeps for the possessed bot between frames and ticks (VW.9c.2 B, D350, D360): its own client state, never the control block of
+    // a local player. The client runs once per FRAME (the 0x5df80 hook) and the ticks only copy what it accumulated, like 0x628b0 copies the block.
+    struct PossessedBot
+    {
+        // Player index of the bot and its handle with the salt: another bot in the same slot is another possession.
+        std::size_t Player{ 0 };
+        std::uint32_t Handle{ 0xFFFFFFFF };
+
+        // Unit the aim was started for. A new unit (respawn) starts the aim again from the unit.
+        std::uint32_t Unit{ 0xFFFFFFFF };
+
+        // Client state after the last frame. Its yaw and pitch are the aim, accumulated over every frame.
+        ::Control::Client::Type::ClientState State{};
+
+        // Whether a frame ran since the possession (or the unit) began.
+        bool HasFrame{ false };
+
+        // Ticks since the last frame ran. The frame sets it to 0, every tick adds one (TickFrameAge).
+        std::uint32_t TicksSinceFrame{ 0 };
+
+        // Output of the last frame (the held state: move, buttons, lanes, triggers, held events).
+        ::Control::Client::Type::ClientOutput Last{};
+
+        // What the frames since the last tick asked for: the buttons, lanes and pulse events OR-ed, the triggers at their largest. A tick delivers it
+        // once and clears it, so a press is neither lost between ticks nor delivered twice.
+        ::Control::Client::Type::ClientOutput Pending{};
     };
 
     // Signature of the engine function that applies the player actions of one tick (haloreach.dll rva 0x47050).

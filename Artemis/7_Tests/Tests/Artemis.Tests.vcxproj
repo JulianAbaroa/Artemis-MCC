@@ -110,6 +110,7 @@
     <ClCompile Include="Engine\TickProducerTests.cpp" />
     <ClCompile Include="Viewer\OptionsStoreTests.cpp" />
     <ClCompile Include="Viewer\RosterOrderTests.cpp" />
+    <ClCompile Include="Viewer\PossessDecisionTests.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\Type\DevTools.Viewer.Roster.Type.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="Engine\PovTests.cpp" />
     <ClCompile Include="Engine\ClientFrameTests.cpp" />
     <ClCompile Include="Engine\ClientReplayTests.cpp" />
+    <ClCompile Include="Engine\PossessionTests.cpp" />
     <ClCompile Include="Engine\UnitContextTests.cpp" />
     <ClCompile Include="Engine\ViewActionTests.cpp" />
     <ClCompile Include="Engine\LifecycleStoreTests.cpp" />

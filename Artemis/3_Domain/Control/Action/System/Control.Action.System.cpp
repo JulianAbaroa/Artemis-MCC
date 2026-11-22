@@ -3,6 +3,7 @@ module Control.Action.System;
 import Common.Engine.Type;
 import Common.Math.System;
 import Control.Action.Type;
+import Control.Client.Type;
 import Blam.Layout.Action.Type;
 import std;
 
@@ -12,6 +13,12 @@ namespace
     using Control::Action::Type::AppliedFacing;
     using Control::Action::Type::ClientRequests;
     using Control::Action::Type::PlayerActionHistory;
+    using Control::Action::Type::PossessedAction;
+    using Control::Client::Type::ClientOutput;
+    using Control::Client::Type::k_EventReload;
+    using Control::Client::Type::k_EventSwitchGrenade;
+    using Control::Client::Type::k_EventSwitchWeapon;
+    using Control::Client::Type::k_EventZoomPress;
     using Control::Action::Type::UnitClientState;
     using Control::Action::Type::WeaponRequest;
     using Control::Action::System::UnitRules;
@@ -28,11 +35,23 @@ namespace
     using Blam::Layout::Action::Type::Offset::k_ActionButtonsOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionFacingOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionThrottleOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionEventsOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionFireTriggerOffset;
+    using Blam::Layout::Action::Type::Offset::k_ActionTrigger4Offset;
+    using Blam::Layout::Action::Type::Offset::k_ActionZoomTriggerOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionLanesOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionInventoryVersionOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionWeaponSlotOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionGrenadeTypeOffset;
     using Blam::Layout::Action::Type::Offset::k_ActionZoomLevelOffset;
+
+    // The client buttons the host accepts: bits 48 to 63 of the action must be zero (A17 sec. 2).
+    constexpr std::uint64_t k_ValidButtons{ (1ull << 48) - 1 };
+
+    // Event bit of the zoom step in (A17 sec. 6), and the shift of the reload and throw bits to the events word of the action.
+    constexpr std::uint32_t k_EventZoomIn{ 1u << 4 };
+    constexpr std::uint32_t k_EventsWordShift{ 8 };
+    constexpr std::uint32_t k_EventsWordMask{ 3 };
 
     // Ticks a weapon request is sent while the unit does not hold the slot (half a second at 60 ticks per second).
     constexpr std::uint32_t k_WeaponRequestTicks{ 30 };
@@ -164,6 +183,43 @@ namespace Control::Action::System
         return ((milliseconds * ticksPerSecond) + (k_MillisecondsPerSecond - 1)) / k_MillisecondsPerSecond;
     }
 
+    auto MakePossessedAction(const ClientOutput& output, float yaw, float pitch) -> PossessedAction
+    {
+        std::uint32_t heldBits{ 0 };
+        for (const auto& lane : k_HoldLanes) heldBits |= 1u << lane.HeldBit;
+
+        PossessedAction action{};
+        ActionOverride& actionOverride{ action.Override };
+        actionOverride.Buttons = output.Buttons & k_ValidButtons;
+        actionOverride.Yaw = yaw;
+        actionOverride.Pitch = pitch;
+        actionOverride.TurnLimit = 0.0f;
+        actionOverride.ThrottleForward = output.MoveForward;
+        actionOverride.ThrottleLeft = output.MoveSide;
+        actionOverride.Lanes = output.Lanes & ~heldBits;
+        actionOverride.ClientEvents = static_cast<std::uint16_t>((output.Events >> k_EventsWordShift) & k_EventsWordMask);
+        actionOverride.FireTrigger = output.FireTrigger;
+        actionOverride.ZoomTrigger = output.ZoomTrigger;
+        actionOverride.Trigger4 = output.Trigger4;
+
+        action.Requests.IsWeaponSwitch = (output.Events & k_EventSwitchWeapon) != 0;
+        action.Requests.IsGrenadeSwitch = (output.Events & k_EventSwitchGrenade) != 0;
+        action.Requests.IsZoom = (output.Events & (k_EventZoomPress | k_EventZoomIn)) != 0;
+        return action;
+    }
+
+    auto MakeNeutralOverride(const std::optional<UnitClientState>& unit) -> ActionOverride
+    {
+        ActionOverride actionOverride{};
+        if (unit)
+        {
+            actionOverride.Yaw = unit->Facing[0];
+            actionOverride.Pitch = unit->Facing[1];
+        }
+
+        return actionOverride;
+    }
+
     auto BuildAction(std::span<std::uint8_t, k_PlayerActionSize> action, const ActionOverride& actionOverride,
         const std::optional<UnitClientState>& unit, std::optional<std::uint32_t> holdTicks, const ClientRequests& requests,
         std::uint64_t sequence, const UnitRules& rules, PlayerActionHistory& history) -> std::array<float, 2>
@@ -196,6 +252,12 @@ namespace Control::Action::System
         if (actionOverride.IsUseTest && IsUseTestDown(sequence)) lanes |= k_UseLane;
 
         WriteLanes(action, history.LaneTicks, lanes, holdTicks);
+
+        // note: Only the possessed bot writes these, the empty action of the engine has zero in all of them.
+        if (actionOverride.ClientEvents != 0) std::memcpy(action.data() + k_ActionEventsOffset, &actionOverride.ClientEvents, sizeof(actionOverride.ClientEvents));
+        if (actionOverride.FireTrigger != 0.0f) std::memcpy(action.data() + k_ActionFireTriggerOffset, &actionOverride.FireTrigger, sizeof(float));
+        if (actionOverride.ZoomTrigger != 0.0f) std::memcpy(action.data() + k_ActionZoomTriggerOffset, &actionOverride.ZoomTrigger, sizeof(float));
+        if (actionOverride.Trigger4 != 0.0f) std::memcpy(action.data() + k_ActionTrigger4Offset, &actionOverride.Trigger4, sizeof(float));
 
         WriteClientRequests(action, unit, requests, rules, history.PendingWeapon);
 

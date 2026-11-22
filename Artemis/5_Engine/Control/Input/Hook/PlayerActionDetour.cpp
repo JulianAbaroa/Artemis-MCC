@@ -25,6 +25,17 @@ namespace
 
     using Engine::Base::Hook::System::k_DrainTimeout;
 
+    using ::Control::Action::System::MakeNeutralOverride;
+    using ::Control::Action::Type::PossessedAction;
+
+    using Engine::Control::Input::Type::PossessedBot;
+    using Engine::Control::Input::Type::k_PossessInputUser;
+    using Engine::Control::Input::Type::k_PossessRequestMaxAge;
+    using Engine::Control::Input::System::ShouldNeutralizeLocal;
+    using Engine::Control::Input::System::TakeTickAction;
+    using Engine::Control::Input::System::TickFrameAge;
+    using Engine::Control::Input::System::FindInputPlayer;
+    using Engine::Control::Input::System::FindPossessedBot;
     using Engine::Control::Input::System::GetEngineThreadContext;
     using Engine::Control::Input::System::LocateControlTag;
     using Engine::Control::Input::System::ReadControlTag;
@@ -148,6 +159,83 @@ namespace Engine::Control::Input::Hook
         }
     }
 
+    auto PlayerActionDetour::SetPossession(PossessRequestStore& requestStore, PossessionStore& possessionStore) -> void
+    {
+        m_PossessRequestStore = &requestStore;
+        m_PossessionStore = &possessionStore;
+    }
+
+    auto PlayerActionDetour::ApplyPossession(std::uintptr_t threadContext, std::uint32_t engineMask,
+        std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests)
+        -> void
+    {
+        if (m_PossessRequestStore == nullptr || m_PossessionStore == nullptr) return;
+
+        // note: Turned off for good when the frames ran on another thread than the ticks (PossessionService logs the ERROR).
+        if (m_PossessionStore->IsDisabled())
+        {
+            m_PossessionStore->Release();
+            return;
+        }
+
+        const std::optional<std::uint32_t> request{ m_PossessRequestStore->Read(k_PossessRequestMaxAge) };
+        const std::optional<std::size_t> bot{ request ? FindPossessedBot(request, m_BotService.GetBotPlayerHandles(threadContext)) : std::nullopt };
+        if (!bot)
+        {
+            m_PossessionStore->Release();
+            return;
+        }
+
+        const std::optional<std::size_t> humanLocal{ FindInputPlayer(threadContext, k_PossessInputUser) };
+
+        std::uint32_t overrideMask{ 0 };
+        for (std::size_t player{ 0 }; player < overrides.size(); ++player)
+        {
+            if (overrides[player]) overrideMask |= 1u << player;
+        }
+
+        // note: The neutral action of the human local, always while a bot is possessed, with or without a unit (a dead local must not play with the keys).
+        if (ShouldNeutralizeLocal(bot, humanLocal, overrideMask, engineMask))
+        {
+            overrides[*humanLocal] = MakeNeutralOverride(m_BotService.GetUnitClientState(threadContext, *humanLocal));
+            requests[*humanLocal] = ClientRequests{};
+        }
+
+        m_PossessionStore->Begin(*bot, *request);
+        PossessedBot* possessed{ m_PossessionStore->Find() };
+        if (possessed == nullptr) return;
+
+        // note: The Python action of the possessed bot is discarded (D351). The bot gets the neutral action unless the frames of the client left one.
+        const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, *bot) };
+        overrides[*bot] = MakeNeutralOverride(unitState);
+        requests[*bot] = ClientRequests{};
+
+        if (!unitState)
+        {
+            m_PossessionStore->CountTick(false, false);
+            if (m_PossessionStore->MarkUnitMissing())
+            {
+                m_Log.Message("[PlayerActionDetour] WARNING: The possessed bot (player {}) has no unit: it gets a neutral action until it spawns.",
+                    *bot);
+            }
+            return;
+        }
+
+        // note: The client runs per frame in the 0x5df80 hook (D360). No frame since the unit began, or a unit the frames did not see, is a neutral tick.
+        // note: A frame that did not run for more than k_PossessMaxStaleTicks ticks is a neutral tick too, and the held state is forgotten.
+        if (possessed->Unit != unitState->Unit || TickFrameAge(*possessed))
+        {
+            m_PossessionStore->CountTick(false, false);
+            return;
+        }
+
+        const bool isUnsupported{ (possessed->Last.Unsupported | possessed->Pending.Unsupported) != 0 };
+        PossessedAction action{ TakeTickAction(*possessed) };
+        overrides[*bot] = action.Override;
+        requests[*bot] = action.Requests;
+        m_PossessionStore->CountTick(true, isUnsupported);
+    }
+
     auto PlayerActionDetour::ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void
     {
         // note: Taken every tick, so a press never fires late.
@@ -173,6 +261,8 @@ namespace Engine::Control::Input::Hook
 
         // note: Players with an action from the engine this tick, before the overrides are added.
         const std::uint32_t engineMask{ mask };
+
+        this->ApplyPossession(threadContext, engineMask, overrides, requests);
 
         // note: The tag is only read while some agent or (for the shadow check) some local player plays, never in menus or loading
         // screens.

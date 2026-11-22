@@ -142,6 +142,12 @@ namespace DevTools::Viewer::Scene::System
         return m_FramePoses;
     }
 
+    auto SceneService::IsBot(std::uint32_t handle) const -> bool
+    {
+        const std::optional<std::size_t> index{ IndexOfPlayer(m_Roster, handle) };
+        return index && m_Roster[*index].BotNumber.has_value();
+    }
+
     auto SceneService::IsGameMode() const -> bool
     {
         return m_CameraStore.GetMode() == Mode::Game;
@@ -182,6 +188,7 @@ namespace DevTools::Viewer::Scene::System
         m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
         m_PovRequestStore.Clear();
+        m_PossessRequestStore.Clear();
         m_CameraService.Deactivate();
     }
 

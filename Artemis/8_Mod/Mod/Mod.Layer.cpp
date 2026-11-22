@@ -24,6 +24,9 @@ namespace Mod
         // Egocentric and Export, then Tables, Map and Resolved. The tables read the resolved data, which is built from the map (D195, D200).
         auto& lifecycle = m_Base.m_LifecycleService;
 
+        // The tick marks the bot the user possesses (VW.9c.2 B, D351). The status is atomic, so the AI thread reads it without a lock.
+        m_Export.m_TickService.SetPossessedSource([this] { return m_Control.m_PossessionStore.GetStatus().Player; });
+
         lifecycle.OnMapFileOpened([this](const std::string& filePath) {
             m_Map.m_MapLoaderService.OpenFile(filePath);
         });
@@ -108,6 +111,8 @@ namespace Mod
     {
         // The action source is connected before any hook goes in (D243).
         m_Control.m_PlayerActionDetour.SetActionSource(m_BridgeActionSource);
+        m_Control.m_PlayerActionDetour.SetPossession(m_Control.m_PossessRequestStore, m_Control.m_PossessionStore);
+        m_Control.m_ClientOracleDetour.SetPossession(m_Control.m_PossessionService);
 
         // The tick producer is connected before the tick hooks go in too.
         m_Capture.m_ExecuteGameFrameDetour.SetTickProducer(m_TickProducer);

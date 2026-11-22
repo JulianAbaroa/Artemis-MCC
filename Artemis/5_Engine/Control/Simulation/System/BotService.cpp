@@ -5,12 +5,15 @@ import Common.Math.Type;
 import Control.Action.Type;
 import Control.Client.Type;
 import Engine.Base.Memory.Type;
+import Blam.Layout.Action.Type;
 import Blam.Layout.Object.Type;
 import std;
 
 namespace
 {
     namespace Signature = Engine::Base::Memory::Type::Signature;
+
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
 
     using Engine::Control::Simulation::Type::SessionSnapshot;
     using Engine::Control::Simulation::Type::SessionPlayer;
@@ -862,6 +865,24 @@ namespace Engine::Control::Simulation::System
         if (!slot) return std::nullopt;
 
         return MakePlayerHandle(slot->Salt, playerIndex);
+    }
+
+    auto BotService::GetBotPlayerHandles(std::uintptr_t threadContext) const -> std::array<std::uint32_t, k_MaxActionPlayers>
+    {
+        std::array<std::uint32_t, k_MaxActionPlayers> handles{};
+        handles.fill(k_NoHandle);
+
+        std::vector<Bot> bots{};
+        m_BotStore.CopyBots(bots);
+
+        for (const Bot& bot : bots)
+        {
+            if (bot.PlayerIndex >= handles.size()) continue;
+
+            handles[bot.PlayerIndex] = this->GetPlayerHandle(threadContext, bot.PlayerIndex).value_or(k_NoHandle);
+        }
+
+        return handles;
     }
 
     auto BotService::GetUnitClientState(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<UnitClientState>

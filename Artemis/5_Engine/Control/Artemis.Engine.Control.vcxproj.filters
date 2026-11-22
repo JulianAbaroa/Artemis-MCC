@@ -61,6 +61,18 @@
     <ClCompile Include="Input\State\PlayerActionStore.ixx">
       <Filter>Input\State</Filter>
     </ClCompile>
+    <ClCompile Include="Input\State\PossessionStore.cpp">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\PossessionStore.ixx">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\PossessRequestStore.cpp">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\PossessRequestStore.ixx">
+      <Filter>Input\State</Filter>
+    </ClCompile>
     <ClCompile Include="Input\State\VirtualInputStore.cpp">
       <Filter>Input\State</Filter>
     </ClCompile>
@@ -73,10 +85,22 @@
     <ClCompile Include="Input\System\ClientFrame.ixx">
       <Filter>Input\System</Filter>
     </ClCompile>
+    <ClCompile Include="Input\System\ClientSource.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
     <ClCompile Include="Input\System\ClientReport.ixx">
       <Filter>Input\System</Filter>
     </ClCompile>
     <ClCompile Include="Input\System\ControlTag.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\Possession.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\PossessionService.cpp">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\PossessionService.ixx">
       <Filter>Input\System</Filter>
     </ClCompile>
     <ClCompile Include="Input\Hook\ClientOracleDetour.cpp">

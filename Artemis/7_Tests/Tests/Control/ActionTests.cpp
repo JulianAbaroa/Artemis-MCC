@@ -22,7 +22,10 @@ namespace
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
     using Control::Client::Type::ClientContextSource;
+    using Control::Client::Type::ClientOutput;
     using Control::Client::Type::ClientSettings;
+    using Control::Action::System::MakeNeutralOverride;
+    using Control::Action::System::MakePossessedAction;
     using Control::Client::Type::UnitContext;
     using Control::Action::System::UnitRules;
     using Control::Action::System::BuildAction;
@@ -485,4 +488,98 @@ TEST(ActionTests, GrenadeRequest)
     agent.Tick();
 
     EXPECT_EQ(ReadGrenadeType(agent.Last), 0xFFFF);
+}
+
+TEST(ActionTests, ThePossessedActionTakesTheButtonsTheLanesAndTheEventsOfTheClient)
+{
+    ClientOutput output{};
+    output.Buttons = (1ull << 30) | (1ull << 50);
+    output.Lanes = (1u << 12) | (1u << 13) | (1u << 31);
+    output.Events = (1u << 8) | (1u << 0) | (1u << 1) | (1u << 2);
+    output.MoveForward = 0.5f;
+    output.MoveSide = -1.0f;
+    output.FireTrigger = 1.0f;
+    output.ZoomTrigger = 0.25f;
+    output.Trigger4 = 1.0f;
+
+    const auto possessed{ MakePossessedAction(output, 1.5f, -0.25f) };
+    const ActionOverride& actionOverride{ possessed.Override };
+
+    EXPECT_EQ(actionOverride.Buttons, 1ull << 30);
+    EXPECT_EQ(actionOverride.Lanes, (1u << 12) | (1u << 31));
+    EXPECT_EQ(actionOverride.ClientEvents, 1);
+    EXPECT_EQ(actionOverride.Yaw, 1.5f);
+    EXPECT_EQ(actionOverride.Pitch, -0.25f);
+    EXPECT_EQ(actionOverride.TurnLimit, 0.0f);
+    EXPECT_EQ(actionOverride.ThrottleForward, 0.5f);
+    EXPECT_EQ(actionOverride.ThrottleLeft, -1.0f);
+    EXPECT_EQ(actionOverride.FireTrigger, 1.0f);
+    EXPECT_EQ(actionOverride.ZoomTrigger, 0.25f);
+    EXPECT_EQ(actionOverride.Trigger4, 1.0f);
+    EXPECT_TRUE(possessed.Requests.IsWeaponSwitch);
+    EXPECT_TRUE(possessed.Requests.IsGrenadeSwitch);
+    EXPECT_TRUE(possessed.Requests.IsZoom);
+}
+
+TEST(ActionTests, ThePossessedActionTurnsTheGrenadeThrowAndTheZoomStepIntoTheirFields)
+{
+    ClientOutput output{};
+    output.Events = 1u << 9;
+    EXPECT_EQ(MakePossessedAction(output, 0.0f, 0.0f).Override.ClientEvents, 2);
+    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+
+    output.Events = 1u << 4;
+    EXPECT_TRUE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+
+    output.Events = 1u << 5;
+    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+}
+
+TEST(ActionTests, TheEventsAndTheTriggersOfTheOverrideGoToTheActionOnlyWhenTheyAreNotZero)
+{
+    Agent agent{};
+    agent.Tick();
+
+    // note: The test action is filled with a pattern: an untouched field keeps it, as the empty action of the engine would keep its zeros.
+    const Action untouched{ MakeAction() };
+    EXPECT_EQ(std::memcmp(agent.Last.data() + 0x34, untouched.data() + 0x34, sizeof(std::uint16_t)), 0);
+    EXPECT_EQ(std::memcmp(agent.Last.data() + 0x38, untouched.data() + 0x38, sizeof(float)), 0);
+    EXPECT_EQ(std::memcmp(agent.Last.data() + 0x3C, untouched.data() + 0x3C, sizeof(float)), 0);
+    EXPECT_EQ(std::memcmp(agent.Last.data() + 0x24, untouched.data() + 0x24, sizeof(float)), 0);
+
+    std::uint16_t events{ 0 };
+
+    agent.Override.ClientEvents = 2;
+    agent.Override.FireTrigger = 0.75f;
+    agent.Override.ZoomTrigger = 0.5f;
+    agent.Override.Trigger4 = 1.0f;
+    agent.Tick();
+
+    float fire{ 0.0f };
+    float zoom{ 0.0f };
+    float extra{ 0.0f };
+    std::memcpy(&events, agent.Last.data() + 0x34, sizeof(events));
+    std::memcpy(&fire, agent.Last.data() + 0x38, sizeof(fire));
+    std::memcpy(&zoom, agent.Last.data() + 0x3C, sizeof(zoom));
+    std::memcpy(&extra, agent.Last.data() + 0x24, sizeof(extra));
+    EXPECT_EQ(events, 2);
+    EXPECT_EQ(fire, 0.75f);
+    EXPECT_EQ(zoom, 0.5f);
+    EXPECT_EQ(extra, 1.0f);
+}
+
+TEST(ActionTests, TheNeutralOverrideDoesNothingAndLooksWhereTheUnitLooks)
+{
+    UnitClientState unit{ MakeUnit() };
+    unit.Facing = { 2.0f, 0.5f };
+
+    const ActionOverride neutral{ MakeNeutralOverride(unit) };
+    EXPECT_EQ(neutral.Buttons, 0u);
+    EXPECT_EQ(neutral.Lanes, 0u);
+    EXPECT_EQ(neutral.ThrottleForward, 0.0f);
+    EXPECT_EQ(neutral.ThrottleLeft, 0.0f);
+    EXPECT_EQ(neutral.Yaw, 2.0f);
+    EXPECT_EQ(neutral.Pitch, 0.5f);
+
+    EXPECT_EQ(MakeNeutralOverride(std::nullopt).Yaw, 0.0f);
 }

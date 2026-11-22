@@ -9,9 +9,11 @@ namespace
 {
     using Control::Action::Type::ActionOverride;
     using Control::Action::Type::ClientRequests;
+    using Control::Action::Type::PossessedAction;
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
     using Control::Client::Type::ClientContextSource;
+    using Control::Client::Type::ClientOutput;
     using Control::Client::Type::ClientSettings;
     using Control::Client::Type::UnitContext;
 
@@ -50,6 +52,20 @@ export namespace Control::Action::System
     // param seconds: Hold threshold read from the tag.
     // return: Ticks to hold a lane, or nullopt if the value is not a threshold (outside 0 to a sanity limit, or not a number).
     auto GetHoldThresholdTicks(float seconds) -> std::optional<std::uint32_t>;
+
+    // Turns the output of the pure client into the override and the requests of a possessed bot (VW.9c.2 B, D354): the same override the
+    // agents of Python use, so BuildAction writes the action (buttons, lanes with their held bits, weapon, grenade and zoom requests).
+    // param output: What StepClient left. Its look is already in yaw and pitch.
+    // param yaw: Absolute facing the bot must have (the look deltas already added to the aim of the bot), radians.
+    // param pitch: Absolute pitch, radians.
+    // return: The buttons below bit 48, the lanes without held bits (BuildAction counts them), the move axes, the triggers and the events word
+    // of the reload and the grenade throw, with no turn limit (a human, not an agent). The events of the output become requests: switch weapon,
+    // switch grenade and zoom (press or step in). The zoom step out has no request.
+    auto MakePossessedAction(const ClientOutput& output, float yaw, float pitch) -> PossessedAction;
+
+    // return: The override of a player that does nothing: no buttons, no throttle, no lanes, looking where its unit looks (the facing of the
+    // state, or zero without a unit).
+    auto MakeNeutralOverride(const std::optional<UnitClientState>& unit) -> ActionOverride;
 
     // Writes the fields of an agent into its action: facing, buttons, throttle, hold lanes and client requests (D109, D119-D121).
     // param action: Action of the player, already cleared by the engine and with the slot of its unit.

@@ -11,10 +11,11 @@ import std;
 
 export namespace Engine::Control::Input::Hook
 {
-    // Oracle of the pure client (VW.9c.1, D356): hooks the player control of the engine (0x5df80) and, for a local human player without
-    // an override, runs the pure client on the table, the block and the unit it saw at the entry, then compares its output and its state
-    // with what the engine left. Development tool, off by default (the shadow check switch of PlayerActionStore).
-    // note: Reads game memory and never writes it. Runs on the game thread inside the original call.
+    // Hook of the player control of the engine (0x5df80), installed always. It has two uses on the game thread: the oracle of the pure client (VW.9c.1,
+    // D356: for a local human player without an override it runs the pure client on the table, the block and the unit it saw at the entry and compares
+    // its output and state with what the engine left. It is a development tool, off by default behind the shadow check switch of PlayerActionStore) and the
+    // client of the possessed bot (VW.9c.2 B, D360: input user 0, once per frame, in PossessionService).
+    // note: Reads game memory and never writes it. Runs on the game thread inside the original call. Without the hook no bot can be possessed.
     class ClientOracleDetour
     {
     private:
@@ -32,6 +33,7 @@ export namespace Engine::Control::Input::Hook
 
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
 
+        using PossessionService = Engine::Control::Input::System::PossessionService;
 
         using BotService = Engine::Control::Simulation::System::BotService;
 
@@ -39,6 +41,10 @@ export namespace Engine::Control::Input::Hook
         ClientOracleDetour(Log& log, AOBService& aobService, PlayerActionStore& playerActionStore, BotService& botService) :
             m_Log(log), m_AOBService(aobService), m_PlayerActionStore(playerActionStore), m_BotService(botService) {}
         ~ClientOracleDetour() = default;
+
+        // Connects the service that runs the client of the possessed bot (VW.9c.2 B, D360).
+        // note: The one that composes the layers calls it before Install. Without it nobody is possessed.
+        auto SetPossession(PossessionService& possessionService) -> void;
 
         // Finds the player control by its rva and the control tag anchor, and installs the hook.
         // return: False if the function is not found (the log says why) or the hook fails. The oracle stays off and nothing else changes.
@@ -56,6 +62,7 @@ export namespace Engine::Control::Input::Hook
         AOBService& m_AOBService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
+        PossessionService* m_PossessionService{ nullptr };
 
         static inline std::atomic<ClientOracleDetour*> s_Instance{ nullptr };
         static inline PlayerControlFunction s_OriginalFunction{ nullptr };

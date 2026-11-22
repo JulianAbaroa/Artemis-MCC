@@ -27,8 +27,8 @@ Other projects may import only these modules; everything else in the project is 
 
 | Module | What it gives |
 |---|---|
-| `Control.Action.Type` | `ActionOverride`, `AppliedFacing`, `ClientRequests`, `UnitClientState`, `PlayerActionHistory`. |
-| `Control.Action.System` | `BuildAction`, `GetHoldThresholdTicks` and the `UnitRules` port (also `GetClientContext`: the unit facts the client asks, VW.9c.1). |
+| `Control.Action.Type` | `ActionOverride` (also the events word, the fire, zoom and extra triggers of a possessed bot), `AppliedFacing`, `ClientRequests`, `PossessedAction`, `UnitClientState`, `PlayerActionHistory`. |
+| `Control.Action.System` | `BuildAction` (writes the events word +0x34 and the triggers +0x24, +0x38, +0x3C only when not zero), `MakePossessedAction` (client output to override and requests, VW.9c.2 B), `MakeNeutralOverride`, `GetHoldThresholdTicks` and the `UnitRules` port (also `GetClientContext`: the unit facts the client asks, VW.9c.1). |
 | `Control.Client.Type` | `InputFrame` (the table of one input user, already resolved), `ClientState` (the client block fields kept between calls, with their offsets), `UnitContext` (what the client asks of the unit), `ClientSettings` (passed in, D359), `ClientOutput`, `ClientStep`, `ClientStatus`, `Unsupported` and the event, button and event bit constants. |
 | `Control.Client.System` | `StepClient` (one call of 0x5df80) and `IntegrateAim` (adds the look delta to yaw and pitch with the pitch limit). |
 | `Control.Lockstep.Type` | Limits and defaults of the lockstep (decision period N, latency d, timeouts) and `BridgeControlState`. |

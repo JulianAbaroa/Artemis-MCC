@@ -13,6 +13,7 @@ export import :AgentStrip;
 
 import Services.Telemetry.State;
 import Engine.Base.Pov.State;
+import Engine.Control.Input.State;
 import Engine.Render.Type;
 import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
@@ -33,6 +34,7 @@ export namespace DevTools::Viewer::Hud::System
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
         using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
+        using PossessionStore = Engine::Control::Input::State::PossessionStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
@@ -40,9 +42,10 @@ export namespace DevTools::Viewer::Hud::System
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
 
     public:
-        HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, const PovStatusStore& povStatusStore, CollidableStore& collidableStore,
+        HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, const PovStatusStore& povStatusStore, const PossessionStore& possessionStore,
+            CollidableStore& collidableStore,
             OverlayStore& overlayStore, SceneService& sceneService, LatencyService& latencyService) :
-            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_PovStatusStore(povStatusStore), m_CollidableStore(collidableStore),
+            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_PovStatusStore(povStatusStore), m_PossessionStore(possessionStore), m_CollidableStore(collidableStore),
             m_OverlayStore(overlayStore), m_SceneService(sceneService), m_LatencyService(latencyService) {}
         ~HudService() = default;
 
@@ -57,6 +60,7 @@ export namespace DevTools::Viewer::Hud::System
         TelemetryStore& m_TelemetryStore;
         RenderStore& m_RenderStore;
         const PovStatusStore& m_PovStatusStore;
+        const PossessionStore& m_PossessionStore;
         CollidableStore& m_CollidableStore;
         OverlayStore& m_OverlayStore;
         SceneService& m_SceneService;
@@ -75,6 +79,10 @@ export namespace DevTools::Viewer::Hud::System
         // Draws the POV: whether the view assignment of the engine was found, and while a player is requested who it is, the handles of the
         // request, of the view of the game and of the local player, and the calls, reasserts and faults (VW.9a, D340).
         auto DrawPov(const std::shared_ptr<const Tick>& tick) -> void;
+
+        // Draws the possession of a bot: off, or the player and the ticks the client of the user drove it, the ones with an action and the ones
+        // that left a branch unported, and that the unit is missing (VW.9c.2 B).
+        auto DrawPossession(const std::shared_ptr<const Tick>& tick) -> void;
 
         // Draws whether the first person mask of the overlay was copied in the last frame (VW.6.y.2 B).
         auto DrawFirstPersonMask() -> void;

@@ -32,7 +32,6 @@ namespace
 
     using ::Control::Client::Type::k_NoZoom;
 
-    using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_NoHandle;
 
     using Engine::Base::Hook::System::k_DrainTimeout;
@@ -47,6 +46,9 @@ namespace
     using Engine::Control::Input::System::ReadControlTag;
     using Engine::Control::Input::System::ReadClientState;
     using Engine::Control::Input::System::ReadInputFrame;
+    using Engine::Control::Input::System::ReadClientSettings;
+    using Engine::Control::Input::System::ReadInputTable;
+    using Engine::Control::Input::System::ReadDualWieldRestrictions;
 
     using Engine::Control::Input::Type::ClientDifferences;
     using Engine::Control::Input::Type::ShadowField;
@@ -60,37 +62,15 @@ namespace
     using Engine::Control::Input::Type::k_ClientOracleFile;
     using Engine::Control::Input::Type::k_ClientOutputCompared;
     using Engine::Control::Input::Type::k_ClientOutputSize;
-    using Engine::Control::Input::Type::k_ClockSlot;
-    using Engine::Control::Input::Type::k_ClockTickSecondsOffset;
-    using Engine::Control::Input::Type::k_ClockTicksPerSecondOffset;
     using Engine::Control::Input::Type::k_ControlBlockStride;
     using Engine::Control::Input::Type::k_ControlGlobalsSlot;
-    using Engine::Control::Input::Type::k_ControlSettingsDefaultBit;
-    using Engine::Control::Input::Type::k_DualWieldKeyboardRva;
-    using Engine::Control::Input::Type::k_DualWieldPadRva;
-    using Engine::Control::Input::Type::k_DualWieldPadStride;
-    using Engine::Control::Input::Type::k_InputModeCount;
-    using Engine::Control::Input::Type::k_InputModeRva;
-    using Engine::Control::Input::Type::k_ControlSettingsDefaultRva;
-    using Engine::Control::Input::Type::k_ControlSettingsRva;
-    using Engine::Control::Input::Type::k_ControlSettingsStride;
-    using Engine::Control::Input::Type::k_ControlTagJumpTimerOffset;
-    using Engine::Control::Input::Type::k_ControlTagZoomCancelOffset;
-    using Engine::Control::Input::Type::k_CrouchToggleRva;
-    using Engine::Control::Input::Type::k_HoldThresholdOffset;
     using Engine::Control::Input::Type::k_InputEventTableRva;
     using Engine::Control::Input::Type::k_InputTableSize;
-    using Engine::Control::Input::Type::k_MeleeHoldsUseRva;
+    using Engine::Control::Input::Type::k_PossessInputUser;
     using Engine::Control::Input::Type::k_PlayerControlAnchorWindow;
     using Engine::Control::Input::Type::k_PlayerControlRva;
-    using Engine::Control::Input::Type::k_SettingsAimSeatedOffset;
-    using Engine::Control::Input::Type::k_SettingsAimZoomedOffset;
-    using Engine::Control::Input::Type::k_SettingsJumpFlagOffset;
 
     using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
-
-    // Milliseconds per second, to turn the hold threshold of the tag into the one the engine compares.
-    constexpr float k_MillisecondsPerSecond{ 1000.0f };
 
     template<typename T>
     auto ReadMemory(std::uintptr_t address) -> T
@@ -122,16 +102,32 @@ namespace Engine::Control::Input::Hook
 
         ClientOracleDetour* self{ s_Instance.load() };
 
-        // note: The switch is an atomic: with the check off the call costs one load and no lock.
-        const bool isOn{ self != nullptr && output != nullptr && inputUser >= 0 && static_cast<std::size_t>(inputUser) < k_ClientInputUsers
-            && self->m_PlayerActionStore.IsShadowEnabled() };
-        if (!isOn)
+        // note: Both switches are atomics: with the check off and nobody possessed the call costs two loads and no lock.
+        const bool isInRange{ self != nullptr && output != nullptr && inputUser >= 0 && static_cast<std::size_t>(inputUser) < k_ClientInputUsers };
+        const bool isChecked{ isInRange && self->m_PlayerActionStore.IsShadowEnabled() };
+        const bool isPossessed{ isInRange && inputUser == k_PossessInputUser && self->m_PossessionService != nullptr
+            && self->m_PossessionService->IsActive() };
+        if (!isChecked && !isPossessed)
         {
             s_OriginalFunction(inputUser, localIndex, deltaTime, unused, tableOut, output);
             return;
         }
 
         const std::uintptr_t threadContext{ GetEngineThreadContext(self->m_EngineTlsIndex) };
+
+        // note: The client of the possessed bot runs here, once per frame with the table of this frame (D360). The ticks only copy what it left.
+        if (isPossessed && threadContext != 0 && self->m_ModuleBase != 0)
+        {
+            self->m_PossessionService->StepFrame(self->m_ModuleBase, self->m_ControlTag, threadContext, inputUser, localIndex, deltaTime,
+                ReadInputTable(self->m_ModuleBase, inputUser));
+        }
+
+        if (!isChecked)
+        {
+            s_OriginalFunction(inputUser, localIndex, deltaTime, unused, tableOut, output);
+            return;
+        }
+
         const std::optional<std::size_t> player{ threadContext != 0 ? FindInputPlayer(threadContext, inputUser) : std::nullopt };
         const std::uintptr_t controlGlobals{ threadContext != 0 ? ReadMemory<std::uintptr_t>(threadContext + k_ControlGlobalsSlot) : 0 };
 
@@ -303,43 +299,19 @@ namespace Engine::Control::Input::Hook
         for (const std::string& line : lines) file << line << '\n';
     }
 
+    auto ClientOracleDetour::SetPossession(PossessionService& possessionService) -> void
+    {
+        m_PossessionService = &possessionService;
+    }
+
     auto ClientOracleDetour::ReadSettings(std::uint32_t localIndex, std::uintptr_t threadContext) const -> std::optional<ClientSettings>
     {
-        if (m_ModuleBase == 0 || localIndex >= k_MaxLocalUsers) return std::nullopt;
-
-        const std::uintptr_t tag{ ReadControlTag(m_ControlTag) };
-        if (tag == 0) return std::nullopt;
-
-        const std::uintptr_t clock{ ReadMemory<std::uintptr_t>(threadContext + k_ClockSlot) };
-        if (clock == 0) return std::nullopt;
-
-        std::uintptr_t block{ m_ModuleBase + k_ControlSettingsRva + (localIndex * k_ControlSettingsStride) };
-        if (((ReadMemory<std::uint32_t>(block) >> k_ControlSettingsDefaultBit) & 1u) != 0) block = m_ModuleBase + k_ControlSettingsDefaultRva;
-
-        ClientSettings settings{};
-        settings.HoldThresholdMs = static_cast<std::int32_t>(ReadMemory<float>(tag + k_HoldThresholdOffset) * k_MillisecondsPerSecond);
-        settings.ZoomCancelThreshold = ReadMemory<float>(tag + k_ControlTagZoomCancelOffset);
-        settings.JumpTimerSeconds = ReadMemory<float>(tag + k_ControlTagJumpTimerOffset);
-        settings.AimScaleZoomed = ReadMemory<float>(block + k_SettingsAimZoomedOffset);
-        settings.AimScaleSeated = ReadMemory<float>(block + k_SettingsAimSeatedOffset);
-        settings.IsJumpFlag = ReadMemory<std::uint8_t>(block + k_SettingsJumpFlagOffset) != 0;
-        settings.IsCrouchToggle = ReadMemory<std::uint8_t>(m_ModuleBase + k_CrouchToggleRva) != 0;
-        settings.IsMeleeHoldsUse = ReadMemory<std::uint8_t>(m_ModuleBase + k_MeleeHoldsUseRva) != 0;
-        settings.TicksPerSecond = ReadMemory<std::int16_t>(clock + k_ClockTicksPerSecondOffset);
-        settings.TickSeconds = ReadMemory<float>(clock + k_ClockTickSecondsOffset);
-        return settings;
+        return ReadClientSettings(m_ModuleBase, ReadControlTag(m_ControlTag), threadContext, localIndex);
     }
 
     auto ClientOracleDetour::ReadDualWieldFlags(std::uint32_t localIndex) const -> std::optional<std::uint8_t>
     {
-        if (m_ModuleBase == 0) return std::nullopt;
-
-        // note: A local index past the array reads the mode of the first user, like the engine does.
-        const std::uint32_t modeIndex{ localIndex < k_InputModeCount ? localIndex : 0 };
-        const auto mode{ ReadMemory<std::int32_t>(m_ModuleBase + k_InputModeRva + (modeIndex * sizeof(std::int32_t))) };
-        if (mode != 0) return ReadMemory<std::uint8_t>(m_ModuleBase + k_DualWieldKeyboardRva);
-
-        return ReadMemory<std::uint8_t>(m_ModuleBase + k_DualWieldPadRva + (static_cast<std::uintptr_t>(localIndex) * k_DualWieldPadStride));
+        return ReadDualWieldRestrictions(m_ModuleBase, localIndex);
     }
 
     auto ClientOracleDetour::Install() -> bool
@@ -353,7 +325,7 @@ namespace Engine::Control::Input::Hook
             k_PlayerControlAnchorWindow, L"haloreach.dll", &anchor) };
         if (function == 0)
         {
-            m_Log.Message("[ClientOracleDetour] ERROR: Failed to find the player control (rva {:X}). The client oracle stays off.",
+            m_Log.Message("[ClientOracleDetour] ERROR: Failed to find the player control (rva {:X}). The client oracle stays off and no bot can be possessed.",
                 k_PlayerControlRva);
             return false;
         }

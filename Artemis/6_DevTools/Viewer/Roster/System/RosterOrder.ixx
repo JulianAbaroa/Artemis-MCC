@@ -16,6 +16,13 @@ export namespace DevTools::Viewer::Roster::System
     // first and a negative one the last. Nothing for an empty list or a zero delta without a current position.
     auto StepFrom(std::size_t count, std::optional<std::size_t> current, int delta) -> std::optional<std::size_t>;
 
+    // return: The player the game must let the user possess, or nothing (VW.9c.2 B, D352). Only a bot, only with the option on and the Game camera:
+    // the Free camera, a human selected, no player selected or the option off give nothing, which releases the bot. The caller runs it only while the
+    // Viewer is active (an inactive Viewer withdraws the request in SceneService::Deactivate).
+    // param observed: The player observed (the selected one), k_NoHandle when none.
+    // param isObservedBot: The observed player is an Artemis bot of the roster. It stays true while the bot is dead: the selection follows the player.
+    auto DecidePossession(bool isOptionOn, bool isGameMode, std::uint32_t observed, bool isObservedBot) -> std::optional<std::uint32_t>;
+
     // return: The previous, current and next positions of the strip. One player has no neighbours. With two, the other one is shown only as the next.
     auto StripOf(std::size_t count, std::size_t current) -> Roster::Type::RosterStrip;
 }

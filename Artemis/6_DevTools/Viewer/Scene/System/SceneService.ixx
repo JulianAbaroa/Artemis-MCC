@@ -8,6 +8,7 @@ import Engine.Control.Simulation.Type;
 import Engine.Control.Simulation.State;
 import Engine.Base.Pov.Type;
 import Engine.Base.Pov.State;
+import Engine.Control.Input.State;
 import Engine.Render.State;
 import Views.View.Type;
 import Bridge.Codec.Tick.Type;
@@ -34,6 +35,7 @@ export namespace DevTools::Viewer::Scene::System
         using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using SettingsStore = Services::Settings::State::SettingsStore;
         using PovRequestStore = Engine::Base::Pov::State::PovRequestStore;
+        using PossessRequestStore = Engine::Control::Input::State::PossessRequestStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
@@ -53,9 +55,10 @@ export namespace DevTools::Viewer::Scene::System
     public:
         SceneService(SettingsStore& settingsStore, ObservedPlayerStore& observedStore, CameraStore& cameraStore,
             CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore, PovRequestStore& povRequestStore,
-            const BotStore& botStore) :
+            PossessRequestStore& possessRequestStore, const BotStore& botStore) :
             m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_CameraStore(cameraStore),
-            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore), m_PovRequestStore(povRequestStore), m_BotStore(botStore) {}
+            m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore), m_PovRequestStore(povRequestStore),
+            m_PossessRequestStore(possessRequestStore), m_BotStore(botStore) {}
         ~SceneService() = default;
 
         SceneService(const SceneService&) = delete;
@@ -154,6 +157,9 @@ export namespace DevTools::Viewer::Scene::System
         // empty without a tick. The arrows walk it and the strip draws from it.
         auto GetRoster() const -> const std::vector<RosterEntry>&;
 
+        // return: True if the player with that handle is an Artemis bot of the roster (a human, or a player not in the table, is not).
+        auto IsBot(std::uint32_t handle) const -> bool;
+
     private:
         std::unordered_set<std::uint32_t> m_Hidden{};
         std::shared_ptr<const CollidableScene> m_Scene{};
@@ -182,6 +188,7 @@ export namespace DevTools::Viewer::Scene::System
         SelectionService& m_SelectionService;
         const RenderStore& m_RenderStore;
         PovRequestStore& m_PovRequestStore;
+        PossessRequestStore& m_PossessRequestStore;
         const BotStore& m_BotStore;
 
         PaletteService m_PaletteService{};

@@ -108,6 +108,7 @@ export namespace DevTools::Viewer::Options::Type
         HideGameHud,
         HideFirstPerson,
         WatchPov,
+        PossessBot,
 
         Count
     };
@@ -389,6 +390,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::WatchPov, Group::Camera, Layer::Count, Level::Full, "WatchPov", "Watch POV",
             "The game shows the selected player in first person, with its HUD (engine player mapping, D340).", false },
+
+        { Flag::PossessBot, Group::Camera, Layer::Count, Level::Full, "PossessBot", "Auto-possess bot",
+            "With the Game camera, the Artemis bot you select plays with your mouse and keyboard (your settings). Your own player stands still. TAB to the Free camera, selecting a human or turning this off gives the bot back. Pair it with Watch POV to see through the bot.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

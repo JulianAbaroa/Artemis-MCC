@@ -136,7 +136,9 @@ export namespace Mod
             .m_BotStore = m_Control.m_BotStore,
             .m_BridgeService = m_Transport.m_BridgeService,
             .m_PovRequestStore = m_Base.m_PovRequestStore,
-            .m_PovStatusStore = m_Base.m_PovStatusStore };
+            .m_PovStatusStore = m_Base.m_PovStatusStore,
+            .m_PossessRequestStore = m_Control.m_PossessRequestStore,
+            .m_PossessionStore = m_Control.m_PossessionStore };
 
         Blam::Map::Layer m_Map{ m_Service.m_Log };
         Blam::MapModel::Layer m_Resolved{ m_Service.m_Log, m_Map };

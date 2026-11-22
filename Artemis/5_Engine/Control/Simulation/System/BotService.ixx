@@ -12,7 +12,13 @@ import Engine.Base.Memory.System;
 import Engine.Control.Input.State;
 import Engine.Control.Simulation.Type;
 import Engine.Control.Simulation.State;
+import Blam.Layout.Action.Type;
 import std;
+
+namespace
+{
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+}
 
 export namespace Engine::Control::Simulation::System
 {
@@ -81,6 +87,10 @@ export namespace Engine::Control::Simulation::System
         // return: The handle (with salt) of the player in the slot, or nullopt if the slot is free.
         // note: Game thread only.
         auto GetPlayerHandle(std::uintptr_t threadContext, std::size_t playerIndex) const -> std::optional<std::uint32_t>;
+
+        // return: The handle (with salt) of the Artemis bot in each player slot, 0xFFFFFFFF where the slot has none (a human or a free slot).
+        // note: Game thread only. The possession only takes a bot of this list (VW.9c.2 B, D352: never a human).
+        auto GetBotPlayerHandles(std::uintptr_t threadContext) const -> std::array<std::uint32_t, k_MaxActionPlayers>;
 
         // return: The client state of the unit of the player, or nullopt if the player is gone or has no live unit.
         // note: Game thread only.

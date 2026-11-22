@@ -67,6 +67,10 @@ export namespace Bridge::Codec::Tick::Type
         // MapId of the scnr of the loaded map, engine id. 0 while no map or the scnr is not frozen.
         std::int32_t MapId = 0;
 
+        // Player handle of the bot the user possesses in this tick, 0xFFFFFFFF when none (VW.9c.2 B, D351). Domain only: the flat layout of the
+        // bridge does not carry it yet, so Python does not see it.
+        std::uint32_t PossessedPlayer = 0xFFFFFFFF;
+
         std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Sbsp::Sbsp>> Map{};
         std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Scnr::Scnr>> Limits{};
         std::shared_ptr<const std::unordered_map<std::string, Blam::MapModel::Definitions::Type::Sddt::Sddt>> Designs{};

@@ -44,6 +44,8 @@ export namespace Engine::Control::Input::Hook
         using ShadowPlayer = Engine::Control::Input::Type::ShadowPlayer;
 
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
+        using PossessionStore = Engine::Control::Input::State::PossessionStore;
+        using PossessRequestStore = Engine::Control::Input::State::PossessRequestStore;
 
         using ActionSource = Engine::Control::Input::System::ActionSource;
 
@@ -60,6 +62,10 @@ export namespace Engine::Control::Input::Hook
         // note: The one that composes the layers calls it before Install. Runs once, on the thread that builds the layers (D243).
         auto SetActionSource(ActionSource& actionSource) -> void;
 
+        // Connects the request of the bot to possess and the state of the possession (VW.9c.2 B).
+        // note: The one that composes the layers calls it before Install, like SetActionSource. Without it no bot is possessed.
+        auto SetPossession(PossessRequestStore& requestStore, PossessionStore& possessionStore) -> void;
+
         // Finds the target by signature and installs the hook. Does nothing if already installed.
         // return: False if there is no action source, the target is not found or the hook fails.
         auto Install() -> bool;
@@ -73,7 +79,12 @@ export namespace Engine::Control::Input::Hook
         MatchSetupService& m_MatchSetupService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
+
+        // The bot the Viewer asks to possess (VW.9c.2 B) and what the client of the user keeps for it. Null until connected: then nobody is possessed.
+        PossessRequestStore* m_PossessRequestStore{ nullptr };
+        PossessionStore* m_PossessionStore{ nullptr };
         ActionSource* m_ActionSource{ nullptr };
+
 
         static inline PlayerActionDetour* s_Instance{ nullptr };
         static inline ApplyPlayerActionsFunction s_OriginalFunction{ nullptr };
@@ -114,6 +125,19 @@ export namespace Engine::Control::Input::Hook
         // note: The action starts from the empty action of the engine, then the unit slot, the override and the interaction (D119).
         // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
+
+        // Possession of a bot (VW.9c.2 B, D350, D360): while the Viewer asks for one, the tick copies what the client of the user accumulated in the
+        // frames (the 0x5df80 hook runs it, see PossessionService) into the action of the bot through the same override path as an agent, and the
+        // human local gets a neutral action.
+        // param engineMask: Players with an action from the engine this tick.
+        // param overrides: The overrides of the tick. The one of the possessed bot is replaced (the override of Python is dropped, D351) and the
+        // human local gets a neutral one, unless it is an agent (D350).
+        // param requests: The client requests of the tick, replaced the same way.
+        // note: Game thread only, once per tick, after the overrides were copied. Without a request, or when the bot is gone or is not an Artemis
+        // bot (never a human, D352), the possession is released and nothing changes.
+        auto ApplyPossession(std::uintptr_t threadContext, std::uint32_t engineMask,
+            std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests)
+            -> void;
 
         // Does what the engine does in the theater for the views that show a non local player: copies the action of that player into the
         // input of the view, so the camera, zoom and weapon follow a bot tick by tick (VW.9a.y, D349).

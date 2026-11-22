@@ -25,12 +25,15 @@ import DevTools.Viewer.Control.System;
 import DevTools.Viewer.Map.System;
 import DevTools.Viewer.Hud.System;
 import DevTools.Viewer.Inspector.System;
+import DevTools.Viewer.Roster.System;
 import DevTools.Viewer.Scene.System;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
+
+    using DevTools::Viewer::Roster::System::DecidePossession;
 }
 
 export namespace DevTools::Viewer
@@ -79,11 +82,11 @@ export namespace DevTools::Viewer
             m_SelectionService(m_SelectionStore),
             m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OptionsStore),
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService,
-                engine.m_RenderStore, engine.m_PovRequestStore, engine.m_BotStore),
+                engine.m_RenderStore, engine.m_PovRequestStore, engine.m_PossessRequestStore, engine.m_BotStore),
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, m_CollidableStore, m_OverlayStore, m_SceneService,
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, engine.m_PossessionStore, m_CollidableStore, m_OverlayStore, m_SceneService,
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
             m_AgentCardService(m_CollidableStore, m_SceneService, m_OptionsStore, m_SelectionStore, engine.m_BotStore),
@@ -116,6 +119,12 @@ export namespace DevTools::Viewer
 
                     if (m_OptionsStore.IsEnabled(Flag::WatchPov) && observed != k_NoHandle) engine.m_PovRequestStore.Publish(observed);
                     else engine.m_PovRequestStore.Clear();
+
+                    // note: The possession follows the selected player, not its body, so it survives the death of the bot (D352). A human, the Free
+                    // camera or the option off withdraw it and the next tick of the game gives the bot back.
+                    const std::optional<std::uint32_t> possessed{ DecidePossession(m_OptionsStore.IsEnabled(Flag::PossessBot), m_SceneService.IsGameMode(), observed, m_SceneService.IsBot(observed)) };
+                    if (possessed) engine.m_PossessRequestStore.Publish(*possessed);
+                    else engine.m_PossessRequestStore.Clear();
                 }
 
                 // The scene point does not run for an inactive Viewer, so the reset (override, flying state, scene, poses, observed player) is made

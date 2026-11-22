@@ -432,4 +432,8 @@ export namespace Control::Client::Type
     inline constexpr std::uint32_t k_EventThrowGrenade{ 1u << 9 };
     inline constexpr std::uint32_t k_EventChordA{ 1u << 10 };
     inline constexpr std::uint32_t k_EventChordB{ 1u << 11 };
+
+    // Events of one frame only (a press, a step): switch weapon, switch grenade, zoom press, zoom steps in and out, reload and throw. A consumer that
+    // runs less often than the client (the ticks of a possessed bot, D360) latches them until it delivers them once. The held ones (3, 6, 7) are not.
+    inline constexpr std::uint32_t k_EventPulses{ 0x337u };
 }

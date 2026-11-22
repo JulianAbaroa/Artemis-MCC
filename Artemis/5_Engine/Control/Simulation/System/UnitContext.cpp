@@ -19,6 +19,7 @@ namespace
 
     using ::Control::Client::Type::k_NoZoom;
 
+    using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_NoHandle;
     using Engine::Control::Simulation::Type::k_AltPitchKinds;
     using Engine::Control::Simulation::Type::k_AltPitchMask;
@@ -232,7 +233,12 @@ namespace
             resolver.Take(UnitFact::AltControl, port.IsAltControl(source.PlayerHandle), context.IsAltControl);
         }
 
-        resolver.Take(UnitFact::ControlLocked, port.IsControlsLocked(source.InputUser, source.LocalIndex), context.IsControlLocked);
+        // note: 0x61830 indexes a table by the input user: a value outside the local users stays unknown, it is never passed to the engine.
+        if (source.InputUser >= 0 && std::cmp_less(source.InputUser, k_MaxLocalUsers))
+        {
+            resolver.Take(UnitFact::ControlLocked, port.IsControlsLocked(source.InputUser, source.LocalIndex), context.IsControlLocked);
+        }
+
         if (source.DualWieldFlags) context.DualWieldFlags = *source.DualWieldFlags;
     }
 

@@ -25,6 +25,13 @@ export namespace Blam::Layout::Action::Type::Offset
     // Throttle of the action (2 floats, -1 to 1): forward, then left.
     inline constexpr std::uintptr_t k_ActionThrottleOffset{ 0x1C };
 
+    // Analog fields the client copies from its block (0x628b0): the extra trigger (block +0xBC, 0 for most units, 1 for the boost of a
+    // Revenant), the events word (block +0x128: 1 reload, 2 throw grenade), and the fire and zoom triggers in [0, 1].
+    inline constexpr std::uintptr_t k_ActionTrigger4Offset{ 0x24 };
+    inline constexpr std::uintptr_t k_ActionEventsOffset{ 0x34 };
+    inline constexpr std::uintptr_t k_ActionFireTriggerOffset{ 0x38 };
+    inline constexpr std::uintptr_t k_ActionZoomTriggerOffset{ 0x3C };
+
     // Hold lanes of the action (uint32): a "down" bit per button and a "held" bit once it was down for the hold threshold of the
     // engine (A17 sec. 8, D121). The host takes the presses, holds and releases from them (0x4b534).
     inline constexpr std::uintptr_t k_ActionLanesOffset{ 0x40 };

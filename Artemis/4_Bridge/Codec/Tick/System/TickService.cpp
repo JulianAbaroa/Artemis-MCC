@@ -13,10 +13,16 @@ namespace
 
 namespace Bridge::Codec::Tick::System
 {
+    auto TickService::SetPossessedSource(std::function<std::uint32_t()> source) -> void
+    {
+        m_PossessedSource = std::move(source);
+    }
+
     auto TickService::Assemble(std::uint64_t generation) -> void
     {
         ::Tick tick;
         tick.Generation = generation;
+        if (m_PossessedSource) tick.PossessedPlayer = m_PossessedSource();
 
         if (m_DefinitionsStore.m_Sbsp.IsFrozen())
         {

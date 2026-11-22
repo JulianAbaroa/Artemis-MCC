@@ -34,6 +34,13 @@ export namespace Control::Action::Type
         // Down bits of the hold lanes the agent holds this tick (k_HoldLanes). The held bits are added by the hook (D121).
         std::uint32_t Lanes{ 0 };
 
+        // Fields of the client of a possessed bot (VW.9c.2 B): the events word of the action (+0x34: 1 reload, 2 throw grenade), the fire
+        // and zoom triggers and the extra trigger. Written only when not zero, so the other agents keep the empty action.
+        std::uint16_t ClientEvents{ 0 };
+        float FireTrigger{ 0.0f };
+        float ZoomTrigger{ 0.0f };
+        float Trigger4{ 0.0f };
+
         // Holds use, then releases it, in a cycle. Test only (A9 M5d: can a bot pick up the flag).
         bool IsUseTest{ false };
 
@@ -60,6 +67,13 @@ export namespace Control::Action::Type
 
         // Go to the next zoom level of the weapon in the hands, or back to no zoom after the last one.
         bool IsZoom{ false };
+    };
+
+    // What the client of a possessed bot asks of its unit in one tick: the override and the one-tick requests (VW.9c.2 B).
+    struct PossessedAction
+    {
+        ActionOverride Override{};
+        ClientRequests Requests{};
     };
 
     // Weapon slot an agent asked for, sent until the unit holds it or the ticks run out (the engine drops a request whose inventory

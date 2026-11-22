@@ -75,6 +75,11 @@ export namespace Bridge::Codec::Tick::System
             m_DefinitionsStore(definitionsStore), m_TickStore(tickStore) {}
         ~TickService() = default;
 
+        // Connects where the possessed player of each tick is read from (VW.9c.2 B). Without it the tick marks none.
+        // note: The one that composes the layers calls it before the AI thread starts. The source is called on the thread that assembles the tick,
+        // so it must be safe to call from there (an atomic read).
+        auto SetPossessedSource(std::function<std::uint32_t()> source) -> void;
+
         auto Assemble(std::uint64_t generation) -> void;
 
     private:
@@ -104,6 +109,7 @@ export namespace Bridge::Codec::Tick::System
         std::shared_ptr<const std::unordered_map<std::string, Sbsp>> m_Map{};
         std::shared_ptr<const std::unordered_map<std::string, Scnr>> m_Limits{};
         std::int32_t m_MapId{};
+        std::function<std::uint32_t()> m_PossessedSource{};
         std::shared_ptr<const std::unordered_map<std::string, Sddt>> m_Designs{};
     };
 }

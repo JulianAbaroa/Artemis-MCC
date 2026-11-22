@@ -7,6 +7,7 @@ module DevTools.Viewer.Hud.System;
 import Common.Engine.Type;
 import Engine.Base.Memory.Type;
 import Engine.Base.Pov.Type;
+import Engine.Control.Input.Type;
 import Engine.Render.Type;
 import Perception.Players.Type;
 import DevTools.Viewer.Latency.Type;
@@ -21,6 +22,7 @@ namespace
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::SceneStatus;
     using Engine::Base::Pov::Type::PovStatus;
+    using Engine::Control::Input::Type::PossessStatus;
     using Perception::Players::Type::Player;
 
     using Common::Engine::Type::k_NoHandle;
@@ -171,6 +173,7 @@ namespace DevTools::Viewer::Hud::System
         this->DrawOverride();
         this->DrawFirstPersonHook();
         this->DrawPov(tick);
+        this->DrawPossession(tick);
         this->DrawFirstPersonMask();
         this->DrawLatency();
     }
@@ -267,6 +270,25 @@ namespace DevTools::Viewer::Hud::System
         ImGui::TextColored(status.Faults == 0 ? k_Info : k_Red, "%s req 0x%08X engine 0x%08X local 0x%08X calls %u reasserts %u loadout acks %u faults %u%s",
             player ? player->Name.c_str() : "?", status.RequestedHandle, status.EngineHandle, status.LocalHandle, status.Calls, status.Reasserts, status.LoadoutAcks, status.Faults,
             m_SceneService.IsPovPlayerDead(status) ? " dead" : "");
+    }
+
+    auto HudService::DrawPossession(const std::shared_ptr<const Tick>& tick) -> void
+    {
+        const PossessStatus status{ m_PossessionStore.GetStatus() };
+
+        ImGui::Text("Possess:");
+        ImGui::SameLine();
+
+        if (status.Player == k_NoHandle)
+        {
+            ImGui::TextDisabled("off");
+            return;
+        }
+
+        const Player* player{ tick && tick->Players ? tick->Players->Find(status.Player) : nullptr };
+
+        ImGui::TextColored(status.IsUnitMissing || status.Unsupported != 0 ? k_Orange : k_Info, "%s ticks %llu delivered %llu unsupported %llu%s",
+            player ? player->Name.c_str() : "?", status.Ticks, status.Delivered, status.Unsupported, status.IsUnitMissing ? " no unit" : "");
     }
 
     auto HudService::DrawFirstPersonMask() -> void

@@ -48,6 +48,13 @@ namespace DevTools::Viewer::Roster::System
         return static_cast<std::size_t>(next < 0 ? next + size : next);
     }
 
+    auto DecidePossession(bool isOptionOn, bool isGameMode, std::uint32_t observed, bool isObservedBot) -> std::optional<std::uint32_t>
+    {
+        if (!isOptionOn || !isGameMode || !isObservedBot || observed == 0xFFFFFFFF) return std::nullopt;
+
+        return observed;
+    }
+
     auto StripOf(std::size_t count, std::size_t current) -> RosterStrip
     {
         RosterStrip strip{ .Current = current };
