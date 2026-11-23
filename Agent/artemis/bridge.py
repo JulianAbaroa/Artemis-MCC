@@ -6,7 +6,7 @@ writes the action of each player Python controls. Windows only (named shared mem
     bridge = Bridge(discover()[0]["pid"])
     bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, agents=mask)
     tick = bridge.wait_tick()
-    bridge.write_actions(tick.action_tick, {index: Action(handle=..., yaw=..., forward=1.0)})
+    bridge.write_actions(tick.action_tick, {index: Action(handle=..., forward=1.0, yaw_delta=0.1)})
 
 The layout comes from bridge_layout.py, generated from Data/Bridge/Bridge.xml: a region with another LayoutHash is refused.
 """
@@ -87,16 +87,35 @@ def discover() -> list:
     return found
 
 
+# The controls of an AgentInput, bit 0 to 12 of Level and Edge (Diseno/22 sec. 2). Bits 13 to 31 are 0.
+CONTROLS = ("Jump", "Crouch", "Fire", "Zoom", "ZoomIn", "ZoomOut", "Melee", "Ability", "ThrowGrenade", "Use", "SwitchWeapon",
+            "SwitchGrenade", "Reload")
+# The four states of a control in one window as (Level, Edge): nothing, tap, press and hold, still held.
+CONTROL_STATES = ((0, 0), (0, 1), (1, 1), (1, 0))
+
+
 @dataclass
 class Action:
-    """Action of one player for one decision (D109). Yaw and pitch are absolute radians, the throttle goes from -1 to 1."""
+    """AgentInput of one player for one decision (D362, D365): what it does during the d ticks of the window. The axes go from -1 to 1;
+    yaw_delta and pitch_delta are radians for the whole window. level and edge have one bit per control (CONTROLS)."""
     handle: int
-    buttons: int = 0
-    yaw: float = 0.0
-    pitch: float = 0.0
     forward: float = 0.0
     left: float = 0.0
-    lanes: int = 0
+    yaw_delta: float = 0.0
+    pitch_delta: float = 0.0
+    level: int = 0
+    edge: int = 0
+
+
+def PackControls(states: dict):
+    """({control name: state 0-3 of CONTROL_STATES}) -> (level, edge). A control left out is nothing."""
+    level = edge = 0
+    for name, state in states.items():
+        bit = 1 << CONTROLS.index(name)
+        is_level, is_edge = CONTROL_STATES[int(state)]
+        level |= bit if is_level else 0
+        edge |= bit if is_edge else 0
+    return level, edge
 
 
 class PublishedTick:
@@ -124,6 +143,9 @@ class PublishedTick:
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])
         self.action_tick = int(self.header["ActionTick"])
+        # The player the user possesses (NO_HANDLE when none) and what it did in the last closed window of d ticks (D364): imitation data.
+        self.possessed_player = int(self.header["PossessedPlayer"])
+        self.possessed_input = self.header["PossessedInput"]
         self.match_id = int(self.header["MatchId"])
         self.received_qpc = received_qpc
 
@@ -231,8 +253,8 @@ class Bridge:
                     sparse=None):
         """Asks for the owner, the mode, N, d, the time scale and the players (mask of player table indices) Python controls.
         Artemis applies them in its next control update (50 ms) and reports what is in effect in the Artemis part of the control.
-        turn_limit: most radians per tick the facing of each agent turns toward the yaw and pitch of its action (D114), 0 = straight
-        to them. Artemis reads it when it applies each decision, so a decision applied after the change already turns with it.
+        turn_limit: most radians per tick and per axis the look of each agent may ask (D363), 0 = no limit. What it cuts is lost, so a
+        YawDelta above turn_limit * d does not arrive whole. Artemis reads it when it applies each decision.
         sparse: True asks Artemis to run its pipeline only on decision ticks (Q101), False on every tick. It is only a request: the
         effective one is is_sparse. Artemis keeps every tick while a recorder or a tool needs them, and while no client is connected."""
         if sparse is not None:
@@ -433,15 +455,15 @@ class Bridge:
         return fresh
 
     def write_actions(self, decision_tick: int, actions: dict):
-        """Writes the actions of one decision ({player table index: Action}) and publishes it. Players left out keep their previous
-        action. Must be called for every tick in Lockstep, even with no actions, or the game waits for it."""
+        """Writes the actions of one decision ({player table index: Action}) and publishes it. Players left out keep what Artemis has:
+        it repeats the held controls without look or taps (D363). Must be called for every tick in Lockstep, even with no actions, or the game waits for it."""
         for index, action in actions.items():
             # The slot is marked as being written (DecisionTick 0) until its fields are complete, so Artemis never copies it half done.
             self.actions["DecisionTick"][index] = 0
             self.actions["PlayerHandle"][index] = action.handle
-            # note: Bridge v2 (D365) only has the AgentInput. Until the Python side moves to it (VW.9c.3 D3) only the move axes of the old Action reach Artemis.
-            self.actions["Input"]["MoveForward"][index] = action.forward
-            self.actions["Input"]["MoveLeft"][index] = action.left
+            for field, value in (("MoveForward", action.forward), ("MoveLeft", action.left), ("YawDelta", action.yaw_delta),
+                                 ("PitchDelta", action.pitch_delta), ("Level", action.level), ("Edge", action.edge)):
+                self.actions["Input"][field][index] = value
             self.actions["DecisionTick"][index] = decision_tick
         # note: x64 keeps the order of stores, so Artemis sees the actions once it sees the sequence.
         self._action_sequence.value = decision_tick

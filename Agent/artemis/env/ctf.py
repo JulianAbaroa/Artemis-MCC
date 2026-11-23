@@ -18,25 +18,37 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from ..bridge import Action, Bridge, BridgeMode, BridgeOwner
+from ..bridge import CONTROL_STATES, CONTROLS, Action, Bridge, BridgeMode, BridgeOwner, PackControls
 from ..bridge_layout import NO_HANDLE, NOT_LOCAL, BridgePhase, BridgeSetupResult
 from ..match_setup import MatchSetup, is_relative_roster, resolve_roster
 from ..semantic import Event, FlagState
 
 TWO_PI = 2 * math.pi
 METERS = 50.0
-PITCH_LIMIT = 1.4
-CROUCH_BIT = 1 << 0
-JUMP_BIT = 1 << 1
 
-# MultiDiscrete branches: forward, left, yaw delta, pitch delta, jump, crouch.
-ACTION_NVEC = (3, 3, 9, 5, 2, 2)
+# Input profiles (D365, Diseno/22 5.3): the controls the policy may use. The others stay on "nothing" and are not in the action space.
+PROFILES = {"keyboard": CONTROLS, "stage0": ("Jump", "Crouch")}
+# MultiDiscrete branches: forward, left, yaw delta, pitch delta, then one of the four states of CONTROL_STATES per control of the profile.
+MOVE_NVEC = (3, 3, 9, 5)
 THROTTLE = (-1.0, 0.0, 1.0)
 YAW_STEPS = (-1.0, -0.5, -0.25, -0.1, 0.0, 0.1, 0.25, 0.5, 1.0)
 PITCH_STEPS = (-0.5, -0.2, 0.0, 0.2, 0.5)
 # Entries of the state before the one-hot of the last action: 19 = time left, 20 and 21 = score left of the own and the enemy team.
 STATE_SIZE = 22
-OBS_SIZE = STATE_SIZE + sum(ACTION_NVEC)
+
+
+def ActionNvec(profile):
+    """Sizes of the MultiDiscrete branches of a profile."""
+    return MOVE_NVEC + (len(CONTROL_STATES),) * len(PROFILES[profile])
+
+
+def MakeAction(handle, branches, profile, per_decision):
+    """The bridge Action of one decision from the branches of the MultiDiscrete. per_decision: radians of a full yaw / pitch step."""
+    states = dict(zip(PROFILES[profile], (int(b) for b in branches[len(MOVE_NVEC):])))
+    level, edge = PackControls(states)
+    return Action(handle=handle, forward=THROTTLE[branches[0]], left=THROTTLE[branches[1]],
+                  yaw_delta=YAW_STEPS[branches[2]] * per_decision, pitch_delta=PITCH_STEPS[branches[3]] * per_decision,
+                  level=level, edge=edge)
 
 
 @dataclass
@@ -45,6 +57,7 @@ class CtfConfig:
     latency: int = 4
     scale: float = 0.0
     turn_limit: float = 0.1
+    profile: str = "stage0"
     # Asks Artemis for its pipeline only on decision ticks (Q101). Off by default: the checks of env_check read every tick.
     sparse: bool = False
     max_seconds: float = 120.0
@@ -73,11 +86,10 @@ def Vec(v):
 class AgentState:
     """What the environment keeps of one agent across the steps of an episode."""
 
-    def __init__(self, handle):
+    def __init__(self, handle, nvec):
         self.handle = handle
         self.index = handle & 0xFFFF
-        self.target = None
-        self.last_action = np.zeros(len(ACTION_NVEC), dtype=np.int64)
+        self.last_action = np.zeros(len(nvec), dtype=np.int64)
         self.phi = None
         self.is_taken_rewarded = False
         # BaseTeam of the base the agent plays from, as of the last observation (see CtfEnv._side_of).
@@ -94,6 +106,10 @@ class CtfEnv:
         """setups: an object with next_setup() (a TrainingList). A reset() that is not given a setup of its own asks for the next one."""
         self.bridge = bridge
         self.config = config or CtfConfig()
+        if self.config.profile not in PROFILES:
+            raise ValueError(f"unknown input profile {self.config.profile!r} (have: {', '.join(PROFILES)})")
+        self.nvec = ActionNvec(self.config.profile)
+        self.obs_size = STATE_SIZE + sum(self.nvec)
         self.setups = setups
         self.agents = []
         self.states = {}
@@ -250,7 +266,7 @@ class CtfEnv:
                 info["roster"] = {"value": asked.roster, "result": result}
             info["setup"] = {"result": result, "round": final.round, "reason": final.reason}
         self.agents = [int(p["Handle"]) for p in players]
-        self.states = {handle: AgentState(handle) for handle in self.agents}
+        self.states = {handle: AgentState(handle, self.nvec) for handle in self.agents}
         for player in players:
             self.states[int(player["Handle"])].side = self._side_of(int(player["Team"]))
         mask = 0
@@ -269,6 +285,8 @@ class CtfEnv:
         c = self.config
         players = self._players()
         bridge_actions = {}
+        # A look delta above turn_limit * d (the window is min(N, d) ticks) is cut by Artemis and lost: a full step stays under it.
+        per_decision = min(c.period, c.latency) * c.turn_limit if c.turn_limit > 0 else math.pi / 4
         for handle, branches in actions.items():
             state = self.states[handle]
             player = players.get(handle)
@@ -276,15 +294,7 @@ class CtfEnv:
             state.last_action = branches
             if player is None:
                 continue
-            if state.target is None or not self._is_playing(player):
-                state.target = AimAngles(player)
-            per_decision = c.period * c.turn_limit if c.turn_limit > 0 else math.pi / 4
-            yaw = Wrap(state.target[0] + YAW_STEPS[branches[2]] * per_decision)
-            pitch = float(np.clip(state.target[1] + PITCH_STEPS[branches[3]] * per_decision, -PITCH_LIMIT, PITCH_LIMIT))
-            state.target = (yaw, pitch)
-            buttons = (JUMP_BIT if branches[4] else 0) | (CROUCH_BIT if branches[5] else 0)
-            bridge_actions[state.index] = Action(handle=handle, buttons=buttons, yaw=yaw, pitch=pitch,
-                                                 forward=THROTTLE[branches[0]], left=THROTTLE[branches[1]])
+            bridge_actions[state.index] = MakeAction(handle, branches, c.profile, per_decision)
         self._next_tick(bridge_actions)
 
         rewards = {handle: 0.0 for handle in self.agents}
@@ -372,11 +382,11 @@ class CtfEnv:
 
     def _observe(self, handle):
         """Observation vector of one agent and the shaping potential of its state (None while it has no body)."""
-        obs = np.zeros(OBS_SIZE, dtype=np.float32)
+        obs = np.zeros(self.obs_size, dtype=np.float32)
         player = self._players().get(handle)
         state = self.states[handle]
         offset = STATE_SIZE
-        for branch, n in zip(state.last_action, ACTION_NVEC):
+        for branch, n in zip(state.last_action, self.nvec):
             obs[offset + int(branch)] = 1.0
             offset += n
         obs[19] = self._time_left()

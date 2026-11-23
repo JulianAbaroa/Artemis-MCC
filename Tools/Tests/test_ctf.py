@@ -5,13 +5,13 @@ ticks of a list. The real Bridge needs Windows shared memory, so a stand-in modu
 of an agent comes from the OwnerTeam of the stands, and the flag state from the rows of the tick. P.6 (D255): the clock and the score
 of the round come from the Match.
 """
+import ctypes
 import importlib
 import math
 import os
 import sys
-import types
-from dataclasses import dataclass
 from typing import NamedTuple
+from unittest import mock
 
 import numpy as np
 import pytest
@@ -24,16 +24,6 @@ FLAG_RED, FLAG_BLUE, STAND_RED, STAND_BLUE = 0xE5A00001, 0xE5A00002, 0xE5A00003,
 RED, BLUE = 0, 1
 NONE = 0xFFFFFFFF
 HOME, CARRIED, DROPPED = 0, 1, 2
-
-
-@dataclass
-class FakeAction:
-    handle: int
-    buttons: int = 0
-    yaw: float = 0.0
-    pitch: float = 0.0
-    forward: float = 0.0
-    left: float = 0.0
 
 
 class FakeTick:
@@ -111,10 +101,10 @@ def ctf(monkeypatch):
     for name in [n for n in sys.modules if n == "artemis" or n.startswith("artemis.")]:
         monkeypatch.delitem(sys.modules, name)
     layout = importlib.import_module("artemis.bridge_layout")
-    fake = types.ModuleType("artemis.bridge")
-    fake.Action, fake.Bridge = FakeAction, FakeBridge
-    fake.BridgeMode, fake.BridgeOwner = layout.BridgeMode, layout.BridgeOwner
-    monkeypatch.setitem(sys.modules, "artemis.bridge", fake)
+    # The real module (its Action, CONTROLS, PackControls) with kernel32 stood in, and a fake Bridge in place of the one on shared memory.
+    monkeypatch.setattr(ctypes, "WinDLL", lambda *args, **kwargs: mock.MagicMock(), raising=False)
+    bridge_module = importlib.import_module("artemis.bridge")
+    bridge_module.Bridge = FakeBridge
     module = importlib.import_module("artemis.env.ctf")
     module.layout = layout
     RESULTS.update({value: layout.BridgeSetupResult(value) for value in (1, 2, 3, 4)})
@@ -155,7 +145,7 @@ def Reset(ctf, *frames):
 def test_enemy_flag_at_its_stand_is_home(ctf):
     env, obs = Reset(ctf, Frame(ctf))
     assert env.states[P0].side == RED
-    assert obs.shape == (ctf.OBS_SIZE,)
+    assert obs.shape == (ctf.STATE_SIZE + sum(ctf.ActionNvec("stage0")),)
     assert obs[11] == 1.0 and obs[12] == 0.0 and obs[6] == 0.0
     assert obs[18] == 1.0
     assert obs[10] == pytest.approx(95.0 / ctf.METERS)
@@ -218,6 +208,20 @@ def test_team_that_owns_no_stand_has_no_side_and_sees_no_flags(ctf):
     assert not obs[7:19].any()
 
 
+def test_a_step_writes_the_agent_input_of_the_profile(ctf):
+    bridge = FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, action_tick=2)])
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(turn_limit=0.1))
+    env.reset()
+    # forward, left nothing, yaw to the right, pitch to the middle, jump press and hold, crouch nothing
+    env.step({P0: np.array([2, 1, 8, 2, 2, 0])})
+    tick, actions = bridge.written[-1]
+    action = actions[P0 & 0xFFFF]
+    assert tick == 1 and action.handle == P0
+    assert (action.forward, action.left) == (1.0, 0.0)
+    assert action.yaw_delta == pytest.approx(4 * 0.1) and action.pitch_delta == 0.0  # N = d = 4 ticks of the turn limit
+    assert (action.level, action.edge) == (1, 1)
+
+
 def test_rewards_come_from_the_flag_events_of_artemis(ctf):
     def Event(kind, cause=P0, effect=NONE, sequence=1):
         return {"Sequence": sequence, "Kind": kind, "CausePlayer": cause, "EffectPlayer": effect}
@@ -230,7 +234,7 @@ def test_rewards_come_from_the_flag_events_of_artemis(ctf):
     captured = Frame(ctf, action_tick=4, events=[Event(ctf.Event.FlagCaptured, sequence=4)])
     env = ctf.CtfEnv(FakeBridge([start, taken, again, captured]))
     env.reset()
-    nothing = np.zeros(len(ctf.ACTION_NVEC), dtype=np.int64)
+    nothing = np.zeros(len(ctf.ActionNvec("stage0")), dtype=np.int64)
     config = env.config
     _, rewards, _, _, infos = env.step({P0: nothing})
     assert infos[P0]["events"] == ["FlagTaken"]
@@ -291,7 +295,7 @@ def test_no_score_to_win_gives_no_score_left(ctf):
 
 
 def test_the_cap_of_the_environment_truncates_and_the_end_of_the_round_terminates(ctf):
-    nothing = np.zeros(len(ctf.ACTION_NVEC), dtype=np.int64)
+    nothing = np.zeros(len(ctf.ActionNvec("stage0")), dtype=np.int64)
     # Cap of 60 s reached by the round clock: cut with end_round, truncated.
     frames = [Frame(ctf, match=Clock(0)), Frame(ctf, action_tick=2, match=Clock(3600))]
     env = ctf.CtfEnv(FakeBridge(frames), ctf.CtfConfig(max_seconds=60.0))
@@ -555,7 +559,7 @@ def test_reset_gives_up_after_reset_timeout_when_no_tick_comes_and_the_phase_say
     env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.25, reset_timeout=1.0))
     env.reset()
     with pytest.raises(RuntimeError, match="no tick for"):
-        env.step({P0: np.zeros(len(ctf.ACTION_NVEC), dtype=np.int64)})
+        env.step({P0: np.zeros(len(ctf.ActionNvec("stage0")), dtype=np.int64)})
     assert bridge.waits <= 6
 
 

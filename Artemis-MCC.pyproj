@@ -96,6 +96,7 @@
     <Compile Include="Tools\test.py" />
     <Compile Include="Tools\Tests\conftest.py" />
     <Compile Include="Tools\Tests\tdump_writer.py" />
+    <Compile Include="Tools\Tests\test_agent_input.py" />
     <Compile Include="Tools\Tests\test_components.py" />
     <Compile Include="Tools\Tests\test_bridge_map.py" />
     <Compile Include="Tools\Tests\test_bridge_preset.py" />

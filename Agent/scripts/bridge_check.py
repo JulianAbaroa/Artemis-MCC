@@ -6,9 +6,10 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
     info                                   The open regions and the control block of the newest one.
     ticks [--count 60] [--scale S]        T1/T2: consecutive ticks, layout, copies that hit a write, clock of the ticks.
     run [--mode lockstep|free] [--seconds 60] [--agents bots|all] [--scale S] [--period N] [--latency D] [--crash-after K]
-                                           T3-T5: trivial policy (walk forward, turn --yaw-step rad per decision), the decision each
-                                           player had applied (known answer), the aim against the yaw sent, latencies, ticks per
-                                           second. --crash-after K exits without closing after K decisions (the client dies).
+                                           T3-T5: trivial policy (walk forward, YawDelta --yaw-step rad per decision), the decision
+                                           each player had applied (known answer) and how far its aim turned between two decisions
+                                           against the delta sent (the AgentInput applied), the imitation block when the user possesses
+                                           a player (D364), latencies, ticks per second. --crash-after K exits without closing after K decisions (the client dies).
         [--pause-every K --pause-seconds S]  P.5 (D143): every K decisions holds a pause of S s, alternating after answering the
                                            decision and before answering it (the game waits inside the tick). No tick may run
                                            during a pause and the known answer must hold across it.
@@ -42,7 +43,7 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            "preset" and "map" are the same request with one field.
     turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
                                            D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
-                                           pitch +-0.4). The aim seen between two ticks never turns faster than --turn-limit rad
+                                           pitch +-0.4), asked as YawDelta / PitchDelta in steps under the turn limit. The aim seen between two ticks never turns faster than --turn-limit rad
                                            per tick and reaches each target before the next one.
 Exit code 0 when every check of the command passes.
 """
@@ -210,7 +211,7 @@ def Run(args):
             print(f"FAIL no match running after {args.wait} s")
             return 1
         bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep if lockstep else BridgeMode.Free,
-                           period=args.period, latency=args.latency, scale=args.scale, agents=0, sparse=args.sparse)
+                           period=args.period, latency=args.latency, scale=args.scale, agents=0, sparse=args.sparse, turn_limit=0.0)
         if not bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1):
             print("FAIL Artemis did not hand the instance over")
             return 1
@@ -219,7 +220,10 @@ def Run(args):
         period, latency = args.period, args.latency
         before = bridge.counters()
         freq = bridge.qpc_frequency
-        mask, yaws, matches = 0, {}, {}
+        mask, matches = 0, {}
+        # Per (match, player): the aim yaw of the previous decision and the decisions in a row it was seen alive with a body.
+        seen_aim, streak, sent = {}, {}, set()
+        possessed_ticks = possessed_moves = 0
         recv, respond = [], []
         applied_ok = applied_total = aim_ok = aim_total = decisions = 0
         first_pos, last_pos = {}, {}
@@ -246,19 +250,33 @@ def Run(args):
             for p in agents:
                 new_mask |= 1 << (int(p["Handle"]) & 0xFFFF)
             entities = {int(e["Handle"]): e for e in published.entities}
+            # note: the imitation block (D364): PossessedPlayer is a handle, PossessedInput what that player did in the last closed window.
+            if published.possessed_player != L.NO_HANDLE:
+                possessed_ticks += 1
+                pi = published.possessed_input
+                possessed_moves += bool(pi["MoveForward"] or pi["MoveLeft"] or pi["YawDelta"] or pi["PitchDelta"] or pi["Level"] or pi["Edge"])
             for p in agents:
                 index = int(p["Handle"]) & 0xFFFF
                 applied = int(p["AppliedDecision"])
                 previous = tick - period
-                if (mask >> index) & 1 and previous in yaws:
+                if (mask >> index) & 1 and (published.match_id, previous) in sent:
                     applied_total += 1
                     applied_ok += applied == previous
-                if applied in yaws and int(p["HasBody"]) and int(p["IsAlive"]):
-                    aim = p["Aim"]
-                    seen = math.atan2(float(aim["Y"]), float(aim["X"])) % (2 * math.pi)
-                    diff = abs((seen - yaws[applied] + math.pi) % (2 * math.pi) - math.pi)
-                    aim_total += 1
-                    aim_ok += diff < AIM_TOLERANCE
+                key = (published.match_id, int(p["Handle"]))
+                if int(p["HasBody"]) and int(p["IsAlive"]):
+                    seen = AimAngles(p)[0]
+                    streak[key] = streak.get(key, 0) + 1
+                    # Known answer of the AgentInput applied: with yaw_step per decision and no turn limit the aim turns yaw_step between
+                    # two decisions in a row (the delta of the window of the previous decision has been played). The first decisions of
+                    # a life or of the attach have no previous window to play, so they are not counted.
+                    if streak[key] > 3 and key in seen_aim:
+                        turned = (seen - seen_aim[key] + math.pi) % (2 * math.pi) - math.pi
+                        aim_total += 1
+                        aim_ok += abs(turned - args.yaw_step) < AIM_TOLERANCE
+                    seen_aim[key] = seen
+                else:
+                    streak.pop(key, None)
+                    seen_aim.pop(key, None)
                 body = entities.get(int(p["BipedHandle"]))
                 if body is not None and int(p["IsAlive"]):
                     position = np.array([float(body["WorldOrigin"][k]) for k in ("X", "Y", "Z")])
@@ -268,10 +286,6 @@ def Run(args):
             if new_mask != mask:
                 bridge.set_control(agents=new_mask)
                 mask = new_mask
-            yaw = ((tick // period) * args.yaw_step) % (2 * math.pi)
-            yaws[tick] = yaw
-            for old in [t for t in yaws if t < tick - 16 * period]:
-                del yaws[old]
             is_pause = bool(args.pause_every) and decisions > 0 and decisions % args.pause_every == 0
             is_answered = len(pauses) % 2 == 0
             if is_pause and not is_answered:
@@ -279,8 +293,10 @@ def Run(args):
                 pauses.append(("before answering", tick, HoldPause(bridge, args.pause_seconds)))
                 paused_seconds += time.time() - pause_start
                 pause_just_ended = True
-            bridge.write_actions(tick, {int(p["Handle"]) & 0xFFFF: Action(handle=int(p["Handle"]), yaw=yaw, forward=1.0)
+            bridge.write_actions(tick, {int(p["Handle"]) & 0xFFFF: Action(handle=int(p["Handle"]), forward=1.0, yaw_delta=args.yaw_step)
                                         for p in agents})
+            sent.add((published.match_id, tick))
+            sent -= {s for s in sent if s[1] < tick - 16 * period}
             if not is_pause:
                 respond.append((qpc() - int(published.header["PublishQpc"])) / freq * 1000)
             if is_pause and is_answered:
@@ -304,8 +320,9 @@ def Run(args):
               f"in {elapsed:.1f} s, {ticks / elapsed:.0f} ticks/s, matches {len(matches)}")
         for match, stats in matches.items():
             print(f"  match {match}: {stats['decisions']} decisions, ticks {stats['first']}-{stats['last']}, up to {stats['players']} agents")
-        print(f"known answer: applied = previous decision {applied_ok}/{applied_total}, aim = yaw sent {aim_ok}/{aim_total}, "
+        print(f"known answer: applied = previous decision {applied_ok}/{applied_total}, turned = yaw delta sent {aim_ok}/{aim_total}, "
               f"farthest from the start min {min(moved) if moved else 0:.1f} m over {len(moved)} lives")
+        print(f"possessed block: {possessed_ticks} ticks with a PossessedPlayer, {possessed_moves} of them with a non-empty PossessedInput")
         print(f"latency ms: publish->read p50 {Percentile(recv, 50):.3f} p99 {Percentile(recv, 99):.3f} | publish->answer "
               f"p50 {Percentile(respond, 50):.3f} p99 {Percentile(respond, 99):.3f}")
         print(f"game waits {waits} avg {(delta['LockstepWaitNs'] / waits / 1e6) if waits else 0:.3f} ms, timeouts "
@@ -332,7 +349,7 @@ def Run(args):
                        ("no Lockstep timeouts", delta["LockstepTimeouts"] == 0),
                        ("no tick skipped", delta["PublishedTicks"] - decisions <= 1)]
         if aim_total:
-            checks.append(("aim = yaw sent >= 95%", aim_ok >= 0.95 * aim_total))
+            checks.append(("turned = yaw delta sent >= 95%", aim_ok >= 0.95 * aim_total))
         failed = [name for name, ok in checks if not ok]
         print("PASS" if not failed else "FAIL " + ", ".join(failed))
         return 0 if not failed else 1
@@ -428,7 +445,12 @@ def Turn(args):
             return 1
         if not CheckSparse(bridge, args):
             return 1
-        targets, last_aim, over = {}, {}, []
+        # targets: the aim each agent has to reach (absolute, for the check). pending: what is left to ask of it as YawDelta / PitchDelta,
+        # open loop (the aim seen lags the decision by d ticks). A delta above limit * window ticks would be cut and lost, so it goes in
+        # steps of 90% of that.
+        targets, pending, last_aim, over = {}, {}, {}, []
+        window = min(period, args.latency)
+        step = 0.9 * limit * window if limit > 0 else math.inf
         mask = decisions = settled_ok = settled_total = 0
         max_rate = 0.0
         start = time.time()
@@ -449,6 +471,8 @@ def Turn(args):
                 new_mask |= 1 << index
                 if not (int(p["HasBody"]) and int(p["IsAlive"])):
                     last_aim.pop(index, None)
+                    targets.pop(index, None)
+                    pending.pop(index, None)
                     continue
                 yaw, pitch = AimAngles(p)
                 if index in last_aim:
@@ -462,13 +486,19 @@ def Turn(args):
                 last_aim[index] = (tick, yaw, pitch)
                 if index not in targets:
                     targets[index] = (yaw, 0.0)
+                    pending[index] = [0.0, -pitch]
                 elif is_change:
                     target_yaw, target_pitch = targets[index]
                     settled_total += 1
                     settled_ok += AngleGap(yaw, target_yaw) < AIM_TOLERANCE and abs(pitch - target_pitch) < AIM_TOLERANCE
-                    targets[index] = ((target_yaw + args.turn_step) % (2 * math.pi), -target_pitch if target_pitch else 0.4)
-                target_yaw, target_pitch = targets[index]
-                actions[index] = Action(handle=int(p["Handle"]), yaw=target_yaw, pitch=target_pitch)
+                    new_pitch = -target_pitch if target_pitch else 0.4
+                    targets[index] = ((target_yaw + args.turn_step) % (2 * math.pi), new_pitch)
+                    pending[index][0] += args.turn_step
+                    pending[index][1] += new_pitch - target_pitch
+                send = [max(-step, min(step, value)) for value in pending[index]]
+                pending[index][0] -= send[0]
+                pending[index][1] -= send[1]
+                actions[index] = Action(handle=int(p["Handle"]), yaw_delta=send[0], pitch_delta=send[1])
             if new_mask != mask:
                 bridge.set_control(agents=new_mask)
                 mask = new_mask

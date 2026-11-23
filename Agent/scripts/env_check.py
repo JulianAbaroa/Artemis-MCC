@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np  # noqa: E402
 
 from artemis.bridge import Bridge, discover  # noqa: E402
-from artemis.env import ACTION_NVEC, CtfConfig, CtfEnv  # noqa: E402
+from artemis.env import PROFILES, ActionNvec, CtfConfig, CtfEnv  # noqa: E402
 from artemis.env.ctf import YAW_STEPS  # noqa: E402
 from artemis.training import load_list  # noqa: E402
 
@@ -26,14 +26,15 @@ from artemis.training import load_list  # noqa: E402
 def Seek(obs, config, rng):
     vector = obs[14:16] if obs[6] > 0.5 else obs[7:9]
     error = math.atan2(float(vector[1]), float(vector[0]))
-    per_decision = config.period * config.turn_limit
+    per_decision = min(config.period, config.latency) * config.turn_limit
     yaw_bin = int(np.argmin([abs(step * per_decision - error) for step in YAW_STEPS]))
-    jump = int(rng.random() < 0.05)
-    return np.array([2, 1, yaw_bin, 2, jump, 0])
+    # Every control of the profile on "nothing" (state 0) but Jump, which taps now and then (state 1).
+    states = [1 if name == "Jump" and rng.random() < 0.05 else 0 for name in PROFILES[config.profile]]
+    return np.array([2, 1, yaw_bin, 2, *states])
 
 
 def Random(obs, config, rng):
-    return np.array([rng.integers(n) for n in ACTION_NVEC])
+    return np.array([rng.integers(n) for n in ActionNvec(config.profile)])
 
 
 def Main():
@@ -43,6 +44,7 @@ def Main():
     parser.add_argument("--max-seconds", type=float, default=90.0)
     parser.add_argument("--scale", type=float, default=0.0)
     parser.add_argument("--turn-limit", type=float, default=0.1)
+    parser.add_argument("--profile", choices=sorted(PROFILES), default="stage0", help="input profile of the policy (Diseno/22 5.3)")
     parser.add_argument("--sparse", action="store_true", help="ask Artemis for its pipeline only on decisions (default: every tick)")
     parser.add_argument("--list", help="training list (Data/Training/<name>.json): every episode starts with its next setup")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
@@ -52,7 +54,8 @@ def Main():
     if not regions:
         print("FAIL no open region (is MCC running with Artemis?)")
         return 2
-    config = CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit, sparse=args.sparse)
+    config = CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit, sparse=args.sparse,
+                       profile=args.profile)
     policy = Seek if args.policy == "seek" else Random
     rng = np.random.default_rng(0)
     failures = []

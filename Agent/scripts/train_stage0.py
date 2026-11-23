@@ -12,7 +12,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from artemis.bridge import Bridge, discover  # noqa: E402
-from artemis.env import ACTION_NVEC, OBS_SIZE, CtfConfig, CtfEnv  # noqa: E402
+from artemis.env import PROFILES, CtfConfig, CtfEnv  # noqa: E402
 from artemis.train.ppo import Ppo, PpoConfig  # noqa: E402
 from artemis.training import load_list  # noqa: E402
 
@@ -26,6 +26,7 @@ def Main():
     parser.add_argument("--scale", type=float, default=10.0)
     parser.add_argument("--max-seconds", type=float, default=60.0, help="game seconds before an episode is cut")
     parser.add_argument("--turn-limit", type=float, default=0.1)
+    parser.add_argument("--profile", choices=sorted(PROFILES), default="stage0", help="input profile of the policy (Diseno/22 5.3)")
     parser.add_argument("--no-sparse", action="store_true", help="ask Artemis for its pipeline on every tick (default: only on decisions)")
     parser.add_argument("--list", help="training list (Data/Training/<name>.json): the setup of every episode comes from it")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
@@ -49,12 +50,12 @@ def Main():
     setups = load_list(args.list, seed=args.seed) if args.list else None
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit,
-                                          sparse=not args.no_sparse), setups)
+                                          sparse=not args.no_sparse, profile=args.profile), setups)
         if not env.take_control():
             Log("FAIL Artemis did not hand the instance over")
             return 1
         try:
-            ppo = Ppo(env, bridge, OBS_SIZE, ACTION_NVEC, PpoConfig(steps=args.steps), log=Log)
+            ppo = Ppo(env, bridge, env.obs_size, env.nvec, PpoConfig(steps=args.steps), log=Log)
             ppo.train(args.updates, checkpoint=os.path.join(folder, "policy.pt"))
         finally:
             env.release()
