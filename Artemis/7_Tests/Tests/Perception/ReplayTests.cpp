@@ -68,6 +68,10 @@ namespace
     using Tests::Support::Pipeline::k_BipedHandle;
 
     constexpr std::string_view k_JobsVariable{ "ARTEMIS_REPLAY_JOBS" };
+
+    // note: More passes at once share memory bandwidth and cache: on the 10-core laptop (RB.1, 2026-11-23) ReplayTests took 224 s with
+    // the 16 hardware threads, 147 s with 6, 118 s with 4 and 132 s with 3.
+    constexpr std::size_t k_DefaultReplayJobs{ 4 };
     constexpr std::string_view k_SyntheticMap{ "synthetic.map" };
 
     // A recording in memory: the two files of one session.
@@ -869,7 +873,7 @@ namespace
         return films;
     }
 
-    // return: How many passes may run at once: ARTEMIS_REPLAY_JOBS if it is set, else the hardware threads.
+    // return: How many passes may run at once: ARTEMIS_REPLAY_JOBS if it is set, else k_DefaultReplayJobs.
     auto ReplayJobs() -> std::size_t
     {
         char* value{ nullptr };
@@ -882,7 +886,7 @@ namespace
             std::free(value);
         }
 
-        if (jobs == 0) jobs = std::thread::hardware_concurrency();
+        if (jobs == 0) jobs = k_DefaultReplayJobs;
         return (std::max)(jobs, std::size_t{ 1 });
     }
 
