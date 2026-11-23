@@ -186,6 +186,10 @@ def Collect(film, dump):
                 s.Add("header_count_" + name, tick, 0, f"header {int(header[name])} rows {size}")
         if int(header["Flags"]) != 0:
             s.Add("header_flags", tick, 0, f"0x{int(header['Flags']):X}")
+        if int(header["PossessedPlayer"]) != 0xFFFFFFFF:
+            s.Add("header_possessed_player", tick, 0, f"0x{int(header['PossessedPlayer']):X}")
+        if any(float(x) != 0.0 for x in header["PossessedInput"]):
+            s.Add("header_possessed_input", tick, 0, str(header["PossessedInput"]))
         # Entities: the rows that changed, with the kind of their parent in the table of the tick.
         e = r.entities
         if len(e):
@@ -720,7 +724,7 @@ def _Names(prefix, names, suffix=""):
 # counts that depend on a film (event objects gone, hits without a drop, ticks alive steps, loadout not with the biped).
 GENERAL_RULES = (
     _Names("header_count_", ("PlayerCount", "EntityCount", "ObjectiveCount", "StandCount", "WeaponCount", "ProjectileCount", "ExplosiveCount", "LiftCount")) +
-    ("header_flags", "header_last_event_sequence", "table_not_sorted_or_repeated") +
+    ("header_flags", "header_possessed_player", "header_possessed_input", "header_last_event_sequence", "table_not_sorted_or_repeated") +
     _Names("entity_unknown_", ("Kind", "Function", "Group", "Lifecycle", "Binding", "Physics")) +
     ("entity_capability_bit_unknown", "entity_handle_repeated_in_a_record", "entity_forward_not_unit", "entity_up_not_unit",
      "entity_forward_not_perpendicular_to_up", "entity_binding_vs_bound_to", "entity_bound_to_vs_parent_handle", "entity_bound_to_not_in_the_tick",

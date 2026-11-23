@@ -59,7 +59,7 @@ FOOTER = np.dtype([("Marker", "S4"), ("Reserved", "<u4"), ("RecordedTicks", "<u8
                    ("EventLosses", "<u8")])
 HAS_MATCH, EVENTS_LOST, KEYFRAME, TIME_MEASURED = 1, 2, 4, 8
 # Tables the layout of a file may not have, in the order of the blocks at the end of a record: Record slot, struct, count in the header.
-# Version 2 added the first two, version 3 the weapons and the projectiles, version 4 the explosives, version 5 the lifts. A file whose layout lacks a block has none of it.
+# Version 2 added the first two, version 3 the weapons and the projectiles, version 4 the explosives, version 5 the lifts. Version 6 changes no block (the header gains the possession of the user). A file whose layout lacks a block has none of it.
 EXTRA_BLOCKS = (("objectives", "BridgeObjective", "ObjectiveCount"), ("stands", "BridgeStand", "StandCount"),
                 ("weapons", "BridgeWeapon", "WeaponCount"), ("projectiles", "BridgeProjectile", "ProjectileCount"),
                 ("explosives", "BridgeExplosive", "ExplosiveCount"), ("lifts", "BridgeLift", "LiftCount"))
@@ -123,8 +123,8 @@ class Dump:
          source) = FILE_HEADER.unpack_from(data, 0)
         if magic != b"ATDUMP\0\0":
             raise TickDumpError(f"{path} is not a .tdump file.")
-        if self.version not in (1, 2, 3, 4, 5):
-            raise TickDumpError(f"{path} has format version {self.version}, this reader knows 1 to 5.")
+        if self.version not in (1, 2, 3, 4, 5, 6):
+            raise TickDumpError(f"{path} has format version {self.version}, this reader knows 1 to 6.")
         self.map_name, self.start_time, self.source = Text(map_name), Text(start), Text(source)
         try:
             self.layout = json.loads(data[header_size:header_size + json_size])

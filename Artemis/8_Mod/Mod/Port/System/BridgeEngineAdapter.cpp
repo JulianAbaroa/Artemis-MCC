@@ -169,13 +169,24 @@ namespace Mod::Port::System
         return setup;
     }
 
-    auto BridgeEngineAdapter::SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void
+    auto BridgeEngineAdapter::SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const AgentInput& input, std::uint32_t windowTicks,
+        float turnLimit) -> void
     {
-        m_PlayerActionStore.SetOverride(playerIndex, actionOverride);
+        m_PlayerActionStore.SetAgentInput(playerIndex, playerHandle, input, windowTicks, turnLimit);
     }
 
-    auto BridgeEngineAdapter::RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void
+    auto BridgeEngineAdapter::ClearAgentInput(std::size_t playerIndex) -> void
     {
-        m_PlayerActionStore.RequestClient(playerIndex, requests);
+        m_PlayerActionStore.ClearAgentInput(playerIndex);
+    }
+
+    auto BridgeEngineAdapter::CloseImitationWindow() -> void
+    {
+        m_PossessionService.CloseWindow();
+    }
+
+    auto BridgeEngineAdapter::GetImitation() const -> BridgeImitation
+    {
+        return BridgeImitation{ .PlayerHandle = m_PossessionStore.GetStatus().Player, .Input = m_PossessionStore.GetWindow() };
     }
 }

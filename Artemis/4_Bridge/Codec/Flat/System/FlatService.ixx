@@ -23,7 +23,8 @@ export namespace Bridge::Codec::Flat::System
         auto operator=(const FlatService&) -> FlatService& = delete;
 
         // Fills the players, the entities, the flags, the stands, the weapons, the projectiles, the match, the events, their counts, the flags and the generation of the tick.
-        // note: The clock fields of the header are the bridge's (BridgeService::EndTick).
+        // note: The clock fields of the header are the bridge's (BridgeService::EndTick): the action tick, the possessed player and the window of what it did.
+        // Here the possessed player is NoHandle and its input zero.
         auto Flatten(const Tick& tick, BridgeTick& flat) const -> void;
     };
 }

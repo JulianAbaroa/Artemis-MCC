@@ -1,18 +1,12 @@
 export module Control.Lockstep.Type;
 
-import Common.Engine.Type;
-import Control.Action.Type;
 import Contract.Bridge.Type;
 import std;
 
 namespace
 {
-    using Control::Action::Type::ActionOverride;
-
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgeMode;
-
-    using Common::Engine::Type::k_MaxPlayers;
 }
 
 export namespace Control::Lockstep::Type
@@ -51,18 +45,15 @@ export namespace Control::Lockstep::Type
     // Work of the game thread between ticks (only the PlayerAction hook touches it).
     struct BridgeHookState
     {
-        // Decision whose actions are in the overrides, 0 = none.
+        // Decision whose actions were given to the players, 0 = none.
         std::uint64_t AppliedSequence{ 0 };
 
-        // Players that have a bridge override, so they are cleared when they leave the mask.
+        // Players that have an AgentInput of the client, so they are released when they leave the mask.
         std::uint32_t ControlledMask{ 0 };
 
         // Lockstep timeouts in a row, and whether Lockstep is suspended until the client answers a decision again.
         std::uint32_t TimeoutsInRow{ 0 };
         bool IsLockstepSuspended{ false };
-
-        // Override of each player of the client, set again every tick so it wins over the UI and the bench (D106).
-        std::array<std::optional<ActionOverride>, k_MaxPlayers> Overrides{};
     };
 
     // How a wait of the Lockstep for a decision ended.

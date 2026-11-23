@@ -1,46 +1,34 @@
 module Control.Lockstep.System;
 
-import Common.Math.Type;
-import Control.Action.Type;
+import Control.Client.Type;
+import Control.Client.System;
 import Control.Lockstep.Type;
 import Contract.Bridge.Type;
 import std;
 
 namespace
 {
-    using Control::Action::Type::ActionOverride;
-    using Control::Action::Type::ClientRequests;
+    using Control::Client::System::SanitizeAgentInput;
+    using Control::Client::Type::AgentInput;
     using Control::Lockstep::Type::ApplyTiming;
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
     using Control::Lockstep::Type::WaitResult;
 
-    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeClientControl;
     using Contract::Bridge::Type::BridgeMode;
     using Contract::Bridge::Type::BridgeOwner;
-    using Contract::Bridge::Type::BridgeRequest;
 
-    using Common::Math::Type::k_TwoPi;
-    using Common::Math::Type::k_HalfPi;
     using Control::Lockstep::Type::k_MaxLockstepTimeouts;
     using Control::Lockstep::Type::k_MaxDecisionPeriod;
     using Control::Lockstep::Type::k_MinLatency;
 
-    // return: The value, or 0 when it is not finite. Sets isRejected when it had to change it.
-    auto Finite(float value, bool& isRejected) -> float
+    // return: Whether the sanitizer left the value as it was. NaN is never equal, so it counts as changed.
+    auto IsSame(float value, float clean) -> bool
     {
-        if (std::isfinite(value)) return value;
-        isRejected = true;
-        return 0.0f;
-    }
-
-    auto Clamp(float value, float limit, bool& isRejected) -> float
-    {
-        if (value >= -limit && value <= limit) return value;
-        isRejected = true;
-        return std::clamp(value, -limit, limit);
+        return value == clean;
     }
 }
 
@@ -87,30 +75,30 @@ namespace Control::Lockstep::System
         return isSparse && !isDecision && wasSparse && !isFirstAfterLoad;
     }
 
-    auto BuildOverride(const BridgeAction& action, float turnLimit, bool& isRejected) -> ActionOverride
+    auto ToAgentInput(const BridgeAgentInput& input, bool& isRejected) -> AgentInput
     {
-        // The engine keeps the yaw in [0, 2 pi): any finite yaw is wrapped there.
-        float yaw{ std::fmod(Finite(action.Yaw, isRejected), k_TwoPi) };
-        if (yaw < 0.0f) yaw += k_TwoPi;
+        const AgentInput clean{ SanitizeAgentInput(AgentInput{ .MoveForward = input.MoveForward, .MoveLeft = input.MoveLeft,
+            .YawDelta = input.YawDelta, .PitchDelta = input.PitchDelta, .Level = input.Level, .Edge = input.Edge }) };
 
-        ActionOverride actionOverride{};
-        actionOverride.Buttons = action.Buttons;
-        actionOverride.Yaw = yaw;
-        actionOverride.Pitch = Clamp(Finite(action.Pitch, isRejected), k_HalfPi, isRejected);
-        actionOverride.ThrottleForward = Clamp(Finite(action.ThrottleForward, isRejected), 1.0f, isRejected);
-        actionOverride.ThrottleLeft = Clamp(Finite(action.ThrottleLeft, isRejected), 1.0f, isRejected);
-        actionOverride.Lanes = action.Lanes;
-        actionOverride.TurnLimit = std::isfinite(turnLimit) && turnLimit > 0.0f ? turnLimit : 0.0f;
+        if (!IsSame(input.MoveForward, clean.MoveForward) || !IsSame(input.MoveLeft, clean.MoveLeft) || !IsSame(input.YawDelta, clean.YawDelta)
+            || !IsSame(input.PitchDelta, clean.PitchDelta) || input.Level != clean.Level || input.Edge != clean.Edge)
+        {
+            isRejected = true;
+        }
 
-        return actionOverride;
+        return clean;
     }
 
-    auto ToClientRequests(std::uint8_t requests) -> ClientRequests
+    auto ToBridgeAgentInput(const AgentInput& input) -> BridgeAgentInput
     {
-        return ClientRequests{
-            .IsWeaponSwitch = (requests & static_cast<std::uint8_t>(BridgeRequest::WeaponSwitch)) != 0,
-            .IsGrenadeSwitch = (requests & static_cast<std::uint8_t>(BridgeRequest::GrenadeSwitch)) != 0,
-            .IsZoom = (requests & static_cast<std::uint8_t>(BridgeRequest::Zoom)) != 0 };
+        return BridgeAgentInput{ .MoveForward = input.MoveForward, .MoveLeft = input.MoveLeft, .YawDelta = input.YawDelta,
+            .PitchDelta = input.PitchDelta, .Level = input.Level, .Edge = input.Edge };
+    }
+
+    auto IsImitationWindowEnd(std::uint64_t actionTick, std::uint8_t period, std::uint8_t latency) -> bool
+    {
+        if (actionTick == 0 || period == 0 || latency == 0) return false;
+        return actionTick % period % latency == 0;
     }
 
     auto GetDueDecision(std::uint64_t actionTick, const BridgeControlState& control, const BridgeHookState& hook,
@@ -162,13 +150,6 @@ namespace Control::Lockstep::System
         if (sequence <= appliedSequence || sequence + latency > actionTick) return ApplyTiming::None;
 
         return sequence + latency < actionTick ? ApplyTiming::Late : ApplyTiming::OnTime;
-    }
-
-    auto GetReleasedOverride(const std::optional<ActionOverride>& last) -> std::optional<ActionOverride>
-    {
-        if (last.has_value() && !last->LocalIndex.has_value()) return ActionOverride{ .Yaw = last->Yaw, .Pitch = last->Pitch };
-
-        return std::nullopt;
     }
 
     auto ReadClock(std::uint64_t actionTick, std::uint64_t lastReadTick, std::uint64_t lastReadMatch, std::uint64_t match,

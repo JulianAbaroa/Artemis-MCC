@@ -97,7 +97,7 @@ export namespace Mod
         Engine::Match::Layer m_Match{ m_Service, m_Base };
         Engine::Render::Layer m_Render{ m_Service, m_Base };
         BridgeEngineAdapter m_BridgeEngineAdapter{ m_Base.m_LifecycleStore, m_Match.m_MatchCycleStore, m_Control.m_PlayerActionStore,
-            m_Base.m_MatchSetupService, m_Base.m_PresetService, m_Base.m_MapVariantService, m_Match.m_MatchConfigService };
+            m_Control.m_PossessionStore, m_Control.m_PossessionService, m_Base.m_MatchSetupService, m_Base.m_PresetService, m_Base.m_MapVariantService, m_Match.m_MatchConfigService };
         Bridge::Transport::Layer m_Transport{ m_Service, m_BridgeEngineAdapter };
         BridgeActionSource m_BridgeActionSource{ m_Transport.m_BridgeService };
 

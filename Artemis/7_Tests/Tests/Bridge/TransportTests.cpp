@@ -3,7 +3,7 @@
 
 import Common.Log.System;
 import Common.Log.Type;
-import Control.Action.Type;
+import Control.Client.Type;
 import Services.Settings.State;
 import Bridge.Codec.Flat.Type;
 import Bridge.Transport.Type;
@@ -21,13 +21,12 @@ namespace
 {
     using Common::Log::System::Log;
     using Common::Log::Type::LogMessage;
-    using Control::Action::Type::ActionOverride;
-    using Control::Action::Type::ClientRequests;
     using Bridge::Codec::Flat::Type::BridgeClock;
     using Bridge::Transport::State::BridgeStore;
     using Bridge::Transport::System::BridgeEngine;
     using Bridge::Transport::System::BridgeService;
     using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeMode;
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgePhase;
@@ -41,7 +40,7 @@ namespace
     using Contract::Bridge::Type::BridgeTick;
     using Services::Settings::State::SettingsStore;
     using Tests::Support::FakeBridge::FakeBridgeEngine;
-    using Tests::Support::FakeBridge::OverrideCall;
+    using Tests::Support::FakeBridge::AgentCall;
     using Tests::Support::Log::CollectingSink;
 
     using Contract::Bridge::Type::k_BridgeActionEventSuffix;
@@ -64,14 +63,18 @@ namespace
     constexpr std::uint32_t k_OtherHandle{ 0x0002'0000 };
 
     // Writes the action of a slot the way the client does: the fields first, the decision tick last.
-    auto WriteAction(BridgeRegion& region, std::size_t player, std::uint32_t handle, std::uint64_t decision, float yaw,
-        std::uint64_t buttons) -> void
+    auto WriteAction(BridgeRegion& region, std::size_t player, std::uint32_t handle, std::uint64_t decision, const BridgeAgentInput& input) -> void
     {
         BridgeAction& slot{ region.Actions[player] };
         slot.PlayerHandle = handle;
-        slot.Yaw = yaw;
-        slot.Buttons = buttons;
+        slot.Input = input;
         std::atomic_ref<std::uint64_t>(slot.DecisionTick).store(decision, std::memory_order_release);
+    }
+
+    // return: An input that moves forward and holds the controls of Level (bit 0 Jump, bit 2 Fire).
+    auto MakeInput(float forward, std::uint32_t level) -> BridgeAgentInput
+    {
+        return BridgeAgentInput{ .MoveForward = forward, .Level = level, .Edge = level };
     }
 
     // Tells the bridge the client answered up to this decision.
@@ -393,18 +396,24 @@ TEST_F(TransportTests, FreeAppliesAtTheLatency)
 {
     this->PublishPlayer(k_Handle, k_BridgeNotLocal);
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0x1);
-    WriteAction(*m_Region, 0, k_Handle, 4, 1.0f, 5);
+    m_Region->Control.Client.RequestTurnLimit = 0.25f;
+    WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
     Answer(*m_Region, 4);
 
     m_Service.Apply(5);
-    EXPECT_EQ(m_Engine.CountOverrides(0), 0u);
+    EXPECT_EQ(m_Engine.CountInputs(0), 0u);
 
     m_Service.Apply(6);
-    ASSERT_EQ(m_Engine.CountOverrides(0), 1u);
-    const ActionOverride& applied{ *m_Engine.m_OverrideCalls.back().Value };
-    EXPECT_FLOAT_EQ(applied.Yaw, 1.0f);
-    EXPECT_EQ(applied.Buttons, 5u);
-    EXPECT_FALSE(applied.LocalIndex.has_value());
+    ASSERT_EQ(m_Engine.CountInputs(0), 1u);
+    const AgentCall& applied{ m_Engine.m_AgentCalls.back() };
+    EXPECT_FLOAT_EQ(applied.Input->MoveForward, 1.0f);
+    EXPECT_EQ(applied.Input->Level, 5u);
+    EXPECT_EQ(applied.Input->Edge, 5u);
+    EXPECT_EQ(applied.PlayerHandle, k_Handle);
+
+    // The window is the latency (d) and the turn limit goes with it, as the control block gave them.
+    EXPECT_EQ(applied.WindowTicks, 2u);
+    EXPECT_FLOAT_EQ(applied.TurnLimit, 0.25f);
 
     BridgeClock clock{};
     m_Service.CaptureClock(true, clock);
@@ -415,13 +424,13 @@ TEST_F(TransportTests, HandleMismatchIsCounted)
 {
     this->PublishPlayer(k_Handle, k_BridgeNotLocal);
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0x1);
-    WriteAction(*m_Region, 0, k_OtherHandle, 4, 1.0f, 5);
+    WriteAction(*m_Region, 0, k_OtherHandle, 4, MakeInput(1.0f, 5));
     Answer(*m_Region, 4);
 
     m_Service.Apply(5);
     m_Service.Apply(6);
 
-    EXPECT_EQ(m_Engine.CountOverrides(0), 0u);
+    EXPECT_EQ(m_Engine.CountInputs(0), 0u);
     EXPECT_EQ(this->GetStatus().Counters.HandleMismatches, 1u);
 }
 
@@ -450,7 +459,7 @@ TEST_F(TransportTests, LockstepWaitsForAQueuedDecisionAndSuspendsAfterTwoTimeout
     m_Service.MarkPushed(8);
     EXPECT_LT(Timed([this] { m_Service.Apply(10); }), 0.2);
 
-    WriteAction(*m_Region, 0, k_Handle, 8, 1.0f, 5);
+    WriteAction(*m_Region, 0, k_Handle, 8, MakeInput(1.0f, 5));
     Answer(*m_Region, 8);
     m_Service.Apply(11);
     EXPECT_TRUE(this->HasLog("Lockstep resumed"));
@@ -468,7 +477,7 @@ TEST_F(TransportTests, LockstepAnsweredByTheClient)
 
     std::thread client([this, actionEvent] {
         std::this_thread::sleep_for(milliseconds{ 50 });
-        WriteAction(*m_Region, 0, k_Handle, 4, 1.0f, 5);
+        WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
         Answer(*m_Region, 4);
         SetEvent(actionEvent);
     });
@@ -477,8 +486,8 @@ TEST_F(TransportTests, LockstepAnsweredByTheClient)
     CloseHandle(actionEvent);
 
     EXPECT_LT(seconds, 0.5);
-    ASSERT_EQ(m_Engine.CountOverrides(0), 1u);
-    EXPECT_EQ(m_Engine.m_OverrideCalls.back().Value->Buttons, 5u);
+    ASSERT_EQ(m_Engine.CountInputs(0), 1u);
+    EXPECT_EQ(m_Engine.m_AgentCalls.back().Input->Level, 5u);
     const BridgeStatus status{ this->GetStatus() };
     EXPECT_EQ(status.Counters.LockstepWaits, 1u);
     EXPECT_EQ(status.Counters.LockstepTimeouts, 0u);
@@ -503,42 +512,112 @@ TEST_F(TransportTests, StopEndsTheWait)
     EXPECT_EQ(this->GetStatus().Counters.LockstepTimeouts, 0u);
 }
 
-TEST_F(TransportTests, ReleasedBotKeepsItsFacing)
+TEST_F(TransportTests, ReleasedBotStandsStillAndALocalGetsItsInputBack)
 {
     this->PublishPlayer(k_Handle, k_BridgeNotLocal);
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0x1);
-    WriteAction(*m_Region, 0, k_Handle, 4, 1.0f, 5);
+    WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
     Answer(*m_Region, 4);
     m_Service.Apply(6);
-    ASSERT_EQ(m_Engine.CountOverrides(0), 1u);
-    const float pitch{ m_Engine.m_OverrideCalls.back().Value->Pitch };
+    ASSERT_EQ(m_Engine.CountInputs(0), 1u);
 
-    // The client lets go of the bot: it stays with the facing it had and nothing else.
+    // The client lets go of the bot: it gets an input that asks for nothing, so it keeps its facing and stops (repetition without look).
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
     m_Service.Apply(7);
-    const OverrideCall& released{ m_Engine.m_OverrideCalls.back() };
+    const AgentCall& released{ m_Engine.m_AgentCalls.back() };
     EXPECT_EQ(released.Player, 0u);
-    ASSERT_TRUE(released.Value.has_value());
-    EXPECT_FLOAT_EQ(released.Value->Yaw, 1.0f);
-    EXPECT_FLOAT_EQ(released.Value->Pitch, pitch);
-    EXPECT_EQ(released.Value->Buttons, 0u);
-    EXPECT_EQ(released.Value->Lanes, 0u);
-    EXPECT_FLOAT_EQ(released.Value->ThrottleForward, 0.0f);
-    EXPECT_FLOAT_EQ(released.Value->ThrottleLeft, 0.0f);
+    ASSERT_TRUE(released.Input.has_value());
+    EXPECT_EQ(released.PlayerHandle, k_Handle);
+    EXPECT_FLOAT_EQ(released.Input->MoveForward, 0.0f);
+    EXPECT_FLOAT_EQ(released.Input->MoveLeft, 0.0f);
+    EXPECT_FLOAT_EQ(released.Input->YawDelta, 0.0f);
+    EXPECT_FLOAT_EQ(released.Input->PitchDelta, 0.0f);
+    EXPECT_EQ(released.Input->Level, 0u);
+    EXPECT_EQ(released.Input->Edge, 0u);
+    EXPECT_EQ(released.WindowTicks, 1u);
 
     // A local player goes back to its own input.
     this->PublishPlayer(k_Handle, 0);
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0x1);
-    WriteAction(*m_Region, 0, k_Handle, 8, 1.0f, 5);
+    WriteAction(*m_Region, 0, k_Handle, 8, MakeInput(1.0f, 5));
     Answer(*m_Region, 8);
     m_Service.Apply(10);
-    ASSERT_TRUE(m_Engine.m_OverrideCalls.back().Value.has_value());
-    EXPECT_EQ(m_Engine.m_OverrideCalls.back().Value->LocalIndex, std::optional<std::size_t>{ 0 });
+    ASSERT_TRUE(m_Engine.m_AgentCalls.back().Input.has_value());
 
     this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
     m_Service.Apply(11);
-    EXPECT_EQ(m_Engine.m_OverrideCalls.back().Player, 0u);
-    EXPECT_FALSE(m_Engine.m_OverrideCalls.back().Value.has_value());
+    EXPECT_EQ(m_Engine.m_AgentCalls.back().Player, 0u);
+    EXPECT_FALSE(m_Engine.m_AgentCalls.back().Input.has_value());
+}
+
+TEST_F(TransportTests, AnInputWithValuesOutOfRangeIsMadeSaneAndCounted)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0x1);
+
+    BridgeAgentInput broken{ .MoveForward = 3.0f, .MoveLeft = std::numeric_limits<float>::quiet_NaN(), .YawDelta = 0.5f,
+        .PitchDelta = std::numeric_limits<float>::infinity(), .Level = 0xFFFF'FFFFu, .Edge = 0x8000'0001u };
+    WriteAction(*m_Region, 0, k_Handle, 4, broken);
+    Answer(*m_Region, 4);
+    m_Service.Apply(6);
+
+    ASSERT_EQ(m_Engine.CountInputs(0), 1u);
+    const auto& input{ *m_Engine.m_AgentCalls.back().Input };
+    EXPECT_FLOAT_EQ(input.MoveForward, 1.0f);
+    EXPECT_FLOAT_EQ(input.MoveLeft, 0.0f);
+    EXPECT_FLOAT_EQ(input.YawDelta, 0.5f);
+    EXPECT_FLOAT_EQ(input.PitchDelta, 0.0f);
+    EXPECT_EQ(input.Level, 0x1FFFu);
+    EXPECT_EQ(input.Edge, 0x1u);
+    EXPECT_EQ(this->GetStatus().Counters.RejectedActions, 1u);
+
+    // A sane input is not counted.
+    WriteAction(*m_Region, 0, k_Handle, 8, MakeInput(-0.5f, 0x1FFFu));
+    Answer(*m_Region, 8);
+    m_Service.Apply(10);
+    EXPECT_EQ(m_Engine.CountInputs(0), 2u);
+    EXPECT_EQ(this->GetStatus().Counters.RejectedActions, 1u);
+}
+
+// The imitation block (D364): the clock carries the possessed player and the last closed window together, and EndTick writes both into the header. The window
+// closes where one ends: every d ticks counted from the decision tick.
+TEST_F(TransportTests, TheClockCarriesTheLastWindowAndTheWindowsCloseEveryLatencyTicks)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+
+    for (std::uint64_t tick{ 1 }; tick <= 8; ++tick) m_Service.Apply(tick);
+    EXPECT_EQ(m_Engine.m_WindowCloses, 4u);
+
+    m_Engine.m_Imitation.PlayerHandle = k_Handle;
+    m_Engine.m_Imitation.Input = Control::Client::Type::AgentInput{ .MoveForward = 1.0f, .YawDelta = -0.5f, .Level = 4, .Edge = 5 };
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.PossessedPlayer, k_Handle);
+    EXPECT_FLOAT_EQ(clock.PossessedInput.MoveForward, 1.0f);
+    EXPECT_FLOAT_EQ(clock.PossessedInput.YawDelta, -0.5f);
+    EXPECT_EQ(clock.PossessedInput.Level, 4u);
+    EXPECT_EQ(clock.PossessedInput.Edge, 5u);
+
+    BridgeTick* flat{ m_Service.BeginTick() };
+    ASSERT_NE(flat, nullptr);
+    m_Service.EndTick(*flat, clock);
+    EXPECT_EQ(flat->Header.PossessedPlayer, k_Handle);
+    EXPECT_EQ(flat->Header.PossessedInput.Edge, 5u);
+
+    // Nobody possessed: no handle and a zero input, together.
+    m_Engine.m_Imitation = {};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.PossessedPlayer, 0xFFFF'FFFFu);
+    EXPECT_EQ(clock.PossessedInput.Level, 0u);
+}
+
+TEST_F(TransportTests, TheLayoutIsTheOneOfTheBridgeV2)
+{
+    EXPECT_EQ(k_BridgeLayoutHash, 0x4B4E4E552E4DF04FULL);
+    EXPECT_EQ(sizeof(BridgeAgentInput), 24u);
+    EXPECT_EQ(sizeof(BridgeAction), 40u);
+    EXPECT_EQ(offsetof(BridgeAction, Input), 16u);
+    EXPECT_EQ(sizeof(BridgeRegion), 492992u);
 }
 
 TEST_F(TransportTests, ClockMarksDecisionTicks)

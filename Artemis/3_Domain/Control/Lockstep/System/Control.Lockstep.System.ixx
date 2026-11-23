@@ -1,21 +1,20 @@
 export module Control.Lockstep.System;
 
-import Control.Action.Type;
+import Control.Client.Type;
 import Control.Lockstep.Type;
 import Contract.Bridge.Type;
 import std;
 
 namespace
 {
-    using Control::Action::Type::ActionOverride;
-    using Control::Action::Type::ClientRequests;
+    using Control::Client::Type::AgentInput;
     using Control::Lockstep::Type::ApplyTiming;
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
     using Control::Lockstep::Type::WaitResult;
 
-    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeClientControl;
 }
 
@@ -39,14 +38,20 @@ export namespace Control::Lockstep::System
     // the whole pipeline, so the tick of a decision always has the state it needs.
     auto IsLightTick(bool isSparse, bool isDecision, bool wasSparse, bool isFirstAfterLoad) -> bool;
 
-    // return: The override of a player for the action of the client, with the values the engine accepts.
-    // param turnLimit: Turn limit of the client. A value that is not a positive number is 0 (straight to the target).
+    // return: The AgentInput the client wrote for a player, sane: the one place that makes the values of the bridge acceptable (D365).
     // param isRejected: Set to true when a value had to be changed. Never set to false.
-    // note: The yaw is wrapped to [0, 2 pi). Pitch and throttle are cut to their range. A value that is not finite is 0.
-    auto BuildOverride(const BridgeAction& action, float turnLimit, bool& isRejected) -> ActionOverride;
+    // note: The move axes are cut to [-1, 1], a value that is not finite is 0 (also in the look) and the bits of Level and Edge that are no control
+    // are dropped (SanitizeAgentInput). The turn limit is not here: it travels in the control block and the store keeps it sane.
+    auto ToAgentInput(const BridgeAgentInput& input, bool& isRejected) -> AgentInput;
 
-    // return: The one-tick presses of the BridgeRequest bits of an action.
-    auto ToClientRequests(std::uint8_t requests) -> ClientRequests;
+    // return: The AgentInput as the bridge writes it (the imitation block of the tick). Copies the values.
+    auto ToBridgeAgentInput(const AgentInput& input) -> BridgeAgentInput;
+
+    // return: Whether the window of the possessed player closes at this action tick (D364): windows of d ticks counted from the last decision tick
+    // (a multiple of N), so the last one of each period ends where the next decision begins.
+    // param period: N, the decision period. 0 never closes.
+    // param latency: d, the ticks of a window. 0 never closes.
+    auto IsImitationWindowEnd(std::uint64_t actionTick, std::uint8_t period, std::uint8_t latency) -> bool;
 
     // return: The decision the game thread has to wait for before this action tick, or 0 if it does not wait.
     // param pushedDecision: Last decision tick handed to the AI thread, so its frame will reach the client (D305).
@@ -67,10 +72,6 @@ export namespace Control::Lockstep::System
     // as soon as it arrives when it is late.
     auto GetApplyTiming(std::uint64_t sequence, std::uint64_t appliedSequence, std::uint8_t latency, std::uint64_t actionTick)
         -> ApplyTiming;
-
-    // return: The override of a player that leaves the client. A bot stands still with the facing it had, and a local player goes back
-    // to its own input (nullopt).
-    auto GetReleasedOverride(const std::optional<ActionOverride>& last) -> std::optional<ActionOverride>;
 
     // return: What the clock of this read says about the last read tick.
     // param isConsecutive: False after dropped ticks or a reset, so a jump is not a skip.

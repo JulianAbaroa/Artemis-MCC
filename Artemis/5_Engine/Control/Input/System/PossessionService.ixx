@@ -54,6 +54,11 @@ export namespace Engine::Control::Input::System
         // return: Whether a bot is possessed (the hook only calls StepFrame then).
         auto IsActive() const -> bool;
 
+        // Closes the window of the possessed bot: the frames added since the last close become its last window (D364). Does nothing without a possessed bot, or
+        // when the possession is off because the frames ran on another thread.
+        // note: Game thread, where a decision window ends (the bridge calls it through its engine port).
+        auto CloseWindow() -> void;
+
         // Runs one frame of the client for the possessed bot. The bot is shared with the ticks without a lock, so it only runs on the thread that
         // began the possession: on another one it logs one ERROR, turns the possession off and never touches the bot. Logs one INFO per possession with
         // the two thread ids. Does nothing when the unit is missing, the settings cannot be read or the table is not in

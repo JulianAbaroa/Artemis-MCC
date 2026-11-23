@@ -4,6 +4,7 @@
 import Common.Log.System;
 import Common.Log.Type;
 import Control.Action.Type;
+import Control.Client.Type;
 import Services.Layer;
 import Engine.Base.Layer;
 import Engine.Capture.Layer;
@@ -68,11 +69,11 @@ namespace
     class IdleBridgeEngine : public BridgeEngine
     {
     private:
-        using ActionOverride = Control::Action::Type::ActionOverride;
-        using ClientRequests = Control::Action::Type::ClientRequests;
+        using AgentInput = Control::Client::Type::AgentInput;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
         using BridgeActiveSetup = Bridge::Transport::Type::BridgeActiveSetup;
+        using BridgeImitation = Bridge::Transport::Type::BridgeImitation;
         using BridgeSetupInfo = Bridge::Transport::Type::BridgeSetupInfo;
         using BridgeSetupRequest = Bridge::Transport::Type::BridgeSetupRequest;
 
@@ -92,17 +93,19 @@ namespace
         auto CancelSetupRequest() -> void override {}
         auto GetSetupResult() const -> BridgeSetupInfo override { return BridgeSetupInfo{}; }
         auto GetActiveSetup() const -> BridgeActiveSetup override { return BridgeActiveSetup{}; }
-        auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override
+        auto SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const AgentInput& input, std::uint32_t windowTicks,
+            float turnLimit) -> void override
         {
             static_cast<void>(playerIndex);
-            static_cast<void>(actionOverride);
+            static_cast<void>(playerHandle);
+            static_cast<void>(input);
+            static_cast<void>(windowTicks);
+            static_cast<void>(turnLimit);
         }
 
-        auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void override
-        {
-            static_cast<void>(playerIndex);
-            static_cast<void>(requests);
-        }
+        auto ClearAgentInput(std::size_t playerIndex) -> void override { static_cast<void>(playerIndex); }
+        auto CloseImitationWindow() -> void override {}
+        auto GetImitation() const -> BridgeImitation override { return BridgeImitation{}; }
     };
 }
 

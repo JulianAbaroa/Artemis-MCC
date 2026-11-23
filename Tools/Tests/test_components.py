@@ -508,7 +508,7 @@ def test_the_action_format_lives_in_blam_layout():
         assert not Defines(text, "struct", "HoldLane"), path
 
 
-@pytest.mark.parametrize("name", ["ActionOverride", "ClientRequests", "WeaponRequest", "AppliedFacing", "UnitClientState",
+@pytest.mark.parametrize("name", ["ActionOverride", "ClientRequests", "WeaponRequest", "UnitClientState",
                                   "PlayerActionHistory", "BridgeControlState", "BridgeHookState"])
 def test_control_types_are_defined_only_under_control(name):
     found = [path for path in Sources("Artemis") if Defines(Read(path), "struct", name)]
@@ -529,7 +529,7 @@ def test_the_detour_builds_the_action_with_control():
 
 def test_the_bridge_service_takes_its_decisions_from_control():
     text = Read(BRIDGE_SERVICE_CPP)
-    for name in ("DecideControl", "BuildOverride", "Finite", "Clamp"):
+    for name in ("DecideControl", "ToAgentInput", "SanitizeAgentInput", "Finite", "Clamp"):
         assert not re.search(rf"\bauto\s+(?:\w+::)?{name}\s*\(", text), f"defines {name}"
     for name in ("GetDueDecision", "RecordWait", "ReadClock"):
         assert f"{name}(" in text, name
@@ -598,7 +598,8 @@ def test_the_ports_declare_exactly_their_methods():
     assert re.search(r"\bclass\s+BridgeEngine\b", engine)
     assert set(VIRTUAL_METHOD.findall(engine)) == {"GetPhase", "GetEngineStarts", "GetPausedFrames", "GetRequestedTimeScale",
                                                    "SetRequestedTimeScale", "IsPauseRequested", "SetPauseRequested", "SetEndRoundRequested",
-                                                   "RequestSetup", "CancelSetupRequest", "GetSetupResult", "GetActiveSetup", "SetOverride", "RequestClient"}
+                                                   "RequestSetup", "CancelSetupRequest", "GetSetupResult", "GetActiveSetup", "SetAgentInput", "ClearAgentInput", "CloseImitationWindow",
+                                                   "GetImitation"}
     source = Read("Artemis/5_Engine/Control/Input/System/ActionSource.ixx")
     assert re.search(r"^export module Engine\.Control\.Input\.System:ActionSource;", source, re.MULTILINE)
     assert re.search(r"\bclass\s+ActionSource\b", source)

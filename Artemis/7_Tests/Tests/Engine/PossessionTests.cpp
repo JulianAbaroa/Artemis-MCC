@@ -2,6 +2,7 @@
 
 import Common.Engine.Type;
 import Control.Action.Type;
+import Control.Client.System;
 import Control.Client.Type;
 import Engine.Control.Input.State;
 import Engine.Control.Input.System;
@@ -21,7 +22,14 @@ namespace
     using Engine::Control::Input::State::PossessRequestStore;
     using Engine::Control::Input::System::FindPossessedBot;
     using ::Control::Action::Type::UnitClientState;
+    using ::Control::Client::System::AddAgentFrame;
+    using ::Control::Client::System::CloseAgentInput;
+    using ::Control::Client::System::MakeAgentFrame;
+    using ::Control::Client::Type::AgentInput;
+    using ::Control::Client::Type::AgentInputState;
     using ::Control::Client::Type::ClientOutput;
+    using ::Control::Client::Type::ClientSettings;
+    using ::Control::Client::Type::k_AgentControlCount;
     using ::Control::Client::Type::ClientStep;
     using ::Control::Client::Type::UnitContext;
     using ::Control::Client::Type::k_EventReload;
@@ -511,4 +519,98 @@ TEST(TickPossessionTests, ATickMarksNoPlayerByDefault)
     const Bridge::Codec::Tick::Type::Tick tick{};
 
     EXPECT_EQ(tick.PossessedPlayer, k_NoHandle);
+}
+
+namespace
+{
+    constexpr std::int32_t k_WindowTicks{ 4 };
+
+    // Adds the synthetic frames of one window of an AgentInput to the reducer of the store, the way the frames of the possessed client are added.
+    auto AddWindow(PossessionStore& store, const AgentInput& input, AgentInputState& state) -> void
+    {
+        for (std::int32_t tick{ 0 }; tick < k_WindowTicks; ++tick)
+        {
+            const auto frame{ MakeAgentFrame(input, tick, k_WindowTicks, ClientSettings{}, 0.0f, state) };
+            AddAgentFrame(store.GetReducer(), frame, input.YawDelta / k_WindowTicks, input.PitchDelta / k_WindowTicks);
+        }
+    }
+
+    // Closes the window the way the bridge does, through the store: the reducer gives the window and the store keeps it.
+    auto CloseWindow(PossessionStore& store) -> AgentInput
+    {
+        store.SetWindow(CloseAgentInput(store.GetReducer()));
+        return store.GetWindow();
+    }
+}
+
+// The imitation of the possessed bot (VW.9c.3 D, D364): the frames of each window are reduced to one AgentInput, kept as the last window.
+TEST(PossessionWindowTests, EachControlInEachOfTheFourStatesComesOutAsTheStatesOfTheAgentInput)
+{
+    for (std::uint32_t control{ 0 }; control < k_AgentControlCount; ++control)
+    {
+        const std::uint32_t bit{ 1u << control };
+
+        // nothing, tap, press and hold, and keep holding (it was down at the start of the window).
+        struct Case { std::uint32_t Level; std::uint32_t Edge; bool WasDown; };
+        for (const Case& item : { Case{ 0, 0, false }, Case{ 0, bit, false }, Case{ bit, bit, false }, Case{ bit, 0, true } })
+        {
+            PossessionStore store{};
+            store.Begin(0, 0x10000);
+            AgentInputState state{};
+            if (item.WasDown)
+            {
+                AddWindow(store, AgentInput{ .Level = bit, .Edge = bit }, state);
+                CloseWindow(store);
+            }
+
+            AddWindow(store, AgentInput{ .Level = item.Level, .Edge = item.Edge }, state);
+            const AgentInput window{ CloseWindow(store) };
+            EXPECT_EQ(window.Level, item.Level) << "control " << control;
+            EXPECT_EQ(window.Edge, item.Edge) << "control " << control;
+        }
+    }
+}
+
+TEST(PossessionWindowTests, TheAxesAndTheLookAskedAreTheOnesOfTheWindow)
+{
+    PossessionStore store{};
+    store.Begin(0, 0x10000);
+    AgentInputState state{};
+
+    AddWindow(store, AgentInput{ .MoveForward = 1.0f, .MoveLeft = -0.5f, .YawDelta = 0.4f, .PitchDelta = -0.2f }, state);
+    const AgentInput window{ CloseWindow(store) };
+
+    EXPECT_FLOAT_EQ(window.MoveForward, 1.0f);
+    EXPECT_FLOAT_EQ(window.MoveLeft, -0.5f);
+    EXPECT_NEAR(window.YawDelta, 0.4f, 1e-5f);
+    EXPECT_NEAR(window.PitchDelta, -0.2f, 1e-5f);
+
+    // The next window starts clean: its look does not add to the one before.
+    AddWindow(store, AgentInput{ .YawDelta = 0.1f }, state);
+    EXPECT_NEAR(CloseWindow(store).YawDelta, 0.1f, 1e-5f);
+}
+
+TEST(PossessionWindowTests, TheWindowIsZeroWithoutPossessionAndStartsFreshWithEach)
+{
+    PossessionStore store{};
+    EXPECT_EQ(store.GetWindow().Level, 0u);
+
+    store.Begin(0, 0x10000);
+    AgentInputState state{};
+    AddWindow(store, AgentInput{ .MoveForward = 1.0f, .Level = 1, .Edge = 1 }, state);
+    EXPECT_EQ(CloseWindow(store).Level, 1u);
+
+    // Going on with the same bot keeps the window. Another bot, or the end of the possession, forget it.
+    store.Begin(0, 0x10000);
+    EXPECT_EQ(store.GetWindow().Level, 1u);
+
+    store.Begin(1, 0x20000);
+    EXPECT_EQ(store.GetWindow().Level, 0u);
+    EXPECT_FLOAT_EQ(store.GetReducer().MoveForward, 0.0f);
+
+    AddWindow(store, AgentInput{ .Level = 2, .Edge = 2 }, state);
+    CloseWindow(store);
+    store.Release();
+    EXPECT_EQ(store.GetWindow().Level, 0u);
+    EXPECT_EQ(store.GetReducer().Level, 0u);
 }

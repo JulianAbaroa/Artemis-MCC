@@ -62,7 +62,7 @@ export namespace Control::Action::System
     // param yaw: Absolute facing the bot must have (the look deltas already added to the aim of the bot), radians.
     // param pitch: Absolute pitch, radians.
     // return: The buttons below bit 48, the lanes without held bits (BuildAction counts them), the move axes, the triggers and the events word
-    // of the reload and the grenade throw, with no turn limit (a human, not an agent). The events of the output become requests: switch weapon,
+    // of the reload and the grenade throw. The events of the output become requests: switch weapon,
     // switch grenade and zoom (press, step in and step out, each its own request).
     auto MakeClientAction(const ClientOutput& output, float yaw, float pitch) -> ClientAction;
 
@@ -72,8 +72,7 @@ export namespace Control::Action::System
 
     // Writes the fields of an agent into its action: facing, buttons, throttle, hold lanes and client requests (D109, D119-D121).
     // param action: Action of the player, already cleared by the engine and with the slot of its unit.
-    // param unit: Client state of its unit, or nullopt without a live unit (then the facing goes straight to the target and no
-    // request is sent).
+    // param unit: Client state of its unit, or nullopt without a live unit (then no request is sent).
     // param holdTicks: Hold threshold in ticks, or nullopt if unknown (then no held bit is set).
     // param sequence: Action tick of the use test.
     // param history: What the action of this agent remembers between ticks. Updated.

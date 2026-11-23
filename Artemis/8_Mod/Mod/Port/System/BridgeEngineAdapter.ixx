@@ -1,6 +1,6 @@
 export module Mod.Port.System:BridgeEngine;
 
-import Control.Action.Type;
+import Control.Client.Type;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.MapVariant.System;
 import Engine.Base.MatchSetup.System;
@@ -8,6 +8,7 @@ import Engine.Base.Preset.System;
 import Engine.Match.State;
 import Engine.Match.System;
 import Engine.Control.Input.State;
+import Engine.Control.Input.System;
 import Bridge.Transport.Type;
 import Bridge.Transport.System;
 import std;
@@ -18,8 +19,7 @@ export namespace Mod::Port::System
     class BridgeEngineAdapter : public Bridge::Transport::System::BridgeEngine
     {
     private:
-        using ActionOverride = Control::Action::Type::ActionOverride;
-        using ClientRequests = Control::Action::Type::ClientRequests;
+        using AgentInput = Control::Client::Type::AgentInput;
 
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using MapVariantService = Engine::Base::MapVariant::System::MapVariantService;
@@ -29,18 +29,21 @@ export namespace Mod::Port::System
         using MatchConfigService = Engine::Match::System::MatchConfigService;
 
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
+        using PossessionStore = Engine::Control::Input::State::PossessionStore;
+        using PossessionService = Engine::Control::Input::System::PossessionService;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
         using BridgeActiveSetup = Bridge::Transport::Type::BridgeActiveSetup;
+        using BridgeImitation = Bridge::Transport::Type::BridgeImitation;
         using BridgeSetupInfo = Bridge::Transport::Type::BridgeSetupInfo;
         using BridgeSetupRequest = Bridge::Transport::Type::BridgeSetupRequest;
 
     public:
         BridgeEngineAdapter(LifecycleStore& lifecycleStore, MatchCycleStore& matchCycleStore, PlayerActionStore& playerActionStore,
-            MatchSetupService& matchSetupService, PresetService& presetService, MapVariantService& mapVariantService,
-            MatchConfigService& matchConfigService) :
+            PossessionStore& possessionStore, PossessionService& possessionService, MatchSetupService& matchSetupService, PresetService& presetService,
+            MapVariantService& mapVariantService, MatchConfigService& matchConfigService) :
             m_LifecycleStore(lifecycleStore), m_MatchCycleStore(matchCycleStore), m_PlayerActionStore(playerActionStore),
-            m_MatchSetupService(matchSetupService), m_PresetService(presetService), m_MapVariantService(mapVariantService),
+            m_PossessionStore(possessionStore), m_PossessionService(possessionService), m_MatchSetupService(matchSetupService), m_PresetService(presetService), m_MapVariantService(mapVariantService),
             m_MatchConfigService(matchConfigService) {}
         ~BridgeEngineAdapter() override = default;
 
@@ -59,13 +62,18 @@ export namespace Mod::Port::System
         auto CancelSetupRequest() -> void override;
         auto GetSetupResult() const -> BridgeSetupInfo override;
         auto GetActiveSetup() const -> BridgeActiveSetup override;
-        auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override;
-        auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void override;
+        auto SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const AgentInput& input, std::uint32_t windowTicks,
+            float turnLimit) -> void override;
+        auto ClearAgentInput(std::size_t playerIndex) -> void override;
+        auto CloseImitationWindow() -> void override;
+        auto GetImitation() const -> BridgeImitation override;
 
     private:
         LifecycleStore& m_LifecycleStore;
         MatchCycleStore& m_MatchCycleStore;
         PlayerActionStore& m_PlayerActionStore;
+        PossessionStore& m_PossessionStore;
+        PossessionService& m_PossessionService;
         MatchSetupService& m_MatchSetupService;
         PresetService& m_PresetService;
         MapVariantService& m_MapVariantService;

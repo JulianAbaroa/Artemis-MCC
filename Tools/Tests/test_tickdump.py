@@ -117,8 +117,8 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(bad))
     data = bytearray(Film(range(2)).Bytes())
-    data[8] = 6
-    other = tmp_path / "v6.tdump"
+    data[8] = 7
+    other = tmp_path / "v7.tdump"
     other.write_bytes(bytes(data))
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(other))
@@ -575,7 +575,7 @@ def WeaponFilm(charged_at=None, ticks=range(6)):
 
 def test_weapons_and_projectiles_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "w.tdump", WeaponFilm(charged_at=3)))
-    assert d.version == 5 and not d.is_cut
+    assert d.version == 6 and not d.is_cut
     assert [len(r.explosives) for r in d.records] == [1] * 6
     assert float(d.records[0].explosives["Damage"][0]) == 200.0 and int(d.records[0].header["ExplosiveCount"]) == 1
     assert [len(r.weapons) for r in d.records] == [1] * 6
@@ -602,7 +602,7 @@ def LiftFilm(exit_speed=None, ticks=range(6)):
 
 def test_lifts_round_trip_through_the_reader_and_show_prints_them(tmp_path, capsys):
     d = tickdump.Dump(Save(tmp_path, "l.tdump", LiftFilm(exit_speed=6.5)))
-    assert d.version == 5 and not d.is_cut
+    assert d.version == 6 and not d.is_cut
     assert [len(r.lifts) for r in d.records] == [1] * 6
     assert int(d.records[0].header["LiftCount"]) == 1
     assert [int(r.lifts["HasExit"][0]) for r in d.records] == [0, 0, 0, 1, 1, 1]
@@ -647,7 +647,7 @@ def test_a_weapon_that_changes_energy_is_a_difference_of_its_table(tmp_path):
 
 def test_flags_and_stands_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "a.tdump", FlagFilm(state_at=3)))
-    assert d.version == 5 and not d.is_cut
+    assert d.version == 6 and not d.is_cut
     assert [len(r.objectives) for r in d.records] == [2] * 6
     assert [len(r.stands) for r in d.records] == [1] * 6
     assert [int(r.objectives["State"][1]) for r in d.records] == [0, 0, 0, 1, 1, 1]

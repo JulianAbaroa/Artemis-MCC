@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
-import Common.Math.Type;
-import Control.Action.Type;
+import Control.Client.Type;
 import Control.Lockstep.Type;
 import Control.Lockstep.System;
 import Contract.Bridge.Type;
@@ -12,7 +11,7 @@ import std;
 
 namespace
 {
-    using Control::Action::Type::ActionOverride;
+    using Control::Client::Type::AgentInput;
     using Control::Lockstep::Type::ApplyTiming;
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
@@ -21,26 +20,23 @@ namespace
     using Control::Lockstep::Type::k_MinLatency;
     using Control::Lockstep::Type::WaitResult;
     using Control::Lockstep::System::ApplyConnection;
-    using Control::Lockstep::System::BuildOverride;
     using Control::Lockstep::System::DecideControl;
     using Control::Lockstep::System::GetApplyTiming;
     using Control::Lockstep::System::GetDueDecision;
-    using Control::Lockstep::System::GetReleasedOverride;
     using Control::Lockstep::System::IsDecisionTick;
+    using Control::Lockstep::System::IsImitationWindowEnd;
     using Control::Lockstep::System::IsLightTick;
     using Control::Lockstep::System::IsSparse;
     using Control::Lockstep::System::ReadClock;
     using Control::Lockstep::System::RecordWait;
     using Control::Lockstep::System::ResumeIfAnswered;
-    using Control::Lockstep::System::ToClientRequests;
+    using Control::Lockstep::System::ToAgentInput;
+    using Control::Lockstep::System::ToBridgeAgentInput;
 
-    using Contract::Bridge::Type::BridgeAction;
+    using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeClientControl;
     using Contract::Bridge::Type::BridgeMode;
     using Contract::Bridge::Type::BridgeOwner;
-
-    using Common::Math::Type::k_HalfPi;
-    using Common::Math::Type::k_TwoPi;
 
     // return: What the client writes in its control block to ask for these.
     auto MakeClient(BridgeOwner owner, BridgeMode mode, std::uint8_t period, std::uint8_t latency, std::uint32_t agentMask)
@@ -141,126 +137,97 @@ TEST(LockstepTests, ApplyConnectionReleasesWhenGone)
     EXPECT_EQ(gone.AgentMask, 0u);
 }
 
-TEST(LockstepTests, BuildOverrideSanitizes)
+TEST(LockstepTests, ToAgentInputKeepsASaneInputAsItIs)
+{
+    const BridgeAgentInput input{ .MoveForward = 1.0f, .MoveLeft = -0.25f, .YawDelta = 3.0f, .PitchDelta = -0.5f, .Level = 0x1FFFu, .Edge = 0x0A5u };
+
+    bool isRejected{ false };
+    const AgentInput clean{ ToAgentInput(input, isRejected) };
+    EXPECT_FALSE(isRejected);
+    EXPECT_FLOAT_EQ(clean.MoveForward, 1.0f);
+    EXPECT_FLOAT_EQ(clean.MoveLeft, -0.25f);
+    EXPECT_FLOAT_EQ(clean.YawDelta, 3.0f);
+    EXPECT_FLOAT_EQ(clean.PitchDelta, -0.5f);
+    EXPECT_EQ(clean.Level, 0x1FFFu);
+    EXPECT_EQ(clean.Edge, 0x0A5u);
+
+    // The way back gives the same values.
+    const BridgeAgentInput back{ ToBridgeAgentInput(clean) };
+    EXPECT_FLOAT_EQ(back.MoveForward, input.MoveForward);
+    EXPECT_FLOAT_EQ(back.MoveLeft, input.MoveLeft);
+    EXPECT_FLOAT_EQ(back.YawDelta, input.YawDelta);
+    EXPECT_FLOAT_EQ(back.PitchDelta, input.PitchDelta);
+    EXPECT_EQ(back.Level, input.Level);
+    EXPECT_EQ(back.Edge, input.Edge);
+}
+
+TEST(LockstepTests, ToAgentInputSanitizes)
 {
     constexpr float nan{ std::numeric_limits<float>::quiet_NaN() };
     constexpr float inf{ std::numeric_limits<float>::infinity() };
 
-    BridgeAction action{};
-    action.Buttons = 0x1234;
-    action.Lanes = 0x56;
-    action.Yaw = -0.5f;
-    action.Pitch = 0.25f;
-    action.ThrottleForward = 0.5f;
-    action.ThrottleLeft = -0.5f;
+    // Each value that has to change raises the flag on its own.
+    for (int field{ 0 }; field < 6; ++field)
+    {
+        BridgeAgentInput input{};
+        switch (field)
+        {
+        case 0: input.MoveForward = 2.0f; break;
+        case 1: input.MoveLeft = -inf; break;
+        case 2: input.YawDelta = nan; break;
+        case 3: input.PitchDelta = inf; break;
+        case 4: input.Level = 1u << 13; break;
+        default: input.Edge = 0x8000'0000u; break;
+        }
 
+        bool isRejected{ false };
+        const AgentInput clean{ ToAgentInput(input, isRejected) };
+        EXPECT_TRUE(isRejected) << field;
+        EXPECT_FLOAT_EQ(clean.MoveForward, field == 0 ? 1.0f : 0.0f) << field;
+        EXPECT_FLOAT_EQ(clean.MoveLeft, 0.0f) << field;
+        EXPECT_FLOAT_EQ(clean.YawDelta, 0.0f) << field;
+        EXPECT_FLOAT_EQ(clean.PitchDelta, 0.0f) << field;
+        EXPECT_EQ(clean.Level, 0u) << field;
+        EXPECT_EQ(clean.Edge, 0u) << field;
+    }
+
+    // The bits 13 to 31 are dropped and the control bits stay.
     bool isRejected{ false };
-    ActionOverride result{ BuildOverride(action, 0.2f, isRejected) };
-    EXPECT_NEAR(result.Yaw, k_TwoPi - 0.5f, 1e-6);
-    EXPECT_FLOAT_EQ(result.Pitch, 0.25f);
-    EXPECT_FLOAT_EQ(result.ThrottleForward, 0.5f);
-    EXPECT_FLOAT_EQ(result.ThrottleLeft, -0.5f);
-    EXPECT_EQ(result.Buttons, 0x1234u);
-    EXPECT_EQ(result.Lanes, 0x56u);
-    EXPECT_FLOAT_EQ(result.TurnLimit, 0.2f);
-    EXPECT_FALSE(result.LocalIndex.has_value());
-    EXPECT_FALSE(isRejected);
-
-    // A yaw over a turn wraps without a rejection.
-    action.Yaw = 7.0f;
-    result = BuildOverride(action, 0.0f, isRejected);
-    EXPECT_NEAR(result.Yaw, 7.0f - k_TwoPi, 1e-6);
-    EXPECT_FALSE(isRejected);
-
-    // What is not a number or not finite is 0, and counts as a rejection.
-    for (const float bad : { nan, inf, -inf })
-    {
-        BridgeAction broken{};
-        broken.Yaw = bad;
-        isRejected = false;
-        result = BuildOverride(broken, 0.0f, isRejected);
-        EXPECT_NEAR(result.Yaw, 0.0f, 1e-6);
-        EXPECT_TRUE(isRejected);
-
-        broken = BridgeAction{};
-        broken.Pitch = bad;
-        isRejected = false;
-        result = BuildOverride(broken, 0.0f, isRejected);
-        EXPECT_FLOAT_EQ(result.Pitch, 0.0f);
-        EXPECT_TRUE(isRejected);
-
-        broken = BridgeAction{};
-        broken.ThrottleForward = bad;
-        isRejected = false;
-        result = BuildOverride(broken, 0.0f, isRejected);
-        EXPECT_FLOAT_EQ(result.ThrottleForward, 0.0f);
-        EXPECT_TRUE(isRejected);
-
-        broken = BridgeAction{};
-        broken.ThrottleLeft = bad;
-        isRejected = false;
-        result = BuildOverride(broken, 0.0f, isRejected);
-        EXPECT_FLOAT_EQ(result.ThrottleLeft, 0.0f);
-        EXPECT_TRUE(isRejected);
-    }
-
-    // What is out of range is cut to it, and counts as a rejection.
-    BridgeAction wide{};
-    wide.Pitch = 2.0f;
-    isRejected = false;
-    result = BuildOverride(wide, 0.0f, isRejected);
-    EXPECT_NEAR(result.Pitch, k_HalfPi, 1e-6);
+    const AgentInput clean{ ToAgentInput(BridgeAgentInput{ .Level = 0xFFFF'FFFFu, .Edge = 0xFFFF'E001u }, isRejected) };
     EXPECT_TRUE(isRejected);
+    EXPECT_EQ(clean.Level, 0x1FFFu);
+    EXPECT_EQ(clean.Edge, 0x0001u);
 
-    wide = BridgeAction{};
-    wide.ThrottleForward = 1.5f;
-    wide.ThrottleLeft = -1.5f;
-    isRejected = false;
-    result = BuildOverride(wide, 0.0f, isRejected);
-    EXPECT_FLOAT_EQ(result.ThrottleForward, 1.0f);
-    EXPECT_FLOAT_EQ(result.ThrottleLeft, -1.0f);
-    EXPECT_TRUE(isRejected);
-
-    // A turn limit that is not a positive number is 0 (straight to the target), and it is not a rejection.
-    for (const float limit : { nan, -1.0f, 0.0f })
-    {
-        isRejected = false;
-        EXPECT_FLOAT_EQ(BuildOverride(BridgeAction{}, limit, isRejected).TurnLimit, 0.0f);
-        EXPECT_FALSE(isRejected);
-    }
-
-    // The flag is only raised: a clean action leaves it as it came.
+    // The flag is only raised: a clean input leaves it as it came.
     isRejected = true;
-    BuildOverride(BridgeAction{}, 0.0f, isRejected);
+    ToAgentInput(BridgeAgentInput{}, isRejected);
     EXPECT_TRUE(isRejected);
 }
 
-TEST(LockstepTests, ToClientRequestsBits)
+TEST(LockstepTests, IsImitationWindowEnd)
 {
-    auto requests = ToClientRequests(0x1);
-    EXPECT_TRUE(requests.IsWeaponSwitch);
-    EXPECT_FALSE(requests.IsGrenadeSwitch);
-    EXPECT_FALSE(requests.IsZoom);
+    // N 4 and d 2: the windows are [4k, 4k + 2) and [4k + 2, 4k + 4): they end at the even ticks, the last of each period at the decision tick.
+    EXPECT_FALSE(IsImitationWindowEnd(1, 4, 2));
+    EXPECT_TRUE(IsImitationWindowEnd(2, 4, 2));
+    EXPECT_FALSE(IsImitationWindowEnd(3, 4, 2));
+    EXPECT_TRUE(IsImitationWindowEnd(4, 4, 2));
+    EXPECT_TRUE(IsImitationWindowEnd(8, 4, 2));
 
-    requests = ToClientRequests(0x2);
-    EXPECT_FALSE(requests.IsWeaponSwitch);
-    EXPECT_TRUE(requests.IsGrenadeSwitch);
-    EXPECT_FALSE(requests.IsZoom);
+    // d = N: one window per period.
+    EXPECT_FALSE(IsImitationWindowEnd(2, 4, 4));
+    EXPECT_TRUE(IsImitationWindowEnd(4, 4, 4));
 
-    requests = ToClientRequests(0x4);
-    EXPECT_FALSE(requests.IsWeaponSwitch);
-    EXPECT_FALSE(requests.IsGrenadeSwitch);
-    EXPECT_TRUE(requests.IsZoom);
+    // d does not divide N: the count restarts at each decision tick.
+    EXPECT_TRUE(IsImitationWindowEnd(3, 5, 3));
+    EXPECT_FALSE(IsImitationWindowEnd(4, 5, 3));
+    EXPECT_TRUE(IsImitationWindowEnd(5, 5, 3));
+    EXPECT_TRUE(IsImitationWindowEnd(8, 5, 3));
+    EXPECT_FALSE(IsImitationWindowEnd(9, 5, 3));
 
-    requests = ToClientRequests(0x7);
-    EXPECT_TRUE(requests.IsWeaponSwitch);
-    EXPECT_TRUE(requests.IsGrenadeSwitch);
-    EXPECT_TRUE(requests.IsZoom);
-
-    requests = ToClientRequests(0x0);
-    EXPECT_FALSE(requests.IsWeaponSwitch);
-    EXPECT_FALSE(requests.IsGrenadeSwitch);
-    EXPECT_FALSE(requests.IsZoom);
+    // Nothing closes at tick 0 or with a zero period or window.
+    EXPECT_FALSE(IsImitationWindowEnd(0, 4, 2));
+    EXPECT_FALSE(IsImitationWindowEnd(4, 0, 2));
+    EXPECT_FALSE(IsImitationWindowEnd(4, 4, 0));
 }
 
 TEST(LockstepTests, GetDueDecision)
@@ -332,33 +299,6 @@ TEST(LockstepTests, GetApplyTiming)
 
     // A decision already applied is not applied again.
     EXPECT_EQ(GetApplyTiming(4, 4, 2, 6), ApplyTiming::None);
-}
-
-TEST(LockstepTests, GetReleasedOverride)
-{
-    ActionOverride bot{};
-    bot.Yaw = 1.0f;
-    bot.Pitch = 0.2f;
-    bot.Buttons = 5;
-    bot.ThrottleForward = 1.0f;
-
-    const std::optional<ActionOverride> released{ GetReleasedOverride(bot) };
-    ASSERT_TRUE(released.has_value());
-    EXPECT_FLOAT_EQ(released->Yaw, 1.0f);
-    EXPECT_FLOAT_EQ(released->Pitch, 0.2f);
-    EXPECT_EQ(released->Buttons, 0u);
-    EXPECT_FLOAT_EQ(released->ThrottleForward, 0.0f);
-    EXPECT_FLOAT_EQ(released->ThrottleLeft, 0.0f);
-    EXPECT_FLOAT_EQ(released->TurnLimit, 0.0f);
-    EXPECT_EQ(released->Lanes, 0u);
-    EXPECT_FALSE(released->LocalIndex.has_value());
-
-    // A local player goes back to its own input.
-    ActionOverride local{ bot };
-    local.LocalIndex = 0;
-    EXPECT_FALSE(GetReleasedOverride(local).has_value());
-
-    EXPECT_FALSE(GetReleasedOverride(std::nullopt).has_value());
 }
 
 TEST(LockstepTests, ReadClock)

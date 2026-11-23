@@ -1,7 +1,14 @@
 module Engine.Control.Input.State;
 import :Possession;
 
+import Control.Client.Type;
 import std;
+
+namespace
+{
+    using ::Control::Client::Type::AgentInput;
+    using ::Control::Client::Type::AgentInputReducer;
+}
 
 namespace Engine::Control::Input::State
 {
@@ -16,6 +23,8 @@ namespace Engine::Control::Input::State
         }
 
         m_Bot = ClientDriven{ .Player = playerIndex, .Handle = handle };
+        m_Reducer = AgentInputReducer{};
+        m_Window = AgentInput{};
         m_IsThreadLogDone = false;
         m_Player.store(handle);
         m_Ticks.store(0);
@@ -28,6 +37,8 @@ namespace Engine::Control::Input::State
     auto PossessionStore::Release() -> void
     {
         m_Bot.reset();
+        m_Reducer = AgentInputReducer{};
+        m_Window = AgentInput{};
         m_Player.store(0xFFFFFFFF);
     }
 
@@ -64,6 +75,21 @@ namespace Engine::Control::Input::State
     auto PossessionStore::IsActive() const -> bool
     {
         return m_Player.load() != 0xFFFFFFFF;
+    }
+
+    auto PossessionStore::GetReducer() -> AgentInputReducer&
+    {
+        return m_Reducer;
+    }
+
+    auto PossessionStore::SetWindow(const AgentInput& window) -> void
+    {
+        m_Window = window;
+    }
+
+    auto PossessionStore::GetWindow() const -> AgentInput
+    {
+        return m_Window;
     }
 
     auto PossessionStore::CountTick(bool isDelivered, bool isUnsupported) -> void

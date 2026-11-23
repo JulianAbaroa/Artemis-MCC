@@ -1,6 +1,6 @@
 export module Bridge.Transport.System:Engine;
 
-import Control.Action.Type;
+import Control.Client.Type;
 import Bridge.Transport.Type;
 import std;
 
@@ -12,11 +12,11 @@ export namespace Bridge::Transport::System
     class BridgeEngine
     {
     private:
-        using ActionOverride = Control::Action::Type::ActionOverride;
-        using ClientRequests = Control::Action::Type::ClientRequests;
+        using AgentInput = Control::Client::Type::AgentInput;
 
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
         using BridgeActiveSetup = Bridge::Transport::Type::BridgeActiveSetup;
+        using BridgeImitation = Bridge::Transport::Type::BridgeImitation;
         using BridgeSetupInfo = Bridge::Transport::Type::BridgeSetupInfo;
         using BridgeSetupRequest = Bridge::Transport::Type::BridgeSetupRequest;
 
@@ -53,10 +53,23 @@ export namespace Bridge::Transport::System
         // return: The setup the engine holds.
         virtual auto GetActiveSetup() const -> BridgeActiveSetup = 0;
 
-        // Sets the override of a player for the next action, or none to give the player back to the engine.
-        virtual auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void = 0;
+        // Gives a player a window of AgentInput: the client of Artemis plays it every tick (D363) and repeats the last one until the next.
+        // param playerHandle: Handle of the player in the slot, so the engine drops the input when the slot has another player.
+        // param input: Already sane (ToAgentInput).
+        // param windowTicks: Ticks of the window (d).
+        // param turnLimit: Radians per tick and per axis the look may ask, 0 = no limit.
+        virtual auto SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const AgentInput& input, std::uint32_t windowTicks,
+            float turnLimit) -> void = 0;
 
-        // Asks the engine for the weapon, grenade and interaction requests of a client player.
-        virtual auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void = 0;
+        // Stops the AgentInput of a player: the engine action is its own again.
+        virtual auto ClearAgentInput(std::size_t playerIndex) -> void = 0;
+
+        // Closes the window of the possessed player, if any: what it did since the previous close becomes the last window (D364).
+        // note: Game thread, once per action tick, where the window ends (IsImitationWindowEnd).
+        virtual auto CloseImitationWindow() -> void = 0;
+
+        // return: The possessed player and the last closed window of what it did, read together (NoHandle and zero when none is possessed).
+        // note: Game thread, when the clock of a tick is read, so the handle and the window are of the same moment.
+        virtual auto GetImitation() const -> BridgeImitation = 0;
     };
 }

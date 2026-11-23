@@ -8,7 +8,9 @@ export namespace Bridge::Codec::Dump::Type
     // Version of the .tdump format (D151). Raised when the file header, the record header or the order of the blocks changes.
     // note: 2 adds the Objectives and Stands blocks at the end of each record. 3 adds the Weapons and Projectiles blocks after them.
     // 4 adds the Explosives block and 5 the Lifts block (D261). A reader of an older version reads those files without the blocks they do not have.
-    inline constexpr std::uint32_t k_TickDumpVersion{ 5 };
+    // 6 adds the possession of the user to BridgeTickHeader (PossessedPlayer and PossessedInput, D365): a schema change only, the blocks and their order
+    // are those of 5.
+    inline constexpr std::uint32_t k_TickDumpVersion{ 6 };
 
     // First bytes of a .tdump file.
     inline constexpr std::array<char, 8> k_TickDumpMagic{ 'A', 'T', 'D', 'U', 'M', 'P', '\0', '\0' };

@@ -328,12 +328,15 @@ ALL = pytest.mark.parametrize("film", FILMS)
 @ALL
 def test_header_counts_match_the_rows(film):
     """Covers: TickHeader.PlayerCount, TickHeader.EntityCount, TickHeader.ObjectiveCount, TickHeader.StandCount, TickHeader.WeaponCount,
-    TickHeader.ProjectileCount, TickHeader.ExplosiveCount, TickHeader.LiftCount, TickHeader.Flags, TickHeader.LastEventSequence.
-    Every count is the number of rows of its block, no tick is truncated and LastEventSequence is the Sequence of the newest event so far."""
+    TickHeader.ProjectileCount, TickHeader.ExplosiveCount, TickHeader.LiftCount, TickHeader.Flags, TickHeader.LastEventSequence,
+    TickHeader.PossessedPlayer, TickHeader.PossessedInput.
+    PossessedPlayer is NoHandle and PossessedInput is zero in every tick of a .tdump (a replay has no possession and no window clock, D365). Every count is the number of rows of its block, no tick is truncated and LastEventSequence is the Sequence of the newest event so far."""
     s = Film(film)
     for name in ("PlayerCount", "EntityCount", "ObjectiveCount", "StandCount", "WeaponCount", "ProjectileCount", "ExplosiveCount", "LiftCount"):
         s.Clean("header_count_" + name)
     s.Clean("header_flags")
+    s.Clean("header_possessed_player")
+    s.Clean("header_possessed_input")
     s.Clean("header_last_event_sequence")
     s.Clean("table_not_sorted_or_repeated")
 
@@ -821,7 +824,7 @@ def Cover(struct, test, *fields):
 
 
 Cover("TickHeader", "test_header_counts_match_the_rows", "PlayerCount", "EntityCount", "ObjectiveCount", "StandCount", "WeaponCount", "ProjectileCount",
-      "ExplosiveCount", "LiftCount", "Flags", "LastEventSequence")
+      "ExplosiveCount", "LiftCount", "Flags", "LastEventSequence", "PossessedPlayer", "PossessedInput")
 Cover("TickHeader", REPLAY + "MapIdIsTheSameNonZeroValueInEachFilm", "MapId")
 Cover("Match", REPLAY + "CtfFlagEventsMatchTheExpectedList", "GameTick")
 Cover("Match", "test_match_phase_and_round_state", "Phase", "RoundState")

@@ -27,6 +27,7 @@ namespace
     using Perception::Details::Type::WeaponDetail;
     using Blam::Layout::Player::Type::Traits::PlayerTraits;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
+    using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeGround;
     using Contract::Bridge::Type::BridgePlayerTraits;
     using Contract::Bridge::Type::BridgeInfiniteAmmo;
@@ -479,6 +480,8 @@ namespace Bridge::Codec::Flat::System
         flat.Header.ExplosiveCount = static_cast<std::uint16_t>(explosiveCount);
         flat.Header.LiftCount = static_cast<std::uint16_t>(liftCount);
         flat.Header.Generation = tick.Generation;
+        flat.Header.PossessedPlayer = k_NoHandle;
+        flat.Header.PossessedInput = BridgeAgentInput{};
         flat.Header.MapId = tick.MapId;
         flat.Header.Flags = flags;
     }

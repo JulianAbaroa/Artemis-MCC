@@ -3,8 +3,8 @@
 Group `5_Engine` - static library inside the game process - applies the actions of the players and runs the bots.
 
 ## Responsibility
-- `PlayerActionDetour`: once per tick on the game thread, writes the overrides into the action of any player (local or bot) and
-  publishes the actions. It asks the `ActionSource` port for the overrides of the client's players. After the engine applied the actions it
+- `PlayerActionDetour`: once per tick on the game thread, writes the action of any player (local or bot: an override of the bench or the Viewer, or what the client of Artemis makes of an AgentInput) and
+  publishes the actions. It asks the `ActionSource` port (the bridge, which sets the `AgentInput` of Python's players in the `PlayerActionStore` through `BridgeEngine`) before it reads the store. After the engine applied the actions it
   also calls the engine function `CopyActionToView` (0x62fcc) on the game thread for every view that shows a non local player, outside the
   theater and only if that player has an action in the tick (after the overrides), as the engine does in the theater: the camera, zoom and
   weapon of a view that watches a bot (Watch POV) follow it tick by tick (VW.9a.y, D349). The decision is the pure `FindViewActionPlayer`. A
@@ -37,15 +37,15 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   bot, never a human, the salt must match: pure `FindPossessedBot`) and the pure `TakeTickAction` copies the accumulated aim, the held state and the
   pending pulses to the action, clearing them (delivered once), as 0x628b0 copies the block. The result goes through the SAME path as an agent
   (`MakeClientAction`: `ActionOverride` plus `ClientRequests`; `BuildAction`, `UnitRules`, hold lanes D121, interaction D118 and the unit slot are the
-  existing ones). The Python override of the possessed bot is discarded (D351). While a bot is possessed the human local player of input user 0 gets a
+  existing ones). The `AgentInput` of Python for the possessed bot is not played while it is possessed (D351, D367). While a bot is possessed the human local player of input user 0 gets a
   neutral override (`MakeNeutralOverride`, no write to its control block, D361) whether it has a unit or not, only when it has an engine action and no
   override of an agent (a local agent is never touched, D350): pure `ShouldNeutralizeLocal`. No request, a human or a gone bot releases the possession the
   same tick. A tick whose unit is missing, or that no frame has served yet, gives the bot a neutral action and counts; one WARNING per possession for a
   missing unit. `ReadClientSettings`, `ReadDualWieldRestrictions` and `ReadInputTable` (`Input.System:ClientSource`) are what the client of the engine reads
   about a user: the oracle and the possession both use them. `UnitContext` never passes an input user outside 0..3 to 0x61830. A request is dropped when
   the Viewer stops publishing for more than 100 ms (stalled Presents), which releases the bot. The bot is shared by the frame thread and the tick thread without a lock, so `StepFrame` checks that it runs on the thread that began the possession (`PossessionStore::IsTickThread`): on another thread it logs one ERROR and `Disable`s the possession. A bot with no new frame for more than `k_PossessMaxStaleTicks` ticks gets a neutral action and forgets its held state (`TickFrameAge`). `SetPossession` of both detours connects the stores
-  (before Install: without it nobody is possessed). The tick marks the possessed player: see `Bridge.Codec` (domain only, not in the bridge yet).
-- Agents through the client of Artemis (VW.9c.3 C and D, D362, D363, D367; the bridge stays v1): `PlayerActionStore` holds per player an `AgentDelivery` (the player handle,
+  (before Install: without it nobody is possessed). The tick marks the possessed player: see `Bridge.Codec` (and in the bridge since VW.9c.3 D). Imitation (D364): `PossessionService::StepFrame` also adds each frame it ran to the `AgentInputReducer` of the `PossessionStore`, and `PossessionService::CloseWindow` (game thread, called by the bridge through its engine port where a window of d ticks ends) turns what was added into the last closed window (`CloseAgentInput`), which `PossessionStore::GetWindow` gives back: the level and the edge of each control (a frame with down count 1 is an edge), the move axes of the last frame and the look the client was asked in the window, before zoom and damp. The reducer and the window start empty with each possession and are forgotten when it ends.
+- Agents through the client of Artemis (VW.9c.3 C and D, D362, D363, D367; the bridge sets them through `SetAgentInput` since D2, v2): `PlayerActionStore` holds per player an `AgentDelivery` (the player handle,
   the `AgentInput`, the window length d in ticks, the turn limit per tick and a sequence number that rises with every `SetAgentInput(index, handle, ...)`), under the same lock as the overrides. It is EXCLUSIVE
   with an `ActionOverride`: setting one removes the other (the last wins), releasing an override (`SetOverride` with nothing) leaves the AgentInput, `ClearAgentInput`
   stops it (with a handle, only the AgentInput of that handle), `BotService::RemoveBot` and `Cleanup` drop it; a turn limit that is not finite or is negative is kept as 0 (no limit). The hook copies both
@@ -116,7 +116,7 @@ Group `5_Engine` - static library inside the game process - applies the actions 
 - Know the bridge: it sees it only through `ActionSource`, which `Mod` implements.
 
 ## Input and output
-- Input: overrides set by `ActionSource::Prepare`, bot, team and remove requests, roster requests, virtual input states.
+- Input: the `AgentInput` or override set in the `PlayerActionStore` (by `ActionSource::Prepare` for Python's players, by the bench and the Viewer), bot, team and remove requests, roster requests, virtual input states.
 - Output: writes into the engine's player actions and input; the published actions and session snapshot.
 
 ## Public interface

@@ -13,6 +13,8 @@ namespace
     using Common::Engine::Type::k_NoHandle;
 
     using ::Control::Action::Type::UnitClientState;
+    using ::Control::Client::System::AddAgentFrame;
+    using ::Control::Client::System::CloseAgentInput;
     using ::Control::Client::System::StepClient;
     using ::Control::Client::Type::ClientContextSource;
     using ::Control::Client::Type::ClientSettings;
@@ -87,5 +89,13 @@ namespace Engine::Control::Input::System
         if (step.Status != ClientStatus::Ran) return;
 
         AccumulateFrame(*bot, step, context);
+        AddAgentFrame(m_PossessionStore.GetReducer(), frame, step.Output.LookYawRequested, step.Output.LookPitchRequested);
+    }
+
+    auto PossessionService::CloseWindow() -> void
+    {
+        if (m_PossessionStore.IsDisabled() || m_PossessionStore.Find() == nullptr) return;
+
+        m_PossessionStore.SetWindow(CloseAgentInput(m_PossessionStore.GetReducer()));
     }
 }

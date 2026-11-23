@@ -1,12 +1,15 @@
 export module Bridge.Codec.Flat.Type;
 
 import Common.Engine.Type;
+import Contract.Bridge.Type;
 import Bridge.Codec.Tick.Type;
 import std;
 
 namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_NoHandle;
+    using Contract::Bridge::Type::BridgeAgentInput;
 }
 
 export namespace Bridge::Codec::Flat::Type
@@ -20,6 +23,11 @@ export namespace Bridge::Codec::Flat::Type
 
         // DecisionTick of the bridge action applied to each player (by player table index), 0 = none.
         std::array<std::uint64_t, k_MaxPlayers> AppliedDecisions{};
+
+        // The player the user possesses and the last closed window of what it did, as an AgentInput (D364), read together on the game thread.
+        // NoHandle and zero when none is possessed.
+        std::uint32_t PossessedPlayer{ k_NoHandle };
+        BridgeAgentInput PossessedInput{};
 
         // Whether this state is a decision tick of a connected client (a tick goes out).
         bool IsDecision{ false };

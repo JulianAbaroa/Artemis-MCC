@@ -1,6 +1,6 @@
 export module Tests.Support.FakeBridge;
 
-import Control.Action.Type;
+import Control.Client.Type;
 import Bridge.Transport.Type;
 import Bridge.Transport.System;
 import std;
@@ -10,18 +10,21 @@ import std;
 
 namespace
 {
-    using Control::Action::Type::ActionOverride;
+    using Control::Client::Type::AgentInput;
     using Bridge::Transport::System::BridgeEngine;
     using Contract::Bridge::Type::BridgeSetupResult;
 }
 
 export namespace Tests::Support::FakeBridge
 {
-    // What the bridge asked of the engine, in order.
-    struct OverrideCall
+    // What the bridge asked of the engine for a player, in order: an AgentInput, or none when it cleared it.
+    struct AgentCall
     {
         std::size_t Player{ 0 };
-        std::optional<ActionOverride> Value{};
+        std::optional<AgentInput> Input{};
+        std::uint32_t PlayerHandle{ 0 };
+        std::uint32_t WindowTicks{ 0 };
+        float TurnLimit{ 0.0f };
     };
 
     // Engine behind the port: keeps what the bridge writes and gives it back, and the phase and match the test sets.
@@ -29,13 +32,13 @@ export namespace Tests::Support::FakeBridge
     class FakeBridgeEngine : public BridgeEngine
     {
     private:
+        using AgentInput = Control::Client::Type::AgentInput;
+
+        using BridgeImitation = Bridge::Transport::Type::BridgeImitation;
         using BridgePhase = Contract::Bridge::Type::BridgePhase;
         using BridgeActiveSetup = Bridge::Transport::Type::BridgeActiveSetup;
         using BridgeSetupInfo = Bridge::Transport::Type::BridgeSetupInfo;
         using BridgeSetupRequest = Bridge::Transport::Type::BridgeSetupRequest;
-
-        using ActionOverride = Control::Action::Type::ActionOverride;
-        using ClientRequests = Control::Action::Type::ClientRequests;
 
     public:
         FakeBridgeEngine() = default;
@@ -54,8 +57,9 @@ export namespace Tests::Support::FakeBridge
         std::size_t m_SetupCancels{ 0 };
         BridgeSetupInfo m_SetupInfo{};
         BridgeActiveSetup m_ActiveSetup{};
-        std::vector<OverrideCall> m_OverrideCalls{};
-        std::size_t m_RequestCount{ 0 };
+        std::vector<AgentCall> m_AgentCalls{};
+        std::size_t m_WindowCloses{ 0 };
+        BridgeImitation m_Imitation{};
         mutable std::function<void()> m_OnGetEngineStarts{};
 
         auto GetPhase() const -> BridgePhase override { return m_Phase; }
@@ -97,23 +101,26 @@ export namespace Tests::Support::FakeBridge
         auto GetSetupResult() const -> BridgeSetupInfo override { return m_SetupInfo; }
         auto GetActiveSetup() const -> BridgeActiveSetup override { return m_ActiveSetup; }
 
-        auto SetOverride(std::size_t playerIndex, std::optional<ActionOverride> actionOverride) -> void override
+        auto SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const AgentInput& input, std::uint32_t windowTicks,
+            float turnLimit) -> void override
         {
-            m_OverrideCalls.push_back(OverrideCall{ .Player = playerIndex, .Value = actionOverride });
+            m_AgentCalls.push_back(AgentCall{ .Player = playerIndex, .Input = input, .PlayerHandle = playerHandle, .WindowTicks = windowTicks,
+                .TurnLimit = turnLimit });
         }
 
-        auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void override
+        auto ClearAgentInput(std::size_t playerIndex) -> void override
         {
-            static_cast<void>(playerIndex);
-            static_cast<void>(requests);
-            ++m_RequestCount;
+            m_AgentCalls.push_back(AgentCall{ .Player = playerIndex });
         }
 
-        // return: How many overrides with an action the bridge set for the player.
-        auto CountOverrides(std::size_t playerIndex) const -> std::size_t
+        auto CloseImitationWindow() -> void override { ++m_WindowCloses; }
+        auto GetImitation() const -> BridgeImitation override { return m_Imitation; }
+
+        // return: How many AgentInputs the bridge gave the player.
+        auto CountInputs(std::size_t playerIndex) const -> std::size_t
         {
-            return static_cast<std::size_t>(std::ranges::count_if(m_OverrideCalls, [playerIndex](const OverrideCall& call) {
-                return call.Player == playerIndex && call.Value.has_value();
+            return static_cast<std::size_t>(std::ranges::count_if(m_AgentCalls, [playerIndex](const AgentCall& call) {
+                return call.Player == playerIndex && call.Input.has_value();
             }));
         }
     };

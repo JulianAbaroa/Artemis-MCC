@@ -10,7 +10,6 @@ import std;
 namespace
 {
     using Control::Action::Type::ActionOverride;
-    using Control::Action::Type::AppliedFacing;
     using Control::Action::Type::ClientRequests;
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::ClientAction;
@@ -25,8 +24,6 @@ namespace
     using Control::Action::System::UnitRules;
 
     using Common::Engine::Type::k_TicksPerSecond;
-    using Common::Math::System::TurnToward;
-    using Common::Math::System::MoveToward;
 
     using Blam::Layout::Action::Type::k_HoldLanes;
     using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
@@ -216,7 +213,6 @@ namespace Control::Action::System
         actionOverride.Buttons = output.Buttons & k_ValidButtons;
         actionOverride.Yaw = yaw;
         actionOverride.Pitch = pitch;
-        actionOverride.TurnLimit = 0.0f;
         actionOverride.ThrottleForward = output.MoveForward;
         actionOverride.ThrottleLeft = output.MoveSide;
         actionOverride.Lanes = output.Lanes & ~heldBits;
@@ -249,21 +245,8 @@ namespace Control::Action::System
         const std::optional<UnitClientState>& unit, std::optional<std::uint32_t> holdTicks, const ClientRequests& requests,
         std::uint64_t sequence, const UnitRules& rules, PlayerActionHistory& history) -> std::array<float, 2>
     {
-        // note: The turn goes on from the facing written last tick while the unit is the same. A new unit (first tick of an
-        // override, a spawn, another player in the slot, a new match) starts from the aim the unit has, so it never jumps.
-        const auto& previous{ history.Facing };
-        std::array<float, 2> facing{ actionOverride.Yaw, actionOverride.Pitch };
-        if (unit)
-        {
-            const std::array<float, 2> from{ previous && previous->Unit == unit->Unit ? previous->Facing : unit->Facing };
-            facing = { TurnToward(from[0], actionOverride.Yaw, actionOverride.TurnLimit),
-                MoveToward(from[1], actionOverride.Pitch, actionOverride.TurnLimit) };
-            history.Facing = AppliedFacing{ .Unit = unit->Unit, .Facing = facing };
-        }
-        else
-        {
-            history.Facing.reset();
-        }
+        // note: The facing is the one of the override, straight: the turn limit of D145 is gone (the client of Artemis limits the look per tick, D363).
+        const std::array<float, 2> facing{ actionOverride.Yaw, actionOverride.Pitch };
         const std::array<float, 2> throttle{ actionOverride.ThrottleForward, actionOverride.ThrottleLeft };
 
         // note: The zoom level of the action is marked absent unless the agent asks for one, so the unit keeps its zoom (D120).

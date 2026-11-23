@@ -15,6 +15,7 @@ import std;
 namespace
 {
     using Control::Action::Type::ActionOverride;
+    using Engine::Control::Input::Type::AgentDelivery;
     using Engine::Control::Input::Type::PlayerActions;
     using Engine::Control::Input::Type::ReadAction;
     using Engine::Control::Simulation::Type::Bot;
@@ -67,11 +68,14 @@ namespace DevTools::Viewer::Inspector::System
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> overrides{};
         actionStore.CopyOverrides(overrides);
 
+        std::array<std::optional<AgentDelivery>, k_MaxActionPlayers> deliveries{};
+        actionStore.CopyAgentInputs(deliveries);
+
         std::vector<Bot> bots{};
         botStore.CopyBots(bots);
 
         const bool isBot{ std::ranges::any_of(bots, [index](const Bot& bot) { return bot.PlayerIndex == index; }) };
-        const char* writer{ overrides[index] ? "Python / override" : (isBot ? "bot" : "engine") };
+        const char* writer{ overrides[index] ? "override (bench / viewer)" : (deliveries[index] ? "AgentInput (bridge / bench)" : (isBot ? "bot" : "engine")) };
 
         const auto& action{ actions.Actions[index] };
         const bool hasAction{ (actions.Mask & (1u << index)) != 0 };

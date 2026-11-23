@@ -4,7 +4,6 @@ import :Engine;
 
 import Common.Log.System;
 import Services.Settings.State;
-import Control.Action.Type;
 import Control.Lockstep.Type;
 import Bridge.Transport.Type;
 import Bridge.Transport.State;
@@ -25,8 +24,6 @@ export namespace Bridge::Transport::System
 
         using SettingsStore = Services::Settings::State::SettingsStore;
 
-        using ActionOverride = Control::Action::Type::ActionOverride;
-
         using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
         using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
 
@@ -35,6 +32,7 @@ export namespace Bridge::Transport::System
         using BridgeAction = Contract::Bridge::Type::BridgeAction;
         using BridgeClock = Bridge::Codec::Flat::Type::BridgeClock;
         using BridgeLinkState = Bridge::Transport::Type::BridgeLinkState;
+        using BridgeSlot = Bridge::Transport::Type::BridgeSlot;
         using BridgeStatus = Bridge::Transport::Type::BridgeStatus;
 
         using BridgeStore = Bridge::Transport::State::BridgeStore;
@@ -69,7 +67,8 @@ export namespace Bridge::Transport::System
         // still.
         auto Update() -> void;
 
-        // Reads the clock of the tick about to be copied. Game thread, between two ticks, right before the capture (D305).
+        // Reads the clock of the tick about to be copied, with the possessed player and the last window of what it did, read together (D364). Game thread,
+        // between two ticks, right before the capture (D305).
         // param isConsecutive: False after dropped ticks or a reset, so a jump is not counted as a clock skip.
         // note: The first read of a new match is not a skip either: every engine starts the clock again (D139).
         auto CaptureClock(bool isConsecutive, BridgeClock& out) -> void;
@@ -88,8 +87,8 @@ export namespace Bridge::Transport::System
         // Completes the BridgeTick of BeginTick with the clock, publishes it and wakes the client.
         auto EndTick(BridgeTick& flat, const BridgeClock& clock) -> void;
 
-        // Applies the actions of the client to its players before the engine applies the actions of a tick, waiting for them in
-        // Lockstep. Game thread (PlayerAction hook), once per tick.
+        // Gives the AgentInput of the client to its players before the engine applies the actions of a tick, waiting for them in
+        // Lockstep, and closes the window of the possessed player where a window ends. Game thread (PlayerAction hook), once per tick.
         // param actionTick: Number of the action tick about to be applied (1 + the ticks applied before).
         auto Apply(std::uint64_t actionTick) -> void;
 
@@ -110,8 +109,8 @@ export namespace Bridge::Transport::System
         auto ApplyPause(bool isRequested) -> void;
 
         auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t;
-        auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, BridgeHookState& hook) -> void;
+        auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, std::uint8_t windowTicks, BridgeHookState& hook) -> void;
         auto ReleasePlayers(BridgeHookState& hook, std::uint32_t keepMask) -> void;
-        auto ReleasePlayer(BridgeHookState& hook, std::size_t player) -> void;
+        auto ReleasePlayer(BridgeHookState& hook, std::size_t player, const BridgeSlot& slot) -> void;
     };
 }

@@ -6,6 +6,7 @@ module Bridge.Transport.System;
 import :Service;
 
 import Common.Engine.Type;
+import Control.Client.Type;
 import Control.Lockstep.Type;
 import Control.Lockstep.System;
 import Blam.Layout.Action.Type;
@@ -13,28 +14,30 @@ import std;
 
 namespace
 {
+    using Control::Client::Type::AgentInput;
     using Control::Lockstep::Type::ApplyTiming;
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
     using Control::Lockstep::Type::WaitResult;
     using Control::Lockstep::System::ApplyConnection;
-    using Control::Lockstep::System::BuildOverride;
     using Control::Lockstep::System::DecideControl;
     using Control::Lockstep::System::GetApplyTiming;
     using Control::Lockstep::System::GetDueDecision;
-    using Control::Lockstep::System::GetReleasedOverride;
     using Control::Lockstep::System::IsDecisionTick;
+    using Control::Lockstep::System::IsImitationWindowEnd;
     using Control::Lockstep::System::IsSparse;
     using Control::Lockstep::System::ReadClock;
     using Control::Lockstep::System::RecordWait;
     using Control::Lockstep::System::ResumeIfAnswered;
-    using Control::Lockstep::System::ToClientRequests;
+    using Control::Lockstep::System::ToAgentInput;
+    using Control::Lockstep::System::ToBridgeAgentInput;
 
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgeMode;
     using Contract::Bridge::Type::BridgePhase;
     using Bridge::Transport::Type::BridgeCounters;
+    using Bridge::Transport::Type::BridgeImitation;
     using Bridge::Transport::Type::BridgeSlot;
 
     using std::chrono::steady_clock;
@@ -322,6 +325,10 @@ namespace Bridge::Transport::System
             out.AppliedDecisions[player] = m_BridgeStore.GetAppliedDecision(player);
         }
 
+        const BridgeImitation imitation{ m_Engine.GetImitation() };
+        out.PossessedPlayer = imitation.PlayerHandle;
+        out.PossessedInput = ToBridgeAgentInput(imitation.Input);
+
         const BridgeControlState control{ m_BridgeStore.GetControl() };
         out.IsDecision = IsDecisionTick(m_BridgeStore.GetRegion() != nullptr, control, out.ActionTick, reading.IsRepeated);
         out.IsSparse = IsSparse(control, m_SettingsStore.GetEveryTickDemand());
@@ -366,6 +373,8 @@ namespace Bridge::Transport::System
 
         flat.Header.MatchId = static_cast<std::uint32_t>(m_Engine.GetEngineStarts());
         flat.Header.ActionTick = clock.ActionTick;
+        flat.Header.PossessedPlayer = clock.PossessedPlayer;
+        flat.Header.PossessedInput = clock.PossessedInput;
         flat.Header.PublishQpc = static_cast<std::uint64_t>(counter.QuadPart);
 
         // The actions of a slot must carry the handle of its player in this tick (D40).
@@ -421,14 +430,11 @@ namespace Bridge::Transport::System
             if (timing != ApplyTiming::None)
             {
                 if (timing == ApplyTiming::Late) m_BridgeStore.AddLateAction();
-                this->ApplyDecision(*region, sequence, agentMask, hook);
-            }
-
-            for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player)
-            {
-                if ((hook.ControlledMask & (1u << player)) != 0) m_Engine.SetOverride(player, hook.Overrides[player]);
+                this->ApplyDecision(*region, sequence, agentMask, control.Latency, hook);
             }
         }
+
+        if (IsImitationWindowEnd(actionTick, control.DecisionPeriod, control.Latency)) m_Engine.CloseImitationWindow();
 
         m_BridgeStore.SetActionTick(actionTick);
     }
@@ -617,13 +623,13 @@ namespace Bridge::Transport::System
         return sequence;
     }
 
-    auto BridgeService::ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask,
+    auto BridgeService::ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, std::uint8_t windowTicks,
         BridgeHookState& hook) -> void
     {
         std::array<BridgeSlot, k_MaxPlayers> slots{};
         m_BridgeStore.CopySlots(slots);
 
-        // The turn limit of the client goes with each decision, so all its agents turn alike from the tick it is applied (D114).
+        // The turn limit of the client goes with each decision, so all its agents turn alike from the tick it is applied (D363).
         const float turnLimit{ region.Control.Client.RequestTurnLimit };
 
         for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player)
@@ -643,23 +649,17 @@ namespace Bridge::Transport::System
             if (slots[player].Handle == k_NoHandle || action.PlayerHandle != slots[player].Handle)
             {
                 m_BridgeStore.AddHandleMismatch();
-                if ((hook.ControlledMask & (1u << player)) != 0) this->ReleasePlayer(hook, player);
+                if ((hook.ControlledMask & (1u << player)) != 0) this->ReleasePlayer(hook, player, slots[player]);
                 continue;
             }
 
             bool isRejected{ false };
-            ActionOverride actionOverride{ BuildOverride(action, turnLimit, isRejected) };
+            const AgentInput input{ ToAgentInput(action.Input, isRejected) };
             if (isRejected) m_BridgeStore.AddRejectedAction();
-            actionOverride.LocalIndex = slots[player].LocalIndex;
-            hook.Overrides[player] = actionOverride;
+
+            m_Engine.SetAgentInput(player, slots[player].Handle, input, windowTicks, turnLimit);
             hook.ControlledMask |= 1u << player;
             m_BridgeStore.SetAppliedDecision(player, decision);
-
-            const auto requests{ static_cast<std::uint8_t>(action.Requests) };
-            if (requests != 0)
-            {
-                m_Engine.RequestClient(player, ToClientRequests(requests));
-            }
         }
 
         hook.AppliedSequence = decision;
@@ -670,19 +670,22 @@ namespace Bridge::Transport::System
         const std::uint32_t released{ hook.ControlledMask & ~keepMask };
         if (released == 0) return;
 
+        std::array<BridgeSlot, k_MaxPlayers> slots{};
+        m_BridgeStore.CopySlots(slots);
+
         for (std::size_t player{ 0 }; player < k_MaxPlayers; ++player)
         {
-            if ((released & (1u << player)) != 0) this->ReleasePlayer(hook, player);
+            if ((released & (1u << player)) != 0) this->ReleasePlayer(hook, player, slots[player]);
         }
     }
 
-    auto BridgeService::ReleasePlayer(BridgeHookState& hook, std::size_t player) -> void
+    auto BridgeService::ReleasePlayer(BridgeHookState& hook, std::size_t player, const BridgeSlot& slot) -> void
     {
-        // A local player goes back to its own input. A bot has none: the engine would repeat its last action forever, so it is left
-        // standing with the facing it had.
-        m_Engine.SetOverride(player, GetReleasedOverride(hook.Overrides[player]));
+        // A local player goes back to its own input. A bot has none: the engine would repeat its last action forever, so it gets an AgentInput
+        // that asks for nothing, which leaves it standing with the facing it had (repetition without look, D363).
+        if (slot.LocalIndex || slot.Handle == k_NoHandle) m_Engine.ClearAgentInput(player);
+        else m_Engine.SetAgentInput(player, slot.Handle, AgentInput{}, 1, 0.0f);
 
-        hook.Overrides[player].reset();
         hook.ControlledMask &= ~(1u << player);
         m_BridgeStore.SetAppliedDecision(player, 0);
     }

@@ -1,6 +1,6 @@
 """
 tdump_writer.py
-Test support of M2 (D170-D174): writes .tdump files (format version 5, 4 without lifts, 3 without explosives, 2 without weapons and projectiles, 1 without flags and stands; Ignore Referencia/Diseno/15 sec. 4) the
+Test support of M2 (D170-D174): writes .tdump files (format version 6, 5 without the possession of the header, 4 without lifts, 3 without explosives, 2 without weapons and projectiles, 1 without flags and stands; Ignore Referencia/Diseno/15 sec. 4) the
 way the dump thread of Artemis does (Artemis/4_Bridge/Codec/Dump/System/Bridge.Codec.Dump.System.cpp: keyframe first and every
 keyframe_interval records, otherwise the rows that are new or differ byte for byte plus the handles that are gone). The layout is the
 real one of Data/Bridge/Bridge.xml (GenerateBridge.LayoutJson, the same text the C++ embeds), optionally changed to test layout
@@ -33,7 +33,7 @@ FILE_HEADER = struct.Struct("<8sIIQIIII64s32s64s")
 RECORD_HEADER = struct.Struct("<4sIIHHHHI")
 FOOTER = struct.Struct("<4sIQQQQ")
 HAS_MATCH, EVENTS_LOST, KEYFRAME, TIME_MEASURED = 1, 2, 4, 8
-DUMP_STRUCTS = ("BridgeVec3", "BridgeTickHeader", "BridgeMatch", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
+DUMP_STRUCTS = ("BridgeVec3", "BridgeAgentInput", "BridgeTickHeader", "BridgeMatch", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
                 "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine", "BridgeExplosive", "BridgeLiftStage", "BridgeLift")
 SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "i32": 4, "f32": 4, "u64": 8}
 
@@ -134,8 +134,12 @@ class Writer:
         """Whether the layout has the lift block (format version 5)."""
         return self.HasExplosives() and "BridgeLift" in self.types and "LiftCount" in self.types["BridgeTickHeader"].names
 
+    def HasPossession(self):
+        """Whether the header has the possession of the user (format version 6, no block changes)."""
+        return self.HasLifts() and "PossessedInput" in self.types["BridgeTickHeader"].names
+
     def Version(self):
-        return 5 if self.HasLifts() else 4 if self.HasExplosives() else 3 if self.HasWeapons() else 2 if self.HasObjectives() else 1
+        return 6 if self.HasPossession() else 5 if self.HasLifts() else 4 if self.HasExplosives() else 3 if self.HasWeapons() else 2 if self.HasObjectives() else 1
 
     def Rows(self, name, rows):
         out = np.zeros(len(rows), self.types[name])

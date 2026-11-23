@@ -1,5 +1,6 @@
 export module Engine.Control.Input.State:Possession;
 
+import Control.Client.Type;
 import Engine.Control.Input.Type;
 import std;
 
@@ -11,6 +12,9 @@ export namespace Engine::Control::Input::State
     class PossessionStore
     {
     private:
+        using AgentInput = ::Control::Client::Type::AgentInput;
+        using AgentInputReducer = ::Control::Client::Type::AgentInputReducer;
+
         using ClientDriven = Engine::Control::Input::Type::ClientDriven;
         using PossessStatus = Engine::Control::Input::Type::PossessStatus;
 
@@ -52,6 +56,15 @@ export namespace Engine::Control::Input::State
         // return: Whether a bot is possessed. Any thread.
         auto IsActive() const -> bool;
 
+        // return: What the frames of the window in course add up. Game thread only, for the possessed bot (the state of the reducer starts with each possession).
+        auto GetReducer() -> AgentInputReducer&;
+
+        // Keeps the window that just closed as the last one (D364). Game thread only.
+        auto SetWindow(const AgentInput& window) -> void;
+
+        // return: The last closed window of what the user did with the bot, zero before the first and after the possession ends. Game thread only.
+        auto GetWindow() const -> AgentInput;
+
         // Counts one possessed tick. Game thread only.
         // param isDelivered: The action came from the client of the user.
         // param isUnsupported: The client left a branch it does not port.
@@ -66,6 +79,8 @@ export namespace Engine::Control::Input::State
 
     private:
         std::optional<ClientDriven> m_Bot{};
+        AgentInputReducer m_Reducer{};
+        AgentInput m_Window{};
         std::atomic<std::thread::id> m_TickThread{};
         bool m_IsThreadLogDone{ false };
         std::atomic<bool> m_IsDisabled{ false };

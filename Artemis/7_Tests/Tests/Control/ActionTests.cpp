@@ -14,8 +14,6 @@ import std;
 namespace
 {
     using Common::Engine::Type::k_NoHandle;
-    using Common::Math::System::TurnToward;
-    using Common::Math::System::MoveToward;
 
     using Control::Action::Type::ActionOverride;
     using Control::Action::Type::ClientRequests;
@@ -241,7 +239,6 @@ TEST(ActionTests, NoUnitWritesTheTarget)
 {
     Agent agent{};
     agent.Unit = std::nullopt;
-    agent.Override.TurnLimit = 0.1f;
     agent.Override.Yaw = 1.0f;
     agent.Override.Pitch = 0.2f;
     agent.Tick();
@@ -250,7 +247,6 @@ TEST(ActionTests, NoUnitWritesTheTarget)
     EXPECT_FLOAT_EQ(ReadPitch(agent.Last), 0.2f);
     EXPECT_FLOAT_EQ(agent.LastFacing[0], 1.0f);
     EXPECT_FLOAT_EQ(agent.LastFacing[1], 0.2f);
-    EXPECT_FALSE(agent.History.Facing.has_value());
 
     agent.Requests.IsWeaponSwitch = true;
     agent.Tick();
@@ -263,55 +259,23 @@ TEST(ActionTests, NoUnitWritesTheTarget)
     EXPECT_EQ(agent.Rules.ZoomCalls, 0);
 }
 
-TEST(ActionTests, TurnLimitZeroGoesStraight)
+TEST(ActionTests, TheFacingGoesStraightToTheOverride)
 {
     Agent agent{};
     agent.Unit = MakeUnit();
     agent.Unit->Facing = { 3.0f, 0.0f };
     agent.Override.Yaw = 1.0f;
     agent.Override.Pitch = 0.5f;
-    agent.Override.TurnLimit = 0.0f;
     agent.Tick();
 
     EXPECT_FLOAT_EQ(ReadYaw(agent.Last), 1.0f);
     EXPECT_FLOAT_EQ(ReadPitch(agent.Last), 0.5f);
-}
 
-TEST(ActionTests, TurnStepsFromTheUnitThenFromTheLastFacing)
-{
-    Agent agent{};
-    agent.Override.Yaw = 1.0f;
-    agent.Override.Pitch = 0.5f;
-    agent.Override.TurnLimit = 0.1f;
-
-    agent.Tick();
-    EXPECT_FLOAT_EQ(ReadYaw(agent.Last), 0.1f);
-    EXPECT_FLOAT_EQ(ReadPitch(agent.Last), 0.1f);
-
-    // The same unit goes on from the facing written, although its own facing has not moved.
-    agent.Tick();
-    EXPECT_FLOAT_EQ(ReadYaw(agent.Last), 0.2f);
-    EXPECT_FLOAT_EQ(ReadPitch(agent.Last), 0.2f);
-
-    // Another unit starts from its own facing.
+    // The same on the next tick and with another unit: nothing is remembered from the facing written.
     agent.Unit->Unit = 0x0001'0003;
     agent.Tick();
-    EXPECT_FLOAT_EQ(ReadYaw(agent.Last), 0.1f);
-    EXPECT_FLOAT_EQ(ReadPitch(agent.Last), 0.1f);
-}
-
-TEST(ActionTests, YawTurnsTheShortWay)
-{
-    Agent agent{};
-    agent.Unit->Facing = { 6.2f, 0.0f };
-    agent.Override.Yaw = 0.1f;
-    agent.Override.Pitch = 0.5f;
-    agent.Override.TurnLimit = 0.1f;
-    agent.Tick();
-
-    EXPECT_FLOAT_EQ(ReadYaw(agent.Last), TurnToward(6.2f, 0.1f, 0.1f));
-    EXPECT_LT(ReadYaw(agent.Last), 0.1f);
-    EXPECT_FLOAT_EQ(ReadPitch(agent.Last), MoveToward(0.0f, 0.5f, 0.1f));
+    EXPECT_FLOAT_EQ(ReadYaw(agent.Last), 1.0f);
+    EXPECT_FLOAT_EQ(ReadPitch(agent.Last), 0.5f);
 }
 
 TEST(ActionTests, LaneHeldAfterTheThreshold)
@@ -517,7 +481,6 @@ TEST(ActionTests, ThePossessedActionTakesTheButtonsTheLanesAndTheEventsOfTheClie
     EXPECT_EQ(actionOverride.ClientEvents, 1);
     EXPECT_EQ(actionOverride.Yaw, 1.5f);
     EXPECT_EQ(actionOverride.Pitch, -0.25f);
-    EXPECT_EQ(actionOverride.TurnLimit, 0.0f);
     EXPECT_EQ(actionOverride.ThrottleForward, 0.5f);
     EXPECT_EQ(actionOverride.ThrottleLeft, -1.0f);
     EXPECT_EQ(actionOverride.FireTrigger, 1.0f);

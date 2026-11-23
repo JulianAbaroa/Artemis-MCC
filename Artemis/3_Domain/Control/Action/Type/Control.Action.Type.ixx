@@ -22,9 +22,6 @@ export namespace Control::Action::Type
         float Yaw{ 0.0f };
         float Pitch{ 0.0f };
 
-        // Most radians the yaw and the pitch the hook writes move per tick toward Yaw and Pitch (D114). 0 = straight to them.
-        float TurnLimit{ 0.0f };
-
         float ThrottleForward{ 0.0f };
         float ThrottleLeft{ 0.0f };
 
@@ -47,13 +44,6 @@ export namespace Control::Action::Type
         // Local player (split-screen input user) of the player. Its control block gets the same facing, so its view follows the
         // action. Empty for a player that is not local.
         std::optional<std::size_t> LocalIndex{};
-    };
-
-    // Yaw and pitch the hook last wrote for an agent, and the unit they were written for (D114).
-    struct AppliedFacing
-    {
-        std::uint32_t Unit{ 0 };
-        std::array<float, 2> Facing{};
     };
 
     // One-tick presses of an agent that the client turns into requests (D120): the hook consumes them on its next tick.
@@ -121,9 +111,6 @@ export namespace Control::Action::Type
     // note: Forgotten when the agent has no override, so a new override starts from the unit again.
     struct PlayerActionHistory
     {
-        // Facing the agent got on its last tick (D114). Empty without a unit.
-        std::optional<AppliedFacing> Facing{};
-
         // Ticks each hold lane has been down (D121).
         std::array<std::uint32_t, k_HoldLanes.size()> LaneTicks{};
 

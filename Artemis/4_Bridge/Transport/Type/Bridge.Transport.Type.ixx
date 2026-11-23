@@ -3,6 +3,7 @@ export module Bridge.Transport.Type;
 export import Contract.Bridge.Type;
 
 import Common.Engine.Type;
+import Control.Client.Type;
 import Control.Lockstep.Type;
 import std;
 
@@ -11,6 +12,7 @@ namespace
     using Common::Engine::Type::k_NoHandle;
     using Contract::Bridge::Type::BridgeRoster;
     using Contract::Bridge::Type::BridgeSetupResult;
+    using Control::Client::Type::AgentInput;
     using Control::Lockstep::Type::BridgeControlState;
 }
 
@@ -37,6 +39,16 @@ export namespace Bridge::Transport::Type
 
         // Split-screen index, so the view of a local player follows its action. Empty for bots.
         std::optional<std::size_t> LocalIndex{};
+    };
+
+    // The possessed player and what the user did with it in the last closed window, read together on the game thread (D364).
+    struct BridgeImitation
+    {
+        // Handle of the possessed player, NoHandle when none.
+        std::uint32_t PlayerHandle{ k_NoHandle };
+
+        // Zero when no player is possessed.
+        AgentInput Input{};
     };
 
     // One match setup the client asks for (LS.2): the fields it did not set are empty and mean no change. An empty preset asks for the base

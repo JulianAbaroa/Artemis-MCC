@@ -4,12 +4,12 @@ Group `3_Domain` - pure static library - the logic of the player action and of t
 
 ## Responsibility
 - Action: from the decision of an agent to the fields Artemis writes into the 0xA8-byte action of a tick (buttons, hold lanes with
-  the engine's threshold, limited turn of the aim, weapon/grenade/zoom requests of a client).
+  the engine's threshold, the facing straight to the one asked, weapon/grenade/zoom requests of a client).
 - Client: the engine client of a local player (0x5df80, keyboard and mouse) as a pure function (VW.9c.1, D356): from the event table of an
   input user, the state of its client block, the context of the unit and the settings of the user to the output the engine builds
   (move axes, triggers, look delta, buttons, event bits and hold lanes) and the new state (crouch toggle, jump timer, look rates, latches).
 - Lockstep: the policy of the bridge: which control is in effect for what the client asked, when a decision is due, how long to
-  wait, when to suspend after timeouts, how a bridge action becomes a sanitized override, and the clock of decision ticks.
+  wait, when to suspend after timeouts, how the `BridgeAgentInput` of a bridge action becomes a sane `AgentInput` (and the way back for the imitation block), and the clock of decision ticks.
 
 ## Does not
 - Write memory or call engine functions: `Engine.Control` applies the action.
@@ -18,7 +18,7 @@ Group `3_Domain` - pure static library - the logic of the player action and of t
   port, which `Engine.Control` implements.
 
 ## Input and output
-- Input: an `ActionOverride` (from the bridge), the client state of the unit, the previous `PlayerActionHistory`, the control
+- Input: an `ActionOverride` (from the bench) or an `AgentInput` (from the bridge or the bench), the client state of the unit, the previous `PlayerActionHistory`, the control
   requests of the client.
 - Output: the action fields to write and the new history; the control in effect, timeouts and the due decision.
 
@@ -27,12 +27,12 @@ Other projects may import only these modules; everything else in the project is 
 
 | Module | What it gives |
 |---|---|
-| `Control.Action.Type` | `ActionOverride` (also the events word, the fire, zoom and extra triggers of a possessed bot), `AppliedFacing`, `ClientRequests` (with `operator|`, the requests added up), `ClientAction` (what the client gives a player, a possessed bot or an agent), `UnitClientState`, `PlayerActionHistory`. |
+| `Control.Action.Type` | `ActionOverride` (also the events word, the fire, zoom and extra triggers of a possessed bot), `ClientRequests` (with `operator|`, the requests added up), `ClientAction` (what the client gives a player, a possessed bot or an agent), `UnitClientState`, `PlayerActionHistory`. |
 | `Control.Action.System` | `BuildAction` (writes the events word +0x34 and the triggers +0x24, +0x38, +0x3C only when not zero), `MakeClientAction` (client output to override and requests, VW.9c.2 B), `MakeNeutralOverride`, `GetHoldThresholdTicks` and the `UnitRules` port (also `GetClientContext`: the unit facts the client asks, VW.9c.1). |
 | `Control.Client.Type` | `InputFrame` (the table of one input user, already resolved), `ClientState` (the client block fields kept between calls, with their offsets), `UnitContext` (what the client asks of the unit), `ClientSettings` (passed in, D359), `ClientOutput`, `ClientStep`, `ClientStatus`, `Unsupported` and the event, button and event bit constants. Agent input (VW.9c.3 B, D362-D364): `AgentControl` (13 bits), `k_AgentControlCount`, `k_AgentControlMask`, `AgentInput` (move axes, look in radians without zoom, `Level` and `Edge` bits), `k_AgentControlEvents` (the primary and secondary events each control raises, A17 sec. 9), `AgentInputState` (synthesizer state per agent) and `AgentInputReducer` (window reducer state) and `AgentInputLine` (an AgentInput held for a range of ticks with its window and turn limit). `ClientOutput` also carries `LookYawRequested` and `LookPitchRequested` (the look asked, before zoom and aim damp). `k_MillisecondsPerSecond`. |
 | `Control.Client.System` | `StepClient` (one call of 0x5df80) and `IntegrateAim` (adds the look delta to yaw and pitch with the pitch limit). `SanitizeAgentInput`, `MakeAgentFrame` (AgentInput to the keyboard and mouse frame of tick k of a window, with the turn limit as a parameter) and `AddAgentFrame` / `CloseAgentInput` (frames of a window to one AgentInput), `FindAgentControl` (a control by its lowercase name, `k_AgentControlNames` in the Type module), `ParseAgentInputWords` (the text form of an AgentInput: words `key=value` with move, look, level, edge and turn, the one the test bench reads, VW.9c.3 C), `ParseAgentInputLine` (the same with the first tick, the last tick and the window before the words, `AgentInputLine`) and `AreTickRangesOverlapping` (VW.9c.3 D). |
 | `Control.Lockstep.Type` | Limits and defaults of the lockstep (decision period N, latency d, timeouts) and `BridgeControlState`. |
-| `Control.Lockstep.System` | `DecideControl`, `ApplyConnection`, `BuildOverride`, `GetDueDecision`, `RecordWait`, `ResumeIfAnswered`, `GetApplyTiming`, `GetReleasedOverride`, `ReadClock`, `IsDecisionTick`, `IsSparse` (Q101: the client asked for sparse, is connected and nobody needs every tick, pure). |
+| `Control.Lockstep.System` | `DecideControl`, `ApplyConnection`, `ToAgentInput` (the `BridgeAgentInput` the client wrote to a sane `AgentInput`, with the flag the bridge counts as a rejected action: the one place that sanitizes it, VW.9c.3 D, D365), `ToBridgeAgentInput` (the way back, for the imitation block), `IsImitationWindowEnd` (where a window of d ticks of the possessed player ends, counted from the decision tick, D364), `GetDueDecision`, `RecordWait`, `ResumeIfAnswered`, `GetApplyTiming`, `ReadClock`, `IsDecisionTick`, `IsSparse` (Q101: the client asked for sparse, is connected and nobody needs every tick, pure). |
 
 ## Depends on
 `Common`, `Blam.Layout`, `Contract`.
@@ -70,7 +70,7 @@ A fact of the unit the context does not know (`UnitContext::Known` lacks its `Un
 `Output.UnknownRead` holds the bits of the unknown facts the branches that ran actually read, and a step with a bit set is not comparable.
 Not ported on purpose: the controller path (+0x6F8 = 0), the aim assist (D109), the interaction records (D118), the seat turn limits and aim
 follow of 0x6375c and the pause/lock side effects on the table.
-Out-of-range requests are clamped (N, d) or sanitized (`BuildOverride`); nothing throws.
+Out-of-range requests are clamped (N, d) or sanitized (`ToAgentInput` over `SanitizeAgentInput`: axes cut to [-1, 1], a value that is not finite is 0, bits 13 to 31 of `Level` and `Edge` dropped); nothing throws. The turn limit of the bridge is not in the action: it travels in the control block and the `PlayerActionStore` keeps it sane.
 
 ## Requirements
 - Local players with an override and bots get exactly the same action.

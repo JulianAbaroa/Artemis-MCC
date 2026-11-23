@@ -24,7 +24,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from . import bridge_layout as L
-from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgeRequest, BridgeSetupResult
+from .bridge_layout import BridgeMode, BridgeOwner, BridgePhase, BridgeSetupResult
 from .match_setup import MatchSetup, SetupStatus, roster_to_array, roster_to_dict  # noqa: F401
 from .semantic import RoundState
 
@@ -97,7 +97,6 @@ class Action:
     forward: float = 0.0
     left: float = 0.0
     lanes: int = 0
-    requests: BridgeRequest = BridgeRequest(0)
 
 
 class PublishedTick:
@@ -440,13 +439,9 @@ class Bridge:
             # The slot is marked as being written (DecisionTick 0) until its fields are complete, so Artemis never copies it half done.
             self.actions["DecisionTick"][index] = 0
             self.actions["PlayerHandle"][index] = action.handle
-            self.actions["Buttons"][index] = action.buttons
-            self.actions["Yaw"][index] = action.yaw
-            self.actions["Pitch"][index] = action.pitch
-            self.actions["ThrottleForward"][index] = action.forward
-            self.actions["ThrottleLeft"][index] = action.left
-            self.actions["Lanes"][index] = action.lanes
-            self.actions["Requests"][index] = int(action.requests)
+            # note: Bridge v2 (D365) only has the AgentInput. Until the Python side moves to it (VW.9c.3 D3) only the move axes of the old Action reach Artemis.
+            self.actions["Input"]["MoveForward"][index] = action.forward
+            self.actions["Input"]["MoveLeft"][index] = action.left
             self.actions["DecisionTick"][index] = decision_tick
         # note: x64 keeps the order of stores, so Artemis sees the actions once it sees the sequence.
         self._action_sequence.value = decision_tick

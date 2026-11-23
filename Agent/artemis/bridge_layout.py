@@ -7,8 +7,8 @@ import enum
 
 import numpy as np
 
-LAYOUT_VERSION = 1
-LAYOUT_HASH = 0x6B0D42ED38624BDD
+LAYOUT_VERSION = 2
+LAYOUT_HASH = 0x4B4E4E552E4DF04F
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -127,13 +127,6 @@ class BridgePowerup(enum.IntEnum):
     Yellow = 3
 
 
-class BridgeRequest(enum.IntFlag):
-    """One-shot client requests of a decision (D120)."""
-    WeaponSwitch = 0x1
-    GrenadeSwitch = 0x2
-    Zoom = 0x4
-
-
 class BridgeTickFlag(enum.IntFlag):
     """Flags of a tick."""
     EntitiesTruncated = 0x1
@@ -184,12 +177,20 @@ BridgeControl = np.dtype({
     'itemsize': 576,
 })
 
+# What an agent decides for a window of d ticks, or what a possessed player did in one (D362, D365). Level and Edge have one bit per control, in the order Jump, Crouch, Fire, Zoom, ZoomIn, ZoomOut, Melee, Ability, ThrowGrenade, Use, SwitchWeapon, SwitchGrenade, Reload (bits 13 to 31 are 0: Artemis drops them). Artemis makes the values sane (Control Client SanitizeAgentInput) and counts the changed ones in RejectedActions.
+BridgeAgentInput = np.dtype({
+    'names': ['MoveForward', 'MoveLeft', 'YawDelta', 'PitchDelta', 'Level', 'Edge'],
+    'formats': ['<f4', '<f4', '<f4', '<f4', '<u4', '<u4'],
+    'offsets': [0, 4, 8, 12, 16, 20],
+    'itemsize': 24,
+})
+
 # What the tick is: which match and which action tick.
 BridgeTickHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2'],
-    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56, 58],
-    'itemsize': 64,
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount', 'PossessedPlayer', 'PossessedInput'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2', '<u4', BridgeAgentInput],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56, 58, 60, 64],
+    'itemsize': 88,
 })
 
 # State of the match (Environment Match, D103).
@@ -300,16 +301,16 @@ BridgeLift = np.dtype({
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (2048,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
-    'offsets': [0, 8, 72, 3528, 216520, 216640, 216864, 216928, 219232, 228448, 234592, 235616, 245856],
+    'offsets': [0, 8, 96, 3552, 216544, 216664, 216888, 216952, 219256, 228472, 234616, 235640, 245880],
     'itemsize': 245888,
 })
 
-# Action of one player for one decision, written by Python (D109, D119).
+# Action of one player for one decision, written by Python (D109, D365). Artemis plays the input through its own client during the d ticks of the window.
 BridgeAction = np.dtype({
-    'names': ['PlayerHandle', 'Lanes', 'DecisionTick', 'Buttons', 'Yaw', 'Pitch', 'ThrottleForward', 'ThrottleLeft', 'Requests'],
-    'formats': ['<u4', '<u4', '<u8', '<u8', '<f4', '<f4', '<f4', '<f4', 'u1'],
-    'offsets': [0, 4, 8, 16, 24, 28, 32, 36, 40],
-    'itemsize': 48,
+    'names': ['PlayerHandle', 'DecisionTick', 'Input'],
+    'formats': ['<u4', '<u8', BridgeAgentInput],
+    'offsets': [0, 8, 16],
+    'itemsize': 40,
 })
 
 # The whole shared memory of one instance.
@@ -317,7 +318,7 @@ BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
     'offsets': [0, 576, 492352],
-    'itemsize': 493120,
+    'itemsize': 492992,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -416,4 +417,4 @@ OFFSETS = {
     'Actions': 492352,
 }
 
-REGION_SIZE = 493120
+REGION_SIZE = 492992
