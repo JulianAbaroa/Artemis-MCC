@@ -13,8 +13,8 @@ namespace
 {
     using Common::Engine::Type::k_NoHandle;
 
-    using ::Control::Action::System::MakePossessedAction;
-    using ::Control::Action::Type::PossessedAction;
+    using ::Control::Action::System::MakeClientAction;
+    using ::Control::Action::Type::ClientAction;
     using ::Control::Action::Type::UnitClientState;
     using ::Control::Client::System::IntegrateAim;
     using ::Control::Client::Type::ClientOutput;
@@ -123,7 +123,7 @@ export namespace Engine::Control::Input::System
     // return: What the tick delivers for the bot: the aim accumulated by every frame, the held state of the last frame and everything the frames since
     // the last tick asked for once. Clears what was delivered, so several ticks in one frame deliver a press once and no frame is lost.
     // note: The caller checked that a frame ran (HasFrame).
-    inline auto TakeTickAction(ClientDriven& bot) -> PossessedAction
+    inline auto TakeTickAction(ClientDriven& bot) -> ClientAction
     {
         ClientOutput output{ bot.Last };
         output.Buttons |= bot.Pending.Buttons;
@@ -138,6 +138,6 @@ export namespace Engine::Control::Input::System
         bot.Last.Events &= ~k_EventPulses;
         bot.Pending = ClientOutput{};
 
-        return MakePossessedAction(output, bot.State.Yaw, bot.State.Pitch);
+        return MakeClientAction(output, bot.State.Yaw, bot.State.Pitch);
     }
 }

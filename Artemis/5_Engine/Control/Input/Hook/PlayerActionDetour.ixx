@@ -45,7 +45,6 @@ export namespace Engine::Control::Input::Hook
         using ShadowField = Engine::Control::Input::Type::ShadowField;
         using ShadowPlayer = Engine::Control::Input::Type::ShadowPlayer;
 
-        using AgentClientStore = Engine::Control::Input::State::AgentClientStore;
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
         using PossessionStore = Engine::Control::Input::State::PossessionStore;
         using PossessRequestStore = Engine::Control::Input::State::PossessRequestStore;
@@ -57,9 +56,9 @@ export namespace Engine::Control::Input::Hook
 
     public:
         PlayerActionDetour(Log& log, AOBService& aobService, MatchSetupService& matchSetupService, PlayerActionStore& playerActionStore,
-            BotService& botService, AgentClientStore& agentClientStore, AgentClientService& agentClientService) :
+            BotService& botService, AgentClientService& agentClientService) :
             m_Log(log), m_AOBService(aobService), m_MatchSetupService(matchSetupService), m_PlayerActionStore(playerActionStore),
-            m_BotService(botService), m_AgentClientStore(agentClientStore), m_AgentClientService(agentClientService) {}
+            m_BotService(botService), m_AgentClientService(agentClientService) {}
         ~PlayerActionDetour() = default;
 
         // Connects the action source (the bridge, D215) that sets the overrides of the Python players.
@@ -85,7 +84,6 @@ export namespace Engine::Control::Input::Hook
         BotService& m_BotService;
 
         // The agents that play an AgentInput through the client of Artemis, one step per tick (VW.9c.3 C).
-        AgentClientStore& m_AgentClientStore;
         AgentClientService& m_AgentClientService;
 
         // The bot the Viewer asks to possess (VW.9c.2 B) and what the client of the user keeps for it. Null until connected: then nobody is possessed.
@@ -140,14 +138,13 @@ export namespace Engine::Control::Input::Hook
         // note: Game thread only, once per tick, before ApplyAgents and ApplyPossession.
         auto ResolvePossession(std::uintptr_t threadContext) -> std::optional<PossessTarget>;
 
-        // Plays the AgentInput of every agent through the client of Artemis, one step per tick (VW.9c.3 C, D363): the override and the client requests of
-        // the player are replaced by what the step gives, and the action goes on through BuildAction like any other (D118-D121). A player without an
-        // AgentInput forgets its client state.
-        // param possessed: The possessed player, nothing when none. Possession wins (D351): that player gets no step and forgets its client state, and the
-        // AgentInput stays in the store for when the possession ends.
+        // Wires the AgentInput of every agent to the client of Artemis, one step per tick (VW.9c.3 C, D363): AgentClientService decides and steps each
+        // player, and the override of an agent is replaced by what the step gives. The action goes on through BuildAction like any other (D118-D121).
+        // param possessed: The possessed player, nothing when none. Possession wins (D351): that player gets no step and its AgentInput stays in the
+        // store for when the possession ends (D367).
         // param deliveries: The AgentInput of every player, empty for a player without one.
         // param overrides: The overrides of the tick. The one of an agent is replaced (an AgentInput and an override exclude each other in the store).
-        // param requests: The client requests of the tick, replaced the same way.
+        // param requests: The client requests of the tick. What the client of an agent asks adds up to them (VW.9c.3 D).
         // note: Game thread only, once per tick, after the overrides were copied. A tick without settings (control tag or clock missing) gives the agent
         // the neutral action.
         auto ApplyAgents(std::uintptr_t threadContext, std::optional<std::size_t> possessed,

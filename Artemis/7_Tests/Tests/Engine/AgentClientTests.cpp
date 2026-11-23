@@ -15,11 +15,13 @@ import std;
 namespace
 {
     using ::Control::Action::Type::ActionOverride;
-    using ::Control::Action::Type::PossessedAction;
+    using ::Control::Action::Type::ClientRequests;
+    using ::Control::Action::Type::ClientAction;
     using ::Control::Action::Type::UnitClientState;
     using ::Control::Client::System::StepClient;
     using ::Control::Client::Type::AgentControl;
     using ::Control::Client::Type::AgentInput;
+    using ::Control::Client::Type::AgentInputState;
     using ::Control::Client::Type::ClientSettings;
     using ::Control::Client::Type::ClientState;
     using ::Control::Client::Type::ClientStep;
@@ -36,10 +38,12 @@ namespace
     using Engine::Control::Input::System::PrepareAgentFrame;
     using Engine::Control::Input::System::ReadAgentClientSettings;
     using Engine::Control::Input::System::ResetAgentUnit;
-    using Engine::Control::Input::System::ShouldRunAgent;
+    using Engine::Control::Input::System::PlanAgent;
+    using Engine::Control::Input::System::UndoAgentFrame;
     using Engine::Control::Input::System::TakeTickAction;
     using Engine::Control::Input::Type::AgentClient;
     using Engine::Control::Input::Type::AgentDelivery;
+    using Engine::Control::Input::Type::AgentPlan;
     using Engine::Control::Input::Type::k_ClockSlot;
     using Engine::Control::Input::Type::k_ClockTicksPerSecondOffset;
     using Engine::Control::Input::Type::k_ClockTickSecondsOffset;
@@ -48,6 +52,9 @@ namespace
     using Engine::Control::Input::Type::k_HoldThresholdOffset;
 
     constexpr float k_Dt{ 1.0f / 60.0f };
+
+    // The handle a test gives the player of an index: a salt and the index.
+    constexpr auto HandleOf(std::size_t playerIndex) -> std::uint32_t { return 0x10000u + static_cast<std::uint32_t>(playerIndex); }
 
     auto Bit(AgentControl control) -> std::uint32_t { return 1u << static_cast<std::uint32_t>(control); }
 
@@ -61,11 +68,11 @@ namespace
 
     auto MakeDelivery(const AgentInput& input, std::uint32_t windowTicks, std::uint64_t sequence, float turnLimit = 0.0f) -> AgentDelivery
     {
-        return AgentDelivery{ .Input = input, .WindowTicks = windowTicks, .TurnLimit = turnLimit, .Sequence = sequence };
+        return AgentDelivery{ .Handle = HandleOf(0), .Input = input, .WindowTicks = windowTicks, .TurnLimit = turnLimit, .Sequence = sequence };
     }
 
     // One tick of the client of an agent: what AgentClientService does, with a context that knows every fact and has a unit on foot.
-    auto RunTick(AgentClient& agent, const AgentDelivery& delivery, const UnitClientState& unit) -> PossessedAction
+    auto RunTick(AgentClient& agent, const AgentDelivery& delivery, const UnitClientState& unit) -> ClientAction
     {
         const ClientSettings settings{};
         const std::uint32_t tick{ AdvanceAgentWindow(agent, delivery.Sequence) };
@@ -87,9 +94,9 @@ namespace
 TEST(AgentInputStoreTests, EveryDeliveryRaisesTheSequence)
 {
     PlayerActionStore store{};
-    store.SetAgentInput(3, AgentInput{ .MoveForward = 1.0f }, 4, 0.0f);
-    store.SetAgentInput(3, AgentInput{ .MoveForward = -1.0f }, 6, 0.25f);
-    store.SetAgentInput(5, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(3, HandleOf(3), AgentInput{ .MoveForward = 1.0f }, 4, 0.0f);
+    store.SetAgentInput(3, HandleOf(3), AgentInput{ .MoveForward = -1.0f }, 6, 0.25f);
+    store.SetAgentInput(5, HandleOf(5), AgentInput{}, 4, 0.0f);
 
     std::array<std::optional<AgentDelivery>, 16> deliveries{};
     store.CopyAgentInputs(deliveries);
@@ -110,14 +117,14 @@ TEST(AgentInputStoreTests, AnOverrideAndAnAgentInputExcludeEachOtherAndTheLastOn
     std::array<std::optional<AgentDelivery>, 16> deliveries{};
     std::array<std::optional<ActionOverride>, 16> overrides{};
 
-    store.SetAgentInput(2, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(2, HandleOf(2), AgentInput{}, 4, 0.0f);
     store.SetOverride(2, ActionOverride{ .ThrottleForward = 1.0f });
     store.CopyAgentInputs(deliveries);
     store.CopyOverrides(overrides);
     EXPECT_FALSE(deliveries[2].has_value());
     EXPECT_TRUE(overrides[2].has_value());
 
-    store.SetAgentInput(2, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(2, HandleOf(2), AgentInput{}, 4, 0.0f);
     store.CopyActions(overrides, deliveries);
     EXPECT_TRUE(deliveries[2].has_value());
     EXPECT_FALSE(overrides[2].has_value());
@@ -126,9 +133,9 @@ TEST(AgentInputStoreTests, AnOverrideAndAnAgentInputExcludeEachOtherAndTheLastOn
 TEST(AgentInputStoreTests, ATurnLimitThatIsNotFiniteOrIsNegativeIsKeptAsNoLimit)
 {
     PlayerActionStore store{};
-    store.SetAgentInput(0, AgentInput{}, 4, std::numeric_limits<float>::quiet_NaN());
-    store.SetAgentInput(1, AgentInput{}, 4, -0.5f);
-    store.SetAgentInput(2, AgentInput{}, 4, std::numeric_limits<float>::infinity());
+    store.SetAgentInput(0, HandleOf(0), AgentInput{}, 4, std::numeric_limits<float>::quiet_NaN());
+    store.SetAgentInput(1, HandleOf(1), AgentInput{}, 4, -0.5f);
+    store.SetAgentInput(2, HandleOf(2), AgentInput{}, 4, std::numeric_limits<float>::infinity());
 
     std::array<std::optional<AgentDelivery>, 16> deliveries{};
     store.CopyAgentInputs(deliveries);
@@ -143,7 +150,7 @@ TEST(AgentInputStoreTests, ATurnLimitThatIsNotFiniteOrIsNegativeIsKeptAsNoLimit)
 TEST(AgentInputStoreTests, ReleasingTheOverrideLeavesTheAgentInput)
 {
     PlayerActionStore store{};
-    store.SetAgentInput(2, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(2, HandleOf(2), AgentInput{}, 4, 0.0f);
     store.SetOverride(2, std::nullopt);
 
     std::array<std::optional<AgentDelivery>, 16> deliveries{};
@@ -154,10 +161,10 @@ TEST(AgentInputStoreTests, ReleasingTheOverrideLeavesTheAgentInput)
 TEST(AgentInputStoreTests, ClearStopsOnlyThatPlayerAndTheWindowHasAtLeastOneTick)
 {
     PlayerActionStore store{};
-    store.SetAgentInput(1, AgentInput{}, 0, 0.0f);
-    store.SetAgentInput(2, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(1, HandleOf(1), AgentInput{}, 0, 0.0f);
+    store.SetAgentInput(2, HandleOf(2), AgentInput{}, 4, 0.0f);
     store.ClearAgentInput(1);
-    store.SetAgentInput(16, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(16, HandleOf(16), AgentInput{}, 4, 0.0f);
     store.ClearAgentInput(99);
 
     std::array<std::optional<AgentDelivery>, 16> deliveries{};
@@ -165,7 +172,7 @@ TEST(AgentInputStoreTests, ClearStopsOnlyThatPlayerAndTheWindowHasAtLeastOneTick
     EXPECT_FALSE(deliveries[1].has_value());
     EXPECT_TRUE(deliveries[2].has_value());
 
-    store.SetAgentInput(1, AgentInput{}, 0, 0.0f);
+    store.SetAgentInput(1, HandleOf(1), AgentInput{}, 0, 0.0f);
     store.CopyAgentInputs(deliveries);
     ASSERT_TRUE(deliveries[1].has_value());
     EXPECT_EQ(deliveries[1]->WindowTicks, 1u);
@@ -174,7 +181,7 @@ TEST(AgentInputStoreTests, ClearStopsOnlyThatPlayerAndTheWindowHasAtLeastOneTick
 TEST(AgentInputStoreTests, CleanupDropsTheAgentInputs)
 {
     PlayerActionStore store{};
-    store.SetAgentInput(4, AgentInput{}, 4, 0.0f);
+    store.SetAgentInput(4, HandleOf(4), AgentInput{}, 4, 0.0f);
     store.Cleanup();
 
     std::array<std::optional<AgentDelivery>, 16> deliveries{};
@@ -187,19 +194,35 @@ TEST(AgentClientStoreTests, BeginStartsOnceAndGoesOnWhileActive)
     AgentClientStore store{};
     EXPECT_EQ(store.Find(2), nullptr);
 
-    EXPECT_TRUE(store.Begin(2));
+    store.Begin(2, HandleOf(2));
     ASSERT_NE(store.Find(2), nullptr);
+    EXPECT_EQ(store.Find(2)->Client.Handle, HandleOf(2));
+    EXPECT_EQ(store.Find(2)->Client.Player, 2u);
     store.Find(2)->Sequence = 9;
-    EXPECT_FALSE(store.Begin(2));
+    store.Begin(2, HandleOf(2));
     EXPECT_EQ(store.Find(2)->Sequence, 9u);
     EXPECT_EQ(store.GetStatus().ActiveMask, 1u << 2);
+}
+
+TEST(AgentClientStoreTests, AnotherHandleInTheSameIndexIsAnotherAgentWithNewStateAndCounters)
+{
+    AgentClientStore store{};
+    store.Begin(2, HandleOf(2));
+    store.Find(2)->Sequence = 9;
+    store.Find(2)->HasSequence = true;
+    store.CountTick(2, true, false, false);
+
+    store.Begin(2, HandleOf(2) + 0x20000);
+    EXPECT_FALSE(store.Find(2)->HasSequence);
+    EXPECT_EQ(store.Find(2)->Client.Handle, HandleOf(2) + 0x20000);
+    EXPECT_EQ(store.GetStatus().Players[2].Ticks, 0u);
 }
 
 TEST(AgentClientStoreTests, CountsTheTicksOfEachPlayerAndKeepsThemAfterTheEnd)
 {
     AgentClientStore store{};
-    store.Begin(1);
-    store.Begin(3);
+    store.Begin(1, HandleOf(1));
+    store.Begin(3, HandleOf(3));
     store.CountTick(1, true, false, false);
     store.CountTick(1, true, true, true);
     store.CountTick(1, false, false, false);
@@ -213,6 +236,7 @@ TEST(AgentClientStoreTests, CountsTheTicksOfEachPlayerAndKeepsThemAfterTheEnd)
     EXPECT_EQ(status.Players[3].UnknownRead, 1u);
 
     store.End(1);
+    store.End(5);
     status = store.GetStatus();
     EXPECT_EQ(status.ActiveMask, 1u << 3);
     EXPECT_EQ(status.Players[1].Ticks, 3u);
@@ -222,12 +246,12 @@ TEST(AgentClientStoreTests, CountsTheTicksOfEachPlayerAndKeepsThemAfterTheEnd)
 TEST(AgentClientStoreTests, ANewBeginAfterTheEndZeroesTheCountersAndTheState)
 {
     AgentClientStore store{};
-    store.Begin(1);
+    store.Begin(1, HandleOf(1));
     store.Find(1)->TickInWindow = 7;
     store.CountTick(1, true, true, true);
     store.End(1);
 
-    EXPECT_TRUE(store.Begin(1));
+    store.Begin(1, HandleOf(1));
     EXPECT_EQ(store.GetStatus().Players[1].Ticks, 0u);
     EXPECT_EQ(store.Find(1)->TickInWindow, 0u);
     EXPECT_FALSE(store.Find(1)->HasSequence);
@@ -236,9 +260,10 @@ TEST(AgentClientStoreTests, ANewBeginAfterTheEndZeroesTheCountersAndTheState)
 TEST(AgentClientStoreTests, OutOfRangePlayersStartNothing)
 {
     AgentClientStore store{};
-    EXPECT_FALSE(store.Begin(16));
+    store.Begin(16, HandleOf(16));
     EXPECT_EQ(store.Find(16), nullptr);
     store.CountTick(16, true, true, true);
+    store.Suspend(16);
     store.End(16);
     EXPECT_EQ(store.GetStatus().ActiveMask, 0u);
 }
@@ -286,12 +311,18 @@ TEST(AgentWindowTests, PastTheWindowTheInputKeepsWhatIsHeldAndTheAxesButNoPressA
     EXPECT_EQ(past.PitchDelta, 0.0f);
 }
 
-TEST(AgentWindowTests, PossessionWinsOverTheAgentInput)
+TEST(AgentWindowTests, PossessionWinsOverTheAgentInputAndAnotherPlayerInTheIndexDropsIt)
 {
-    EXPECT_TRUE(ShouldRunAgent(true, 3, std::nullopt));
-    EXPECT_TRUE(ShouldRunAgent(true, 3, std::optional<std::size_t>{ 4 }));
-    EXPECT_FALSE(ShouldRunAgent(true, 3, std::optional<std::size_t>{ 3 }));
-    EXPECT_FALSE(ShouldRunAgent(false, 3, std::nullopt));
+    const AgentDelivery delivery{ .Handle = HandleOf(3) };
+
+    EXPECT_EQ(PlanAgent(delivery, 3, std::nullopt, HandleOf(3)), AgentPlan::Run);
+    EXPECT_EQ(PlanAgent(delivery, 3, std::optional<std::size_t>{ 4 }, HandleOf(3)), AgentPlan::Run);
+    EXPECT_EQ(PlanAgent(delivery, 3, std::optional<std::size_t>{ 3 }, HandleOf(3)), AgentPlan::Suspend);
+
+    // note: Another handle in the index, or an empty slot, is Stale even when the player is possessed.
+    EXPECT_EQ(PlanAgent(delivery, 3, std::nullopt, HandleOf(3) + 0x10000), AgentPlan::Stale);
+    EXPECT_EQ(PlanAgent(delivery, 3, std::nullopt, std::nullopt), AgentPlan::Stale);
+    EXPECT_EQ(PlanAgent(delivery, 3, std::optional<std::size_t>{ 3 }, HandleOf(4)), AgentPlan::Stale);
 }
 
 TEST(AgentTickTests, AHeldControlIsDownOnEveryTickAndItsDownCountKeepsCountingPastTheWindow)
@@ -372,7 +403,7 @@ TEST(AgentTickTests, TheMoveAxesGoOnPastTheWindowWithTheSignOfLeft)
 
     for (std::uint32_t tick{ 0 }; tick < 9; ++tick)
     {
-        const PossessedAction action{ RunTick(agent, delivery, unit) };
+        const ClientAction action{ RunTick(agent, delivery, unit) };
         EXPECT_EQ(action.Override.ThrottleForward, 1.0f) << tick;
         EXPECT_EQ(action.Override.ThrottleLeft, 1.0f) << tick;
     }
@@ -388,7 +419,7 @@ TEST(AgentTickTests, APressedRequestIsDeliveredOnceInTheWholeWindowAndAfter)
     std::uint32_t reloads{ 0 };
     for (std::uint32_t tick{ 0 }; tick < 10; ++tick)
     {
-        const PossessedAction action{ RunTick(agent, delivery, unit) };
+        const ClientAction action{ RunTick(agent, delivery, unit) };
         if (action.Requests.IsWeaponSwitch) ++switches;
         if ((action.Override.ClientEvents & 1u) != 0) ++reloads;
     }
@@ -405,7 +436,7 @@ TEST(AgentTickTests, AHeldFireGivesTheTriggerEveryTick)
 
     for (std::uint32_t tick{ 0 }; tick < 9; ++tick)
     {
-        const PossessedAction action{ RunTick(agent, delivery, unit) };
+        const ClientAction action{ RunTick(agent, delivery, unit) };
         EXPECT_EQ(action.Override.FireTrigger, 1.0f) << tick;
     }
 }
@@ -490,4 +521,217 @@ TEST(AgentSettingsTests, WithoutTheTagOrTheClockThereAreNoSettings)
 
     EXPECT_FALSE(ReadAgentClientSettings(0, reinterpret_cast<std::uintptr_t>(context.data())).has_value());
     EXPECT_FALSE(ReadAgentClientSettings(reinterpret_cast<std::uintptr_t>(tag.data()), reinterpret_cast<std::uintptr_t>(context.data())).has_value());
+}
+
+TEST(AgentInputStoreTests, EveryDeliveryKeepsTheHandleAndClearingByHandleLeavesTheDeliveryOfAnotherPlayer)
+{
+    PlayerActionStore store{};
+    store.SetAgentInput(3, HandleOf(3), AgentInput{}, 4, 0.0f);
+
+    std::array<std::optional<AgentDelivery>, 16> deliveries{};
+    store.CopyAgentInputs(deliveries);
+    ASSERT_TRUE(deliveries[3].has_value());
+    EXPECT_EQ(deliveries[3]->Handle, HandleOf(3));
+
+    // note: The player of the index changed: the new one gets a delivery, and the clear of the old one does not take it away.
+    store.SetAgentInput(3, HandleOf(3) + 0x10000, AgentInput{}, 4, 0.0f);
+    store.ClearAgentInput(3, HandleOf(3));
+    store.CopyAgentInputs(deliveries);
+    ASSERT_TRUE(deliveries[3].has_value());
+    EXPECT_EQ(deliveries[3]->Handle, HandleOf(3) + 0x10000);
+
+    store.ClearAgentInput(3, HandleOf(3) + 0x10000);
+    store.CopyAgentInputs(deliveries);
+    EXPECT_FALSE(deliveries[3].has_value());
+
+    store.SetAgentInput(3, HandleOf(3), AgentInput{}, 4, 0.0f);
+    store.ClearAgentInput(3);
+    store.CopyAgentInputs(deliveries);
+    EXPECT_FALSE(deliveries[3].has_value());
+}
+
+TEST(AgentInputStoreTests, TheRequestsOfThePlayerAddUpAndMergeWithWhatTheClientAsks)
+{
+    PlayerActionStore store{};
+    store.RequestClient(2, ClientRequests{ .IsWeaponSwitch = true });
+    store.RequestClient(2, ClientRequests{ .IsZoomOut = true });
+
+    std::array<ClientRequests, 16> taken{};
+    store.TakeClientRequests(taken);
+
+    const ClientRequests merged{ taken[2] | ClientRequests{ .IsWeaponSwitch = true, .IsGrenadeSwitch = true } };
+    EXPECT_TRUE(merged.IsWeaponSwitch);
+    EXPECT_TRUE(merged.IsGrenadeSwitch);
+    EXPECT_TRUE(merged.IsZoomOut);
+    EXPECT_FALSE(merged.IsZoom);
+    EXPECT_FALSE(merged.IsZoomIn);
+}
+
+TEST(AgentClientStoreTests, ASuspensionKeepsOnlyTheLastWindowSoTheReleaseGoesOnInRepetition)
+{
+    // note: Q112, D367: delivery, possession for N ticks, release. The first tick after the release is in repetition: no press and no look, and the
+    // held controls and the axes as they were. The old window is never played again.
+    AgentClientStore store{};
+    const AgentDelivery delivery{ MakeDelivery(AgentInput{ .MoveForward = 1.0f, .YawDelta = 0.4f, .Level = Bit(AgentControl::Fire),
+        .Edge = Bit(AgentControl::Fire) | Bit(AgentControl::Jump) }, 4, 7) };
+
+    store.Begin(1, HandleOf(1));
+    for (std::uint32_t tick{ 0 }; tick < 2; ++tick) AdvanceAgentWindow(*store.Find(1), delivery.Sequence);
+    store.Find(1)->IsWarned = true;
+    store.CountTick(1, true, false, false);
+
+    // The possession takes the player: the agent is inactive, its counters stay.
+    store.Suspend(1);
+    EXPECT_EQ(store.Find(1), nullptr);
+    EXPECT_EQ(store.GetStatus().ActiveMask, 0u);
+    EXPECT_EQ(store.GetStatus().Players[1].Ticks, 1u);
+    store.Suspend(1);
+
+    // The release: the same agent goes on, with its last sequence seen and no state of the old unit.
+    store.Begin(1, HandleOf(1));
+    AgentClient* agent{ store.Find(1) };
+    ASSERT_NE(agent, nullptr);
+    EXPECT_TRUE(agent->HasSequence);
+    EXPECT_TRUE(agent->IsWarned);
+    EXPECT_EQ(agent->Input.DownMask, 0u);
+    EXPECT_EQ(store.GetStatus().Players[1].Ticks, 1u);
+
+    const std::uint32_t tick{ AdvanceAgentWindow(*agent, delivery.Sequence) };
+    const AgentInput played{ GetAgentTickInput(delivery, tick) };
+    EXPECT_EQ(played.Edge, 0u);
+    EXPECT_EQ(played.YawDelta, 0.0f);
+    EXPECT_EQ(played.PitchDelta, 0.0f);
+    EXPECT_EQ(played.Level, delivery.Input.Level);
+    EXPECT_EQ(played.MoveForward, 1.0f);
+
+    // A delivery that came during the possession is a new window, as always.
+    EXPECT_EQ(AdvanceAgentWindow(*agent, delivery.Sequence + 1), 0u);
+}
+
+TEST(AgentClientStoreTests, ASuspensionOfAPlayerThatWasNeverBegunKeepsNothingAndAnotherPlayerStartsNew)
+{
+    AgentClientStore store{};
+    store.Suspend(2);
+    store.Begin(2, HandleOf(2));
+    EXPECT_FALSE(store.Find(2)->HasSequence);
+    EXPECT_EQ(store.Find(2)->TickInWindow, 0u);
+
+    store.Find(2)->HasSequence = true;
+    store.Suspend(2);
+    store.Begin(2, HandleOf(2) + 0x10000);
+    EXPECT_FALSE(store.Find(2)->HasSequence);
+}
+
+TEST(AgentClientStoreTests, EndForgetsTheSuspensionToo)
+{
+    AgentClientStore store{};
+    store.Begin(2, HandleOf(2));
+    store.Find(2)->HasSequence = true;
+    store.Suspend(2);
+    store.End(2);
+
+    store.Begin(2, HandleOf(2));
+    EXPECT_FALSE(store.Find(2)->HasSequence);
+}
+
+TEST(AgentClientStoreTests, CleanupDropsEveryAgentTheSuspendedOnesAndTheCountersFromAnyThread)
+{
+    AgentClientStore store{};
+    store.Begin(1, HandleOf(1));
+    store.Begin(2, HandleOf(2));
+    store.Find(1)->IsWarned = true;
+    store.Find(2)->HasSequence = true;
+    store.CountTick(1, true, true, true);
+    store.Suspend(2);
+
+    store.Cleanup();
+
+    const auto status{ store.GetStatus() };
+    EXPECT_EQ(status.ActiveMask, 0u);
+    EXPECT_EQ(status.Players[1].Ticks, 0u);
+    EXPECT_EQ(status.Players[1].Unsupported, 0u);
+
+    // The state of the game thread is dropped by its next call: a new match starts clean, the warning included.
+    store.Begin(1, HandleOf(1));
+    store.Begin(2, HandleOf(2));
+    EXPECT_FALSE(store.Find(1)->IsWarned);
+    EXPECT_FALSE(store.Find(2)->HasSequence);
+}
+
+TEST(AgentTickTests, AStepThatDidNotRunLeavesTheSynthesizerAsItWasButKeepsTheStartOfTheWindow)
+{
+    // note: A control held in the last window and a new window with a re-press (Level and Edge): released at tick 0 and pressed at tick 1.
+    const std::size_t fire{ static_cast<std::size_t>(AgentControl::Fire) };
+    AgentClient agent{};
+    const AgentDelivery held{ MakeDelivery(AgentInput{ .Level = Bit(AgentControl::Fire) }, 4, 1) };
+    for (std::uint32_t tick{ 0 }; tick < 4; ++tick) MakeAgentTickFrame(agent, held, AdvanceAgentWindow(agent, 1), ClientSettings{});
+    ASSERT_EQ(agent.Input.DownCount[fire], 4);
+    ASSERT_EQ(agent.Input.StartMask, 0u);
+
+    const AgentDelivery repress{ MakeDelivery(AgentInput{ .Level = Bit(AgentControl::Fire), .Edge = Bit(AgentControl::Fire) }, 4, 2) };
+    const AgentInputState before{ agent.Input };
+
+    // Tick 0 of the new window: the synthesizer fixes the start mask and sees the release. The step does not run, so it is given back.
+    const InputFrame release{ MakeAgentTickFrame(agent, repress, AdvanceAgentWindow(agent, 2), ClientSettings{}) };
+    EXPECT_FALSE(release.Events[static_cast<std::size_t>(InputEvent::Fire)].IsDown);
+    ASSERT_EQ(agent.Input.DownCount[fire], 0);
+    UndoAgentFrame(agent, before);
+    EXPECT_EQ(agent.Input.DownCount[fire], 4);
+    EXPECT_EQ(agent.Input.TicksDown[fire], before.TicksDown[fire]);
+    EXPECT_EQ(agent.Input.DownMask, before.DownMask);
+    EXPECT_EQ(agent.Input.StartMask, Bit(AgentControl::Fire));
+
+    // Tick 1 runs: nobody saw the release, so it is a hold (the count goes on), not a press.
+    const InputFrame next{ MakeAgentTickFrame(agent, repress, AdvanceAgentWindow(agent, 2), ClientSettings{}) };
+    EXPECT_TRUE(next.Events[static_cast<std::size_t>(InputEvent::Fire)].IsDown);
+    EXPECT_EQ(next.Events[static_cast<std::size_t>(InputEvent::Fire)].DownCount, 5);
+}
+
+TEST(AgentTickTests, AControlHeldBeforeAPossessionIsNotPressedAgainWhenItEnds)
+{
+    // note: D367, M1: Level held, possession for N ticks, release on the same unit: the first frame is in repetition, with no new press for the held
+    // control (its down count goes on), Edge 0 and no look.
+    const std::size_t jump{ static_cast<std::size_t>(AgentControl::Jump) };
+    AgentClientStore store{};
+    const AgentDelivery delivery{ MakeDelivery(AgentInput{ .YawDelta = 0.4f, .Level = Bit(AgentControl::Jump), .Edge = Bit(AgentControl::Jump) }, 4, 5) };
+    const UnitClientState unit{ MakeUnit(7) };
+
+    store.Begin(1, HandleOf(1));
+    for (std::uint32_t tick{ 0 }; tick < 3; ++tick) RunTick(*store.Find(1), delivery, unit);
+    ASSERT_EQ(store.Find(1)->Input.DownCount[jump], 3);
+
+    store.Suspend(1);
+    store.Suspend(1);
+    store.Begin(1, HandleOf(1));
+    AgentClient* agent{ store.Find(1) };
+    ASSERT_NE(agent, nullptr);
+
+    const std::uint32_t tick{ AdvanceAgentWindow(*agent, delivery.Sequence) };
+    ASSERT_GE(tick, delivery.WindowTicks);
+    PrepareAgentFrame(*agent, unit);
+    const InputFrame frame{ MakeAgentTickFrame(*agent, delivery, tick, ClientSettings{}) };
+    const auto& pressed{ frame.Events[static_cast<std::size_t>(InputEvent::Jump)] };
+    EXPECT_TRUE(pressed.IsDown);
+    EXPECT_EQ(pressed.DownCount, 4);
+    EXPECT_EQ(frame.YawDelta, 0.0f);
+    EXPECT_EQ(GetAgentTickInput(delivery, tick).Edge, 0u);
+
+    // A new life during the possession forgets the held controls, as a respawn does.
+    store.Suspend(1);
+    store.Begin(1, HandleOf(1));
+    PrepareAgentFrame(*store.Find(1), MakeUnit(8));
+    EXPECT_EQ(store.Find(1)->Input.DownCount[jump], 0);
+}
+
+TEST(AgentClientStoreTests, SuspendingEveryPlayerKeepsTheWindowsAndEndsNothing)
+{
+    AgentClientStore store{};
+    store.Begin(1, HandleOf(1));
+    store.Find(1)->HasSequence = true;
+    store.Find(1)->Sequence = 3;
+
+    store.Suspend(1);
+    store.Begin(1, HandleOf(1));
+    EXPECT_TRUE(store.Find(1)->HasSequence);
+    EXPECT_EQ(store.Find(1)->Sequence, 3u);
 }

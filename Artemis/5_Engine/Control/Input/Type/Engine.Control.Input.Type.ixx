@@ -1,11 +1,14 @@
 export module Engine.Control.Input.Type;
 
+import Common.Engine.Type;
 import Control.Client.Type;
 import Blam.Layout.Action.Type;
 import std;
 
 namespace
 {
+    using Common::Engine::Type::k_NoHandle;
+
     using Blam::Layout::Action::Type::k_HoldLanes;
     using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
     using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
@@ -514,9 +517,10 @@ export namespace Engine::Control::Input::Type
     // block. An agent (AgentClient) gets one step per TICK and takes it at once.
     struct ClientDriven
     {
-        // Player index and its handle with the salt: another bot in the same slot is another possession. The handle of an agent stays unset.
+        // Player index and its handle with the salt: another bot in the same slot is another possession, and another player in the slot of an agent is
+        // another agent (VW.9c.3 D).
         std::size_t Player{ 0 };
-        std::uint32_t Handle{ 0xFFFFFFFF };
+        std::uint32_t Handle{ k_NoHandle };
 
         // Unit the aim was started for. A new unit (respawn) starts the aim again from the unit.
         std::uint32_t Unit{ 0xFFFFFFFF };
@@ -541,6 +545,9 @@ export namespace Engine::Control::Input::Type
     // What an agent decided for a window of ticks, as the PlayerActionStore holds it until the tick takes it (VW.9c.3 C, D362, D363).
     struct AgentDelivery
     {
+        // Handle of the player it was given to (with the salt). The tick drops the delivery when the player in that index has another handle.
+        std::uint32_t Handle{ k_NoHandle };
+
         ::Control::Client::Type::AgentInput Input{};
 
         // Ticks of the window (d). At least 1.
@@ -570,6 +577,23 @@ export namespace Engine::Control::Input::Type
 
         // Whether the WARNING for Unsupported or UnknownRead was logged for this agent.
         bool IsWarned{ false };
+
+        // Unit the agent had when a possession suspended it (D367). The first frame after it keeps the held controls of the synthesizer when the unit is the
+        // same one, so a control held through the possession is not pressed again.
+        std::uint32_t ResumedUnit{ k_NoHandle };
+    };
+
+    // What a tick does with the AgentInput the store holds for a player (VW.9c.3 D, Q112).
+    enum class AgentPlan : std::uint8_t
+    {
+        // The player plays it through the client.
+        Run = 0,
+
+        // The player is possessed: it plays nothing and keeps the last window it saw, so the end of the possession goes on in repetition (D367).
+        Suspend,
+
+        // The player in that index is another one: the delivery is dropped.
+        Stale,
     };
 
     // What the panel shows of one agent (VW.9c.3 C): counters, as for the possession. Written by the game thread, read by the UI.

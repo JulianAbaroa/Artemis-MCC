@@ -583,8 +583,8 @@ TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)
     BotStore botStore{};
     BotService botService{ log, aobService, botStore, playerActionStore };
     AgentClientStore agentClientStore{};
-    AgentClientService agentClientService{ log, botService, agentClientStore };
-    PlayerActionDetour detour{ log, aobService, base.m_MatchSetupService, playerActionStore, botService, agentClientStore, agentClientService };
+    AgentClientService agentClientService{ log, botService, agentClientStore, playerActionStore };
+    PlayerActionDetour detour{ log, aobService, base.m_MatchSetupService, playerActionStore, botService, agentClientService };
 
     EXPECT_FALSE(detour.Install());
 

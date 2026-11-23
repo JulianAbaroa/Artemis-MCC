@@ -13,7 +13,7 @@ namespace
     using Control::Action::Type::AppliedFacing;
     using Control::Action::Type::ClientRequests;
     using Control::Action::Type::PlayerActionHistory;
-    using Control::Action::Type::PossessedAction;
+    using Control::Action::Type::ClientAction;
     using Control::Client::Type::ClientOutput;
     using Control::Client::Type::k_EventReload;
     using Control::Client::Type::k_EventSwitchGrenade;
@@ -206,12 +206,12 @@ namespace Control::Action::System
         return ((milliseconds * ticksPerSecond) + (k_MillisecondsPerSecond - 1)) / k_MillisecondsPerSecond;
     }
 
-    auto MakePossessedAction(const ClientOutput& output, float yaw, float pitch) -> PossessedAction
+    auto MakeClientAction(const ClientOutput& output, float yaw, float pitch) -> ClientAction
     {
         std::uint32_t heldBits{ 0 };
         for (const auto& lane : k_HoldLanes) heldBits |= 1u << lane.HeldBit;
 
-        PossessedAction action{};
+        ClientAction action{};
         ActionOverride& actionOverride{ action.Override };
         actionOverride.Buttons = output.Buttons & k_ValidButtons;
         actionOverride.Yaw = yaw;

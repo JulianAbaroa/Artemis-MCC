@@ -573,6 +573,22 @@ export namespace Control::Client::Type
         std::uint32_t StartMask{ 0 };
     };
 
+    // An AgentInput held for a range of ticks, as a scenario of the bench writes it (VW.9c.3 C, D362).
+    struct AgentInputLine
+    {
+        // First and last tick of the range. A last tick of 0 is the end of the match.
+        std::uint64_t FromTick{ 0 };
+        std::uint64_t ToTick{ 0 };
+
+        // Ticks of the window the input is delivered in (d). At least 1.
+        std::uint32_t WindowTicks{ 4 };
+
+        AgentInput Input{};
+
+        // Radians per tick and per axis the look may ask, 0 = no limit.
+        float TurnLimit{ 0.0f };
+    };
+
     // Adds up the frames of one window of a possessed client into one AgentInput (D364). The caller keeps it and passes it in.
     struct AgentInputReducer
     {

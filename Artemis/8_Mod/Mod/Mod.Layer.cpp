@@ -173,6 +173,7 @@ namespace Mod
         m_Base.m_LifecycleService.OnCleanup([this] {
             m_Base.m_LocalUserStore.Cleanup();
             m_Control.m_PlayerActionStore.Cleanup();
+            m_Control.m_AgentClientStore.Cleanup();
             m_Control.m_BotStore.Cleanup();
             m_Base.m_MatchSetupStore.Cleanup();
             m_Capture.m_CaptureService.Cleanup();

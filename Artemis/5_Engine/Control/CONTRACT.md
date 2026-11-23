@@ -36,7 +36,7 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   Viewer render thread, read with `k_PossessRequestMaxAge`, 100 ms like Watch POV, signed age) against `BotService::GetBotPlayerHandles` (only an Artemis
   bot, never a human, the salt must match: pure `FindPossessedBot`) and the pure `TakeTickAction` copies the accumulated aim, the held state and the
   pending pulses to the action, clearing them (delivered once), as 0x628b0 copies the block. The result goes through the SAME path as an agent
-  (`MakePossessedAction`: `ActionOverride` plus `ClientRequests`; `BuildAction`, `UnitRules`, hold lanes D121, interaction D118 and the unit slot are the
+  (`MakeClientAction`: `ActionOverride` plus `ClientRequests`; `BuildAction`, `UnitRules`, hold lanes D121, interaction D118 and the unit slot are the
   existing ones). The Python override of the possessed bot is discarded (D351). While a bot is possessed the human local player of input user 0 gets a
   neutral override (`MakeNeutralOverride`, no write to its control block, D361) whether it has a unit or not, only when it has an engine action and no
   override of an agent (a local agent is never touched, D350): pure `ShouldNeutralizeLocal`. No request, a human or a gone bot releases the possession the
@@ -45,13 +45,15 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   about a user: the oracle and the possession both use them. `UnitContext` never passes an input user outside 0..3 to 0x61830. A request is dropped when
   the Viewer stops publishing for more than 100 ms (stalled Presents), which releases the bot. The bot is shared by the frame thread and the tick thread without a lock, so `StepFrame` checks that it runs on the thread that began the possession (`PossessionStore::IsTickThread`): on another thread it logs one ERROR and `Disable`s the possession. A bot with no new frame for more than `k_PossessMaxStaleTicks` ticks gets a neutral action and forgets its held state (`TickFrameAge`). `SetPossession` of both detours connects the stores
   (before Install: without it nobody is possessed). The tick marks the possessed player: see `Bridge.Codec` (domain only, not in the bridge yet).
-- Agents through the client of Artemis (VW.9c.3 C, D362, D363; the bridge stays v1): `PlayerActionStore` holds per player an `AgentDelivery` (the `AgentInput`, the
-  window length d in ticks, the turn limit per tick and a sequence number that rises with every `SetAgentInput`), under the same lock as the overrides. It is EXCLUSIVE
+- Agents through the client of Artemis (VW.9c.3 C and D, D362, D363, D367; the bridge stays v1): `PlayerActionStore` holds per player an `AgentDelivery` (the player handle,
+  the `AgentInput`, the window length d in ticks, the turn limit per tick and a sequence number that rises with every `SetAgentInput(index, handle, ...)`), under the same lock as the overrides. It is EXCLUSIVE
   with an `ActionOverride`: setting one removes the other (the last wins), releasing an override (`SetOverride` with nothing) leaves the AgentInput, `ClearAgentInput`
-  stops it, `BotService::RemoveBot` and `Cleanup` drop it; a turn limit that is not finite or is negative is kept as 0 (no limit). The hook copies both
+  stops it (with a handle, only the AgentInput of that handle), `BotService::RemoveBot` and `Cleanup` drop it; a turn limit that is not finite or is negative is kept as 0 (no limit). The hook copies both
   in one lock (`CopyActions`), so in one tick a player has one or the other. Every tick `PlayerActionDetour::ApplyAgents` (after the overrides are copied and the possession resolved,
-  before `ApplyPossession`) runs, for each player with an AgentInput that is not the possessed one (possession wins, D351: that player gets no step, forgets its state
-  and keeps the AgentInput in the store for when the possession ends), one step of `AgentClientService`: `AdvanceAgentWindow` (a sequence number not seen before is
+  before `ApplyPossession`) only wires: it reads the settings once and calls `AgentClientService::PlayTick` for each player, which decides with the pure `PlanAgent`
+  and counts every tick. A player whose AgentInput is of another handle than the one now in its index (or whose slot is empty) is Stale: its client ends and the
+  delivery is dropped (`ClearAgentInput` with that handle, so a new delivery of the new player stays). A possessed player is Suspend (possession wins, D351: no step,
+  and the AgentInput waits in the store). Any other player with an AgentInput is Run, one step of `AgentClientService`: `AdvanceAgentWindow` (a sequence number not seen before is
   tick 0 of a window, any other tick is one more), `GetAgentTickInput` (past the window with no new delivery the same held controls and axes repeat with Edge 0 and no look:
   what is held and the axes go on, a tap is over and nothing turns), `MakeAgentFrame` (synthetic frame), `StepClient` against the unit of the player with
   `ReadAgentClientSettings` (the settings of Artemis, D359), `AccumulateFrame` and `TakeTickAction` in the same tick (one frame per tick), so the result is an
@@ -59,7 +61,7 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   (`ClientSettings::TickSeconds`, not real time, D105). A player without a unit gets the neutral action and forgets its held state, a new unit (respawn) starts the aim
   from the unit and presses the held controls again, and the window and the last delivery seen survive a missing unit. It writes no control block of any local player
   (the override of an agent has no local index). The state of each agent is in `AgentClientStore` (game thread only, begun when the player gets an AgentInput and
-  ended when it loses it or is possessed), its counters (ticks, ticks with a step that ran, ticks with Unsupported, ticks with UnknownRead) are atomics that the Viewer
+  ended when it loses it, its handle changes or the match ends, and suspended when it is possessed), its counters (ticks, ticks with a step that ran, ticks with Unsupported, ticks with UnknownRead) are atomics that the Viewer
   shows under the possession line, and one WARNING per agent is logged the first time a step is Unsupported or reads an unknown unit fact.
   The settings of an agent (`ReadAgentClientSettings`, one function): the game facts (hold threshold, zoom cancel, jump timer, ticks per second, tick seconds) are read
   from the control tag and the clock like for a user, and every preference is fixed and never copied from a user: aim scales 1, crouch is a hold, the jump is not a
@@ -67,6 +69,21 @@ Group `5_Engine` - static library inside the game process - applies the actions 
   (`k_NoInputUser`, `k_NoLocalIndex`: `BuildUnitContext` then says the controls are free, `ControlLocked` known and false, and never asks the engine), `PlayerHandle`
   of the player of the agent (look rates, look offset, alternate control and boost profile are the player's own), `ClientZoomLevel` of the state, dual wield
   restrictions 0, boost values the `Value` of events 0x0A and 0x26 of the synthetic frame.
+  VW.9c.3 D, D367 (Q112): (1) the end of a possession goes on in REPETITION: `AgentClientStore::Suspend` keeps only the last sequence seen with its window over, so the first
+  tick after the release has Edge 0 and no look and the held controls and axes as they were, until the next delivery; the old window is never played again (it would repeat a
+  jump, a grenade or a melee). `End` (no delivery, a new handle, the end of the match) forgets the sequence, and a delivery that came during the possession is a new window. The
+  synthesizer (held controls) DOES survive the suspension (`AgentClient::ResumedUnit`, user 2026-11-23, M1 of the review): a Level held before the possession is still held
+  when it ends, with its down count going on, so it is not pressed again (no jump, grenade or melee). If the unit changed during the possession it is a new life and
+  `PrepareAgentFrame` forgets the controls as for a respawn. (2) The window advances on EVERY tick the agent plays,
+  with or without settings or unit. A step that does not run (`ClientStatus` not `Ran`) does not spend the synthesizer: `UndoAgentFrame` gives back what the controls counted
+  on that tick (down counts, held ticks, down mask) and keeps the start mask of the window, because the window itself goes on counting, so a tap whose tick did not run is lost
+  and is not moved to the next one. The same for a re-press (Level and Edge of a control already held, released at tick 0 and pressed at tick 1): when tick 0 does not run
+  nobody saw the release, the down count goes on and tick 1 is a hold, not a press. (3) `AgentClientStore::Cleanup` runs where `PlayerActionStore::Cleanup` runs (end of match, any thread): the counters and the active mask
+  go at once, the state of the clients is dropped by the game thread at its next call (an atomic flag, no lock), which zeroes the counters and the mask again. (4) An agent is per HANDLE: `AgentDelivery::Handle` and
+  `ClientDriven::Handle` (filled for agents too) are the handle with the salt, and a delivery for another handle in the index is dropped. The bench keeps its applied inputs by
+  handle and clears by handle. (5) The client requests the store holds for a player with an AgentInput (the bench `request` line, `RequestClient`) ADD UP (`operator|` of
+  `ClientRequests`) to what its client asks the same tick, they are not lost. (6) `AgentClientService` owns Begin / Suspend / End and all the counting (`PlayTick`, `SuspendAll`: a tick the hook does not run actions suspends every agent, it never ends them, so the old window is not played again);
+  `ClientAction` / `MakeClientAction` are the one name for what the client gives a player, a possessed bot or an agent.
 - Unit facts of the client (VW.9c.2, D356): `BotService::GetClientContext(state, source, settings, dt)` resolves every `UnitFact` of the unit it is
   given (the local's in the oracle, the bot's in the possession) as far as the memory and the functions answer: what it cannot resolve is out of
   `Known` and the step says so. The pure `BuildUnitContext` (`Engine.Control.Simulation.System:UnitContext`)
@@ -108,8 +125,8 @@ Other projects may import only these modules; everything else in the project is 
 | Module | What it gives |
 |---|---|
 | `Engine.Control.Layer` | The facade: input, action and bot stores, services and detours. Owner only. |
-| `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `PossessionStore`, `PossessRequestStore` (`ClientDriven`, `PossessStatus`, `AgentDelivery`, `AgentClient` and `AgentClientStatus` are in the Type module), `AgentClientStore`, `ReadAction` (a field of a `PlayerAction` by offset). |
-| `Engine.Control.Input.System` | The pure `FindPossessedBot`, `ShouldNeutralizeLocal`, `PrepareFrame`, `AccumulateFrame`, `TakeTickAction`, the pure `AdvanceAgentWindow`, `GetAgentTickInput`, `MakeAgentTickFrame`, `PrepareAgentFrame`, `ResetAgentUnit`, `ShouldRunAgent`, `AgentClientService` (the client per tick of the agents, VW.9c.3 C), `ReadAgentClientSettings`, `PossessionService` (the client per frame of the possessed bot) and the client source reads `ReadClientSettings`, `ReadDualWieldRestrictions`, `ReadInputTable` (VW.9c.2 B), the `ActionSource` port, the input services, the pure `FindViewActionPlayer` (which player's action goes into the input of a view) and the pure `ReadInputFrame`, `ReadClientState`, `CompareClient`, `CountClient`, `FormatClientLine` and `FormatClientStateFields` of the client oracle, and the control tag helpers (`LocateControlTag`, `ReadControlTag`, `FindInputPlayer`, `GetEngineThreadContext`). |
+| `Engine.Control.Input.Type`, `Engine.Control.Input.State` | Input sources and states, `VirtualInputStore`, `PlayerActionStore`, `PossessionStore`, `PossessRequestStore` (`ClientDriven`, `PossessStatus`, `AgentDelivery`, `AgentClient`, `AgentClientStatus` and `AgentPlan` are in the Type module), `AgentClientStore`, `ReadAction` (a field of a `PlayerAction` by offset). |
+| `Engine.Control.Input.System` | The pure `FindPossessedBot`, `ShouldNeutralizeLocal`, `PrepareFrame`, `AccumulateFrame`, `TakeTickAction`, the pure `AdvanceAgentWindow`, `GetAgentTickInput`, `MakeAgentTickFrame`, `PrepareAgentFrame`, `ResetAgentUnit`, `UndoAgentFrame`, `PlanAgent`, `AgentClientService` (the client per tick of the agents, VW.9c.3 C and D), `ReadAgentClientSettings`, `PossessionService` (the client per frame of the possessed bot) and the client source reads `ReadClientSettings`, `ReadDualWieldRestrictions`, `ReadInputTable` (VW.9c.2 B), the `ActionSource` port, the input services, the pure `FindViewActionPlayer` (which player's action goes into the input of a view) and the pure `ReadInputFrame`, `ReadClientState`, `CompareClient`, `CountClient`, `FormatClientLine` and `FormatClientStateFields` of the client oracle, and the control tag helpers (`LocateControlTag`, `ReadControlTag`, `FindInputPlayer`, `GetEngineThreadContext`). |
 | `Engine.Control.Simulation.Type`, `Engine.Control.Simulation.State` | Machines and players of the simulation, the pure `PlanRoster` (bots to move, remove and add to reach a count per team; the `Roster` type comes from `Engine.Base.MatchSetup.Type`), `FindFreeBotNumber` (lowest free bot number), `MakePlayerUpdate` (buffer of the player update), `BotStore` (bot, team and remove requests, session snapshot; bots are added only by a roster, `BotService::AddBot` through `ApplyRoster`, there is no request to add one). `BotService` is the `RosterPort` of `MatchSetupService`. |
 | `Engine.Control.Simulation.System` | `BotService` and its partition `:UnitContext`: the `UnitFactPort` (memory and engine calls behind the unit facts of the client) and the pure `BuildUnitContext` (VW.9c.2). |
 

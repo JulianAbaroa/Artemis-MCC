@@ -75,8 +75,16 @@ export namespace Control::Action::Type
         bool IsZoomOut{ false };
     };
 
-    // What the client of a possessed bot asks of its unit in one tick: the override and the one-tick requests (VW.9c.2 B).
-    struct PossessedAction
+    // return: The two requests added up: each one is set when it is set in either of them.
+    constexpr auto operator|(const ClientRequests& first, const ClientRequests& second) -> ClientRequests
+    {
+        return ClientRequests{ .IsWeaponSwitch = first.IsWeaponSwitch || second.IsWeaponSwitch, .IsGrenadeSwitch = first.IsGrenadeSwitch || second.IsGrenadeSwitch,
+            .IsZoom = first.IsZoom || second.IsZoom, .IsZoomIn = first.IsZoomIn || second.IsZoomIn, .IsZoomOut = first.IsZoomOut || second.IsZoomOut };
+    }
+
+    // What the client of Artemis asks of the unit of a player in one tick, a possessed bot or an agent: the override and the one-tick requests
+    // (VW.9c.2 B, VW.9c.3 C).
+    struct ClientAction
     {
         ActionOverride Override{};
         ClientRequests Requests{};

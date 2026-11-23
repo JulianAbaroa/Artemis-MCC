@@ -74,23 +74,24 @@ namespace Engine::Control::Input::State
         if (actionOverride) m_AgentInputs[playerIndex].reset();
     }
 
-    auto PlayerActionStore::SetAgentInput(std::size_t playerIndex, const ::Control::Client::Type::AgentInput& input, std::uint32_t windowTicks,
-        float turnLimit) -> void
+    auto PlayerActionStore::SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const ::Control::Client::Type::AgentInput& input,
+        std::uint32_t windowTicks, float turnLimit) -> void
     {
         if (playerIndex >= k_MaxActionPlayers) return;
 
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        m_AgentInputs[playerIndex] = AgentDelivery{ .Input = input, .WindowTicks = (std::max)(windowTicks, 1u), .TurnLimit = std::isfinite(turnLimit) && turnLimit > 0.0f ? turnLimit : 0.0f,
+        m_AgentInputs[playerIndex] = AgentDelivery{ .Handle = playerHandle, .Input = input, .WindowTicks = (std::max)(windowTicks, 1u), .TurnLimit = std::isfinite(turnLimit) && turnLimit > 0.0f ? turnLimit : 0.0f,
             .Sequence = ++m_AgentSequence };
         m_Overrides[playerIndex].reset();
     }
 
-    auto PlayerActionStore::ClearAgentInput(std::size_t playerIndex) -> void
+    auto PlayerActionStore::ClearAgentInput(std::size_t playerIndex, std::optional<std::uint32_t> playerHandle) -> void
     {
         if (playerIndex >= k_MaxActionPlayers) return;
 
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        m_AgentInputs[playerIndex].reset();
+        auto& delivery{ m_AgentInputs[playerIndex] };
+        if (delivery && (!playerHandle || delivery->Handle == *playerHandle)) delivery.reset();
     }
 
     auto PlayerActionStore::CopyAgentInputs(std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& out) const -> void
@@ -133,11 +134,7 @@ namespace Engine::Control::Input::State
         std::lock_guard<std::mutex> lock{ m_Mutex };
 
         ClientRequests& pending{ m_ClientRequests[playerIndex] };
-        pending.IsWeaponSwitch = pending.IsWeaponSwitch || requests.IsWeaponSwitch;
-        pending.IsGrenadeSwitch = pending.IsGrenadeSwitch || requests.IsGrenadeSwitch;
-        pending.IsZoom = pending.IsZoom || requests.IsZoom;
-        pending.IsZoomIn = pending.IsZoomIn || requests.IsZoomIn;
-        pending.IsZoomOut = pending.IsZoomOut || requests.IsZoomOut;
+        pending = pending | requests;
     }
 
     auto PlayerActionStore::TakeClientRequests(std::array<ClientRequests, k_MaxActionPlayers>& out) -> void

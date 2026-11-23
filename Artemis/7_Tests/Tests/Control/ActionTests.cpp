@@ -25,7 +25,7 @@ namespace
     using Control::Client::Type::ClientOutput;
     using Control::Client::Type::ClientSettings;
     using Control::Action::System::MakeNeutralOverride;
-    using Control::Action::System::MakePossessedAction;
+    using Control::Action::System::MakeClientAction;
     using Control::Client::Type::UnitContext;
     using Control::Action::System::UnitRules;
     using Control::Action::System::BuildAction;
@@ -509,7 +509,7 @@ TEST(ActionTests, ThePossessedActionTakesTheButtonsTheLanesAndTheEventsOfTheClie
     output.ZoomTrigger = 0.25f;
     output.Trigger4 = 1.0f;
 
-    const auto possessed{ MakePossessedAction(output, 1.5f, -0.25f) };
+    const auto possessed{ MakeClientAction(output, 1.5f, -0.25f) };
     const ActionOverride& actionOverride{ possessed.Override };
 
     EXPECT_EQ(actionOverride.Buttons, 1ull << 30);
@@ -532,18 +532,18 @@ TEST(ActionTests, ThePossessedActionTurnsTheGrenadeThrowAndTheZoomStepIntoTheirF
 {
     ClientOutput output{};
     output.Events = 1u << 9;
-    EXPECT_EQ(MakePossessedAction(output, 0.0f, 0.0f).Override.ClientEvents, 2);
-    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
+    EXPECT_EQ(MakeClientAction(output, 0.0f, 0.0f).Override.ClientEvents, 2);
+    EXPECT_FALSE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoom);
 
     output.Events = 1u << 4;
-    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
-    EXPECT_TRUE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomIn);
-    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomOut);
+    EXPECT_FALSE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoom);
+    EXPECT_TRUE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoomIn);
+    EXPECT_FALSE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoomOut);
 
     output.Events = 1u << 5;
-    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoom);
-    EXPECT_FALSE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomIn);
-    EXPECT_TRUE(MakePossessedAction(output, 0.0f, 0.0f).Requests.IsZoomOut);
+    EXPECT_FALSE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoom);
+    EXPECT_FALSE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoomIn);
+    EXPECT_TRUE(MakeClientAction(output, 0.0f, 0.0f).Requests.IsZoomOut);
 }
 
 namespace

@@ -12,6 +12,8 @@ namespace
     using Control::Client::System::AddAgentFrame;
     using Control::Client::System::CloseAgentInput;
     using Control::Client::System::FindAgentControl;
+    using Control::Client::System::AreTickRangesOverlapping;
+    using Control::Client::System::ParseAgentInputLine;
     using Control::Client::System::ParseAgentInputWords;
     using Control::Client::System::IntegrateAim;
     using Control::Client::System::MakeAgentFrame;
@@ -20,6 +22,7 @@ namespace
     using Control::Client::Type::AgentControl;
     using Control::Client::Type::AgentInput;
     using Control::Client::Type::AgentInputReducer;
+    using Control::Client::Type::AgentInputLine;
     using Control::Client::Type::AgentInputState;
     using Control::Client::Type::ClientSettings;
     using Control::Client::Type::ClientState;
@@ -638,4 +641,62 @@ TEST(AgentTextTests, AFailureLeavesTheInputAndTheTurnUntouched)
     EXPECT_EQ(input.YawDelta, 3.0f);
     EXPECT_EQ(input.Level, 0x5u);
     EXPECT_FLOAT_EQ(turn, 0.5f);
+}
+
+// The line 'input' of the bench without its players word (VW.9c.3 D): the first tick, the last tick, the window and the fields of the AgentInput.
+
+namespace
+{
+    auto ParseLine(const std::vector<std::string>& words, AgentInputLine& line) -> std::string
+    {
+        return ParseAgentInputLine(std::span<const std::string>{ words }, line);
+    }
+}
+
+TEST(AgentLineTests, ALineReadsTheRangeTheWindowAndTheFields)
+{
+    AgentInputLine line{};
+    EXPECT_EQ(ParseLine({ "10", "0", "4", "move=1,-0.5", "look=0.4,0", "level=fire", "edge=fire,jump", "turn=0.02" }, line), "");
+    EXPECT_EQ(line.FromTick, 10u);
+    EXPECT_EQ(line.ToTick, 0u);
+    EXPECT_EQ(line.WindowTicks, 4u);
+    EXPECT_EQ(line.Input.MoveForward, 1.0f);
+    EXPECT_EQ(line.Input.MoveLeft, -0.5f);
+    EXPECT_EQ(line.Input.YawDelta, 0.4f);
+    EXPECT_EQ(line.Input.Level, 1u << static_cast<std::uint32_t>(AgentControl::Fire));
+    EXPECT_EQ(line.Input.Edge, (1u << static_cast<std::uint32_t>(AgentControl::Fire)) | (1u << static_cast<std::uint32_t>(AgentControl::Jump)));
+    EXPECT_EQ(line.TurnLimit, 0.02f);
+
+    EXPECT_EQ(ParseLine({ "5", "5", "1" }, line), "");
+    EXPECT_EQ(line.Input.Level, 0u);
+}
+
+TEST(AgentLineTests, ALineWithoutTheRangeOrWithABadRangeOrWindowFailsAndKeepsTheOldLine)
+{
+    AgentInputLine line{ .FromTick = 3, .WindowTicks = 9 };
+
+    EXPECT_NE(ParseLine({}, line), "");
+    EXPECT_NE(ParseLine({ "10", "0" }, line), "");
+    EXPECT_NE(ParseLine({ "ten", "0", "4" }, line), "");
+    EXPECT_NE(ParseLine({ "10", "-1", "4" }, line), "");
+    EXPECT_NE(ParseLine({ "10", "9", "4" }, line), "");
+    EXPECT_NE(ParseLine({ "10", "20", "0" }, line), "");
+    EXPECT_NE(ParseLine({ "10", "20", "4294967296" }, line), "");
+    EXPECT_NE(ParseLine({ "10", "20", "4", "jump=1" }, line), "");
+    EXPECT_NE(ParseLine({ "10", "20", "4", "move=2,0" }, line), "");
+
+    EXPECT_EQ(line.FromTick, 3u);
+    EXPECT_EQ(line.WindowTicks, 9u);
+}
+
+TEST(AgentLineTests, TwoRangesOverlapWhenTheyShareATickAndALastTickOfZeroIsTheEnd)
+{
+    EXPECT_TRUE(AreTickRangesOverlapping(10, 20, 20, 30));
+    EXPECT_TRUE(AreTickRangesOverlapping(10, 20, 15, 16));
+    EXPECT_FALSE(AreTickRangesOverlapping(10, 20, 21, 30));
+    EXPECT_FALSE(AreTickRangesOverlapping(21, 30, 10, 20));
+    EXPECT_TRUE(AreTickRangesOverlapping(10, 0, 500, 600));
+    EXPECT_TRUE(AreTickRangesOverlapping(500, 600, 10, 0));
+    EXPECT_TRUE(AreTickRangesOverlapping(10, 0, 20, 0));
+    EXPECT_FALSE(AreTickRangesOverlapping(0, 9, 10, 0));
 }

@@ -27,7 +27,7 @@ namespace
     using Engine::Base::Hook::System::k_DrainTimeout;
 
     using ::Control::Action::System::MakeNeutralOverride;
-    using ::Control::Action::Type::PossessedAction;
+    using ::Control::Action::Type::ClientAction;
 
     using Engine::Control::Input::Type::ClientDriven;
     using Engine::Control::Input::Type::k_PossessInputUser;
@@ -40,7 +40,6 @@ namespace
     using Engine::Control::Input::System::GetEngineThreadContext;
     using Engine::Control::Input::System::LocateControlTag;
     using Engine::Control::Input::System::ReadAgentClientSettings;
-    using Engine::Control::Input::System::ShouldRunAgent;
     using Engine::Control::Input::System::ReadControlTag;
 
     using ::Control::Action::Type::ActionOverride;
@@ -195,39 +194,20 @@ namespace Engine::Control::Input::Hook
         const std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& deliveries,
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests) -> void
     {
-        std::optional<ClientSettings> settings{};
-        bool isSettingsRead{ false };
+        // note: Read once per tick, and only when some player has an AgentInput: the settings of Artemis for agents are not the ones of any user (D359).
+        const bool isAnyAgent{ std::ranges::any_of(deliveries, [](const std::optional<AgentDelivery>& delivery) {
+            return delivery.has_value();
+        }) };
+        const std::optional<ClientSettings> settings{ isAnyAgent ? ReadAgentClientSettings(ReadControlTag(m_ControlTag), threadContext) : std::nullopt };
 
         for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
         {
-            // note: Possession wins (D351): the possessed player is not an agent this tick and forgets its state, so a release starts its windows again.
-            if (!ShouldRunAgent(deliveries[player].has_value(), player, possessed))
-            {
-                m_AgentClientStore.End(player);
-                continue;
-            }
+            const std::optional<ClientAction> action{ m_AgentClientService.PlayTick(threadContext, player, possessed, deliveries[player], settings) };
+            if (!action) continue;
 
-            // note: Read once per tick, and only when some agent plays: the settings of Artemis for agents are not the ones of any user (D359).
-            if (!isSettingsRead)
-            {
-                settings = ReadAgentClientSettings(ReadControlTag(m_ControlTag), threadContext);
-                isSettingsRead = true;
-            }
-
-            m_AgentClientStore.Begin(player);
-            const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, player) };
-
-            if (!settings)
-            {
-                m_AgentClientStore.CountTick(player, false, false, false);
-                overrides[player] = MakeNeutralOverride(unitState);
-                requests[player] = ClientRequests{};
-                continue;
-            }
-
-            const PossessedAction action{ m_AgentClientService.StepTick(threadContext, player, *deliveries[player], *settings, unitState) };
-            overrides[player] = action.Override;
-            requests[player] = action.Requests;
+            // note: The requests the store held for the player add up with the ones of the client (VW.9c.3 D).
+            overrides[player] = action->Override;
+            requests[player] = requests[player] | action->Requests;
         }
     }
 
@@ -282,7 +262,7 @@ namespace Engine::Control::Input::Hook
         }
 
         const bool isUnsupported{ (possessed->Last.Unsupported | possessed->Pending.Unsupported) != 0 };
-        PossessedAction action{ TakeTickAction(*possessed) };
+        ClientAction action{ TakeTickAction(*possessed) };
         overrides[bot] = action.Override;
         requests[bot] = action.Requests;
         m_PossessionStore->CountTick(true, isUnsupported);
@@ -303,7 +283,7 @@ namespace Engine::Control::Input::Hook
                 history.LaneTicks.fill(0);
             }
 
-            for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player) m_AgentClientStore.End(player);
+            m_AgentClientService.SuspendAll();
             return;
         }
 

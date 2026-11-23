@@ -13,6 +13,7 @@ import Common.Text.System;
 import Services.Logs.Type;
 import Services.Telemetry.Type;
 import Services.Telemetry.System;
+import Control.Client.Type;
 import Control.Client.System;
 import Bridge.Transport.Type;
 import Engine.Base.Host.Type;
@@ -44,7 +45,9 @@ namespace
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
     using Common::Log::Type::LogLevel;
-    using Control::Client::System::ParseAgentInputWords;
+    using Control::Client::System::AreTickRangesOverlapping;
+    using Control::Client::System::ParseAgentInputLine;
+    using Control::Client::Type::AgentInputLine;
     using Engine::Control::Input::Type::InputState;
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerActions;
@@ -131,6 +134,12 @@ namespace
     // Rows a probe writes at most per match, and the largest value it reads.
     constexpr std::size_t k_MaxProbeRows{ 20000 };
     constexpr std::size_t k_MaxProbeSize{ 256 };
+
+    // return: Whether some player is in both selections.
+    auto ArePlayersOverlapping(BenchPlayers first, BenchPlayers second) -> bool
+    {
+        return first == BenchPlayers::All || second == BenchPlayers::All || first == second;
+    }
 
     // return: Whether the action or request reaches the player.
     auto IsSelected(const Player& player, BenchPlayers players) -> bool
@@ -723,20 +732,15 @@ namespace DevTools::Workbench::Bench::System
             {
                 // input <all|bots|locals> <from tick> <to tick> <window ticks> [move=f,l] [look=yaw,pitch] [level=a,b|-] [edge=a,b|-] [turn=radians]
                 const std::vector<std::string> words{ SplitWords(value) };
-                const auto players{ words.size() >= 4 ? ParsePlayers(words[0]) : std::nullopt };
-                const auto from{ words.size() >= 4 ? ParseNumber<std::uint64_t>(words[1]) : std::nullopt };
-                const auto to{ words.size() >= 4 ? ParseNumber<std::uint64_t>(words[2]) : std::nullopt };
-                const auto window{ words.size() >= 4 ? ParseNumber<std::uint32_t>(words[3]) : std::nullopt };
-                if (!players || !from || !to || !window || *window == 0 || (*to != 0 && *to < *from))
-                {
-                    return fail("input takes all|bots|locals, from and to ticks (to 0 = the end, not before from), a window of 1 or more ticks and the fields of the AgentInput");
-                }
+                const auto players{ !words.empty() ? ParsePlayers(words[0]) : std::nullopt };
+                if (!players) return fail("input takes all|bots|locals, from and to ticks (to 0 = the end, not before from), a window of 1 or more ticks and the fields of the AgentInput");
 
-                BenchInput input{ .Players = *players, .FromTick = *from, .ToTick = *to, .WindowTicks = *window };
-                const std::string why{ ParseAgentInputWords(std::span<const std::string>{ words }.subspan(4), input.Input, input.TurnLimit) };
+                AgentInputLine line{};
+                const std::string why{ ParseAgentInputLine(std::span<const std::string>{ words }.subspan(1), line) };
                 if (!why.empty()) return fail(std::format("input: {}", why));
 
-                match.Inputs.push_back(input);
+                match.Inputs.push_back(BenchInput{ .Players = *players, .FromTick = line.FromTick, .ToTick = line.ToTick, .WindowTicks = line.WindowTicks,
+                    .Input = line.Input, .TurnLimit = line.TurnLimit });
             }
             else if (key == "request")
             {
@@ -797,6 +801,22 @@ namespace DevTools::Workbench::Bench::System
         for (const BenchMatch& match : scenario.Matches)
         {
             if (match.Config.empty()) return std::format("match {} has no config.", match.Name);
+
+            // note: An action mode (an override) and an input for the same player in the same ticks exclude each other in the store: the one set last wins,
+            // so the scenario would not play what it says.
+            for (const BenchAction& action : match.Actions)
+            {
+                if (action.Mode == LocalPlayerAction::Engine) continue;
+
+                for (const BenchInput& input : match.Inputs)
+                {
+                    if (!ArePlayersOverlapping(action.Players, input.Players)
+                        || !AreTickRangesOverlapping(action.FromTick, action.ToTick, input.FromTick, input.ToTick)) continue;
+
+                    return std::format("match {} has an action mode and an input for the same players in the same ticks (they exclude each other).", match.Name);
+                }
+            }
+
             if (!match.IsEveryTick && (match.IsTickDump || match.IsEvents))
             {
                 return std::format("match {} has every_tick off with tickdump or events, which need every tick.", match.Name);
@@ -1314,7 +1334,7 @@ namespace DevTools::Workbench::Bench::System
                 {
                     if (appliedInput != run.AppliedInputs.end())
                     {
-                        m_PlayerActionStore.ClearAgentInput(index);
+                        m_PlayerActionStore.ClearAgentInput(index, player.Handle);
                         run.AppliedInputs.erase(appliedInput);
                     }
                 }
@@ -1325,7 +1345,7 @@ namespace DevTools::Workbench::Bench::System
                         || ticks >= appliedInput->second.DeliveredTick + input.WindowTicks };
                     if (isDue)
                     {
-                        m_PlayerActionStore.SetAgentInput(index, input.Input, input.WindowTicks, input.TurnLimit);
+                        m_PlayerActionStore.SetAgentInput(index, player.Handle, input.Input, input.WindowTicks, input.TurnLimit);
                         run.AppliedInputs[player.Handle] = BenchAppliedInput{ .Index = *wantedInput, .DeliveredTick = ticks };
                     }
                 }
@@ -1495,7 +1515,7 @@ namespace DevTools::Workbench::Bench::System
             if (mode != LocalPlayerAction::Engine) m_PlayerActionStore.SetOverride(handle & k_HandleIndexMask, std::nullopt);
         }
 
-        for (const auto& [handle, input] : run.AppliedInputs) m_PlayerActionStore.ClearAgentInput(handle & k_HandleIndexMask);
+        for (const auto& [handle, input] : run.AppliedInputs) m_PlayerActionStore.ClearAgentInput(handle & k_HandleIndexMask, handle);
 
         run.AppliedInputs.clear();
         run.AppliedModes.clear();

@@ -9,7 +9,7 @@ namespace
 {
     using Control::Action::Type::ActionOverride;
     using Control::Action::Type::ClientRequests;
-    using Control::Action::Type::PossessedAction;
+    using Control::Action::Type::ClientAction;
     using Control::Action::Type::PlayerActionHistory;
     using Control::Action::Type::UnitClientState;
     using Control::Client::Type::ClientContextSource;
@@ -64,7 +64,7 @@ export namespace Control::Action::System
     // return: The buttons below bit 48, the lanes without held bits (BuildAction counts them), the move axes, the triggers and the events word
     // of the reload and the grenade throw, with no turn limit (a human, not an agent). The events of the output become requests: switch weapon,
     // switch grenade and zoom (press, step in and step out, each its own request).
-    auto MakePossessedAction(const ClientOutput& output, float yaw, float pitch) -> PossessedAction;
+    auto MakeClientAction(const ClientOutput& output, float yaw, float pitch) -> ClientAction;
 
     // return: The override of a player that does nothing: no buttons, no throttle, no lanes, looking where its unit looks (the facing of the
     // state, or zero without a unit).

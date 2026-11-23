@@ -54,14 +54,17 @@ export namespace Engine::Control::Input::State
 
         // Gives the player a window of AgentInput (VW.9c.3 C): the client of Artemis plays it every tick, and when the window runs out it repeats the last
         // one without a new press and without look until the next delivery. The sequence number rises with each call.
+        // param playerHandle: Handle of the player (with the salt). The tick drops the delivery when the player in that index has another handle.
         // param input: Sanitized by the client, so the store keeps what it is given.
         // param windowTicks: Ticks of the window (d), at least 1.
         // param turnLimit: Radians per tick and per axis the look may ask, 0 = no limit (not finite or negative is kept as 0).
         // note: Takes the override of the player away (exclusive). Out of range players are ignored.
-        auto SetAgentInput(std::size_t playerIndex, const ::Control::Client::Type::AgentInput& input, std::uint32_t windowTicks, float turnLimit) -> void;
+        auto SetAgentInput(std::size_t playerIndex, std::uint32_t playerHandle, const ::Control::Client::Type::AgentInput& input,
+            std::uint32_t windowTicks, float turnLimit) -> void;
 
         // Stops the AgentInput of the player: the tick after it, the player has the engine action again.
-        auto ClearAgentInput(std::size_t playerIndex) -> void;
+        // param playerHandle: When given, only an AgentInput of that handle stops: the one of another player in the index stays.
+        auto ClearAgentInput(std::size_t playerIndex, std::optional<std::uint32_t> playerHandle = std::nullopt) -> void;
 
         // param out: Out. The AgentInput of every player, empty for a player without one.
         auto CopyAgentInputs(std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& out) const -> void;
@@ -79,6 +82,7 @@ export namespace Engine::Control::Input::State
         auto AdvanceOverrideYaw(std::size_t playerIndex, float radians) -> void;
 
         // Adds client requests for the player (D120). They add up with the ones not taken yet.
+        // note: The ones of a player with an AgentInput add up with what its client asks the same tick (VW.9c.3 D), they are not lost.
         auto RequestClient(std::size_t playerIndex, const ClientRequests& requests) -> void;
 
         // Moves the pending client requests of every player out of the store.

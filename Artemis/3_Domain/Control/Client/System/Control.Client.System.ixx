@@ -7,6 +7,7 @@ namespace
 {
     using Control::Client::Type::AgentControl;
     using Control::Client::Type::AgentInput;
+    using Control::Client::Type::AgentInputLine;
     using Control::Client::Type::AgentInputReducer;
     using Control::Client::Type::AgentInputState;
     using Control::Client::Type::ClientSettings;
@@ -63,6 +64,17 @@ export namespace Control::Client::System
     // return: Empty when it read, otherwise what is wrong (an unknown key or control, a repeated key, a number that is not finite, a move axis outside
     // [-1, 1] or a negative turn limit). On a failure input and turnLimit are unchanged.
     auto ParseAgentInputWords(std::span<const std::string> words, AgentInput& input, float& turnLimit) -> std::string;
+
+    // Reads the text form of an AgentInput held for a range of ticks: the first tick, the last tick (0 = the end), the window length (1 or more) and
+    // then the words of ParseAgentInputWords.
+    // param words: Without the players word that selects who plays it (the bench reads it).
+    // param line: Out. Unchanged on a failure.
+    // return: Empty when it read, otherwise what is wrong (a missing or not numeric tick or window, a last tick before the first, a window of 0, or the
+    // reason of ParseAgentInputWords).
+    auto ParseAgentInputLine(std::span<const std::string> words, AgentInputLine& line) -> std::string;
+
+    // return: Whether two ranges of ticks share a tick. A last tick of 0 is the end of the match.
+    auto AreTickRangesOverlapping(std::uint64_t firstFrom, std::uint64_t firstTo, std::uint64_t secondFrom, std::uint64_t secondTo) -> bool;
 
     // Adds the frame of one client step to the window of the reducer (D364).
     // param lookYaw: Look the table asked in that step, before zoom and damp (ClientOutput::LookYawRequested).

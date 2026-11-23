@@ -12,6 +12,7 @@ namespace
     using Control::Client::Type::AgentControlEvents;
     using Control::Client::Type::AgentEventLink;
     using Control::Client::Type::AgentInput;
+    using Control::Client::Type::AgentInputLine;
     using Control::Client::Type::AgentInputReducer;
     using Control::Client::Type::AgentInputState;
     using Control::Client::Type::ClientOutput;
@@ -637,6 +638,37 @@ namespace Control::Client::System
         input = parsed;
         turnLimit = parsedTurn;
         return {};
+    }
+
+    auto ParseAgentInputLine(std::span<const std::string> words, AgentInputLine& line) -> std::string
+    {
+        constexpr std::size_t headWords{ 3 };
+        std::array<std::uint64_t, headWords> head{};
+        for (std::size_t index{ 0 }; index < headWords && index < words.size(); ++index)
+        {
+            const std::string& word{ words[index] };
+            const auto [end, error]{ std::from_chars(word.data(), word.data() + word.size(), head[index]) };
+            if (word.empty() || error != std::errc{} || end != word.data() + word.size()) return std::format("'{}' is not a number of ticks", word);
+        }
+
+        if (words.size() < headWords) return "takes the first tick, the last tick (0 = the end) and the window ticks";
+        if (head[1] != 0 && head[1] < head[0]) return "the last tick is before the first";
+        if (head[2] == 0 || head[2] > (std::numeric_limits<std::uint32_t>::max)()) return "the window must be 1 tick or more";
+
+        AgentInputLine parsed{ .FromTick = head[0], .ToTick = head[1], .WindowTicks = static_cast<std::uint32_t>(head[2]) };
+        const std::string why{ ParseAgentInputWords(words.subspan(headWords), parsed.Input, parsed.TurnLimit) };
+        if (!why.empty()) return why;
+
+        line = parsed;
+        return {};
+    }
+
+    auto AreTickRangesOverlapping(std::uint64_t firstFrom, std::uint64_t firstTo, std::uint64_t secondFrom, std::uint64_t secondTo) -> bool
+    {
+        constexpr std::uint64_t end{ (std::numeric_limits<std::uint64_t>::max)() };
+        const std::uint64_t firstLast{ firstTo == 0 ? end : firstTo };
+        const std::uint64_t secondLast{ secondTo == 0 ? end : secondTo };
+        return firstFrom <= secondLast && secondFrom <= firstLast;
     }
 
     auto AddAgentFrame(AgentInputReducer& reducer, const InputFrame& frame, float lookYaw, float lookPitch) -> void
