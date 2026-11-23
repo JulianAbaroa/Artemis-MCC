@@ -98,6 +98,12 @@ export namespace Control::Action::Type
         std::int8_t WeaponSlot{ -1 };
         std::uint16_t InventoryVersion{ 0 };
         std::int8_t GrenadeType{ -1 };
+
+        // Grenade type the unit has selected (0x37C, -1 unknown). GrenadeType is the applied one (0x37D) and lags behind it.
+        std::int8_t SelectedGrenadeType{ -1 };
+
+        // Grenades held by type: frag (0x37E) and plasma (0x37F).
+        std::array<std::uint8_t, 2> GrenadeCounts{};
         std::int8_t ZoomLevel{ k_NoZoomLevel };
 
         // The unit sits in a vehicle or a turret.
@@ -116,5 +122,8 @@ export namespace Control::Action::Type
 
         // Weapon slot the agent asked for and the unit does not hold yet (D120).
         std::optional<WeaponRequest> PendingWeapon{};
+
+        // Grenade type the agent asks for and the unit has not selected yet (the +0xC4 of the client block, D355). Empty is no request.
+        std::optional<std::int8_t> PendingGrenade{};
     };
 }

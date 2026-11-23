@@ -92,16 +92,47 @@ namespace
         std::memcpy(action.data() + k_ActionLanesOffset, &lanes, sizeof(lanes));
     }
 
+    // return: Whether the unit holds grenades of the type (a type outside frag and plasma holds none).
+    auto HasGrenades(const UnitClientState& state, std::int8_t type) -> bool
+    {
+        return type >= 0 && static_cast<std::size_t>(type) < state.GrenadeCounts.size() && state.GrenadeCounts[type] > 0;
+    }
+
+    // Steps the grenade request of the client of a local player (0x61a38) and returns the type to write, or -1 for none (D355).
+    // note: The request lives until the unit selects that type. With the applied type empty the next one is asked without a press.
+    // The dual wield test of the engine is not ported: Reach multiplayer has no dual wield.
+    auto StepGrenadeRequest(const UnitClientState& state, bool isSwitch, const UnitRules& rules, std::optional<std::int8_t>& pending) -> std::int8_t
+    {
+        std::int8_t type{ pending ? *pending : static_cast<std::int8_t>(-1) };
+        if (!HasGrenades(state, type)) type = state.GrenadeType;
+
+        if (isSwitch || !HasGrenades(state, type))
+        {
+            UnitClientState from{ state };
+            from.GrenadeType = type;
+
+            const std::optional<std::int8_t> next{ rules.GetNextGrenadeType(from) };
+            type = next ? *next : (HasGrenades(state, type) ? type : static_cast<std::int8_t>(-1));
+        }
+
+        if (type == state.SelectedGrenadeType) type = -1;
+
+        pending = type >= 0 ? std::optional<std::int8_t>{ type } : std::nullopt;
+        return type;
+    }
+
     // Writes the client requests of the agent (weapon, grenade, zoom) into its action, with the engine selectors (D120).
     // note: Without a request the action asks for nothing and keeps the zoom of the unit. For a local player with an override the
     // zoom its own input asks for is ignored. A weapon request is sent again every tick until the unit holds that slot,
-    // k_WeaponRequestTicks pass or the inventory changes.
+    // k_WeaponRequestTicks pass or the inventory changes. A grenade request is sent again every tick until the unit selects the type.
     auto WriteClientRequests(std::span<std::uint8_t, k_PlayerActionSize> action, const std::optional<UnitClientState>& unit,
-        const ClientRequests& requests, const UnitRules& rules, std::optional<WeaponRequest>& weaponRequest) -> void
+        const ClientRequests& requests, const UnitRules& rules, std::optional<WeaponRequest>& weaponRequest,
+        std::optional<std::int8_t>& grenadeRequest) -> void
     {
         if (!unit)
         {
             weaponRequest.reset();
+            grenadeRequest.reset();
         }
 
         // note: A seated unit has no slot to pick: 0x61a38 raises this button for the vehicle weapon instead (the Banshee cannons and
@@ -167,14 +198,11 @@ namespace
             }
         }
 
-        if (requests.IsGrenadeSwitch)
+        const std::int8_t grenade{ StepGrenadeRequest(state, requests.IsGrenadeSwitch, rules, grenadeRequest) };
+        if (grenade >= 0)
         {
-            const std::optional<std::int8_t> type{ rules.GetNextGrenadeType(state) };
-            if (type)
-            {
-                const auto value{ static_cast<std::uint16_t>(*type) };
-                std::memcpy(action.data() + k_ActionGrenadeTypeOffset, &value, sizeof(value));
-            }
+            const auto value{ static_cast<std::uint16_t>(grenade) };
+            std::memcpy(action.data() + k_ActionGrenadeTypeOffset, &value, sizeof(value));
         }
 
         if (zoomLevel)
@@ -267,7 +295,7 @@ namespace Control::Action::System
         if (actionOverride.ZoomTrigger != 0.0f) std::memcpy(action.data() + k_ActionZoomTriggerOffset, &actionOverride.ZoomTrigger, sizeof(float));
         if (actionOverride.Trigger4 != 0.0f) std::memcpy(action.data() + k_ActionTrigger4Offset, &actionOverride.Trigger4, sizeof(float));
 
-        WriteClientRequests(action, unit, requests, rules, history.PendingWeapon);
+        WriteClientRequests(action, unit, requests, rules, history.PendingWeapon, history.PendingGrenade);
 
         return facing;
     }

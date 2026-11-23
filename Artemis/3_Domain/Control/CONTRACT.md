@@ -16,6 +16,9 @@ Group `3_Domain` - pure static library - the logic of the player action and of t
 - Transport anything: `Bridge.Transport` calls the lockstep policy.
 - Answer questions only the engine knows (next weapon, next grenade, next zoom level, whether the unit can zoom): it asks the `UnitRules`
   port, which `Engine.Control` implements.
+- Keep the grenade request of a client between ticks (D355): `PlayerActionHistory::PendingGrenade` is sent every tick until the unit selects that type, and with the
+  applied type empty the next one is asked without a press, as 0x61a38 does for a local player. `UnitClientState` carries the selected type (0x37C) and the counts
+  (0x37E, 0x37F) for it. The dual wield test is not ported (Reach multiplayer has none).
 
 ## Input and output
 - Input: an `ActionOverride` (from the bench) or an `AgentInput` (from the bridge or the bench), the client state of the unit, the previous `PlayerActionHistory`, the control

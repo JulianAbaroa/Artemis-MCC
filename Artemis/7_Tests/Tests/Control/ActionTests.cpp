@@ -94,6 +94,7 @@ namespace
         mutable int GrenadeCalls{ 0 };
         mutable int ZoomCalls{ 0 };
         mutable UnitClientState LastWeaponState{};
+        mutable UnitClientState LastGrenadeState{};
 
         // When set, the answer of that question (nullopt included) instead of the default rule.
         std::optional<std::optional<std::int8_t>> FixedWeapon{};
@@ -113,6 +114,7 @@ namespace
         auto GetNextGrenadeType(const UnitClientState& state) const -> std::optional<std::int8_t> override
         {
             ++GrenadeCalls;
+            LastGrenadeState = state;
             if (FixedGrenade) return *FixedGrenade;
             if (state.GrenadeType < 3) return static_cast<std::int8_t>(state.GrenadeType + 1);
             return std::nullopt;
@@ -140,7 +142,7 @@ namespace
     // return: The unit the tests start from: slot 0, inventory version 7, no zoom, facing 0.
     auto MakeUnit() -> UnitClientState
     {
-        return UnitClientState{ .Unit = 0x0001'0002, .WeaponSlot = 0, .InventoryVersion = 7, .GrenadeType = 0, .ZoomLevel = -1,
+        return UnitClientState{ .Unit = 0x0001'0002, .WeaponSlot = 0, .InventoryVersion = 7, .GrenadeType = 0, .SelectedGrenadeType = 0, .GrenadeCounts = { 2, 2 }, .ZoomLevel = -1,
             .IsSeated = false, .Facing = { 0.0f, 0.0f } };
     }
 
@@ -454,8 +456,83 @@ TEST(ActionTests, GrenadeRequest)
     EXPECT_EQ(ReadGrenadeType(agent.Last), 0x0001);
     EXPECT_EQ(agent.Rules.GrenadeCalls, 1);
 
-    // There is no other grenade type: the request stays empty.
+    // The unit selected the type and there is no other one: the request stays empty.
+    agent.Unit->SelectedGrenadeType = 1;
     agent.Rules.FixedGrenade = std::optional<std::int8_t>{};
+    agent.Tick();
+
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0xFFFF);
+}
+
+TEST(ActionTests, EmptyAppliedGrenadeAsksForTheNextWithoutPress)
+{
+    Agent agent{};
+    agent.Unit->GrenadeCounts = { 0, 2 };
+    agent.Tick();
+
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0x0001);
+    EXPECT_EQ(agent.Rules.GrenadeCalls, 1);
+}
+
+TEST(ActionTests, GrenadeRequestRepeatsUntilTheUnitSelectsIt)
+{
+    Agent agent{};
+    agent.Unit->GrenadeCounts = { 0, 2 };
+    agent.Tick();
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0x0001);
+
+    agent.Tick();
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0x0001);
+    EXPECT_EQ(agent.Rules.GrenadeCalls, 1);
+
+    agent.Unit->SelectedGrenadeType = 1;
+    agent.Tick();
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0xFFFF);
+    EXPECT_FALSE(agent.History.PendingGrenade.has_value());
+}
+
+TEST(ActionTests, NoGrenadesLeftAsksForNothing)
+{
+    Agent agent{};
+    agent.Unit->GrenadeCounts = { 0, 0 };
+    agent.Rules.FixedGrenade = std::optional<std::int8_t>{};
+    agent.Tick();
+
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0xFFFF);
+}
+
+TEST(ActionTests, AppliedGrenadeWithCountAsksForNothingWithoutPress)
+{
+    Agent agent{};
+    agent.Tick();
+
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0xFFFF);
+    EXPECT_EQ(agent.Rules.GrenadeCalls, 0);
+}
+
+TEST(ActionTests, GrenadeSwitchGoesOnFromThePendingRequest)
+{
+    Agent agent{};
+    agent.Unit->GrenadeCounts = { 0, 2 };
+    agent.Tick();
+    EXPECT_TRUE(agent.History.PendingGrenade.has_value());
+
+    agent.Requests.IsGrenadeSwitch = true;
+    agent.Tick();
+
+    EXPECT_EQ(agent.Rules.GrenadeCalls, 2);
+    EXPECT_EQ(agent.Rules.LastGrenadeState.GrenadeType, 1);
+}
+
+TEST(ActionTests, ForgottenHistoryForgetsThePendingGrenade)
+{
+    Agent agent{};
+    agent.Unit->GrenadeCounts = { 0, 2 };
+    agent.Tick();
+    EXPECT_EQ(ReadGrenadeType(agent.Last), 0x0001);
+
+    agent.Unit->GrenadeCounts = { 2, 2 };
+    agent.History = PlayerActionHistory{};
     agent.Tick();
 
     EXPECT_EQ(ReadGrenadeType(agent.Last), 0xFFFF);

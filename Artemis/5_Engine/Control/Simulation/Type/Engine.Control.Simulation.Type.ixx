@@ -71,6 +71,10 @@ export namespace Engine::Control::Simulation::Type
     inline constexpr std::uintptr_t k_UnitWeaponSlot{ 0x34A };
     inline constexpr std::uintptr_t k_UnitInventoryVersion{ 0x34C };
     inline constexpr std::uintptr_t k_UnitGrenadeType{ 0x37D };
+
+    // Grenade type selected by the unit (int8) and the grenades held, frag then plasma (two uint8). The applied type above follows the selected one.
+    inline constexpr std::uintptr_t k_UnitSelectedGrenadeType{ 0x37C };
+    inline constexpr std::uintptr_t k_UnitGrenadeCounts{ 0x37E };
     inline constexpr std::uintptr_t k_UnitZoomLevel{ 0x384 };
 
     // Parent object of an object (uint32 handle, 0xFFFFFFFF none) and seat of a unit inside its parent (int16, -1 none). A unit with

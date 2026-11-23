@@ -109,6 +109,8 @@ namespace
     using Engine::Control::Simulation::Type::k_TagLoadSize;
     using Engine::Control::Simulation::Type::k_UnitInventoryVersion;
     using Engine::Control::Simulation::Type::k_UnitGrenadeType;
+    using Engine::Control::Simulation::Type::k_UnitSelectedGrenadeType;
+    using Engine::Control::Simulation::Type::k_UnitGrenadeCounts;
     using Engine::Control::Simulation::Type::k_UnitZoomLevel;
     using Engine::Control::Simulation::Type::k_TagTriggerCurveFunction;
     using Engine::Control::Simulation::Type::k_ProfileTable;
@@ -946,6 +948,8 @@ namespace Engine::Control::Simulation::System
             .WeaponSlot = Read<std::int8_t>(unit + k_UnitWeaponSlot),
             .InventoryVersion = Read<std::uint16_t>(unit + k_UnitInventoryVersion),
             .GrenadeType = Read<std::int8_t>(unit + k_UnitGrenadeType),
+            .SelectedGrenadeType = Read<std::int8_t>(unit + k_UnitSelectedGrenadeType),
+            .GrenadeCounts = { Read<std::uint8_t>(unit + k_UnitGrenadeCounts), Read<std::uint8_t>(unit + k_UnitGrenadeCounts + 1) },
             .ZoomLevel = Read<std::int8_t>(unit + k_UnitZoomLevel),
             .IsSeated = Read<std::uint32_t>(unit + k_ObjectParent) != 0xFFFFFFFF && Read<std::int16_t>(unit + k_UnitSeat) != -1,
             .Facing = { yaw, std::atan2(aimZ, std::hypot(aimX, aimY)) } };
