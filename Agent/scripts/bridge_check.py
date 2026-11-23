@@ -579,6 +579,9 @@ def Controls(args):
         failed_run = []
         driver.Wait()
         driver.handle = PickAgent(driver.published, args.player)
+        # note: the tick read to pick the agent is answered too: Lockstep waits for every decision (an unanswered one was a
+        # LockstepTimeout at the start of each run, K1 2026-11-23).
+        driver.Answer()
         if not args.imitation and driver.handle == NO_HANDLE:
             print("FAIL no bot (or no player with that index) to play")
             return 1
@@ -623,9 +626,20 @@ def Controls(args):
 def Drain(driver, Say, Record):
     """nogren: throws grenades until FragGrenades + PlasmaGrenades = 0 (up to DRAIN_SECONDS)."""
     from artemis.bridge import CONTROLS as controls
-    throw = PhasesOf("foot", ["throw_grenade"])[0]
+    throw, swap = PhasesOf("foot", ["throw_grenade", "switch_grenade"])
     Say(">>> drain: throwing every grenade")
-    samples = driver.Deliver(lambda first: PhaseInput(throw, first, controls), DRAIN_SECONDS, 1, stop=lambda s: Grenades(s) == 0 and s.alive)
+    end, samples = time.time() + DRAIN_SECONDS, []
+    while time.time() < end:
+        got = driver.Deliver(lambda first: PhaseInput(throw, first, controls), 4.0, 1, stop=lambda s: Grenades(s) == 0 and s.alive)
+        samples += got
+        if not got or Grenades(got[-1]) == 0:
+            break
+        if Grenades(got[0]) == Grenades(got[-1]):
+            # note: the selected type is empty and the other is not: a player gets the other one selected by itself, the agent did
+            # not (K1 2026-11-23, Backlog VW.9c.3). Switch by hand so the context can be reached; the gap is a finding of its own.
+            Say(f"DATO drain: {Grenades(got[-1])} grenades left that throw_grenade does not throw (selected type empty, no auto-select): switch_grenade")
+            samples += driver.Deliver(lambda first: PhaseInput(swap, first, controls), 0.0, 1)
+            driver.Quiet(0.5, 2)
     if not samples or Grenades(samples[-1]) != 0:
         Record("drain", Result("FAIL", f"not emptied in {DRAIN_SECONDS:.0f} s: grenades left {Grenades(samples[-1]) if samples else '?'}"))
         return False
