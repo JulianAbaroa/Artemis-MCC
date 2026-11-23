@@ -263,7 +263,8 @@ def Run(args):
                     applied_total += 1
                     applied_ok += applied == previous
                 key = (published.match_id, int(p["Handle"]))
-                if int(p["HasBody"]) and int(p["IsAlive"]):
+                # note: the possessed player turns with the user, not with the delta sent: its known answer starts again after the release.
+                if int(p["HasBody"]) and int(p["IsAlive"]) and int(p["Handle"]) != published.possessed_player:
                     seen = AimAngles(p)[0]
                     streak[key] = streak.get(key, 0) + 1
                     # Known answer of the AgentInput applied: with yaw_step per decision and no turn limit the aim turns yaw_step between
