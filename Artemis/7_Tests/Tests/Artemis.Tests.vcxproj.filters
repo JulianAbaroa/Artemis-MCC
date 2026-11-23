@@ -72,6 +72,9 @@
     <ClCompile Include="Engine\ClientReplayTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\AgentClientTests.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\PossessionTests.cpp">
       <Filter>Engine</Filter>
     </ClCompile>

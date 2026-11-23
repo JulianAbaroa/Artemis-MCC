@@ -19,6 +19,11 @@ Group `6_DevTools` - static library inside the game process - the launcher, insp
   Each match report also gets a `perf` block (omitted when the run had no sweeps): the cumulative telemetry counters and the Lockstep
   counters are photographed when the run begins and when it ends, and the difference gives ticks, wall, engine (without the Lockstep
   wait), read wait (with `capture_ms`, `queue_wait_ms` and the `queue_depth` avg and max, D305) and sweep times (avg, p50, p99, max) per tick or sweep, the average of each sweep stage, and the Lockstep waits, plus the highest first-unused slot (`object_slots_max`) and live count (`objects_max`) of the engine object table.
+  Match key `inputs` (VW.9c.3 C, line `input <all|bots|locals> <from> <to> <d> [move=f,l] [look=yaw,pitch] [level=names|-] [edge=names|-] [turn=rad]`,
+  parsed by `ParseAgentInputWords` of `Control.Client.System`): while a tick of the match is inside the range (to 0 = the end) the bench gives each selected player
+  the same AgentInput as a new window of d ticks (`PlayerActionStore::SetAgentInput`), once per d ticks, at the sample after it is due (the bench samples the ticks,
+  so the ticks between samples repeat the held controls and axes without a press and without look); outside every range it clears it. The last input whose range holds
+  the tick wins. It is exclusive with an action mode that sets an override of the same player. The bench never writes the control block of a local player.
 
 ## Does not
 - Take part in the tick: the AI thread only hands it the immutable `ObservedTick`.

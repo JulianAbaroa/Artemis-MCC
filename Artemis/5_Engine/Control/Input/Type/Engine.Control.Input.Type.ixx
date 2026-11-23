@@ -502,11 +502,19 @@ export namespace Engine::Control::Input::Type
     // x1.0 are about 66 ms: a frame that did not run (table not in the mouse state, no settings, input user 0 unmapped) must not repeat its last output.
     inline constexpr std::uint32_t k_PossessMaxStaleTicks{ 2 };
 
-    // What the client keeps for the possessed bot between frames and ticks (VW.9c.2 B, D350, D360): its own client state, never the control block of
-    // a local player. The client runs once per FRAME (the 0x5df80 hook) and the ticks only copy what it accumulated, like 0x628b0 copies the block.
-    struct PossessedBot
+    // The bot a possession request resolved to (VW.9c.2 B, D352): its player index and the handle the Viewer asked for.
+    struct PossessTarget
     {
-        // Player index of the bot and its handle with the salt: another bot in the same slot is another possession.
+        std::size_t Player{ 0 };
+        std::uint32_t Handle{ 0xFFFFFFFF };
+    };
+
+    // What the client keeps for a player it drives between steps (VW.9c.2 B, VW.9c.3 C, D350, D360): its own client state, never the control block of
+    // a local player. The possessed bot gets a step per FRAME (the 0x5df80 hook) and the ticks only copy what it accumulated, like 0x628b0 copies the
+    // block. An agent (AgentClient) gets one step per TICK and takes it at once.
+    struct ClientDriven
+    {
+        // Player index and its handle with the salt: another bot in the same slot is another possession. The handle of an agent stays unset.
         std::size_t Player{ 0 };
         std::uint32_t Handle{ 0xFFFFFFFF };
 
@@ -528,6 +536,60 @@ export namespace Engine::Control::Input::Type
         // What the frames since the last tick asked for: the buttons, lanes and pulse events OR-ed, the triggers at their largest. A tick delivers it
         // once and clears it, so a press is neither lost between ticks nor delivered twice.
         ::Control::Client::Type::ClientOutput Pending{};
+    };
+
+    // What an agent decided for a window of ticks, as the PlayerActionStore holds it until the tick takes it (VW.9c.3 C, D362, D363).
+    struct AgentDelivery
+    {
+        ::Control::Client::Type::AgentInput Input{};
+
+        // Ticks of the window (d). At least 1.
+        std::uint32_t WindowTicks{ 4 };
+
+        // Radians per tick and per axis the look may ask, 0 = no limit (what it cuts is lost).
+        float TurnLimit{ 0.0f };
+
+        // Rises with every delivery to the player. A tick that sees a number it did not see before starts a new window.
+        std::uint64_t Sequence{ 0 };
+    };
+
+    // What the client keeps for an agent between ticks (VW.9c.3 C): the state of the client, the synthesizer of the frames, where the tick is inside the
+    // window and the last delivery it saw. Game thread only.
+    struct AgentClient
+    {
+        ClientDriven Client{};
+        ::Control::Client::Type::AgentInputState Input{};
+
+        // Whether Sequence holds a delivery the tick saw.
+        bool HasSequence{ false };
+        std::uint64_t Sequence{ 0 };
+
+        // Tick inside the window of the last delivery: 0 on the tick the delivery was first seen, then one more every tick (it passes the window when no
+        // new delivery comes).
+        std::uint32_t TickInWindow{ 0 };
+
+        // Whether the WARNING for Unsupported or UnknownRead was logged for this agent.
+        bool IsWarned{ false };
+    };
+
+    // What the panel shows of one agent (VW.9c.3 C): counters, as for the possession. Written by the game thread, read by the UI.
+    struct AgentCounters
+    {
+        // Ticks the agent ran through the client, and the ones whose step really ran (the others had a neutral action: no unit or no settings).
+        std::uint64_t Ticks{ 0 };
+        std::uint64_t Delivered{ 0 };
+
+        // Ticks whose step left a branch it does not port (Unsupported), or read a unit fact the context does not know (UnknownRead).
+        std::uint64_t Unsupported{ 0 };
+        std::uint64_t UnknownRead{ 0 };
+    };
+
+    struct AgentClientStatus
+    {
+        std::array<AgentCounters, k_MaxActionPlayers> Players{};
+
+        // Players (bit per index) whose AgentInput runs through the client now.
+        std::uint32_t ActiveMask{ 0 };
     };
 
     // Signature of the engine function that applies the player actions of one tick (haloreach.dll rva 0x47050).

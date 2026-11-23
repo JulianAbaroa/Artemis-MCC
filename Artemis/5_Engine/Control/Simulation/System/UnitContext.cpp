@@ -21,6 +21,7 @@ namespace
 
     using Common::Engine::Type::k_MaxLocalUsers;
     using Common::Engine::Type::k_NoHandle;
+    using Common::Engine::Type::k_NoInputUser;
     using Engine::Control::Simulation::Type::k_AltPitchKinds;
     using Engine::Control::Simulation::Type::k_AltPitchMask;
     using Engine::Control::Simulation::Type::k_FlagAbilityEngine;
@@ -235,8 +236,14 @@ namespace
             resolver.Take(UnitFact::AltControl, port.IsAltControl(source.PlayerHandle), context.IsAltControl);
         }
 
-        // note: 0x61830 indexes a table by the input user: a value outside the local users stays unknown, it is never passed to the engine.
-        if (source.InputUser >= 0 && std::cmp_less(source.InputUser, k_MaxLocalUsers))
+        // note: 0x61830 indexes a table by the input user: a value outside the local users stays unknown, it is never passed to the engine. A source with
+        // no input user (an agent) has no lock to ask, so its controls are free.
+        if (source.InputUser == k_NoInputUser)
+        {
+            context.IsControlLocked = false;
+            resolver.Mark(UnitFact::ControlLocked);
+        }
+        else if (source.InputUser >= 0 && std::cmp_less(source.InputUser, k_MaxLocalUsers))
         {
             resolver.Take(UnitFact::ControlLocked, port.IsControlsLocked(source.InputUser, source.LocalIndex), context.IsControlLocked);
         }

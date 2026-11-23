@@ -34,6 +34,7 @@ export namespace DevTools::Viewer::Hud::System
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
 
         using PovStatusStore = Engine::Base::Pov::State::PovStatusStore;
+        using AgentClientStore = Engine::Control::Input::State::AgentClientStore;
         using PossessionStore = Engine::Control::Input::State::PossessionStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
@@ -43,9 +44,10 @@ export namespace DevTools::Viewer::Hud::System
 
     public:
         HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, const PovStatusStore& povStatusStore, const PossessionStore& possessionStore,
-            CollidableStore& collidableStore,
+            const AgentClientStore& agentClientStore, CollidableStore& collidableStore,
             OverlayStore& overlayStore, SceneService& sceneService, LatencyService& latencyService) :
-            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_PovStatusStore(povStatusStore), m_PossessionStore(possessionStore), m_CollidableStore(collidableStore),
+            m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_PovStatusStore(povStatusStore), m_PossessionStore(possessionStore), m_AgentClientStore(agentClientStore),
+            m_CollidableStore(collidableStore),
             m_OverlayStore(overlayStore), m_SceneService(sceneService), m_LatencyService(latencyService) {}
         ~HudService() = default;
 
@@ -61,6 +63,7 @@ export namespace DevTools::Viewer::Hud::System
         RenderStore& m_RenderStore;
         const PovStatusStore& m_PovStatusStore;
         const PossessionStore& m_PossessionStore;
+        const AgentClientStore& m_AgentClientStore;
         CollidableStore& m_CollidableStore;
         OverlayStore& m_OverlayStore;
         SceneService& m_SceneService;
@@ -83,6 +86,10 @@ export namespace DevTools::Viewer::Hud::System
         // Draws the possession of a bot: off, or the player and the ticks the client of the user drove it, the ones with an action and the ones
         // that left a branch unported, and that the unit is missing (VW.9c.2 B).
         auto DrawPossession(const std::shared_ptr<const Tick>& tick) -> void;
+
+        // Draws the agents that play an AgentInput through the client of Artemis: off, or one line per player that ran with its ticks, the ones whose step
+        // ran, and the ticks with an unported branch or an unknown unit fact (VW.9c.3 C).
+        auto DrawAgents(const std::shared_ptr<const Tick>& tick) -> void;
 
         // Draws whether the first person mask of the overlay was copied in the last frame (VW.6.y.2 B).
         auto DrawFirstPersonMask() -> void;

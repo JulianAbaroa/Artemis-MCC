@@ -310,7 +310,7 @@ def PrintReport(report, asserter=AssertTickDump):
 
 
 MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "roster", "rosters", "setups", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
-              "probes", "tickdump", "events", "every_tick", "decodes"}
+              "probes", "tickdump", "events", "every_tick", "decodes", "inputs"}
 
 
 MAX_TEAMS = 8
@@ -474,6 +474,28 @@ def Compile(scenario, configs):
                 for item in match.get(key, []):
                     words = [item] if isinstance(item, str) else list(item)
                     lines.append(f"{key[:-1]} " + " ".join(str(w) for w in words))
+            # Agent inputs (VW.9c.3 C): [players, from_tick, to_tick, d, {"move": [f, l], "look": [yaw, pitch], "level": [names], "edge": [names], "turn": rad}]
+            # becomes one "input" line the bench reads: input <players> <from> <to> <d> move=f,l look=y,p level=a,b edge=a,b turn=r ("-" for no names).
+            # The C++ side (BenchUIService::Parse, ParseAgentInputWords) validates control names, ranges and counts.
+            for item in match.get("inputs", []):
+                if not isinstance(item, list) or len(item) != 5 or not isinstance(item[4], dict):
+                    raise ValueError(f"match {index + 1}: inputs takes [players, from_tick, to_tick, d, {{AgentInput}}]")
+                players, first, last, window, fields = item
+                if players not in ("all", "bots", "locals"):
+                    raise ValueError(f"match {index + 1}: inputs players must be all, bots or locals, not {players!r}")
+                unknown = set(fields) - {"move", "look", "level", "edge", "turn"}
+                if unknown:
+                    raise ValueError(f"match {index + 1}: inputs AgentInput has unknown keys {sorted(unknown)}")
+                words = [str(players), str(int(first)), str(int(last)), str(int(window))]
+                for key in ("move", "look"):
+                    if key in fields:
+                        words.append(f"{key}=" + ",".join(repr(float(v)) for v in fields[key]))
+                for key in ("level", "edge"):
+                    if key in fields:
+                        words.append(f"{key}=" + (",".join(fields[key]) or "-"))
+                if "turn" in fields:
+                    words.append(f"turn={float(fields['turn'])!r}")
+                lines.append("input " + " ".join(words))
             if match.get("tickdump"):
                 lines.append("tickdump" + (" full" if match["tickdump"] == "full" else ""))
             if match.get("events"):

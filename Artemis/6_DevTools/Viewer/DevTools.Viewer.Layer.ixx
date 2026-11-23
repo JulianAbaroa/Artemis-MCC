@@ -86,7 +86,7 @@ export namespace DevTools::Viewer
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, engine.m_PossessionStore, m_CollidableStore, m_OverlayStore, m_SceneService,
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, engine.m_PossessionStore, engine.m_AgentClientStore, m_CollidableStore, m_OverlayStore, m_SceneService,
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
             m_AgentCardService(m_CollidableStore, m_SceneService, m_OptionsStore, m_SelectionStore, engine.m_BotStore),

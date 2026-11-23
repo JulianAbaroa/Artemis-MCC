@@ -18,6 +18,7 @@ import Bridge.Transport.System;
 import Bridge.Transport.Type;
 import Engine.Control.Input.State;
 import Engine.Control.Input.Hook;
+import Engine.Control.Input.System;
 import Engine.Base.Memory.System;
 import Engine.Base.Pov.Type;
 import Engine.Base.Hook.System;
@@ -38,7 +39,9 @@ namespace
     using Common::Log::Type::LogLevel;
     using Bridge::Transport::System::BridgeEngine;
     using Engine::Control::Input::Hook::PlayerActionDetour;
+    using Engine::Control::Input::State::AgentClientStore;
     using Engine::Control::Input::State::PlayerActionStore;
+    using Engine::Control::Input::System::AgentClientService;
     using Engine::Base::Memory::System::AOBService;
     using Engine::Control::Simulation::State::BotStore;
     using Engine::Control::Simulation::System::BotService;
@@ -579,7 +582,9 @@ TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)
     Engine::Base::Layer base{ service };
     BotStore botStore{};
     BotService botService{ log, aobService, botStore, playerActionStore };
-    PlayerActionDetour detour{ log, aobService, base.m_MatchSetupService, playerActionStore, botService };
+    AgentClientStore agentClientStore{};
+    AgentClientService agentClientService{ log, botService, agentClientStore };
+    PlayerActionDetour detour{ log, aobService, base.m_MatchSetupService, playerActionStore, botService, agentClientStore, agentClientService };
 
     EXPECT_FALSE(detour.Install());
 

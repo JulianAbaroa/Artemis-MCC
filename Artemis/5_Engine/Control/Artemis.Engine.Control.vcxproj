@@ -62,6 +62,8 @@
     <ClCompile Include="Input\Engine.Control.Input.Hook.ixx" />
     <ClCompile Include="Input\Engine.Control.Input.State.ixx" />
     <ClCompile Include="Input\Engine.Control.Input.System.ixx" />
+    <ClCompile Include="Input\State\AgentClientStore.cpp" />
+    <ClCompile Include="Input\State\AgentClientStore.ixx" />
     <ClCompile Include="Input\State\PlayerActionStore.cpp" />
     <ClCompile Include="Input\State\PlayerActionStore.ixx" />
     <ClCompile Include="Input\State\PossessionStore.cpp" />
@@ -71,6 +73,9 @@
     <ClCompile Include="Input\State\VirtualInputStore.cpp" />
     <ClCompile Include="Input\State\VirtualInputStore.ixx" />
     <ClCompile Include="Input\System\ActionSource.ixx" />
+    <ClCompile Include="Input\System\AgentClient.ixx" />
+    <ClCompile Include="Input\System\AgentClientService.cpp" />
+    <ClCompile Include="Input\System\AgentClientService.ixx" />
     <ClCompile Include="Input\Hook\ClientOracleDetour.cpp" />
     <ClCompile Include="Input\Hook\ClientOracleDetour.ixx" />
     <ClCompile Include="Input\System\ClientFrame.ixx" />

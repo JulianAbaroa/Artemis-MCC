@@ -690,6 +690,7 @@ namespace Engine::Control::Simulation::System
     auto BotService::ForgetBot(const Bot& bot) -> void
     {
         m_PlayerActionStore.SetOverride(bot.PlayerIndex, std::nullopt);
+        m_PlayerActionStore.ClearAgentInput(bot.PlayerIndex);
         m_BotStore.RemoveBot(bot.Number);
     }
 

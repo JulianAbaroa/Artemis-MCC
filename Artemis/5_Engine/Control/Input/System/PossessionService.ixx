@@ -26,7 +26,7 @@ namespace
 
     using Engine::Control::Input::State::PossessionStore;
     using Engine::Control::Input::Type::ControlTagLocator;
-    using Engine::Control::Input::Type::PossessedBot;
+    using Engine::Control::Input::Type::ClientDriven;
     using Engine::Control::Input::Type::k_InputTableSize;
 
     using Engine::Control::Simulation::System::BotService;

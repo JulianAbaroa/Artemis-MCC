@@ -8,6 +8,7 @@ import :PlayerAction;
 import Common.Engine.Type;
 import Control.Action.Type;
 import Control.Action.System;
+import Control.Client.Type;
 import Engine.Base.Hook.System;
 import Engine.Base.Memory.Type;
 import Engine.Control.Input.System;
@@ -28,7 +29,7 @@ namespace
     using ::Control::Action::System::MakeNeutralOverride;
     using ::Control::Action::Type::PossessedAction;
 
-    using Engine::Control::Input::Type::PossessedBot;
+    using Engine::Control::Input::Type::ClientDriven;
     using Engine::Control::Input::Type::k_PossessInputUser;
     using Engine::Control::Input::Type::k_PossessRequestMaxAge;
     using Engine::Control::Input::System::ShouldNeutralizeLocal;
@@ -38,12 +39,15 @@ namespace
     using Engine::Control::Input::System::FindPossessedBot;
     using Engine::Control::Input::System::GetEngineThreadContext;
     using Engine::Control::Input::System::LocateControlTag;
+    using Engine::Control::Input::System::ReadAgentClientSettings;
+    using Engine::Control::Input::System::ShouldRunAgent;
     using Engine::Control::Input::System::ReadControlTag;
 
     using ::Control::Action::Type::ActionOverride;
     using ::Control::Action::Type::ClientRequests;
     using ::Control::Action::Type::PlayerActionHistory;
     using ::Control::Action::Type::UnitClientState;
+    using ::Control::Client::Type::ClientSettings;
 
     using Common::Engine::Type::k_MaxLocalUsers;
 
@@ -165,17 +169,15 @@ namespace Engine::Control::Input::Hook
         m_PossessionStore = &possessionStore;
     }
 
-    auto PlayerActionDetour::ApplyPossession(std::uintptr_t threadContext, std::uint32_t engineMask,
-        std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests)
-        -> void
+    auto PlayerActionDetour::ResolvePossession(std::uintptr_t threadContext) -> std::optional<PossessTarget>
     {
-        if (m_PossessRequestStore == nullptr || m_PossessionStore == nullptr) return;
+        if (m_PossessRequestStore == nullptr || m_PossessionStore == nullptr) return std::nullopt;
 
         // note: Turned off for good when the frames ran on another thread than the ticks (PossessionService logs the ERROR).
         if (m_PossessionStore->IsDisabled())
         {
             m_PossessionStore->Release();
-            return;
+            return std::nullopt;
         }
 
         const std::optional<std::uint32_t> request{ m_PossessRequestStore->Read(k_PossessRequestMaxAge) };
@@ -183,9 +185,59 @@ namespace Engine::Control::Input::Hook
         if (!bot)
         {
             m_PossessionStore->Release();
-            return;
+            return std::nullopt;
         }
 
+        return PossessTarget{ .Player = *bot, .Handle = *request };
+    }
+
+    auto PlayerActionDetour::ApplyAgents(std::uintptr_t threadContext, std::optional<std::size_t> possessed,
+        const std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& deliveries,
+        std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests) -> void
+    {
+        std::optional<ClientSettings> settings{};
+        bool isSettingsRead{ false };
+
+        for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
+        {
+            // note: Possession wins (D351): the possessed player is not an agent this tick and forgets its state, so a release starts its windows again.
+            if (!ShouldRunAgent(deliveries[player].has_value(), player, possessed))
+            {
+                m_AgentClientStore.End(player);
+                continue;
+            }
+
+            // note: Read once per tick, and only when some agent plays: the settings of Artemis for agents are not the ones of any user (D359).
+            if (!isSettingsRead)
+            {
+                settings = ReadAgentClientSettings(ReadControlTag(m_ControlTag), threadContext);
+                isSettingsRead = true;
+            }
+
+            m_AgentClientStore.Begin(player);
+            const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, player) };
+
+            if (!settings)
+            {
+                m_AgentClientStore.CountTick(player, false, false, false);
+                overrides[player] = MakeNeutralOverride(unitState);
+                requests[player] = ClientRequests{};
+                continue;
+            }
+
+            const PossessedAction action{ m_AgentClientService.StepTick(threadContext, player, *deliveries[player], *settings, unitState) };
+            overrides[player] = action.Override;
+            requests[player] = action.Requests;
+        }
+    }
+
+    auto PlayerActionDetour::ApplyPossession(std::uintptr_t threadContext, std::uint32_t engineMask, const std::optional<PossessTarget>& target,
+        std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests)
+        -> void
+    {
+        if (!target) return;
+
+        const std::size_t bot{ target->Player };
         const std::optional<std::size_t> humanLocal{ FindInputPlayer(threadContext, k_PossessInputUser) };
 
         std::uint32_t overrideMask{ 0 };
@@ -201,14 +253,14 @@ namespace Engine::Control::Input::Hook
             requests[*humanLocal] = ClientRequests{};
         }
 
-        m_PossessionStore->Begin(*bot, *request);
-        PossessedBot* possessed{ m_PossessionStore->Find() };
+        m_PossessionStore->Begin(bot, target->Handle);
+        ClientDriven* possessed{ m_PossessionStore->Find() };
         if (possessed == nullptr) return;
 
         // note: The Python action of the possessed bot is discarded (D351). The bot gets the neutral action unless the frames of the client left one.
-        const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, *bot) };
-        overrides[*bot] = MakeNeutralOverride(unitState);
-        requests[*bot] = ClientRequests{};
+        const std::optional<UnitClientState> unitState{ m_BotService.GetUnitClientState(threadContext, bot) };
+        overrides[bot] = MakeNeutralOverride(unitState);
+        requests[bot] = ClientRequests{};
 
         if (!unitState)
         {
@@ -216,7 +268,7 @@ namespace Engine::Control::Input::Hook
             if (m_PossessionStore->MarkUnitMissing())
             {
                 m_Log.Message("[PlayerActionDetour] WARNING: The possessed bot (player {}) has no unit: it gets a neutral action until it spawns.",
-                    *bot);
+                    bot);
             }
             return;
         }
@@ -231,8 +283,8 @@ namespace Engine::Control::Input::Hook
 
         const bool isUnsupported{ (possessed->Last.Unsupported | possessed->Pending.Unsupported) != 0 };
         PossessedAction action{ TakeTickAction(*possessed) };
-        overrides[*bot] = action.Override;
-        requests[*bot] = action.Requests;
+        overrides[bot] = action.Override;
+        requests[bot] = action.Requests;
         m_PossessionStore->CountTick(true, isUnsupported);
     }
 
@@ -250,11 +302,14 @@ namespace Engine::Control::Input::Hook
                 history.PendingWeapon.reset();
                 history.LaneTicks.fill(0);
             }
+
+            for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player) m_AgentClientStore.End(player);
             return;
         }
 
         std::array<std::optional<ActionOverride>, k_MaxActionPlayers> overrides{};
-        m_PlayerActionStore.CopyOverrides(overrides);
+        std::array<std::optional<AgentDelivery>, k_MaxActionPlayers> deliveries{};
+        m_PlayerActionStore.CopyActions(overrides, deliveries);
 
         std::uint32_t mask{ 0 };
         std::memcpy(&mask, update + k_UpdateActionMaskOffset, sizeof(mask));
@@ -262,7 +317,11 @@ namespace Engine::Control::Input::Hook
         // note: Players with an action from the engine this tick, before the overrides are added.
         const std::uint32_t engineMask{ mask };
 
-        this->ApplyPossession(threadContext, engineMask, overrides, requests);
+        // note: The agents step before the possession, so a local that is an agent counts as one for the neutral action of the human local (D350), and the
+        // possession then replaces what the possessed bot got (D351).
+        const std::optional<PossessTarget> possession{ this->ResolvePossession(threadContext) };
+        this->ApplyAgents(threadContext, possession ? std::optional<std::size_t>{ possession->Player } : std::nullopt, deliveries, overrides, requests);
+        this->ApplyPossession(threadContext, engineMask, possession, overrides, requests);
 
         // note: The tag is only read while some agent or (for the shadow check) some local player plays, never in menus or loading
         // screens.

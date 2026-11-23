@@ -10,6 +10,10 @@ export namespace Common::Engine::Type
     // Tick of something that has not happened. The engine writes -1 (NONE).
     inline constexpr std::uint32_t k_NoTick{ 0xFFFFFFFF };
 
+    // Input user and local index of something that has none (an agent of Artemis, not a local player). The engine writes -1 (NONE).
+    inline constexpr std::int32_t k_NoInputUser{ -1 };
+    inline constexpr std::uint32_t k_NoLocalIndex{ 0xFFFFFFFF };
+
     // Low half of a handle: the index of the datum in its table. The high half is the salt.
     inline constexpr std::uint32_t k_HandleIndexMask{ 0xFFFF };
 

@@ -8,6 +8,7 @@ namespace
 {
     using Common::Engine::Type::k_NoHandle;
 
+    using Control::Client::Type::AgentControl;
     using Control::Client::Type::AgentControlEvents;
     using Control::Client::Type::AgentEventLink;
     using Control::Client::Type::AgentInput;
@@ -28,6 +29,7 @@ namespace
     using Control::Client::Type::k_AgentControlCount;
     using Control::Client::Type::k_AgentControlEvents;
     using Control::Client::Type::k_AgentControlMask;
+    using Control::Client::Type::k_AgentControlNames;
     using Control::Client::Type::k_ButtonCrouch;
     using Control::Client::Type::k_ButtonFire;
     using Control::Client::Type::k_ButtonJump;
@@ -540,6 +542,101 @@ namespace Control::Client::System
 
         state.DownMask = downMask;
         return frame;
+    }
+
+    auto FindAgentControl(std::string_view name) -> std::optional<AgentControl>
+    {
+        const auto found{ std::ranges::find(k_AgentControlNames, name) };
+        if (found == k_AgentControlNames.end()) return std::nullopt;
+
+        return static_cast<AgentControl>(found - k_AgentControlNames.begin());
+    }
+
+    auto ParseAgentInputWords(std::span<const std::string> words, AgentInput& input, float& turnLimit) -> std::string
+    {
+        AgentInput parsed{ input };
+        float parsedTurn{ turnLimit };
+        std::array<bool, 5> isSeen{};
+
+        for (const std::string& word : words)
+        {
+            const std::size_t equals{ word.find('=') };
+            if (equals == std::string::npos) return std::format("'{}' is not key=value", word);
+
+            const std::string_view key{ std::string_view{ word }.substr(0, equals) };
+            const std::string_view value{ std::string_view{ word }.substr(equals + 1) };
+
+            std::size_t slot{ 0 };
+            if (key == "move") slot = 0;
+            else if (key == "look") slot = 1;
+            else if (key == "level") slot = 2;
+            else if (key == "edge") slot = 3;
+            else if (key == "turn") slot = 4;
+            else return std::format("unknown key '{}'", key);
+
+            if (isSeen[slot]) return std::format("'{}' is given twice", key);
+            isSeen[slot] = true;
+
+            if (slot == 2 || slot == 3)
+            {
+                std::uint32_t mask{ 0 };
+                if (value != "-")
+                {
+                    for (std::size_t start{ 0 }; start <= value.size();)
+                    {
+                        const std::size_t comma{ (std::min)(value.find(',', start), value.size()) };
+                        const std::string_view name{ value.substr(start, comma - start) };
+                        const std::optional<AgentControl> control{ FindAgentControl(name) };
+                        if (!control) return std::format("unknown control '{}'", name);
+
+                        mask |= 1u << static_cast<std::uint32_t>(*control);
+                        start = comma + 1;
+                    }
+                }
+
+                (slot == 2 ? parsed.Level : parsed.Edge) = mask;
+                continue;
+            }
+
+            std::array<float, 2> numbers{};
+            const std::size_t count{ slot == 4 ? 1u : 2u };
+            std::string_view rest{ value };
+            for (std::size_t index{ 0 }; index < count; ++index)
+            {
+                const std::size_t comma{ (std::min)(rest.find(','), rest.size()) };
+                const std::string_view text{ rest.substr(0, comma) };
+                const auto [end, error]{ std::from_chars(text.data(), text.data() + text.size(), numbers[index]) };
+                if (text.empty() || error != std::errc{} || end != text.data() + text.size() || !std::isfinite(numbers[index]))
+                {
+                    return std::format("'{}' takes {} finite number{} separated by commas", key, count, count == 1 ? "" : "s");
+                }
+
+                const bool isLast{ index + 1 == count };
+                if (isLast != (comma == rest.size())) return std::format("'{}' takes {} number{} separated by commas", key, count, count == 1 ? "" : "s");
+                rest = rest.substr((std::min)(comma + 1, rest.size()));
+            }
+
+            if (slot == 0)
+            {
+                if (std::abs(numbers[0]) > 1.0f || std::abs(numbers[1]) > 1.0f) return "move axes must be in [-1, 1]";
+                parsed.MoveForward = numbers[0];
+                parsed.MoveLeft = numbers[1];
+            }
+            else if (slot == 1)
+            {
+                parsed.YawDelta = numbers[0];
+                parsed.PitchDelta = numbers[1];
+            }
+            else
+            {
+                if (numbers[0] < 0.0f) return "turn must be 0 or more";
+                parsedTurn = numbers[0];
+            }
+        }
+
+        input = parsed;
+        turnLimit = parsedTurn;
+        return {};
     }
 
     auto AddAgentFrame(AgentInputReducer& reducer, const InputFrame& frame, float lookYaw, float lookPitch) -> void

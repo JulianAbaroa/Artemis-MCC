@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+import Common.Engine.Type;
 import Control.Action.Type;
 import Control.Client.Type;
 import Engine.Control.Simulation.System;
@@ -15,6 +16,8 @@ namespace
     using Control::Client::Type::UnitContext;
     using Control::Client::Type::UnitFact;
     using Control::Client::Type::k_AllUnitFacts;
+    using Common::Engine::Type::k_NoInputUser;
+    using Common::Engine::Type::k_NoLocalIndex;
 
     using Engine::Control::Simulation::System::BuildUnitContext;
     using Control::Client::Type::ClientSettings;
@@ -822,6 +825,30 @@ TEST(UnitContextTests, APlayerWithoutHandleHasNoLookRatesNorAlternateControl)
     EXPECT_FALSE(context.IsLookRated);
     EXPECT_FALSE(context.IsAltControl);
     EXPECT_TRUE(IsKnown(context, UnitFact::LookRated));
+}
+
+TEST(UnitContextTests, ASourceWithoutInputUserHasFreeControlsAndNeverAsksTheEngine)
+{
+    FakePort port{ MakePort() };
+    port.ControlsLocked = true;
+    ClientContextSource source{ MakeSource() };
+    source.InputUser = k_NoInputUser;
+    source.LocalIndex = k_NoLocalIndex;
+
+    const UnitContext context{ Build(port, MakeState(), source) };
+    EXPECT_FALSE(context.IsControlLocked);
+    EXPECT_TRUE(IsKnown(context, UnitFact::ControlLocked));
+    EXPECT_EQ(context.Known, k_AllUnitFacts);
+}
+
+TEST(UnitContextTests, AnInputUserOutsideTheLocalUsersStaysUnknown)
+{
+    FakePort port{ MakePort() };
+    ClientContextSource source{ MakeSource() };
+    source.InputUser = 7;
+
+    const UnitContext context{ Build(port, MakeState(), source) };
+    EXPECT_FALSE(IsKnown(context, UnitFact::ControlLocked));
 }
 
 TEST(UnitContextTests, AFactWithoutItsFunctionOrMemoryStaysUnknown)

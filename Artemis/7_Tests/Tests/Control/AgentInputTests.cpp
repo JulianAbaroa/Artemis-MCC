@@ -11,6 +11,8 @@ namespace
 {
     using Control::Client::System::AddAgentFrame;
     using Control::Client::System::CloseAgentInput;
+    using Control::Client::System::FindAgentControl;
+    using Control::Client::System::ParseAgentInputWords;
     using Control::Client::System::IntegrateAim;
     using Control::Client::System::MakeAgentFrame;
     using Control::Client::System::SanitizeAgentInput;
@@ -29,6 +31,7 @@ namespace
 
     using Control::Client::Type::k_AgentControlCount;
     using Control::Client::Type::k_AgentControlMask;
+    using Control::Client::Type::k_AgentControlNames;
     using Control::Client::Type::k_EventCount;
     using Control::Client::Type::k_PitchLimit;
 
@@ -507,4 +510,132 @@ TEST(AgentInputTests, SanitizingFixesNaNInfinityRangeAndHighBits)
     EXPECT_EQ(frame.MoveForward, 0.0f);
     EXPECT_EQ(frame.YawDelta, 0.0f);
     for (const EventSample& sample : frame.Events) EXPECT_FALSE(sample.IsDown);
+}
+
+// The text form of an AgentInput (VW.9c.3 C): the names of the controls and the words the test bench reads.
+
+namespace
+{
+    auto Parse(const std::vector<std::string>& words, AgentInput& input, float& turn) -> std::string
+    {
+        return ParseAgentInputWords(std::span<const std::string>{ words }, input, turn);
+    }
+}
+
+TEST(AgentTextTests, EveryControlNameFindsItsControlAndNothingElseDoes)
+{
+    for (std::uint32_t control{ 0 }; control < k_AgentControlCount; ++control)
+    {
+        const auto found{ FindAgentControl(k_AgentControlNames[control]) };
+        ASSERT_TRUE(found.has_value()) << k_AgentControlNames[control];
+        EXPECT_EQ(static_cast<std::uint32_t>(*found), control);
+    }
+
+    EXPECT_FALSE(FindAgentControl("Jump").has_value());
+    EXPECT_FALSE(FindAgentControl("").has_value());
+    EXPECT_FALSE(FindAgentControl("sprint").has_value());
+}
+
+TEST(AgentTextTests, TheNamesAreTheLowercaseNamesOfTheControlsInOrder)
+{
+    const std::array<std::string_view, k_AgentControlCount> expected{ "jump", "crouch", "fire", "zoom", "zoom_in", "zoom_out", "melee", "ability",
+        "throw_grenade", "use", "switch_weapon", "switch_grenade", "reload" };
+    EXPECT_EQ(k_AgentControlNames, expected);
+}
+
+TEST(AgentTextTests, AFullLineSetsEveryField)
+{
+    AgentInput input{};
+    float turn{ 0.0f };
+    ASSERT_EQ(Parse({ "move=1,-0.5", "look=0.25,-0.125", "level=fire,crouch", "edge=jump,fire", "turn=0.1" }, input, turn), "");
+
+    EXPECT_EQ(input.MoveForward, 1.0f);
+    EXPECT_EQ(input.MoveLeft, -0.5f);
+    EXPECT_EQ(input.YawDelta, 0.25f);
+    EXPECT_EQ(input.PitchDelta, -0.125f);
+    EXPECT_EQ(input.Level, Bit(static_cast<std::uint32_t>(AgentControl::Fire)) | Bit(static_cast<std::uint32_t>(AgentControl::Crouch)));
+    EXPECT_EQ(input.Edge, Bit(static_cast<std::uint32_t>(AgentControl::Jump)) | Bit(static_cast<std::uint32_t>(AgentControl::Fire)));
+    EXPECT_FLOAT_EQ(turn, 0.1f);
+}
+
+TEST(AgentTextTests, AKeyLeftOutKeepsWhatTheOutputHeldAndADashClearsTheControls)
+{
+    AgentInput input{ .MoveForward = 0.5f, .Level = 0x7u, .Edge = 0x3u };
+    float turn{ 0.2f };
+    ASSERT_EQ(Parse({ "look=1,2", "level=-" }, input, turn), "");
+
+    EXPECT_EQ(input.MoveForward, 0.5f);
+    EXPECT_EQ(input.YawDelta, 1.0f);
+    EXPECT_EQ(input.Level, 0u);
+    EXPECT_EQ(input.Edge, 0x3u);
+    EXPECT_FLOAT_EQ(turn, 0.2f);
+}
+
+TEST(AgentTextTests, NoWordsChangesNothing)
+{
+    AgentInput input{ .MoveLeft = -1.0f, .Level = 0x10u };
+    float turn{ 0.3f };
+    EXPECT_EQ(Parse({}, input, turn), "");
+    EXPECT_EQ(input.MoveLeft, -1.0f);
+    EXPECT_EQ(input.Level, 0x10u);
+    EXPECT_FLOAT_EQ(turn, 0.3f);
+}
+
+TEST(AgentTextTests, AnUnknownKeyOrControlOrAnUnshapedWordIsRefused)
+{
+    AgentInput input{};
+    float turn{ 0.0f };
+    EXPECT_NE(Parse({ "speed=1" }, input, turn), "");
+    EXPECT_NE(Parse({ "level=jump,sprint" }, input, turn), "");
+    EXPECT_NE(Parse({ "level=" }, input, turn), "");
+    EXPECT_NE(Parse({ "level=jump," }, input, turn), "");
+    EXPECT_NE(Parse({ "edge=Jump" }, input, turn), "");
+    EXPECT_NE(Parse({ "jump" }, input, turn), "");
+}
+
+TEST(AgentTextTests, ARepeatedKeyIsRefused)
+{
+    AgentInput input{};
+    float turn{ 0.0f };
+    EXPECT_NE(Parse({ "move=1,0", "move=0,1" }, input, turn), "");
+    EXPECT_NE(Parse({ "level=jump", "level=fire" }, input, turn), "");
+}
+
+TEST(AgentTextTests, NumbersMustBeFiniteAndInTheRightCount)
+{
+    AgentInput input{};
+    float turn{ 0.0f };
+    EXPECT_NE(Parse({ "move=1" }, input, turn), "");
+    EXPECT_NE(Parse({ "move=1,0,0" }, input, turn), "");
+    EXPECT_NE(Parse({ "move=a,b" }, input, turn), "");
+    EXPECT_NE(Parse({ "move=nan,0" }, input, turn), "");
+    EXPECT_NE(Parse({ "look=inf,0" }, input, turn), "");
+    EXPECT_NE(Parse({ "look=1,2x" }, input, turn), "");
+    EXPECT_NE(Parse({ "look=,2" }, input, turn), "");
+    EXPECT_NE(Parse({ "turn=" }, input, turn), "");
+    EXPECT_NE(Parse({ "turn=1,2" }, input, turn), "");
+}
+
+TEST(AgentTextTests, RangesAreChecked)
+{
+    AgentInput input{};
+    float turn{ 0.0f };
+    EXPECT_NE(Parse({ "move=1.5,0" }, input, turn), "");
+    EXPECT_NE(Parse({ "move=0,-1.0001" }, input, turn), "");
+    EXPECT_NE(Parse({ "turn=-0.1" }, input, turn), "");
+    EXPECT_EQ(Parse({ "move=-1,1", "turn=0" }, input, turn), "");
+    EXPECT_EQ(Parse({ "look=100,-100" }, input, turn), "");
+    EXPECT_EQ(input.YawDelta, 100.0f);
+}
+
+TEST(AgentTextTests, AFailureLeavesTheInputAndTheTurnUntouched)
+{
+    AgentInput input{ .MoveForward = 0.25f, .YawDelta = 3.0f, .Level = 0x5u };
+    float turn{ 0.5f };
+    EXPECT_NE(Parse({ "move=1,1", "look=9,9", "level=jump", "edge=bogus" }, input, turn), "");
+
+    EXPECT_EQ(input.MoveForward, 0.25f);
+    EXPECT_EQ(input.YawDelta, 3.0f);
+    EXPECT_EQ(input.Level, 0x5u);
+    EXPECT_FLOAT_EQ(turn, 0.5f);
 }

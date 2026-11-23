@@ -23,7 +23,7 @@ namespace
     using ::Control::Client::Type::UnitContext;
     using ::Control::Client::Type::k_EventPulses;
 
-    using Engine::Control::Input::Type::PossessedBot;
+    using Engine::Control::Input::Type::ClientDriven;
     using Engine::Control::Input::Type::k_PossessMaxStaleTicks;
 
     using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
@@ -66,7 +66,7 @@ export namespace Engine::Control::Input::System
     // Gets the client state of the bot ready for the step of a frame: a new unit starts the aim from the unit and forgets what the last unit
     // asked for, and the zoom is the one of the unit.
     // return: The state to step.
-    inline auto PrepareFrame(PossessedBot& bot, const UnitClientState& unit) -> ClientState
+    inline auto PrepareFrame(ClientDriven& bot, const UnitClientState& unit) -> ClientState
     {
         if (bot.Unit != unit.Unit)
         {
@@ -85,7 +85,7 @@ export namespace Engine::Control::Input::System
 
     // Adds one frame of the client to the bot (D360): the look goes into the absolute aim, the output becomes the held state, and what only lasts a
     // frame (buttons, lanes, pulse events, triggers) is kept in Pending until a tick delivers it.
-    inline auto AccumulateFrame(PossessedBot& bot, const ClientStep& step, const UnitContext& context) -> void
+    inline auto AccumulateFrame(ClientDriven& bot, const ClientStep& step, const UnitContext& context) -> void
     {
         const ClientOutput& output{ step.Output };
 
@@ -106,7 +106,7 @@ export namespace Engine::Control::Input::System
     // Counts one tick since the last frame of the client.
     // return: True when the bot has no fresh frame (none yet, or more than k_PossessMaxStaleTicks ticks without one): it then gets a neutral action and its
     // held state and pending requests are cleared, so a frame that did not run is never delivered again and again.
-    inline auto TickFrameAge(PossessedBot& bot) -> bool
+    inline auto TickFrameAge(ClientDriven& bot) -> bool
     {
         if (bot.TicksSinceFrame < (std::numeric_limits<std::uint32_t>::max)()) ++bot.TicksSinceFrame;
 
@@ -123,7 +123,7 @@ export namespace Engine::Control::Input::System
     // return: What the tick delivers for the bot: the aim accumulated by every frame, the held state of the last frame and everything the frames since
     // the last tick asked for once. Clears what was delivered, so several ticks in one frame deliver a press once and no frame is lost.
     // note: The caller checked that a frame ran (HasFrame).
-    inline auto TakeTickAction(PossessedBot& bot) -> PossessedAction
+    inline auto TakeTickAction(ClientDriven& bot) -> PossessedAction
     {
         ClientOutput output{ bot.Last };
         output.Buttons |= bot.Pending.Buttons;

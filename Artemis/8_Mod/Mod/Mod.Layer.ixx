@@ -138,7 +138,8 @@ export namespace Mod
             .m_PovRequestStore = m_Base.m_PovRequestStore,
             .m_PovStatusStore = m_Base.m_PovStatusStore,
             .m_PossessRequestStore = m_Control.m_PossessRequestStore,
-            .m_PossessionStore = m_Control.m_PossessionStore };
+            .m_PossessionStore = m_Control.m_PossessionStore,
+            .m_AgentClientStore = m_Control.m_AgentClientStore };
 
         Blam::Map::Layer m_Map{ m_Service.m_Log };
         Blam::MapModel::Layer m_Resolved{ m_Service.m_Log, m_Map };

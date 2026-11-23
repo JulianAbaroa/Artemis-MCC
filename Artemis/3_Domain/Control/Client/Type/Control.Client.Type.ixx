@@ -326,14 +326,17 @@ export namespace Control::Client::Type
     // Who the unit facts are asked for: the engine ids the user-level facts need (the control lock, the look offset, the alternate
     // control mode, the accessibility look rates, the dual wield restrictions) and the client state the unit facts depend on. The unit
     // itself comes in the UnitClientState (VW.9c.2).
-    // note: The oracle fills it from the call it watches. The possession fills it with the user of input user 0 and the unit of the bot.
+    // note: The oracle fills it from the call it watches. The possession fills it with the user of input user 0 and the unit of the bot. An agent has no
+    // input user (VW.9c.3 C): k_NoInputUser and k_NoLocalIndex, the handle of its own player, no dual wield restriction.
+
     struct ClientContextSource
     {
         // Thread context of the game thread that asks (the engine functions behind the facts read it from the TLS, the memory reads
         // need it).
         std::uintptr_t ThreadContext{ 0 };
 
-        // Input user and local index the 0x5df80 call was made for.
+        // Input user and local index the 0x5df80 call was made for. Common k_NoInputUser: no user, so the controls lock has nothing to ask and the context says
+        // the controls are free (UnitFact::ControlLocked known, not locked).
         std::int32_t InputUser{ 0 };
         std::uint32_t LocalIndex{ 0 };
 
@@ -495,6 +498,10 @@ export namespace Control::Client::Type
     };
 
     inline constexpr std::uint32_t k_AgentControlCount{ 13 };
+
+    // Name of each control in text, indexed by AgentControl (the test bench and the logs write them).
+    inline constexpr std::array<std::string_view, k_AgentControlCount> k_AgentControlNames{ "jump", "crouch", "fire", "zoom", "zoom_in", "zoom_out",
+        "melee", "ability", "throw_grenade", "use", "switch_weapon", "switch_grenade", "reload" };
 
     // The bits of Level and Edge an agent can use. A bit outside it is dropped.
     inline constexpr std::uint32_t k_AgentControlMask{ (1u << k_AgentControlCount) - 1u };

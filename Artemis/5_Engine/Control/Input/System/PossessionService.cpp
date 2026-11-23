@@ -24,7 +24,7 @@ namespace
     using ::Control::Client::Type::UnitContext;
 
     using Engine::Control::Input::Type::ControlTagLocator;
-    using Engine::Control::Input::Type::PossessedBot;
+    using Engine::Control::Input::Type::ClientDriven;
     using Engine::Control::Input::Type::k_InputTableSize;
 }
 
@@ -50,7 +50,7 @@ namespace Engine::Control::Input::System
             return;
         }
 
-        PossessedBot* bot{ m_PossessionStore.Find() };
+        ClientDriven* bot{ m_PossessionStore.Find() };
         if (bot == nullptr) return;
 
         if (m_PossessionStore.MarkThreadsLogged())

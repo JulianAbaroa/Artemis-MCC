@@ -5,6 +5,7 @@ import std;
 
 namespace
 {
+    using Control::Client::Type::AgentControl;
     using Control::Client::Type::AgentInput;
     using Control::Client::Type::AgentInputReducer;
     using Control::Client::Type::AgentInputState;
@@ -50,6 +51,18 @@ export namespace Control::Client::System
     // With 2 a tap of a control that was down comes back as a hold, and with 1 a press again and that tap are lost (the bridge uses 4, D304).
     auto MakeAgentFrame(const AgentInput& input, std::int32_t tickInWindow, std::int32_t windowTicks, const ClientSettings& settings,
         float turnLimit, AgentInputState& state) -> InputFrame;
+
+    // return: The control with that name (lowercase, as k_AgentControlNames), or nothing.
+    auto FindAgentControl(std::string_view name) -> std::optional<AgentControl>;
+
+    // Reads the text form of an AgentInput: words "key=value" with the keys move (forward,left), look (yaw,pitch in radians for the window), level and
+    // edge (control names separated by commas, "-" for none) and turn (radians per tick, 0 = no limit). A key left out keeps what the output holds.
+    // param words: One word per field, in any order.
+    // param input: In and out. Only the fields the words name change.
+    // param turnLimit: In and out, same rule.
+    // return: Empty when it read, otherwise what is wrong (an unknown key or control, a repeated key, a number that is not finite, a move axis outside
+    // [-1, 1] or a negative turn limit). On a failure input and turnLimit are unchanged.
+    auto ParseAgentInputWords(std::span<const std::string> words, AgentInput& input, float& turnLimit) -> std::string;
 
     // Adds the frame of one client step to the window of the reducer (D364).
     // param lookYaw: Look the table asked in that step, before zoom and damp (ClientOutput::LookYawRequested).

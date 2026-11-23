@@ -22,9 +22,11 @@ namespace
     using Engine::Render::Type::MaskPairKind;
     using Engine::Render::Type::SceneStatus;
     using Engine::Base::Pov::Type::PovStatus;
+    using Engine::Control::Input::Type::AgentClientStatus;
     using Engine::Control::Input::Type::PossessStatus;
     using Perception::Players::Type::Player;
 
+    using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_NoHandle;
 
     using DevTools::Viewer::Latency::Type::LatencyReport;
@@ -174,6 +176,7 @@ namespace DevTools::Viewer::Hud::System
         this->DrawFirstPersonHook();
         this->DrawPov(tick);
         this->DrawPossession(tick);
+        this->DrawAgents(tick);
         this->DrawFirstPersonMask();
         this->DrawLatency();
     }
@@ -289,6 +292,37 @@ namespace DevTools::Viewer::Hud::System
 
         ImGui::TextColored(status.IsUnitMissing || status.Unsupported != 0 ? k_Orange : k_Info, "%s ticks %llu delivered %llu unsupported %llu%s",
             player ? player->Name.c_str() : "?", status.Ticks, status.Delivered, status.Unsupported, status.IsUnitMissing ? " no unit" : "");
+    }
+
+    auto HudService::DrawAgents(const std::shared_ptr<const Tick>& tick) -> void
+    {
+        const AgentClientStatus status{ m_AgentClientStore.GetStatus() };
+
+        ImGui::Text("Agents:");
+        ImGui::SameLine();
+
+        bool isAnyShown{ false };
+        for (std::size_t index{ 0 }; index < status.Players.size(); ++index)
+        {
+            const auto& counters{ status.Players[index] };
+            const bool isActive{ (status.ActiveMask & (1u << index)) != 0 };
+            if (!isActive && counters.Ticks == 0) continue;
+
+            const Player* player{ nullptr };
+            if (tick && tick->Players)
+            {
+                const auto found{ std::ranges::find_if(tick->Players->Rows, [index](const Player& row) { return (row.Handle & k_HandleIndexMask) == index; }) };
+                player = found != tick->Players->Rows.end() ? &*found : nullptr;
+            }
+
+            if (isAnyShown) ImGui::NewLine();
+            isAnyShown = true;
+            ImGui::TextColored(counters.Unsupported != 0 || counters.UnknownRead != 0 ? k_Orange : k_Info,
+                "%s%s ticks %llu delivered %llu unsupported %llu unknown %llu", player ? player->Name.c_str() : "?", isActive ? "" : " (off)",
+                counters.Ticks, counters.Delivered, counters.Unsupported, counters.UnknownRead);
+        }
+
+        if (!isAnyShown) ImGui::TextDisabled("off");
     }
 
     auto HudService::DrawFirstPersonMask() -> void

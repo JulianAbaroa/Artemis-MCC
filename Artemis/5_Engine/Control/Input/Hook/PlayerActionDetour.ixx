@@ -40,22 +40,26 @@ export namespace Engine::Control::Input::Hook
         using ClearPlayerActionFunction = Engine::Control::Input::Type::ClearPlayerActionFunction;
         using ControlTagLocator = Engine::Control::Input::Type::ControlTagLocator;
         using CopyActionToViewFunction = Engine::Control::Input::Type::CopyActionToViewFunction;
+        using AgentDelivery = Engine::Control::Input::Type::AgentDelivery;
+        using PossessTarget = Engine::Control::Input::Type::PossessTarget;
         using ShadowField = Engine::Control::Input::Type::ShadowField;
         using ShadowPlayer = Engine::Control::Input::Type::ShadowPlayer;
 
+        using AgentClientStore = Engine::Control::Input::State::AgentClientStore;
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
         using PossessionStore = Engine::Control::Input::State::PossessionStore;
         using PossessRequestStore = Engine::Control::Input::State::PossessRequestStore;
 
         using ActionSource = Engine::Control::Input::System::ActionSource;
+        using AgentClientService = Engine::Control::Input::System::AgentClientService;
 
         using BotService = Engine::Control::Simulation::System::BotService;
 
     public:
         PlayerActionDetour(Log& log, AOBService& aobService, MatchSetupService& matchSetupService, PlayerActionStore& playerActionStore,
-            BotService& botService) :
+            BotService& botService, AgentClientStore& agentClientStore, AgentClientService& agentClientService) :
             m_Log(log), m_AOBService(aobService), m_MatchSetupService(matchSetupService), m_PlayerActionStore(playerActionStore),
-            m_BotService(botService) {}
+            m_BotService(botService), m_AgentClientStore(agentClientStore), m_AgentClientService(agentClientService) {}
         ~PlayerActionDetour() = default;
 
         // Connects the action source (the bridge, D215) that sets the overrides of the Python players.
@@ -79,6 +83,10 @@ export namespace Engine::Control::Input::Hook
         MatchSetupService& m_MatchSetupService;
         PlayerActionStore& m_PlayerActionStore;
         BotService& m_BotService;
+
+        // The agents that play an AgentInput through the client of Artemis, one step per tick (VW.9c.3 C).
+        AgentClientStore& m_AgentClientStore;
+        AgentClientService& m_AgentClientService;
 
         // The bot the Viewer asks to possess (VW.9c.2 B) and what the client of the user keeps for it. Null until connected: then nobody is possessed.
         PossessRequestStore* m_PossessRequestStore{ nullptr };
@@ -126,16 +134,36 @@ export namespace Engine::Control::Input::Hook
         // param threadContext: Thread context of the engine, or 0 if unknown (then no override is applied).
         auto ApplyOverrides(std::uint8_t* update, std::uintptr_t threadContext) -> void;
 
+        // Resolves the possession request of the Viewer to a bot.
+        // return: The bot to possess this tick, or nothing: without a request, when the bot is gone or is not an Artemis bot (never a human, D352) or when the
+        // possession is turned off, the possession is released and nothing changes.
+        // note: Game thread only, once per tick, before ApplyAgents and ApplyPossession.
+        auto ResolvePossession(std::uintptr_t threadContext) -> std::optional<PossessTarget>;
+
+        // Plays the AgentInput of every agent through the client of Artemis, one step per tick (VW.9c.3 C, D363): the override and the client requests of
+        // the player are replaced by what the step gives, and the action goes on through BuildAction like any other (D118-D121). A player without an
+        // AgentInput forgets its client state.
+        // param possessed: The possessed player, nothing when none. Possession wins (D351): that player gets no step and forgets its client state, and the
+        // AgentInput stays in the store for when the possession ends.
+        // param deliveries: The AgentInput of every player, empty for a player without one.
+        // param overrides: The overrides of the tick. The one of an agent is replaced (an AgentInput and an override exclude each other in the store).
+        // param requests: The client requests of the tick, replaced the same way.
+        // note: Game thread only, once per tick, after the overrides were copied. A tick without settings (control tag or clock missing) gives the agent
+        // the neutral action.
+        auto ApplyAgents(std::uintptr_t threadContext, std::optional<std::size_t> possessed,
+            const std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& deliveries,
+            std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests) -> void;
+
         // Possession of a bot (VW.9c.2 B, D350, D360): while the Viewer asks for one, the tick copies what the client of the user accumulated in the
         // frames (the 0x5df80 hook runs it, see PossessionService) into the action of the bot through the same override path as an agent, and the
         // human local gets a neutral action.
         // param engineMask: Players with an action from the engine this tick.
+        // param target: The bot ResolvePossession gave, nothing when none.
         // param overrides: The overrides of the tick. The one of the possessed bot is replaced (the override of Python is dropped, D351) and the
         // human local gets a neutral one, unless it is an agent (D350).
         // param requests: The client requests of the tick, replaced the same way.
-        // note: Game thread only, once per tick, after the overrides were copied. Without a request, or when the bot is gone or is not an Artemis
-        // bot (never a human, D352), the possession is released and nothing changes.
-        auto ApplyPossession(std::uintptr_t threadContext, std::uint32_t engineMask,
+        // note: Game thread only, once per tick, after the overrides were copied and the agents stepped. Without a target nothing changes.
+        auto ApplyPossession(std::uintptr_t threadContext, std::uint32_t engineMask, const std::optional<PossessTarget>& target,
             std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides, std::array<ClientRequests, k_MaxActionPlayers>& requests)
             -> void;
 

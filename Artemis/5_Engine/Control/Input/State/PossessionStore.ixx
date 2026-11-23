@@ -11,7 +11,7 @@ export namespace Engine::Control::Input::State
     class PossessionStore
     {
     private:
-        using PossessedBot = Engine::Control::Input::Type::PossessedBot;
+        using ClientDriven = Engine::Control::Input::Type::ClientDriven;
         using PossessStatus = Engine::Control::Input::Type::PossessStatus;
 
     public:
@@ -47,7 +47,7 @@ export namespace Engine::Control::Input::State
         auto MarkThreadsLogged() -> bool;
 
         // return: The possessed bot, or null when none. Game thread only.
-        auto Find() -> PossessedBot*;
+        auto Find() -> ClientDriven*;
 
         // return: Whether a bot is possessed. Any thread.
         auto IsActive() const -> bool;
@@ -65,7 +65,7 @@ export namespace Engine::Control::Input::State
         auto GetStatus() const -> PossessStatus;
 
     private:
-        std::optional<PossessedBot> m_Bot{};
+        std::optional<ClientDriven> m_Bot{};
         std::atomic<std::thread::id> m_TickThread{};
         bool m_IsThreadLogDone{ false };
         std::atomic<bool> m_IsDisabled{ false };

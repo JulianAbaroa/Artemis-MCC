@@ -44,6 +44,23 @@ namespace
         std::memcpy(&value, reinterpret_cast<const void*>(address), sizeof(T));
         return value;
     }
+
+    // Fills the settings that belong to the game and not to a user: the thresholds of the control tag and the clock of the engine.
+    // return: False when the tag is not loaded or the clock is missing.
+    inline auto ReadGameSettings(std::uintptr_t tag, std::uintptr_t threadContext, ClientSettings& settings) -> bool
+    {
+        if (tag == 0) return false;
+
+        const std::uintptr_t clock{ ReadRaw<std::uintptr_t>(threadContext + k_ClockSlot) };
+        if (clock == 0) return false;
+
+        settings.HoldThresholdMs = static_cast<std::int32_t>(ReadRaw<float>(tag + k_HoldThresholdOffset) * static_cast<float>(k_MillisecondsPerSecond));
+        settings.ZoomCancelThreshold = ReadRaw<float>(tag + k_ControlTagZoomCancelOffset);
+        settings.JumpTimerSeconds = ReadRaw<float>(tag + k_ControlTagJumpTimerOffset);
+        settings.TicksPerSecond = ReadRaw<std::int16_t>(clock + k_ClockTicksPerSecondOffset);
+        settings.TickSeconds = ReadRaw<float>(clock + k_ClockTickSecondsOffset);
+        return true;
+    }
 }
 
 // note: What the client of the engine (0x5df80) reads about a user, in one place. The oracle and the possession both call it.
@@ -56,25 +73,43 @@ export namespace Engine::Control::Input::System
     inline auto ReadClientSettings(std::uintptr_t moduleBase, std::uintptr_t tag, std::uintptr_t threadContext, std::uint32_t localIndex)
         -> std::optional<ClientSettings>
     {
-        if (moduleBase == 0 || localIndex >= k_MaxLocalUsers || tag == 0) return std::nullopt;
+        if (moduleBase == 0 || localIndex >= k_MaxLocalUsers) return std::nullopt;
 
-        const std::uintptr_t clock{ ReadRaw<std::uintptr_t>(threadContext + k_ClockSlot) };
-        if (clock == 0) return std::nullopt;
+        ClientSettings settings{};
+        if (!ReadGameSettings(tag, threadContext, settings)) return std::nullopt;
 
         std::uintptr_t block{ moduleBase + k_ControlSettingsRva + (localIndex * k_ControlSettingsStride) };
         if (((ReadRaw<std::uint32_t>(block) >> k_ControlSettingsDefaultBit) & 1u) != 0) block = moduleBase + k_ControlSettingsDefaultRva;
 
-        ClientSettings settings{};
-        settings.HoldThresholdMs = static_cast<std::int32_t>(ReadRaw<float>(tag + k_HoldThresholdOffset) * static_cast<float>(k_MillisecondsPerSecond));
-        settings.ZoomCancelThreshold = ReadRaw<float>(tag + k_ControlTagZoomCancelOffset);
-        settings.JumpTimerSeconds = ReadRaw<float>(tag + k_ControlTagJumpTimerOffset);
         settings.AimScaleZoomed = ReadRaw<float>(block + k_SettingsAimZoomedOffset);
         settings.AimScaleSeated = ReadRaw<float>(block + k_SettingsAimSeatedOffset);
         settings.IsJumpFlag = ReadRaw<std::uint8_t>(block + k_SettingsJumpFlagOffset) != 0;
         settings.IsCrouchToggle = ReadRaw<std::uint8_t>(moduleBase + k_CrouchToggleRva) != 0;
         settings.IsMeleeHoldsUse = ReadRaw<std::uint8_t>(moduleBase + k_MeleeHoldsUseRva) != 0;
-        settings.TicksPerSecond = ReadRaw<std::int16_t>(clock + k_ClockTicksPerSecondOffset);
-        settings.TickSeconds = ReadRaw<float>(clock + k_ClockTickSecondsOffset);
+        return settings;
+    }
+
+    // return: The settings the client of Artemis uses for an agent (VW.9c.3 C, D359), or nothing when the tag or the clock are missing. What belongs to
+    // the game (hold threshold, zoom cancel, jump timer, ticks per second) is read like for a user. Every preference of a user is fixed here and is never
+    // copied from the user: the aim scales are 1 (no extra scale with zoom or in a seat), crouch is a hold, the jump is not a flag, melee does not hold
+    // use. The game system, the session and the input are ready, and the context is not a menu.
+    // param tag: The data of the control tag, already resolved (0 when not loaded).
+    // param threadContext: Thread context of the engine, for the clock.
+    // note: Game thread only.
+    inline auto ReadAgentClientSettings(std::uintptr_t tag, std::uintptr_t threadContext) -> std::optional<ClientSettings>
+    {
+        ClientSettings settings{};
+        if (!ReadGameSettings(tag, threadContext, settings)) return std::nullopt;
+
+        settings.AimScaleZoomed = 1.0f;
+        settings.AimScaleSeated = 1.0f;
+        settings.IsCrouchToggle = false;
+        settings.IsJumpFlag = false;
+        settings.IsMeleeHoldsUse = false;
+        settings.IsGameSystemPresent = true;
+        settings.IsSessionReady = true;
+        settings.IsMenuContext = false;
+        settings.IsInputEnabled = true;
         return settings;
     }
 

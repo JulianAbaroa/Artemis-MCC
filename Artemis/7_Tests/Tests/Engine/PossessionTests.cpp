@@ -35,7 +35,7 @@ namespace
     using Engine::Control::Input::System::TakeTickAction;
     using Engine::Control::Input::System::TickFrameAge;
     using Engine::Control::Input::Type::k_PossessMaxStaleTicks;
-    using Engine::Control::Input::Type::PossessedBot;
+    using Engine::Control::Input::Type::ClientDriven;
 
     constexpr std::size_t k_Players{ 16 };
 
@@ -355,7 +355,7 @@ namespace
     }
 
     // Runs one frame of the client: what the 0x5df80 hook does, with the output the test gives.
-    auto RunFrame(PossessedBot& bot, const ClientOutput& output) -> void
+    auto RunFrame(ClientDriven& bot, const ClientOutput& output) -> void
     {
         const UnitClientState unit{ MakeUnit(k_Unit, 1.0f, 0.0f) };
         ClientStep step{};
@@ -367,7 +367,7 @@ namespace
 
 TEST(PossessedFrameTests, SeveralTicksInOneFrameDeliverAPressOnce)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
     ClientOutput output{};
     output.Events = k_EventReload | k_EventSwitchWeapon | k_EventZoomPress;
     RunFrame(bot, output);
@@ -385,13 +385,13 @@ TEST(PossessedFrameTests, SeveralTicksInOneFrameDeliverAPressOnce)
 
 TEST(PossessedFrameTests, FramesWithoutATickAccumulateTheAimAndKeepThePress)
 {
-    PossessedBot oneStep{};
+    ClientDriven oneStep{};
     ClientOutput big{};
     big.YawDelta = 0.3f;
     big.PitchDelta = 0.06f;
     RunFrame(oneStep, big);
 
-    PossessedBot frames{};
+    ClientDriven frames{};
     ClientOutput press{};
     press.YawDelta = 0.1f;
     press.PitchDelta = 0.02f;
@@ -415,7 +415,7 @@ TEST(PossessedFrameTests, FramesWithoutATickAccumulateTheAimAndKeepThePress)
 
 TEST(PossessedFrameTests, TheHeldStateStaysAndTheButtonsOfBetweenTicksAreNotLost)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
     ClientOutput tap{};
     tap.Buttons = 1ull << 1;
     tap.Events = k_EventZoomHeld;
@@ -437,14 +437,14 @@ TEST(PossessedFrameTests, TheHeldStateStaysAndTheButtonsOfBetweenTicksAreNotLost
 
 TEST(PossessedFrameTests, ABotWithoutAFrameYetIsStale)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
 
     EXPECT_TRUE(TickFrameAge(bot));
 }
 
 TEST(PossessedFrameTests, AFrameThatStopsRunningGoesNeutralAndForgetsTheHeldState)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
     ClientOutput held{};
     held.Buttons = 1ull << 1;
     held.MoveForward = 1.0f;
@@ -466,7 +466,7 @@ TEST(PossessedFrameTests, AFrameThatStopsRunningGoesNeutralAndForgetsTheHeldStat
 
 TEST(PossessedFrameTests, ANewFrameMakesTheBotFreshAgain)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
     RunFrame(bot, ClientOutput{});
     for (std::uint32_t tick{ 0 }; tick < k_PossessMaxStaleTicks; ++tick) ASSERT_FALSE(TickFrameAge(bot));
     ASSERT_TRUE(TickFrameAge(bot));
@@ -478,7 +478,7 @@ TEST(PossessedFrameTests, ANewFrameMakesTheBotFreshAgain)
 
 TEST(PossessedFrameTests, TheLargestTriggerOfTheFramesIsDelivered)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
     ClientOutput down{};
     down.FireTrigger = 1.0f;
     RunFrame(bot, down);
@@ -490,7 +490,7 @@ TEST(PossessedFrameTests, TheLargestTriggerOfTheFramesIsDelivered)
 
 TEST(PossessedFrameTests, ANewUnitStartsTheAimFromTheUnitAndForgetsTheOldRequests)
 {
-    PossessedBot bot{};
+    ClientDriven bot{};
     ClientOutput output{};
     output.Events = k_EventReload;
     output.YawDelta = 0.5f;

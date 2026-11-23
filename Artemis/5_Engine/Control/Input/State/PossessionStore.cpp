@@ -15,7 +15,7 @@ namespace Engine::Control::Input::State
             return false;
         }
 
-        m_Bot = PossessedBot{ .Player = playerIndex, .Handle = handle };
+        m_Bot = ClientDriven{ .Player = playerIndex, .Handle = handle };
         m_IsThreadLogDone = false;
         m_Player.store(handle);
         m_Ticks.store(0);
@@ -56,7 +56,7 @@ namespace Engine::Control::Input::State
         return !std::exchange(m_IsThreadLogDone, true);
     }
 
-    auto PossessionStore::Find() -> PossessedBot*
+    auto PossessionStore::Find() -> ClientDriven*
     {
         return m_Bot ? &(*m_Bot) : nullptr;
     }

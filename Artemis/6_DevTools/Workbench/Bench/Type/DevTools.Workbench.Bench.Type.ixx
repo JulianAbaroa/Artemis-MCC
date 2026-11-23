@@ -3,6 +3,7 @@ export module DevTools.Workbench.Bench.Type;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
+import Control.Client.Type;
 import Services.Telemetry.Type;
 import Engine.Base.MatchSetup.Type;
 import Bridge.Transport.Type;
@@ -14,6 +15,7 @@ namespace
 {
     using Common::Math::Type::Vec3;
     using Control::Action::Type::ClientRequests;
+    using Control::Client::Type::AgentInput;
     using Services::Telemetry::Type::PerfSnapshot;
     using Bridge::Transport::Type::BridgeCounters;
     using Bridge::Codec::Tick::Type::Tick;
@@ -55,6 +57,21 @@ export namespace DevTools::Workbench::Bench::Type
         // Ticks of the match, from 1. ToTick 0 = until the end.
         std::uint64_t FromTick{ 0 };
         std::uint64_t ToTick{ 0 };
+    };
+
+    // AgentInput the bench gives some players during a window of ticks (VW.9c.3 C, D362): the same input every WindowTicks ticks, each delivery a new
+    // window for the client of Artemis. The bench samples the ticks, so a delivery waits for the next sample after it is due and the ticks between
+    // samples repeat the held controls and the move axes without a press or a look.
+    struct BenchInput
+    {
+        BenchPlayers Players{ BenchPlayers::All };
+        // Ticks of the match, from 1. ToTick 0 = until the end.
+        std::uint64_t FromTick{ 0 };
+        std::uint64_t ToTick{ 0 };
+        std::uint32_t WindowTicks{ 4 };
+        AgentInput Input{};
+        // Radians per tick and per axis the look may ask, 0 = no limit.
+        float TurnLimit{ 0.0f };
     };
 
     // Client request (next weapon, grenade or zoom level, D120) sent once to some players at a tick of the match.
@@ -121,6 +138,7 @@ export namespace DevTools::Workbench::Bench::Type
         double MaxSeconds{ 0.0 };
         std::vector<BenchCheck> Checks{};
         std::vector<BenchAction> Actions{};
+        std::vector<BenchInput> Inputs{};
         std::vector<BenchRequest> Requests{};
         std::vector<BenchProbe> Probes{};
         // Records the .tdump of the match with the TickDump, and the .sdump too when IsTickDumpFull (the storage folder of the TickDump tool).
@@ -242,6 +260,13 @@ export namespace DevTools::Workbench::Bench::Type
         std::size_t Rows{ 0 };
     };
 
+    // The AgentInput the bench gave a player: which input of the match and the tick of the last delivery.
+    struct BenchAppliedInput
+    {
+        std::size_t Index{ 0 };
+        std::uint64_t DeliveredTick{ 0 };
+    };
+
     // How the last finished scenario ended, for the status line of the panel.
     struct BenchLastResult
     {
@@ -283,6 +308,8 @@ export namespace DevTools::Workbench::Bench::Type
         // Test mode each player plays because of the bench, by player handle (a new player at an index has another handle), and the
         // requests already sent.
         std::unordered_map<std::uint32_t, LocalPlayerAction> AppliedModes{};
+        // AgentInput each player plays because of the bench, by player handle.
+        std::unordered_map<std::uint32_t, BenchAppliedInput> AppliedInputs{};
         std::vector<bool> SentRequests{};
         // Rounds of the setup checks: the last round seen in play, the round setups requested so far and the rows.
         std::int16_t LastRound{ -1 };

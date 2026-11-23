@@ -71,6 +71,40 @@ namespace Engine::Control::Input::State
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
         m_Overrides[playerIndex] = actionOverride;
+        if (actionOverride) m_AgentInputs[playerIndex].reset();
+    }
+
+    auto PlayerActionStore::SetAgentInput(std::size_t playerIndex, const ::Control::Client::Type::AgentInput& input, std::uint32_t windowTicks,
+        float turnLimit) -> void
+    {
+        if (playerIndex >= k_MaxActionPlayers) return;
+
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_AgentInputs[playerIndex] = AgentDelivery{ .Input = input, .WindowTicks = (std::max)(windowTicks, 1u), .TurnLimit = std::isfinite(turnLimit) && turnLimit > 0.0f ? turnLimit : 0.0f,
+            .Sequence = ++m_AgentSequence };
+        m_Overrides[playerIndex].reset();
+    }
+
+    auto PlayerActionStore::ClearAgentInput(std::size_t playerIndex) -> void
+    {
+        if (playerIndex >= k_MaxActionPlayers) return;
+
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_AgentInputs[playerIndex].reset();
+    }
+
+    auto PlayerActionStore::CopyAgentInputs(std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& out) const -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        out = m_AgentInputs;
+    }
+
+    auto PlayerActionStore::CopyActions(std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& overrides,
+        std::array<std::optional<AgentDelivery>, k_MaxActionPlayers>& deliveries) const -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        overrides = m_Overrides;
+        deliveries = m_AgentInputs;
     }
 
     auto PlayerActionStore::CopyOverrides(std::array<std::optional<ActionOverride>, k_MaxActionPlayers>& out) const -> void
@@ -152,6 +186,7 @@ namespace Engine::Control::Input::State
         m_Latest = PlayerActions{};
         m_Watches.fill(ActionWatch{});
         m_Overrides.fill(std::nullopt);
+        m_AgentInputs.fill(std::nullopt);
         m_ClientRequests.fill(ClientRequests{});
     }
 }

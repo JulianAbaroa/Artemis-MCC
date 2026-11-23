@@ -38,6 +38,7 @@ namespace
     using Engine::Control::Input::State::PlayerActionStore;
     using Engine::Control::Input::State::PossessRequestStore;
     using Engine::Control::Input::State::PossessionStore;
+    using Engine::Control::Input::State::AgentClientStore;
     using Engine::Render::Window::System::InputService;
     using Engine::Control::Simulation::State::BotStore;
     using Engine::Base::Memory::System::GameCameraService;
@@ -87,5 +88,8 @@ export namespace DevTools::Viewer::Access::Type
         // The bot the Viewer asks to possess and what the client keeps for it (VW.9c.2 B). The Viewer writes the request, the game thread owns the state.
         PossessRequestStore& m_PossessRequestStore;
         PossessionStore& m_PossessionStore;
+
+        // The counters of the agents that play an AgentInput through the client of Artemis (VW.9c.3 C).
+        AgentClientStore& m_AgentClientStore;
     };
 }

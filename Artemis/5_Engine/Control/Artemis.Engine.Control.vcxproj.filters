@@ -55,6 +55,12 @@
     <ClCompile Include="Input\Engine.Control.Input.System.ixx">
       <Filter>Input</Filter>
     </ClCompile>
+    <ClCompile Include="Input\State\AgentClientStore.cpp">
+      <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\State\AgentClientStore.ixx">
+      <Filter>Input\State</Filter>
+    </ClCompile>
     <ClCompile Include="Input\State\PlayerActionStore.cpp">
       <Filter>Input\State</Filter>
     </ClCompile>
@@ -78,6 +84,15 @@
     </ClCompile>
     <ClCompile Include="Input\State\VirtualInputStore.ixx">
       <Filter>Input\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\AgentClient.ixx">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\AgentClientService.cpp">
+      <Filter>Input\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Input\System\AgentClientService.ixx">
+      <Filter>Input\System</Filter>
     </ClCompile>
     <ClCompile Include="Input\System\ActionSource.ixx">
       <Filter>Input\System</Filter>

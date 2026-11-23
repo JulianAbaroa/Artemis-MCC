@@ -156,6 +156,7 @@
     <ClCompile Include="Engine\PovTests.cpp" />
     <ClCompile Include="Engine\ClientFrameTests.cpp" />
     <ClCompile Include="Engine\ClientReplayTests.cpp" />
+    <ClCompile Include="Engine\AgentClientTests.cpp" />
     <ClCompile Include="Engine\PossessionTests.cpp" />
     <ClCompile Include="Engine\UnitContextTests.cpp" />
     <ClCompile Include="Engine\ViewActionTests.cpp" />

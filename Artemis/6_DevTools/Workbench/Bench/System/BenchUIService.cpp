@@ -13,6 +13,7 @@ import Common.Text.System;
 import Services.Logs.Type;
 import Services.Telemetry.Type;
 import Services.Telemetry.System;
+import Control.Client.System;
 import Bridge.Transport.Type;
 import Engine.Base.Host.Type;
 import Engine.Base.MapVariant.Type;
@@ -43,6 +44,7 @@ namespace
     using Common::Math::System::Distance;
     using Common::Text::System::JsonEscape;
     using Common::Log::Type::LogLevel;
+    using Control::Client::System::ParseAgentInputWords;
     using Engine::Control::Input::Type::InputState;
     using Engine::Control::Input::Type::LocalInputSource;
     using Engine::Control::Input::Type::PlayerActions;
@@ -61,8 +63,10 @@ namespace
     using Common::Semantic::Type::EventKey::EventKeyLabel;
     using Common::Semantic::Type::EventKey::FindEventKey;
     using DevTools::Workbench::Bench::Type::BenchAction;
+    using DevTools::Workbench::Bench::Type::BenchAppliedInput;
     using DevTools::Workbench::Bench::Type::BenchCheck;
     using DevTools::Workbench::Bench::Type::BenchDecode;
+    using DevTools::Workbench::Bench::Type::BenchInput;
     using DevTools::Workbench::Bench::Type::BenchLastResult;
     using DevTools::Workbench::Bench::Type::BenchPlayers;
     using DevTools::Workbench::Bench::Type::BenchPlayerSample;
@@ -715,6 +719,25 @@ namespace DevTools::Workbench::Bench::System
                 if (!players || !mode || !from || !to) return fail("action takes all|bots|locals, a mode and optional from and to ticks");
                 match.Actions.push_back(BenchAction{ .Players = *players, .Mode = *mode, .FromTick = *from, .ToTick = *to });
             }
+            else if (key == "input")
+            {
+                // input <all|bots|locals> <from tick> <to tick> <window ticks> [move=f,l] [look=yaw,pitch] [level=a,b|-] [edge=a,b|-] [turn=radians]
+                const std::vector<std::string> words{ SplitWords(value) };
+                const auto players{ words.size() >= 4 ? ParsePlayers(words[0]) : std::nullopt };
+                const auto from{ words.size() >= 4 ? ParseNumber<std::uint64_t>(words[1]) : std::nullopt };
+                const auto to{ words.size() >= 4 ? ParseNumber<std::uint64_t>(words[2]) : std::nullopt };
+                const auto window{ words.size() >= 4 ? ParseNumber<std::uint32_t>(words[3]) : std::nullopt };
+                if (!players || !from || !to || !window || *window == 0 || (*to != 0 && *to < *from))
+                {
+                    return fail("input takes all|bots|locals, from and to ticks (to 0 = the end, not before from), a window of 1 or more ticks and the fields of the AgentInput");
+                }
+
+                BenchInput input{ .Players = *players, .FromTick = *from, .ToTick = *to, .WindowTicks = *window };
+                const std::string why{ ParseAgentInputWords(std::span<const std::string>{ words }.subspan(4), input.Input, input.TurnLimit) };
+                if (!why.empty()) return fail(std::format("input: {}", why));
+
+                match.Inputs.push_back(input);
+            }
             else if (key == "request")
             {
                 const std::vector<std::string> words{ SplitWords(value) };
@@ -1275,6 +1298,38 @@ namespace DevTools::Workbench::Bench::System
                     run.AppliedModes[player.Handle] = desired;
                 }
 
+                // The last input of the scenario whose window holds the tick wins. A new input, or one whose window ran out, is delivered again (a new
+                // window for the client), and outside every window the player gets its engine action back. The store keeps an override and an AgentInput
+                // exclusive, so an action mode that sets an override of the same player ends the input.
+                std::optional<std::size_t> wantedInput{};
+                for (std::size_t i{ 0 }; i < match.Inputs.size(); ++i)
+                {
+                    const BenchInput& input{ match.Inputs[i] };
+                    const bool isInside{ ticks >= input.FromTick && (input.ToTick == 0 || ticks <= input.ToTick) };
+                    if (isInside && IsSelected(player, input.Players)) wantedInput = i;
+                }
+
+                const auto appliedInput{ run.AppliedInputs.find(player.Handle) };
+                if (!wantedInput)
+                {
+                    if (appliedInput != run.AppliedInputs.end())
+                    {
+                        m_PlayerActionStore.ClearAgentInput(index);
+                        run.AppliedInputs.erase(appliedInput);
+                    }
+                }
+                else
+                {
+                    const BenchInput& input{ match.Inputs[*wantedInput] };
+                    const bool isDue{ appliedInput == run.AppliedInputs.end() || appliedInput->second.Index != *wantedInput
+                        || ticks >= appliedInput->second.DeliveredTick + input.WindowTicks };
+                    if (isDue)
+                    {
+                        m_PlayerActionStore.SetAgentInput(index, input.Input, input.WindowTicks, input.TurnLimit);
+                        run.AppliedInputs[player.Handle] = BenchAppliedInput{ .Index = *wantedInput, .DeliveredTick = ticks };
+                    }
+                }
+
                 for (std::size_t i{ 0 }; i < match.Requests.size(); ++i)
                 {
                     const BenchRequest& request{ match.Requests[i] };
@@ -1440,6 +1495,9 @@ namespace DevTools::Workbench::Bench::System
             if (mode != LocalPlayerAction::Engine) m_PlayerActionStore.SetOverride(handle & k_HandleIndexMask, std::nullopt);
         }
 
+        for (const auto& [handle, input] : run.AppliedInputs) m_PlayerActionStore.ClearAgentInput(handle & k_HandleIndexMask);
+
+        run.AppliedInputs.clear();
         run.AppliedModes.clear();
         run.FirstSamples.clear();
         run.IsObjectiveSeen = false;

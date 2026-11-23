@@ -19,7 +19,9 @@ export namespace Engine::Control
     private:
         using VirtualInputStore = Engine::Control::Input::State::VirtualInputStore;
         using PlayerActionStore = Engine::Control::Input::State::PlayerActionStore;
+        using AgentClientStore = Engine::Control::Input::State::AgentClientStore;
         using PossessionStore = Engine::Control::Input::State::PossessionStore;
+        using AgentClientService = Engine::Control::Input::System::AgentClientService;
         using PossessionService = Engine::Control::Input::System::PossessionService;
         using InputUpdateDetour = Engine::Control::Input::Hook::InputUpdateDetour;
         using ClientOracleDetour = Engine::Control::Input::Hook::ClientOracleDetour;
@@ -33,8 +35,10 @@ export namespace Engine::Control
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
             m_BotService(service.m_Log, base.m_AOBService, m_BotStore, m_PlayerActionStore),
             m_PossessionService(service.m_Log, m_BotService, m_PossessionStore),
+            m_AgentClientService(service.m_Log, m_BotService, m_AgentClientStore),
             m_InputUpdateDetour(service.m_Log, base.m_HostService, m_VirtualInputStore),
-            m_PlayerActionDetour(service.m_Log, base.m_AOBService, base.m_MatchSetupService, m_PlayerActionStore, m_BotService),
+            m_PlayerActionDetour(service.m_Log, base.m_AOBService, base.m_MatchSetupService, m_PlayerActionStore, m_BotService,
+                m_AgentClientStore, m_AgentClientService),
             m_ClientOracleDetour(service.m_Log, base.m_AOBService, m_PlayerActionStore, m_BotService),
             m_SetMachinesDetour(service.m_Log, base.m_AOBService, m_BotStore) {}
         ~Layer() = default;
@@ -53,9 +57,13 @@ export namespace Engine::Control
         Engine::Control::Input::State::PossessRequestStore m_PossessRequestStore{};
         PossessionStore m_PossessionStore{};
 
+        // The client state and the counters of the agents that play an AgentInput through the client of Artemis (VW.9c.3 C).
+        AgentClientStore m_AgentClientStore{};
+
         // --- System ---
         BotService m_BotService;
         PossessionService m_PossessionService;
+        AgentClientService m_AgentClientService;
 
         // --- Hook ---
         InputUpdateDetour m_InputUpdateDetour;
