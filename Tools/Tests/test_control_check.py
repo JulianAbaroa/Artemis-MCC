@@ -105,6 +105,9 @@ def test_quiet():
     assert Run("quiet", [S(pos=(0.1, 0, 0), yaw=0.001)] * 4, before).status == "PASS"
     assert Run("quiet", [S(pos=(0.1, 0, 0), yaw=0.2)] * 4, before).status == "FAIL"   # turned
     assert Run("quiet", [S(pos=(1.0, 0, 0))] * 4, before).status == "FAIL"            # moved
+    # note: with more samples than STILL_SETTLE the first ones are a slide from the phase before and do not count.
+    slide = [S(pos=(0.1 * i, 0, 0)) for i in range(8)] + [S(pos=(0.8, 0, 0))] * 10
+    assert Run("quiet", slide, before).status == "PASS"
 
 
 def test_forward_and_left_are_projected_on_the_look():
@@ -165,13 +168,15 @@ def test_fire_looks_at_the_magazine_or_the_heat_and_energy():
 
 
 def test_zoom_checks():
-    assert Run("zoom", [S(zoom=0), S(zoom=1)], S()).status == "PASS"
-    assert Run("zoom", [S(zoom=0)] * 3, S()).status == "SKIP"
-    assert Run("zoom_in", [S(zoom=2)], S(zoom=1)).status == "PASS"
-    assert Run("zoom_in", [S(zoom=1)] * 3, S(zoom=1)).status == "SKIP"
-    assert Run("zoom_out", [S(zoom=1), S(zoom=0)], S(zoom=2)).status == "PASS"
-    assert Run("zoom_out", [S(zoom=1)] * 3, S(zoom=2)).status == "FAIL"
-    assert Run("zoom_out", [S(zoom=0)] * 3, S(zoom=0)).status == "SKIP"
+    # note: zoom NO_ZOOM (-1, 255 on the bridge) is no zoom; 0 is the first level (K1 2026-11-23).
+    assert Run("zoom", [S(zoom=-1), S(zoom=0)], S()).status == "PASS"
+    assert Run("zoom", [S(zoom=-1)] * 3, S()).status == "SKIP"
+    assert Run("zoom_in", [S(zoom=0)], S()).status == "PASS"
+    assert Run("zoom_in", [S(zoom=1)], S(zoom=0)).status == "PASS"
+    assert Run("zoom_in", [S(zoom=0)] * 3, S(zoom=0)).status == "SKIP"
+    assert Run("zoom_out", [S(zoom=0), S(zoom=-1)], S(zoom=1)).status == "PASS"
+    assert Run("zoom_out", [S(zoom=0)] * 3, S(zoom=1)).status == "FAIL"
+    assert Run("zoom_out", [S(zoom=-1)] * 3, S()).status == "SKIP"
 
 
 def test_ability_and_forward_ability():
@@ -180,6 +185,8 @@ def test_ability_and_forward_ability():
     assert Run("ability", [S(ability=3, ability_energy=0.7)], ability).status == "PASS"
     assert Run("ability", [S(ability=3, ability_energy=1.0)], ability).status == "FAIL"
     assert Run("ability", [S()] * 3, S()).status == "SKIP"
+    sprint = S(ability=3, ability_energy=1.0, ability_kind=1)
+    assert Run("ability", [sprint] * 3, sprint).status == "SKIP"   # sprint standing still: forward_ability covers it
     both = Walk(5, 1.0)
     for sample in both:
         sample.ability_active = True

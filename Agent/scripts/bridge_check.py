@@ -59,6 +59,7 @@ import argparse
 import math
 import os
 import sys
+import threading
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -497,11 +498,15 @@ class Driver:
 
 
 def Beep():
-    try:
-        import winsound
-        winsound.Beep(880, 200)
-    except (ImportError, RuntimeError):
-        pass
+    # note: winsound.Beep blocks 200 ms and in Lockstep the game thread waits for the answer: the screen froze for a moment at each
+    # phase (K1, 2026-11-23). It plays on its own thread.
+    def Play():
+        try:
+            import winsound
+            winsound.Beep(880, 200)
+        except (ImportError, RuntimeError):
+            pass
+    threading.Thread(target=Play, daemon=True).start()
 
 
 def PickAgent(published, index):

@@ -17,6 +17,10 @@ SEATED = 2  # semantic.Binding.Seated: the biped is in a seat of the vehicle its
 # Thresholds (adjustable in K1).
 STILL_MOVE = 0.5          # quiet: farthest displacement in m
 STILL_TURN = 0.01         # quiet: farthest turn of the aim in rad
+STILL_SETTLE = 8          # quiet: decisions skipped first (the body still slides from what it did before; K1 moved 0.92 m)
+NO_ZOOM = -1              # Sample.zoom without zoom (the bridge sends 255: ZoomLevel none)
+SPRINT = 1                # semantic ArmorAbility.Sprint (Function 6 of the ability entity)
+ARMOR_ABILITY = 6         # semantic Function ArmorAbility
 MOVE_MIN = 2.0            # forward / left: displacement in the direction asked in m
 YAW_TOLERANCE = 0.02      # yaw / pitch: rad each decision may differ from the delta asked
 PITCH_TOLERANCE = 0.02
@@ -42,11 +46,12 @@ class Sample:
     airborne: int = 0
     crouching: bool = False
     crouch_fraction: float = 0.0
-    zoom: int = 0
+    zoom: int = NO_ZOOM
     grenade: int = 0
     frag: int = 0
     plasma: int = 0
     ability: int = NO_HANDLE
+    ability_kind: int = 0                 # Subtype of the ability entity (semantic ArmorAbility), 0 unknown
     ability_active: bool = False
     ability_energy: float = 0.0
     equipped: int = NO_HANDLE
@@ -109,7 +114,7 @@ FOOT = (
     Phase("fire", "fire", controls=Ctl("Fire", "level"), hint="hold fire"),
     Phase("zoom", "zoom", controls=Ctl("Zoom"), hint="zoom key (toggle)"),
     Phase("zoom_in", "zoom_in", controls=Ctl("ZoomIn"), hint="zoom in key"),
-    Phase("zoom_out", "zoom_out", controls=Ctl("ZoomOut"), pre=Pre(Ctl("Zoom"), decisions=1), hint="zoom out key"),
+    Phase("zoom_out", "zoom_out", controls=Ctl("ZoomOut"), pre=Pre(Ctl("ZoomIn"), decisions=1), hint="zoom out key"),
     Phase("melee", "see", controls=Ctl("Melee"), hint="melee"),
     Phase("ability", "ability", controls=Ctl("Ability"), hint="ability key"),
     Phase("forward_ability", "forward_ability", forward=1.0, controls=Ctl("Ability", "level"), hint="W and hold the ability"),
@@ -191,12 +196,15 @@ def SampleOf(published, handle):
     s = Sample(tick=published.action_tick, alive=bool(p["IsAlive"]), has_body=bool(p["HasBody"]),
                yaw=math.atan2(ay, ax), pitch=math.atan2(az, math.hypot(ax, ay)),
                grounded=bool(p["IsGrounded"]), airborne=int(p["AirborneTicks"]), crouching=bool(p["IsCrouching"]),
-               crouch_fraction=float(p["CrouchFraction"]), zoom=int(p["Zoom"]), grenade=int(p["SelectedGrenade"]),
+               crouch_fraction=float(p["CrouchFraction"]), zoom=NO_ZOOM if int(p["Zoom"]) == 255 else int(p["Zoom"]), grenade=int(p["SelectedGrenade"]),
                frag=int(p["FragGrenades"]), plasma=int(p["PlasmaGrenades"]), ability=int(p["Ability"]),
                ability_active=bool(p["IsAbilityActive"]), ability_energy=float(p["AbilityEnergy"]),
                equipped=int(p["EquippedWeapon"]), primary=int(p["PrimaryWeapon"]), secondary=int(p["SecondaryWeapon"]),
                possessed=published.possessed_player == handle)
     ents = published.entities
+    gear = ents[ents["Handle"] == s.ability] if s.ability != NO_HANDLE else ents[:0]
+    if len(gear) and int(gear[0]["Function"]) == ARMOR_ABILITY:
+        s.ability_kind = int(gear[0]["Subtype"])
     body = ents[ents["Handle"] == int(p["BipedHandle"])]
     if len(body):
         b = body[0]
@@ -254,6 +262,8 @@ def _Proj(before, last, left=False):
 
 
 def _Still(phase, samples, before, extras):
+    if len(samples) > STILL_SETTLE:
+        before, samples = samples[STILL_SETTLE - 1], samples[STILL_SETTLE:]
     move = max(_Dist(s.pos, before.pos) for s in samples)
     turn = max(AngleGap(s.yaw, before.yaw) for s in samples)
     detail = f"moved {move:.2f} m, turned {turn:.3f} rad"
@@ -332,7 +342,7 @@ def _Zoom(phase, samples, before, extras):
     top = max(s.zoom for s in samples)
     if top == before.zoom and all(s.zoom == before.zoom for s in samples):
         return Result("SKIP", f"Zoom never changed ({before.zoom}): the weapon has no zoom")
-    return Result("PASS" if top > 0 else "FAIL", f"Zoom {before.zoom} -> up to {top}")
+    return Result("PASS" if top > NO_ZOOM else "FAIL", f"Zoom {before.zoom} -> up to {top}")
 
 
 def _ZoomIn(phase, samples, before, extras):
@@ -343,13 +353,16 @@ def _ZoomIn(phase, samples, before, extras):
 
 
 def _ZoomOut(phase, samples, before, extras):
-    if before.zoom == 0:
+    if before.zoom == NO_ZOOM:
         return Result("SKIP", "no zoom to take out (the Zoom of the start did not turn it on: the weapon has no zoom)")
     low = min(s.zoom for s in samples)
-    return Result("PASS" if low == 0 else "FAIL", f"Zoom {before.zoom} -> down to {low}")
+    return Result("PASS" if low == NO_ZOOM else "FAIL", f"Zoom {before.zoom} -> down to {low}")
 
 
 def _Ability(phase, samples, before, extras):
+    # note: sprint only runs while moving (K1: tap standing still = inactive); forward_ability covers it.
+    if phase.forward == 0 and before.ability_kind == SPRINT:
+        return Result("SKIP", "sprint only runs while moving: forward_ability covers it")
     if before.ability in (0, NO_HANDLE) and not before.ability_energy and not any(s.ability_active for s in samples):
         return Result("SKIP", "no ability")
     active = any(s.ability_active for s in samples)
