@@ -4,6 +4,7 @@ import Contract.Bridge.Type;
 import Bridge.Codec.Dump.System;
 import Bridge.Codec.Layer;
 import Tests.Support.FilmPass;
+import Tests.Support.FilmPool;
 import Tests.Support.Pipeline;
 import std;
 
@@ -25,6 +26,11 @@ namespace
     using Tests::Support::FilmPass::FilmSparse;
     using Tests::Support::FilmPass::RecordingsFolder;
     using Tests::Support::FilmPass::RunFilmPass;
+    using Tests::Support::FilmPool::IsTestSelected;
+    using Tests::Support::FilmPool::MakeTask;
+    using Tests::Support::FilmPool::PoolTask;
+    using Tests::Support::FilmPool::SharedPool;
+    using Tests::Support::FilmPool::SizeOfFilm;
     using Tests::Support::Pipeline::Chain;
 
     namespace TickCodec = Bridge::Codec::Dump::System;
@@ -454,15 +460,64 @@ namespace
         std::vector<ChargeCase> m_ChargeCases{};
     };
 
+    // What the full and the sparse pass over a film found.
+    struct FilmComparison
+    {
+        FilmOutcome Outcome{};
+        SparseReport Report{};
+    };
+
     // Replays the film with the full and the sparse pass side by side.
     // return: What the comparison found, or the reason the film could not be run in the outcome.
-    auto CompareFilm(const std::string& film, FilmOutcome& outcome) -> SparseReport
+    auto CompareFilm(const std::string& film) -> FilmComparison
     {
         TickComparer comparer{};
-        outcome = RunFilmPass(film, false, {}, {}, 1, FilmSparse{ .Period = k_DecisionPeriod,
+        FilmComparison comparison{};
+        comparison.Outcome = RunFilmPass(film, false, {}, {}, 1, FilmSparse{ .Period = k_DecisionPeriod,
             .OnDecision = [&](Chain& full, Chain& sparse, std::size_t record) { comparer.Compare(full, sparse, record); } });
-        return std::move(comparer.Report());
+        comparison.Report = std::move(comparer.Report());
+        return comparison;
     }
+
+    // Film of the test that stays in the suite.
+    const std::vector<std::string> k_ShortFilms{ "explosivos" };
+
+    // return: The key in the pool of the comparison of the film.
+    auto SparseKey(const std::string& film) -> std::string
+    {
+        return "sparse:" + film;
+    }
+
+    // return: The passes of the short test, so they run in the pool with the ones of ReplayTests.
+    auto SparseTasks() -> std::vector<PoolTask>
+    {
+        std::vector<PoolTask> tasks{};
+        if (!IsTestSelected("ReplaySparseTests", "ShortFilmGivesTheSameTickAsTheFullPassOutsideTheToleranceList")) return tasks;
+
+        for (const std::string& film : k_ShortFilms)
+        {
+            tasks.push_back(MakeTask<FilmComparison>(SparseKey(film), SizeOfFilm(film), [film] { return CompareFilm(film); }));
+        }
+
+        return tasks;
+    }
+
+    [[maybe_unused]] const bool s_IsRegistered{ SharedPool().Register(SparseTasks) };
+
+    class ReplaySparseTests : public ::testing::Test
+    {
+    protected:
+        // Queues the passes that the tests selected by the filter need (they are shared with the other suites that wait for passes).
+        static auto SetUpTestSuite() -> void
+        {
+            SharedPool().Start();
+        }
+
+        static auto TearDownTestSuite() -> void
+        {
+            SharedPool().Join();
+        }
+    };
 
     // return: The films of Ignore/Regresion that have golden.sdump, sorted by name.
     auto FilmsWithGolden() -> std::vector<std::string>
@@ -478,25 +533,26 @@ namespace
         return films;
     }
 
-    // Compares the films (in parallel) and checks every difference against the tolerance list.
-    auto CheckFilms(const std::vector<std::string>& names) -> void
+    // Compares the films and checks every difference against the tolerance list.
+    // param isPooled: The comparisons come from the pool (they may be running already). Else each film runs on its own thread.
+    auto CheckFilms(const std::vector<std::string>& names, bool isPooled) -> void
     {
-        std::vector<std::future<std::pair<FilmOutcome, SparseReport>>> jobs{};
-        for (const std::string& name : names)
+        std::vector<std::future<FilmComparison>> jobs{};
+        if (!isPooled)
         {
-            jobs.push_back(std::async(std::launch::async, [name]
+            for (const std::string& name : names)
             {
-                FilmOutcome outcome{};
-                SparseReport report{ CompareFilm(name, outcome) };
-                return std::pair<FilmOutcome, SparseReport>{ std::move(outcome), std::move(report) };
-            }));
+                jobs.push_back(std::async(std::launch::async, [name] { return CompareFilm(name); }));
+            }
         }
 
         std::size_t replayed{ 0 };
-        for (std::size_t index{ 0 }; index < jobs.size(); ++index)
+        for (std::size_t index{ 0 }; index < names.size(); ++index)
         {
             const std::string& name{ names[index] };
-            const auto [outcome, report] = jobs[index].get();
+            const FilmComparison comparison{ isPooled ? SharedPool().Get<FilmComparison>(SparseKey(name), [&name] { return CompareFilm(name); }) : jobs[index].get() };
+            const FilmOutcome& outcome{ comparison.Outcome };
+            const SparseReport& report{ comparison.Report };
             SCOPED_TRACE(name);
 
             if (!outcome.Error.empty()) { ADD_FAILURE() << outcome.Error; continue; }
@@ -541,13 +597,13 @@ namespace
 }
 
 // The short film that stays in the suite (about 30 s). The flags and the lifts are in the test of every film.
-TEST(ReplaySparseTests, ShortFilmGivesTheSameTickAsTheFullPassOutsideTheToleranceList)
+TEST_F(ReplaySparseTests, ShortFilmGivesTheSameTickAsTheFullPassOutsideTheToleranceList)
 {
-    CheckFilms({ "explosivos" });
+    CheckFilms(k_ShortFilms, true);
 }
 
 // Every film of the recordings. Slow: run it with --gtest_also_run_disabled_tests when Q101 changes.
-TEST(ReplaySparseTests, DISABLED_EveryFilmGivesTheSameTickAsTheFullPassOutsideTheToleranceList)
+TEST_F(ReplaySparseTests, DISABLED_EveryFilmGivesTheSameTickAsTheFullPassOutsideTheToleranceList)
 {
-    CheckFilms(FilmsWithGolden());
+    CheckFilms(FilmsWithGolden(), false);
 }

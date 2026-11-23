@@ -196,6 +196,7 @@
     <ClCompile Include="Support\Tests.Support.EngineMemory.ixx" />
     <ClCompile Include="Support\Tests.Support.FakeBridge.ixx" />
     <ClCompile Include="Support\Tests.Support.FilmPass.ixx" />
+    <ClCompile Include="Support\Tests.Support.FilmPool.ixx" />
     <ClCompile Include="Support\Tests.Support.Log.ixx" />
     <ClCompile Include="Support\Tests.Support.ModPort.ixx" />
     <ClCompile Include="Support\Tests.Support.Maps.ixx" />

@@ -28,6 +28,7 @@ import Perception.Match.Type;
 import Perception.Players.Type;
 import Tests.Support.Blam;
 import Tests.Support.FilmPass;
+import Tests.Support.FilmPool;
 import Tests.Support.Pipeline;
 import Tests.Support.Replay;
 import std;
@@ -51,9 +52,13 @@ namespace
     using Tests::Support::Blam::Put;
     using Tests::Support::FilmPass::FilmBeforeRecord;
     using Tests::Support::FilmPass::FilmOutcome;
-    using Tests::Support::FilmPass::PeakWorkingSetMegabytes;
     using Tests::Support::FilmPass::RecordingsFolder;
     using Tests::Support::FilmPass::RunFilmPass;
+    using Tests::Support::FilmPool::IsTestSelected;
+    using Tests::Support::FilmPool::MakeTask;
+    using Tests::Support::FilmPool::PoolTask;
+    using Tests::Support::FilmPool::SharedPool;
+    using Tests::Support::FilmPool::SizeOfFilm;
     using Tests::Support::Pipeline::Chain;
     using Tests::Support::Pipeline::FillSyntheticTags;
     using Tests::Support::Pipeline::WithBipedAndPlayer;
@@ -67,11 +72,6 @@ namespace
     using Contract::Bridge::Type::k_BridgeLayoutHash;
     using Tests::Support::Pipeline::k_BipedHandle;
 
-    constexpr std::string_view k_JobsVariable{ "ARTEMIS_REPLAY_JOBS" };
-
-    // note: More passes at once share memory bandwidth and cache: on the 10-core laptop (RB.1, 2026-11-23) ReplayTests took 224 s with
-    // the 16 hardware threads, 147 s with 6, 118 s with 4 and 132 s with 3.
-    constexpr std::size_t k_DefaultReplayJobs{ 4 };
     constexpr std::string_view k_SyntheticMap{ "synthetic.map" };
 
     // A recording in memory: the two files of one session.
@@ -873,198 +873,128 @@ namespace
         return films;
     }
 
-    // return: How many passes may run at once: ARTEMIS_REPLAY_JOBS if it is set, else k_DefaultReplayJobs.
-    auto ReplayJobs() -> std::size_t
+    // return: The result of the pass over the film. An exception that escapes the pass is the error of the film.
+    auto RunFilm(const std::string& film, bool isCompared) -> std::shared_ptr<const FilmResult>
     {
-        char* value{ nullptr };
-        std::size_t length{};
-        std::size_t jobs{ 0 };
-
-        if (_dupenv_s(&value, &length, k_JobsVariable.data()) == 0 && value != nullptr)
+        std::shared_ptr<const FilmResult> result{};
+        try
         {
-            jobs = static_cast<std::size_t>(std::strtoul(value, nullptr, 10));
-            std::free(value);
+            result = GatherFilm(film, isCompared);
+        }
+        catch (const std::exception& exception)
+        {
+            auto failed{ std::make_shared<FilmResult>() };
+            failed->Pass.Error = std::format("exception in the pass of {}: {}", film, exception.what());
+            result = failed;
         }
 
-        if (jobs == 0) jobs = k_DefaultReplayJobs;
-        return (std::max)(jobs, std::size_t{ 1 });
+        if (result->Pass.Skip.empty())
+        {
+            SharedPool().Print(std::format("[  REPLAY  ] {}: {} records in {:.1f} s\n", film, result->Pass.Records, result->Pass.Seconds));
+        }
+        return result;
     }
 
-    // The passes of the process: each film is replayed once, on a small pool of threads that takes the biggest .sdump first, and the
-    // tests wait for the film they need (D269).
-    class FilmPasses
+    // Films of ASparseSampledPassRunsWithoutFailure.
+    const std::vector<std::string> k_SampledFilms{ "explosivos" };
+    constexpr std::size_t k_SampleEvery{ 4 };
+
+    // What the sampled pass over a film saw.
+    struct SampledResult
     {
-    public:
-        // Starts the passes of the films that were not started yet.
-        // param films: Film and whether its records are compared with golden.tdump.
-        auto Launch(const std::map<std::string, bool>& films) -> void
-        {
-            auto batch{ std::make_shared<Batch>() };
-            {
-                const std::scoped_lock lock{ m_Mutex };
-                for (const auto& [film, isCompared] : films)
-                {
-                    if (m_Results.contains(film)) continue;
+        FilmOutcome Pass{};
+        std::size_t Observed{};
+        std::size_t Misaligned{};
+    };
 
-                    Job& job{ batch->Jobs.emplace_back() };
-                    job.Film = film;
-                    job.IsCompared = isCompared;
-                    m_Results.emplace(film, job.Promise.get_future().share());
+    // return: The key in the pool of the sampled pass over the film.
+    auto SampledKey(const std::string& film) -> std::string
+    {
+        return "sampled:" + film;
+    }
+
+    // Replays a film sampled every k_SampleEvery records (Q101.A).
+    auto RunSampledFilm(const std::string& film) -> SampledResult
+    {
+        SampledResult result{};
+        result.Pass = RunFilmPass(film, false, [&](const Chain&, std::size_t record)
+        {
+            if ((record - 1) % k_SampleEvery != 0) ++result.Misaligned;
+            ++result.Observed;
+        }, {}, k_SampleEvery);
+        return result;
+    }
+
+    // return: The passes the tests of ReplayTests selected by the filter need, so they run at once while the first tests wait.
+    auto ReplayTasks() -> std::vector<PoolTask>
+    {
+        std::map<std::string, bool> films{};
+        const auto want{ [&](const std::string& film, bool isCompared) { films[film] = films[film] || isCompared; } };
+
+        const ::testing::UnitTest& unit{ *::testing::UnitTest::GetInstance() };
+        for (int suiteIndex{ 0 }; suiteIndex < unit.total_test_suite_count(); ++suiteIndex)
+        {
+            const ::testing::TestSuite& suite{ *unit.GetTestSuite(suiteIndex) };
+            if (std::string_view{ suite.name() } != "ReplayTests") continue;
+
+            for (int testIndex{ 0 }; testIndex < suite.total_test_count(); ++testIndex)
+            {
+                const ::testing::TestInfo& info{ *suite.GetTestInfo(testIndex) };
+                if (!info.should_run()) continue;
+
+                const std::string_view name{ info.name() };
+                if (name == "Recordings")
+                {
+                    for (const std::string& film : FilmsWithGolden(true)) want(film, true);
                 }
-            }
-            if (batch->Jobs.empty()) return;
-
-            // The biggest first: the suite takes as long as the longest film if it starts at once.
-            std::error_code error{};
-            const auto sizeOf{ [&](const Job& job) { return std::filesystem::file_size(RecordingsFolder() / job.Film / "golden.sdump", error); } };
-            std::ranges::stable_sort(batch->Jobs, [&](const Job& a, const Job& b) { return sizeOf(a) > sizeOf(b); });
-
-            m_Jobs = (std::min)(ReplayJobs(), batch->Jobs.size());
-            batch->Active = m_Jobs;
-            for (std::size_t i{ 0 }; i < m_Jobs; ++i) m_Workers.emplace_back([this, batch] { this->Work(*batch); });
-        }
-
-        // return: The result of the film, waiting for its pass to end. The pass runs on this thread if nobody started it.
-        auto Get(const std::string& film) -> const FilmResult&
-        {
-            std::shared_future<std::shared_ptr<const FilmResult>> future{};
-            std::promise<std::shared_ptr<const FilmResult>> promise{};
-            bool isOwner{ false };
-            {
-                const std::scoped_lock lock{ m_Mutex };
-                if (const auto it{ m_Results.find(film) }; it != m_Results.end())
+                else if (const auto it{ std::ranges::find(k_TestFilms, name, &TestFilms::Test) }; it != k_TestFilms.end())
                 {
-                    future = it->second;
+                    for (const std::string_view film : it->Films) want(std::string{ film }, false);
                 }
                 else
                 {
-                    future = promise.get_future().share();
-                    m_Results.emplace(film, future);
-                    isOwner = true;
+                    for (const std::string& film : FilmsWithGolden(false)) want(film, false);
                 }
             }
-
-            if (isOwner) promise.set_value(this->Run(film, false));
-            return *future.get();
         }
 
-        // Waits for the passes that are still running.
-        auto Join() -> void
+        std::vector<PoolTask> tasks{};
+        for (const auto& [film, isCompared] : films)
         {
-            m_Workers.clear();
+            tasks.push_back(MakeTask<std::shared_ptr<const FilmResult>>(film, SizeOfFilm(film), [film, isCompared] { return RunFilm(film, isCompared); }));
         }
 
-    private:
-        struct Job
+        if (IsTestSelected("ReplayTests", "ASparseSampledPassRunsWithoutFailure"))
         {
-            std::string Film{};
-            bool IsCompared{};
-            std::promise<std::shared_ptr<const FilmResult>> Promise{};
-        };
-
-        struct Batch
-        {
-            std::vector<Job> Jobs{};
-            std::atomic<std::size_t> Next{ 0 };
-            std::atomic<std::size_t> Active{ 0 };
-        };
-
-        auto Work(Batch& batch) -> void
-        {
-            for (;;)
+            for (const std::string& film : k_SampledFilms)
             {
-                const std::size_t index{ batch.Next.fetch_add(1) };
-                if (index >= batch.Jobs.size()) break;
-
-                Job& job{ batch.Jobs[index] };
-                job.Promise.set_value(this->Run(job.Film, job.IsCompared));
+                tasks.push_back(MakeTask<SampledResult>(SampledKey(film), SizeOfFilm(film), [film] { return RunSampledFilm(film); }));
             }
-
-            if (batch.Active.fetch_sub(1) != 1) return;
-
-            const std::scoped_lock lock{ m_Output };
-            std::cout << std::format("[ REPLAY MEM ] peak working set {} MB, {} jobs, hardware_concurrency {}\n", PeakWorkingSetMegabytes(), m_Jobs,
-                std::thread::hardware_concurrency()) << std::flush;
         }
 
-        // return: The result of the pass. An exception that escapes the pass is the error of the film.
-        auto Run(const std::string& film, bool isCompared) -> std::shared_ptr<const FilmResult>
-        {
-            std::shared_ptr<const FilmResult> result{};
-            try
-            {
-                result = GatherFilm(film, isCompared);
-            }
-            catch (const std::exception& exception)
-            {
-                auto failed{ std::make_shared<FilmResult>() };
-                failed->Pass.Error = std::format("exception in the pass of {}: {}", film, exception.what());
-                result = failed;
-            }
+        return tasks;
+    }
 
-            if (result->Pass.Skip.empty())
-            {
-                const std::scoped_lock lock{ m_Output };
-                std::cout << std::format("[  REPLAY  ] {}: {} records in {:.1f} s\n", film, result->Pass.Records, result->Pass.Seconds) << std::flush;
-            }
-            return result;
-        }
-
-        std::mutex m_Mutex{};
-        std::mutex m_Output{};
-        std::map<std::string, std::shared_future<std::shared_ptr<const FilmResult>>> m_Results{};
-        std::vector<std::jthread> m_Workers{};
-        std::size_t m_Jobs{ 1 };
-    };
+    [[maybe_unused]] const bool s_IsRegistered{ SharedPool().Register(ReplayTasks) };
 
     class ReplayTests : public ::testing::Test
     {
     protected:
-        // Starts the passes of the films that the tests selected by the filter need, so they run at once while the first tests wait.
+        // Starts the passes that the tests selected by the filter need (they are shared with the other suites that wait for passes).
         static auto SetUpTestSuite() -> void
         {
-            std::map<std::string, bool> films{};
-            const auto want{ [&](const std::string& film, bool isCompared) { films[film] = films[film] || isCompared; } };
-
-            const ::testing::UnitTest& unit{ *::testing::UnitTest::GetInstance() };
-            for (int suiteIndex{ 0 }; suiteIndex < unit.total_test_suite_count(); ++suiteIndex)
-            {
-                const ::testing::TestSuite& suite{ *unit.GetTestSuite(suiteIndex) };
-                if (std::string_view{ suite.name() } != "ReplayTests") continue;
-
-                for (int testIndex{ 0 }; testIndex < suite.total_test_count(); ++testIndex)
-                {
-                    const ::testing::TestInfo& info{ *suite.GetTestInfo(testIndex) };
-                    if (!info.should_run()) continue;
-
-                    const std::string_view name{ info.name() };
-                    if (name == "Recordings")
-                    {
-                        for (const std::string& film : FilmsWithGolden(true)) want(film, true);
-                    }
-                    else if (const auto it{ std::ranges::find(k_TestFilms, name, &TestFilms::Test) }; it != k_TestFilms.end())
-                    {
-                        for (const std::string_view film : it->Films) want(std::string{ film }, false);
-                    }
-                    else
-                    {
-                        for (const std::string& film : FilmsWithGolden(false)) want(film, false);
-                    }
-                }
-            }
-
-            s_Passes.Launch(films);
+            SharedPool().Start();
         }
 
         static auto TearDownTestSuite() -> void
         {
-            s_Passes.Join();
+            SharedPool().Join();
         }
 
         // return: What the pass over the film gathered, waiting for the pass to end.
         static auto Film(const std::string& film) -> const FilmResult&
         {
-            return s_Passes.Get(film);
+            return *SharedPool().Get<std::shared_ptr<const FilmResult>>(film, [&film] { return RunFilm(film, false); });
         }
 
         auto SetUp() -> void override
@@ -1081,9 +1011,6 @@ namespace
 
         Chain m_Recorder{};
         Chain m_Replayer{};
-
-    private:
-        static inline FilmPasses s_Passes{};
     };
 }
 
@@ -2160,26 +2087,21 @@ TEST_F(ReplayTests, PowerupsFilmCountsDownOnePerTickAndTheTraitsFollowOneTickLat
 // suite fast; the comparison with the full pass over every film is the test of Q101.C.
 TEST_F(ReplayTests, ASparseSampledPassRunsWithoutFailure)
 {
-    constexpr std::size_t k_SampleEvery{ 4 };
-
     std::size_t replayed{ 0 };
-    for (const std::string name : { std::string{ "explosivos" } })
+    for (const std::string& name : k_SampledFilms)
     {
         SCOPED_TRACE(name);
 
-        std::size_t observed{ 0 };
-        const FilmOutcome pass{ RunFilmPass(name, false, [&](const Chain&, std::size_t record)
-        {
-            EXPECT_EQ((record - 1) % k_SampleEvery, 0u);
-            ++observed;
-        }, {}, k_SampleEvery) };
+        const SampledResult& sampled{ SharedPool().Get<SampledResult>(SampledKey(name), [&name] { return RunSampledFilm(name); }) };
+        const FilmOutcome& pass{ sampled.Pass };
 
         if (!pass.Error.empty()) { ADD_FAILURE() << pass.Error; continue; }
         if (!pass.Skip.empty()) continue;
 
         ++replayed;
+        EXPECT_EQ(sampled.Misaligned, 0u) << "records outside 1, 1 + k, 1 + 2k...";
         EXPECT_GT(pass.Records, 0u);
-        EXPECT_EQ(observed, (pass.Records + k_SampleEvery - 1) / k_SampleEvery);
+        EXPECT_EQ(sampled.Observed, (pass.Records + k_SampleEvery - 1) / k_SampleEvery);
     }
 
     if (replayed == 0) GTEST_SKIP() << "No recording (golden.sdump) in " << RecordingsFolder().string();
