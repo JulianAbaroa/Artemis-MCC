@@ -41,6 +41,14 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            the ones asked (a name "" asks for the base values or the map the match loaded with). With
                                            --reject the result must be Rejected with a reason and the active setup must not change.
                                            "preset" and "map" are the same request with one field.
+    controls [--context foot|nogren|flag|vehicle] [--imitation] [--phase-seconds 6] [--scale 1] [--player N] [--only a,b] [--wait 120]
+                                           E1 (D355, D364): one phase per control of the AgentInput, each checked by what the Tick shows
+                                           (PASS / FAIL / SKIP / SEE). Lockstep N = d = 4, ONE agent (the first live bot with a body, or the
+                                           player of table index N), the others stay with the engine. Follow it with Watch POV: each phase
+                                           prints its name (and beeps). flag / vehicle wait for the user to possess the bot, take the flag /
+                                           board the Warthog and release it. --imitation sends nothing: the user possesses the bot and does
+                                           each control by hand; the PossessedInput of each phase is checked. Also written to
+                                           Ignore/Temporal/vw9c/controls_<context>_<time>.txt. Exit 0 without FAIL, 1 with FAIL, 2 usage.
     turn [--turn-limit 0.1] [--turn-step 2.5] [--hold 15] [--seconds 60] [--scale S]
                                            D114: Lockstep, every bot gets a new target every --hold decisions (yaw +--turn-step,
                                            pitch +-0.4), asked as YawDelta / PitchDelta in steps under the turn limit. The aim seen between two ticks never turns faster than --turn-limit rad
@@ -59,6 +67,8 @@ import numpy as np  # noqa: E402
 
 from artemis import bridge_layout as L  # noqa: E402
 from artemis.bridge import Action, Bridge, BridgeError, BridgeMode, BridgeOwner, BridgePhase, discover, qpc  # noqa: E402
+from artemis.control_check import (CONTEXTS, COUNTERS, NO_HANDLE, DRAIN_SECONDS, FormatLine, GrewCounters, Grenades, PhaseInput,  # noqa: E402
+                                   PhasesOf, PreInput, Result, SampleOf, Summarize, WindowOf, AngleGap, CheckImitation, CheckPhase)
 from artemis.semantic import Event, MatchPhase  # noqa: E402
 
 YAW_STEP = 0.25
@@ -422,15 +432,250 @@ def EndRound(args):
         return 0 if not failed else 1
 
 
+# controls: the lockstep of the test (D304), the quiet between two phases, the most the runner waits for a tick.
+CONTROLS_PERIOD = 4
+QUIET_SECONDS = 1.0
+LEAD_IN_SECONDS = 3.0
+TICK_WAIT_SECONDS = 15.0
+
+
+class Driver:
+    """One agent of the controls test: waits for each decision and answers it (Lockstep needs an answer to every tick)."""
+
+    def __init__(self, bridge):
+        self.bridge = bridge
+        self.mask = 0
+        self.handle = NO_HANDLE
+        self.published = None
+
+    def Wait(self):
+        end = time.time() + TICK_WAIT_SECONDS
+        while True:
+            published = self.bridge.wait_tick(2.0)
+            if published is not None:
+                self.published = published
+                return published
+            if not self.bridge.is_alive:
+                raise BridgeError("Artemis closed the bridge")
+            if time.time() > end:
+                raise BridgeError(f"no tick in {TICK_WAIT_SECONDS:.0f} s (is the match running?)")
+
+    def Agents(self, on):
+        mask = (1 << (self.handle & 0xFFFF)) if on and self.handle != NO_HANDLE else 0
+        if mask != self.mask:
+            self.bridge.set_control(agents=mask)
+            self.mask = mask
+
+    def Answer(self, fields=None):
+        actions = {}
+        if fields is not None and self.mask:
+            actions[self.handle & 0xFFFF] = Action(handle=self.handle, **fields)
+        self.bridge.write_actions(self.published.action_tick, actions)
+
+    def Deliver(self, make_input, seconds, decisions=0, stop=None):
+        """The input of make_input(first) on every decision for `seconds` and at least `decisions`; returns the samples (one per
+        decision: what the agent was like at the start of that decision, so the effect of an input is in the next ones)."""
+        end, samples, first = time.time() + seconds, [], True
+        while time.time() < end or len(samples) < decisions:
+            published = self.Wait()
+            sample = SampleOf(published, self.handle)
+            if sample is not None:
+                samples.append(sample)
+            self.Answer(make_input(first))
+            first = False
+            if stop is not None and sample is not None and stop(sample):
+                break
+        return samples
+
+    def Quiet(self, seconds, decisions=0):
+        samples = self.Deliver(lambda first: PhaseInput(None, first, CONTROLS), seconds, decisions)
+        # note: a dead agent is waited for (up to 30 s) so the next phase starts with a body.
+        end = time.time() + 30.0
+        while samples and not (samples[-1].alive and samples[-1].has_body) and time.time() < end:
+            samples = self.Deliver(lambda first: PhaseInput(None, first, CONTROLS), 0.0, 1)
+        return samples
+
+
+def Beep():
+    try:
+        import winsound
+        winsound.Beep(880, 200)
+    except (ImportError, RuntimeError):
+        pass
+
+
+def PickAgent(published, index):
+    """Handle of the agent: the player of table index `index`, or the first live bot with a body."""
+    bots = [p for p in published.players if int(p["LocalIndex"]) == L.NOT_LOCAL]
+    if index is not None:
+        found = [p for p in published.players if int(p["Handle"]) & 0xFFFF == index]
+        return int(found[0]["Handle"]) if found else NO_HANDLE
+    for p in bots:
+        if int(p["IsAlive"]) and int(p["HasBody"]):
+            return int(p["Handle"])
+    return int(bots[0]["Handle"]) if bots else NO_HANDLE
+
+
+def WaitFor(driver, ready, seconds, request, say):
+    """Answers every decision with nothing (the engine plays the bot) until ready(sample, published), up to `seconds`."""
+    driver.Agents(False)
+    end, next_print = time.time() + seconds, 0.0
+    say(request)
+    while time.time() < end:
+        published = driver.Wait()
+        driver.Answer(None)
+        sample = SampleOf(published, driver.handle)
+        if sample is not None and ready(sample, published):
+            return True
+        if time.time() > next_print:
+            next_print = time.time() + 10.0
+            say(f"  waiting ... ({end - time.time():.0f} s left)")
+    return False
+
+
+CONTROLS = None  # bridge.CONTROLS, set in Controls (the module of the layout is the one the runner imports)
+
+
+def Controls(args):
+    global CONTROLS
+    from artemis.bridge import CONTROLS as BRIDGE_CONTROLS
+    CONTROLS = BRIDGE_CONTROLS
+    context = "foot" if args.imitation else args.context
+    try:
+        phases = PhasesOf(context, args.only.split(",") if args.only else None)
+    except ValueError as error:
+        print(f"usage: {error}")
+        return 2
+    label = "imitation" if args.imitation else args.context
+    lines = []
+
+    def Say(text):
+        print(text)
+        sys.stdout.flush()
+        lines.append(text)
+
+    results = []
+
+    def Record(name, result):
+        results.append(result)
+        Say(FormatLine(label, name, result))
+
+    with Open(args) as bridge:
+        if not WaitRunning(bridge, args.wait):
+            print(f"FAIL no match running after {args.wait} s")
+            return 1
+        bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, period=CONTROLS_PERIOD, latency=CONTROLS_PERIOD,
+                           scale=args.scale or 1.0, agents=0, turn_limit=0.0)
+        if not bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1):
+            print("FAIL Artemis did not hand the instance over")
+            return 1
+        driver = Driver(bridge)
+        before = bridge.counters()
+        failed_run = []
+        driver.Wait()
+        driver.handle = PickAgent(driver.published, args.player)
+        if not args.imitation and driver.handle == NO_HANDLE:
+            print("FAIL no bot (or no player with that index) to play")
+            return 1
+        Say(f"{label}: agent handle {driver.handle:#x} (table index {driver.handle & 0xFFFF}), {len(phases)} phases of {args.phase_seconds:g} s")
+        if args.imitation:
+            Imitation(driver, phases, args, Say, Record)
+        else:
+            driver.Agents(context in ("foot", "nogren"))
+            if context == "nogren" and not Drain(driver, Say, Record):
+                failed_run.append("no se vacio")
+            elif context in ("flag", "vehicle") and not Prepare(driver, context, args, Say):
+                print(f"FAIL the condition of the {context} context did not happen in {args.wait} s")
+                return 1
+            else:
+                driver.Agents(True)
+                driver.Quiet(QUIET_SECONDS, 2)
+                for phase in phases:
+                    Say(f">>> {phase.name}")
+                    Beep()
+                    pre = []
+                    if phase.pre:
+                        pre = driver.Deliver(lambda first, ph=phase: PreInput(ph.pre, first, CONTROLS), phase.pre.seconds, phase.pre.decisions)
+                        driver.Quiet(0.0, 2)
+                    got = driver.Deliver(lambda first, ph=phase: PhaseInput(ph, first, CONTROLS), args.phase_seconds)
+                    Record(phase.name, CheckPhase(phase, got[1:], got[0] if got else None, context, {"pre": pre}))
+                    driver.Quiet(QUIET_SECONDS, 2)
+        after = bridge.counters()
+        grew = GrewCounters(before, after)
+        counts = Summarize(results)
+        if grew:
+            failed_run.append("counters grew: " + ", ".join(grew))
+        Say(f"summary {label}: PASS {counts['PASS']} FAIL {counts['FAIL']} SKIP {counts['SKIP']} SEE {counts['SEE']}")
+        Say("counters before -> after: " + ", ".join(f"{n} {before[n]} -> {after[n]}" for n in COUNTERS))
+        for name in failed_run:
+            Say(f"FAIL {name}")
+        bad = counts["FAIL"] or failed_run
+        Say("FAIL" if bad else "PASS")
+    Save(label, lines)
+    return 1 if bad else 0
+
+
+def Drain(driver, Say, Record):
+    """nogren: throws grenades until FragGrenades + PlasmaGrenades = 0 (up to DRAIN_SECONDS)."""
+    from artemis.bridge import CONTROLS as controls
+    throw = PhasesOf("foot", ["throw_grenade"])[0]
+    Say(">>> drain: throwing every grenade")
+    samples = driver.Deliver(lambda first: PhaseInput(throw, first, controls), DRAIN_SECONDS, 1, stop=lambda s: Grenades(s) == 0 and s.alive)
+    if not samples or Grenades(samples[-1]) != 0:
+        Record("drain", Result("FAIL", f"not emptied in {DRAIN_SECONDS:.0f} s: grenades left {Grenades(samples[-1]) if samples else '?'}"))
+        return False
+    Say(f"drain: empty after {len(samples)} decisions")
+    return True
+
+
+def Prepare(driver, context, args, Say):
+    if context == "flag":
+        return WaitFor(driver, lambda s, p: s.carrying and p.possessed_player == NO_HANDLE, args.wait,
+                       f"POSSESS the bot (table index {driver.handle & 0xFFFF}), take the flag, then RELEASE it (D367: it repeats until the first delivery)", Say)
+    Say("in vehicle = the Entity of the biped has Binding = Seated and BoundTo = the vehicle handle")
+    return WaitFor(driver, lambda s, p: s.vehicle != NO_HANDLE and p.possessed_player == NO_HANDLE, args.wait,
+                   f"POSSESS the bot (table index {driver.handle & 0xFFFF}), board the Warthog as the driver, then RELEASE it", Say)
+
+
+def Imitation(driver, phases, args, Say, Record):
+    """--imitation: sends nothing; the user possesses the bot and does each control; the PossessedInput of each phase is checked."""
+    driver.Agents(False)
+
+    def Windows(seconds):
+        windows = []
+        end = time.time() + seconds
+        while time.time() < end:
+            published = driver.Wait()
+            windows.append(WindowOf(published))
+            driver.Answer(None)
+        return windows
+    Say(f"POSSESS the bot (table index {driver.handle & 0xFFFF}); the first phase starts in {LEAD_IN_SECONDS:g} s")
+    Windows(LEAD_IN_SECONDS)
+    for phase in phases:
+        Say(f">>> {phase.name}: {phase.hint}")
+        Beep()
+        Record(phase.name, CheckImitation(phase, Windows(args.phase_seconds), CONTROLS))
+        Windows(QUIET_SECONDS)
+
+
+def Save(label, lines):
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    folder = os.path.join(root, "Ignore", "Temporal", "vw9c")
+    try:
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, f"controls_{label}_{time.strftime('%H%M%S')}.txt")
+        with open(path, "w", encoding="ascii", errors="replace", newline="\r\n") as out:
+            out.write("\n".join(lines))
+        print(f"written {path}")
+    except OSError as error:
+        print(f"could not write the report: {error}")
+
+
 def AimAngles(player):
     """Yaw in [0, 2 pi) and pitch of the aim of a player, in radians."""
     aim = player["Aim"]
     x, y, z = float(aim["X"]), float(aim["Y"]), float(aim["Z"])
     return math.atan2(y, x) % (2 * math.pi), math.atan2(z, math.hypot(x, y))
-
-
-def AngleGap(a, b):
-    return abs((a - b + math.pi) % (2 * math.pi) - math.pi)
 
 
 def Turn(args):
@@ -741,7 +986,7 @@ def MapVariant(args):
 
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "map", "setup", "turn"])
+    parser.add_argument("command", choices=["info", "ticks", "run", "endround", "preset", "map", "setup", "turn", "controls"])
     parser.add_argument("--pid", type=int)
     parser.add_argument("--wait", type=int, default=120, help="seconds to wait for a running match")
     parser.add_argument("--count", type=int, default=60)
@@ -768,11 +1013,16 @@ def Main():
     parser.add_argument("--turn-limit", type=float, default=0.1, help="turn: radians per tick")
     parser.add_argument("--turn-step", type=float, default=2.5, help="turn: radians the target yaw moves each time")
     parser.add_argument("--hold", type=int, default=15, help="turn: decisions each target is held")
+    parser.add_argument("--context", choices=sorted(CONTEXTS), default="foot", help="controls: foot, nogren, flag or vehicle")
+    parser.add_argument("--imitation", action="store_true", help="controls: send nothing, check the PossessedInput of what the user does")
+    parser.add_argument("--phase-seconds", type=float, default=6.0, help="controls: seconds of each phase")
+    parser.add_argument("--player", type=int, default=None, help="controls: table index of the agent (default: the first live bot)")
+    parser.add_argument("--only", default="", help="controls: phase names to run, comma separated")
     args = parser.parse_args()
     if args.seconds is None:
         args.seconds = {"endround": 300.0, "preset": 120.0, "map": 120.0, "setup": 120.0}.get(args.command, 60.0)
     try:
-        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "map": MapVariant, "setup": Setup, "turn": Turn}[args.command](args)
+        return {"info": Info, "ticks": Ticks, "run": Run, "endround": EndRound, "preset": Preset, "map": MapVariant, "setup": Setup, "turn": Turn, "controls": Controls}[args.command](args)
     except BridgeError as error:
         print(f"FAIL {error}")
         return 2

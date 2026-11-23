@@ -78,6 +78,7 @@
     <Compile Include="Agent\artemis\env\ctf.py" />
     <Compile Include="Agent\artemis\train\__init__.py" />
     <Compile Include="Agent\artemis\train\ppo.py" />
+    <Compile Include="Agent\artemis\control_check.py" />
     <Compile Include="Agent\scripts\bridge_check.py" />
     <Compile Include="Agent\scripts\env_check.py" />
     <Compile Include="Agent\scripts\hello.py" />
@@ -86,7 +87,6 @@
     <Compile Include="Agent\scripts\train_stage0.py" />
     <Compile Include="Agent\scripts\net_probe.py" />
     <Compile Include="Agent\scripts\pov_probe.py" />
-    <Compile Include="Agent\scripts\possess_probe.py" />
     <Compile Include="Agent\scripts\variant_poke.py" />
     <Compile Include="Tools\TagTranspiler\GenerateStructure.py" />
     <Compile Include="Tools\TagTranspiler\GenerateTags.py" />
@@ -97,6 +97,7 @@
     <Compile Include="Tools\Tests\conftest.py" />
     <Compile Include="Tools\Tests\tdump_writer.py" />
     <Compile Include="Tools\Tests\test_agent_input.py" />
+    <Compile Include="Tools\Tests\test_control_check.py" />
     <Compile Include="Tools\Tests\test_components.py" />
     <Compile Include="Tools\Tests\test_bridge_map.py" />
     <Compile Include="Tools\Tests\test_bridge_preset.py" />
