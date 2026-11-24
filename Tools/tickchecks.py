@@ -711,6 +711,345 @@ def AnalyzeLifts(s):
 
 
 
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# The Views block (F4.7, D369): I1, I2, I3, I5, I6 and I7 of Diseno/19 sec. 3.3, the copies and shapes of every other field, and what is zero until
+# F4.5, F4.6 and F4.8. The pass is CollectViews: a Findings with the rules named view_*, i1_* ... i7_*, aim_*, ray_* and reserved_*.
+# ---------------------------------------------------------------------------------------------------------------------------------
+
+VIEW_BATCH = 128
+VIEW_MODE_HUMAN_LIKE = 1
+CHANNEL_HUD, CHANNEL_SEEN, CHANNEL_RADAR = 1, 2, 4
+RELATION_NONE, RELATION_SELF, RELATION_ALLY, RELATION_ENEMY, RELATION_NEUTRAL = 0, 1, 2, 3, 4
+FLAG_CARRIED = 1
+HIT_MISS, HIT_STATIC, HIT_DYNAMIC = 0, 1, 2
+NO_ROW = 0xFF
+SAME_HEAD_DISTANCE = 1.0e-4
+MAX_RAY_RANGE = 150.0
+
+
+def SightConstants():
+    """(k_SightRange, k_SightHalfAngle) read from Data/Views/Sight.xml, the file the C++ constants are generated from."""
+    import xml.etree.ElementTree as ElementTree
+    root = ElementTree.parse(os.path.join(ROOT, "Data", "Views", "Sight.xml")).getroot()
+    values = {c.get("name"): float(c.get("value")) for c in root.findall("constant")}
+    return values["k_SightRange"], values["k_SightHalfAngle"]
+
+
+def Bits32(a):
+    return np.ascontiguousarray(a, dtype=np.float32).view(np.uint32)
+
+
+def VecBits(v):
+    """uint32 (..., 3) of the bits of a BridgeVec3 field."""
+    return np.stack([Bits32(v["X"]), Bits32(v["Y"]), Bits32(v["Z"])], axis=-1)
+
+
+def AnyNonZero(rows):
+    """bool of the shape of rows: whether any byte of the struct (padding included) is not zero."""
+    a = np.ascontiguousarray(rows)
+    return a.view(np.uint8).reshape(a.shape + (a.itemsize,)).any(axis=-1)
+
+
+def Yaw(aim):
+    """float32 heading of an aim vector as the C++ computes it: atan2 of two floats in double, rounded to float."""
+    return np.arctan2(aim["Y"].astype(np.float64), aim["X"].astype(np.float64)).astype(np.float32)
+
+
+def Pitch(aim):
+    """float32 pitch of an aim vector: atan2 in double of Z and of the float hypot of X and Y."""
+    return np.arctan2(aim["Z"].astype(np.float64), np.hypot(aim["X"], aim["Y"]).astype(np.float64)).astype(np.float32)
+
+
+def RelationOf(team, entity_team, found):
+    """ViewsService RelationOf over arrays: Neutral without entity or team, else Ally or Enemy."""
+    neutral = int(Team.Neutral)
+    return np.where(~found | (entity_team == neutral) | (team == neutral), RELATION_NEUTRAL, np.where(entity_team == team, RELATION_ALLY, RELATION_ENEMY))
+
+
+def CollectViews(film, dump):
+    """Findings of the Views block of a .tdump of format version 7: counts and cases of each rule and, in s.values, how much each family was exercised.
+    Records are gathered in batches of VIEW_BATCH (rows padded to MAX_PLAYERS) and checked with numpy."""
+    s = Findings(film)
+    s.values.update({"records": 0, "views": 0, "bodies": 0, "seen_pairs": 0, "mutual_pairs": 0, "ally_pairs": 0, "flag_rows": 0, "aim_casts": 0, "aim_dynamic": 0,
+                     "ray_casts": 0, "ray_dynamic": 0, "tracked": 0})
+    types = dump.types
+    R, O, S, RAYS = MAX_PLAYERS, 8, 8, bl.VIEW_RAY_COUNT
+    batch = []
+    for r, tab in dump.states():
+        n, p = len(r.views), r.players
+        d = {"tick": r.game_tick, "n": n, "players": len(p), "ViewCount": int(r.header["ViewCount"]), "ViewMask": int(r.header["ViewMask"]),
+             "PlayerCount": int(r.header["PlayerCount"])}
+        d["V"] = np.zeros(R, types["BridgeView"])
+        d["V"][:n] = r.views
+        P = d["P"] = np.zeros(R, types["BridgePlayer"])
+        P[:len(p)] = p
+        d["Bf"], d["B"] = Lookup(tab, P["BipedHandle"])
+        # The weapons of the slots (entity and detail), the equipped one, the entity the biped is bound to.
+        slots = np.stack([P["PrimaryWeapon"], P["SecondaryWeapon"]], axis=1).ravel()
+        d["Ef"], d["E"] = (x.reshape(R, 2) for x in Lookup(tab, slots))
+        d["Wf"], d["W"] = (x.reshape(R, 2) for x in Lookup(r.weapons, slots))
+        d["Qf"], d["Q"] = Lookup(tab, P["EquippedWeapon"])
+        d["Cf"], d["C"] = Lookup(tab, d["B"]["BoundTo"])
+        # IsTracked: a weapon that has locked the biped, or the vehicle it sits in.
+        locked = r.weapons["TrackedObject"][(r.weapons["IsLocked"] != 0) & (r.weapons["TrackedObject"] != NO_HANDLE)] if len(r.weapons) else np.zeros(0, np.uint32)
+        seated = d["Bf"] & (d["B"]["Binding"] == sem.Binding.Seated)
+        d["tracked"] = np.isin(P["BipedHandle"], locked) | (seated & np.isin(d["B"]["BoundTo"], locked))
+        # What the aim ray and the rays hit.
+        V = d["V"]
+        d["Af"], d["A"] = Lookup(tab, V["AimHit"]["ObjectHandle"])
+        rf, rr = Lookup(tab, V["Rays"]["ObjectHandle"].ravel())
+        d["Rf"], d["Rr"] = rf.reshape(R, RAYS), rr.reshape(R, RAYS)
+        # Flags, with the entity that gives their position, the row of the carrier, the stand and its origin.
+        ob = d["OB"] = np.zeros(O, types["BridgeObjective"])
+        m = d["m"] = min(len(r.objectives), O)
+        ob[:m] = r.objectives[:m]
+        cf, cr = Lookup(tab, ob["CarrierBiped"])
+        ff, fr = Lookup(tab, ob["Handle"])
+        use_carrier = (ob["State"] == FLAG_CARRIED) & cf
+        d["origin"] = np.where(use_carrier[:, None], VecBits(cr["WorldOrigin"]), VecBits(fr["WorldOrigin"]))
+        d["origin_found"] = use_carrier | ff
+        sf, sr = Lookup(tab, ob["HomeStand"])
+        d["stand_origin"] = np.where(sf[:, None], VecBits(sr["WorldOrigin"]), 0)
+        live_player = np.arange(R) < len(p)
+        by_player = (P["Handle"][None, :] == ob["CarrierPlayer"][:, None]) & live_player[None, :] & (ob["CarrierPlayer"][:, None] != NO_HANDLE)
+        by_biped = (P["BipedHandle"][None, :] == ob["CarrierBiped"][:, None]) & live_player[None, :] & (ob["CarrierBiped"][:, None] != NO_HANDLE)
+        d["carrier_row"] = np.where(by_player.any(axis=1), by_player.argmax(axis=1), np.where(by_biped.any(axis=1), by_biped.argmax(axis=1), NO_ROW))
+        # The side of each team: BaseTeam of the stand it owns with the lowest handle, Neutral without one.
+        stands = np.zeros(S, types["BridgeStand"])
+        k = min(len(r.stands), S)
+        stands[:k] = r.stands[:k]
+        owns = (stands["OwnerTeam"][None, :] == P["Team"][:, None]) & (np.arange(S)[None, :] < k)
+        lowest = np.where(owns, stands["Handle"][None, :].astype(np.int64), 1 << 40).argmin(axis=1)
+        d["side"] = np.where(owns.any(axis=1), stands["BaseTeam"][lowest], int(Team.Neutral))
+        if len(r.events):
+            ev = r.events
+            s.Flag("reserved_event_position", Bits32(ev["Position"]["X"]) | Bits32(ev["Position"]["Y"]) | Bits32(ev["Position"]["Z"]), np.full(len(ev), r.game_tick),
+                   ev["Sequence"])
+            s.Flag("reserved_event_amount", Bits32(ev["Amount"]), np.full(len(ev), r.game_tick), ev["Sequence"])
+        batch.append(d)
+        if len(batch) == VIEW_BATCH:
+            CheckViewBatch(s, batch)
+            batch = []
+    if batch:
+        CheckViewBatch(s, batch)
+    return s
+
+
+def CheckViewBatch(s, batch):
+    A = {k: np.stack([d[k] for d in batch]) if isinstance(batch[0][k], np.ndarray) else np.array([d[k] for d in batch]) for k in batch[0]}
+    ticks, n, V, P = A["tick"].astype(np.int64), A["n"], A["V"], A["P"]
+    K, R = V.shape
+    sight_range, half_angle = SightConstants()
+    idx = np.arange(R)
+    valid = idx[None, :] < n[:, None]
+    head, me = V["Head"], V["Self"]
+    comp = valid & (head["IsComputed"] != 0)
+    handles = P["Handle"]
+    eye = np.eye(R, dtype=bool)[None, :, :]
+    s.values["records"] += K
+    s.values["views"] += int(comp.sum())
+
+    def Rec(name, mask):
+        s.Flag(name, mask, ticks, np.zeros(K, np.int64))
+
+    def Row(name, mask):
+        s.Flag(name, mask.ravel(), np.repeat(ticks, R), handles.ravel())
+
+    def Pair(name, mask):
+        s.Flag(name, mask.ravel(), np.repeat(ticks, R * R), np.broadcast_to(handles[:, :, None], mask.shape).ravel())
+
+    # The header: ViewCount is PlayerCount and the rows of the block, ViewMask the IsComputed of each row (by row of Players).
+    Rec("view_count_is_not_player_count", (A["ViewCount"] != A["PlayerCount"]) | (A["ViewCount"] != n) | (A["players"] != n))
+    Rec("view_mask_is_not_is_computed", A["ViewMask"] != (comp.astype(np.int64) << idx[None, :]).sum(axis=1))
+    Row("view_not_computed_not_zero", valid & ~comp & AnyNonZero(V))
+
+    # The head: the player of the row, and the copies of its player row.
+    alive = P["IsAlive"] != 0
+    Row("view_head_is_not_the_player", comp & ((head["PlayerHandle"] != handles) | (head["PlayerRow"] != idx[None, :]) | (head["BipedHandle"] != P["BipedHandle"]) |
+                                              (head["LocalIndex"] != P["LocalIndex"]) | (head["Team"] != P["Team"])))
+    Row("view_head_side", comp & (head["Side"] != A["side"]))
+    Row("view_mode_not_human_like", comp & (head["Mode"] != VIEW_MODE_HUMAN_LIKE))
+    eyes = np.stack([me["Eye"]["X"], me["Eye"]["Y"], me["Eye"]["Z"]], axis=-1).astype(np.float64)
+    feet = np.stack([me["Feet"]["X"], me["Feet"]["Y"], me["Feet"]["Z"]], axis=-1).astype(np.float64)
+    has_eye = (eyes != 0).any(axis=-1)
+    body = comp & (P["HasBody"] != 0)
+    lift = eyes[..., 2] - feet[..., 2]
+    Row("view_eye_is_not_above_the_feet", body & has_eye & ((np.abs(eyes[..., 0] - feet[..., 0]) > 0.15) | (np.abs(eyes[..., 1] - feet[..., 1]) > 0.15) | (lift < 0.4) | (lift > 0.65)))
+    Row("view_eye_without_body_is_not_zero", comp & ~body & has_eye)
+
+    # Reserved until F4.5 (sounds), F4.6 (notices, radar) and F4.8 (the mode): zero in every View.
+    others = V["Others"]
+    channels = others["Channels"]
+    Row("reserved_radar_bit", comp & ((channels & CHANNEL_RADAR) != 0).any(axis=2))
+    Row("reserved_elevation", comp & (others["Elevation"] != 0).any(axis=2))
+    Row("reserved_sound_count", comp & (V["SoundCount"] != 0))
+    Row("reserved_sounds_not_zero", comp & AnyNonZero(V["Sounds"]).any(axis=2))
+    Row("reserved_notice_count", comp & (V["NoticeCount"] != 0))
+    Row("reserved_notices_not_zero", comp & AnyNonZero(V["Notices"]).any(axis=2))
+
+    # I7: Self is a copy of Players, Entities and Weapons, bit by bit.
+    s.values["bodies"] += int(body.sum())
+    Row("i7_respawn_or_has_body", comp & ((me["RespawnTicks"] != P["RespawnTicks"]) | ((head["HasBody"] != 0) != alive)))
+    aim = P["Aim"]
+    Row("i7_frame_yaw_or_aim_pitch", body & ((Bits32(me["FrameYaw"]) != Bits32(Yaw(aim))) | (Bits32(me["AimPitch"]) != Bits32(Pitch(aim)))))
+    Row("i7_shield_crouch_ability_energy", body & ((Bits32(me["Shield"]) != Bits32(P["Shield"])) | (Bits32(me["CrouchFraction"]) != Bits32(P["CrouchFraction"])) |
+                                                  (Bits32(me["AbilityEnergy"]) != Bits32(P["AbilityEnergy"]))))
+    Row("i7_own_velocity", body & (VecBits(me["OwnVelocity"]) != VecBits(P["OwnVelocity"])).any(axis=2))
+    Row("i7_counters_and_ground", body & ((me["Zoom"] != P["Zoom"]) | (me["TicksAlive"] != P["TicksAlive"]) | (me["AirborneTicks"] != P["AirborneTicks"]) |
+                                         (me["Ground"] != P["Ground"]) | (me["IsGrounded"] != P["IsGrounded"]) | (me["TicksSinceDamage"] != P["TicksSinceDamage"])))
+    Row("i7_grenades_and_ability", body & ((me["FragGrenades"] != P["FragGrenades"]) | (me["PlasmaGrenades"] != P["PlasmaGrenades"]) |
+                                          (me["SelectedGrenade"] != P["SelectedGrenade"]) | (me["Ability"] != P["Ability"]) |
+                                          (me["IsAbilityActive"] != P["IsAbilityActive"]) | ((me["CarriesFlag"] != 0) != (P["Objective"] != NO_HANDLE))))
+    Row("i7_powerup", body & ((me["Powerup"] != P["Powerup"]) | (me["PowerupTicks"] != P["PowerupTicks"])))
+    B, Bf = A["B"], A["Bf"]
+    entity = body & Bf
+    Row("i7_feet_velocity_vitality", entity & ((VecBits(me["Feet"]) != VecBits(B["WorldOrigin"])).any(axis=2) |
+                                               (VecBits(me["LinearVelocity"]) != VecBits(B["LinearVelocity"])).any(axis=2) |
+                                               (Bits32(me["Vitality"]) != Bits32(B["Vitality"]))))
+    s.values["tracked"] += int((body & A["tracked"]).sum())
+    Row("i7_is_tracked", body & Bf & ((me["IsTracked"] != 0) != A["tracked"]))
+    slots = np.stack([P["PrimaryWeapon"], P["SecondaryWeapon"]], axis=2)
+    sw, E, W = me["Weapons"], A["E"], A["W"]
+    Row("i7_weapon_handle", (body[:, :, None] & (sw["Handle"] != slots)).any(axis=2))
+    has = body[:, :, None] & (slots != NO_HANDLE)
+    Row("i7_weapon_is_equipped", (has & ((sw["IsEquipped"] != 0) != (slots == P["EquippedWeapon"][:, :, None]))).any(axis=2))
+    Row("i7_weapon_subtype", (has & A["Ef"] & (sw["Subtype"] != E["Subtype"])).any(axis=2))
+    detail = has & A["Wf"]
+    Row("i7_weapon_floats", (detail & ((Bits32(sw["Energy"]) != Bits32(W["Energy"])) | (Bits32(sw["Heat"]) != Bits32(W["Heat"])) |
+                                       (Bits32(sw["ChargeFraction"]) != Bits32(W["ChargeFraction"])))).any(axis=2))
+    Row("i7_weapon_flags", (detail & ((sw["IsOverheated"] != W["IsOverheated"]) | (sw["IsReloading"] != W["IsReloading"]) |
+                                      (sw["CanFireNow"] != W["CanFireNow"]))).any(axis=2))
+    mag = W["Magazines"][..., 0]
+    Row("i7_weapon_rounds", (detail & (W["MagazineCount"] > 0) & ((sw["Loaded"] != mag["Loaded"]) | (sw["Reserve"] != mag["Reserve"]))).any(axis=2))
+
+    # Cone and distance between every pair of eyes: a looks at b. Two heads closer than 1e-4 are the same point (RaycastVision): no direction, inside.
+    delta = eyes[:, None, :, :] - eyes[:, :, None, :]
+    distance = np.sqrt((delta ** 2).sum(axis=-1))
+    pitch, yaw = me["AimPitch"].astype(np.float64), me["FrameYaw"].astype(np.float64)
+    direction = np.stack([np.cos(pitch) * np.cos(yaw), np.cos(pitch) * np.sin(yaw), np.sin(pitch)], axis=-1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        cosine = (direction[:, :, None, :] * delta).sum(axis=-1) / distance
+    angle = np.where(distance >= SAME_HEAD_DISTANCE, np.degrees(np.arccos(np.clip(np.nan_to_num(cosine), -1.0, 1.0))), 0.0)
+    seen = (channels & CHANNEL_SEEN) != 0
+    seen_pair = comp[:, :, None] & seen & ~eye
+    s.values["seen_pairs"] += int(seen_pair.sum())
+
+    # I1: seen means a body, a live target, within the range and inside the cone.
+    margin = 0.01
+    Pair("i1_seen_without_a_live_pair", seen_pair & (~(head["HasBody"] != 0)[:, :, None] | ~alive[:, None, :]))
+    Pair("i1_seen_past_the_range", seen_pair & (distance > sight_range + 1.0e-3))
+    Pair("i1_seen_outside_the_cone", seen_pair & (angle > half_angle + margin))
+
+    # I2: with both cones on each other and well inside, the line is one: a sees b exactly when b sees a.
+    mutual = (comp[:, :, None] & comp[:, None, :] & ~eye & (head["HasBody"] != 0)[:, :, None] & (head["HasBody"] != 0)[:, None, :] & has_eye[:, :, None] &
+              has_eye[:, None, :] & (distance <= sight_range - 1.0e-2) & (angle < half_angle - margin) & (np.swapaxes(angle, 1, 2) < half_angle - margin))
+    s.values["mutual_pairs"] += int(mutual.sum())
+    Pair("i2_mutual_cones_see_differently", mutual & (seen != np.swapaxes(seen, 1, 2)))
+
+    # I3: an ally is always on the HUD, and where it is while it lives (the origin of its biped).
+    ally = comp[:, :, None] & (others["Relation"] == RELATION_ALLY) & ~eye
+    s.values["ally_pairs"] += int(ally.sum())
+    Pair("i3_ally_without_hud", ally & ((channels & CHANNEL_HUD) == 0))
+    Pair("i3_ally_is_alive", ally & ((others["IsAlive"] != 0) != alive[:, None, :]))
+    biped_origin = VecBits(B["WorldOrigin"])[:, None, :, :]
+    Pair("i3_ally_position", ally & alive[:, None, :] & Bf[:, None, :] & (VecBits(others["Position"]) != biped_origin).any(axis=-1))
+
+    # I5: a row without channel is zero but for its Relation.
+    zero_row = ((others["IsAlive"] == 0) & (VecBits(others["Position"]) == 0).all(axis=-1) & (VecBits(others["Velocity"]) == 0).all(axis=-1) &
+                (Bits32(others["FacingYaw"]) == 0) & (Bits32(others["Vitality"]) == 0) & (Bits32(others["Shield"]) == 0) & (others["WeaponSubtype"] == 0) &
+                (others["IsCrouching"] == 0) & (others["CarriesFlag"] == 0) & (others["Elevation"] == 0))
+    Pair("i5_row_without_channel_is_not_zero", comp[:, :, None] & (channels == 0) & ~eye & ~zero_row)
+
+    # The relation of each row (Self, Ally or Enemy by the two teams, None without a valid team or past the players) and the copies the channels carry.
+    team_a, team_b = head["Team"].astype(np.int16)[:, :, None], P["Team"].astype(np.int16)[:, None, :]
+    neutral = int(Team.Neutral)
+    expected_relation = np.where(eye, RELATION_SELF, np.where((team_a == neutral) | (team_b == neutral) | ~valid[:, None, :], RELATION_NONE,
+                                                              np.where(team_a == team_b, RELATION_ALLY, RELATION_ENEMY)))
+    Pair("view_other_relation", comp[:, :, None] & (others["Relation"] != expected_relation))
+    Pair("view_other_channel_unknown", comp[:, :, None] & ((channels & ~np.uint8(CHANNEL_HUD | CHANNEL_SEEN | CHANNEL_RADAR)) != 0))
+    hud = comp[:, :, None] & ((channels & CHANNEL_HUD) != 0) & ~eye
+    Pair("view_other_hud_is_not_a_copy", hud & (((others["IsAlive"] != 0) != alive[:, None, :]) | ((others["CarriesFlag"] != 0) != (P["Objective"] != NO_HANDLE)[:, None, :])))
+    looks = comp[:, :, None] & seen & ~eye & Bf[:, None, :]
+    Q, Qf = A["Q"], A["Qf"]
+    Pair("view_other_seen_is_not_a_copy",
+         looks & ((VecBits(others["Position"]) != biped_origin).any(axis=-1) | (VecBits(others["Velocity"]) != VecBits(B["LinearVelocity"])[:, None, :, :]).any(axis=-1) |
+                  (Bits32(others["Vitality"]) != Bits32(B["Vitality"])[:, None, :]) | (Bits32(others["Shield"]) != Bits32(P["Shield"])[:, None, :]) |
+                  (Bits32(others["FacingYaw"]) != Bits32(Yaw(aim))[:, None, :]) | ((others["IsCrouching"] != 0) != (P["IsCrouching"] != 0)[:, None, :]) |
+                  (others["WeaponSubtype"] != np.where(Qf, Q["Subtype"], 0)[:, None, :])))
+
+    # I6: Flags[0] is the flag of the team of the agent in this round, Flags[1] a rival one: State, ResetTicks, IsResetRunning, AlliesInZone, Position (the
+    # biped of the carrier when carried, the flag otherwise), CarrierRow and StandPosition as the Objectives row and its entities have them. No
+    # candidate: the row is zero bytes.
+    OB = A["OB"]
+    live = np.arange(OB.shape[1])[None, :] < A["m"][:, None]
+    team = head["Team"].astype(np.int16)
+    owner = OB["OwnerTeam"].astype(np.int16)
+    has_team = (team != neutral)[:, :, None]
+    candidates = (np.stack([has_team & (owner[:, None, :] == team[:, :, None]), has_team & (owner[:, None, :] != team[:, :, None]) & (owner[:, None, :] != neutral)], axis=2)
+                  & live[:, None, None, :] & comp[:, :, None, None])
+    flags = V["Flags"]
+    one = lambda x: x[:, None, None, :]
+    same = ((flags["State"][..., None] == one(OB["State"])) & (flags["ResetTicks"][..., None] == one(OB["ResetTicks"])) &
+            ((flags["IsResetRunning"][..., None] != 0) == (one(OB["IsResetRunning"]) != 0)) & (flags["AlliesInZone"][..., None] == one(OB["AlliesInZone"])) &
+            (~A["origin_found"][:, None, None, :] | (VecBits(flags["Position"])[:, :, :, None, :] == A["origin"][:, None, None, :, :]).all(axis=-1)) &
+            (flags["CarrierRow"][..., None] == one(A["carrier_row"])) &
+            (VecBits(flags["StandPosition"])[:, :, :, None, :] == A["stand_origin"][:, None, None, :, :]).all(axis=-1))
+    has_candidate = candidates.any(axis=-1)
+    s.values["flag_rows"] += int(has_candidate.sum())
+    Row("i6_flag_row_is_none_of_the_flags", (has_candidate & ~(candidates & same).any(axis=-1)).any(axis=2))
+    Row("i6_flag_row_without_candidate_is_not_zero", (comp[:, :, None] & ~has_candidate & AnyNonZero(flags)).any(axis=2))
+
+    # The aim ray: not cast (no body or no eye) is zero bytes. Cast: a range, a kind, and what the kind leaves.
+    aimhit = V["AimHit"]
+    cast = body & has_eye
+    s.values["aim_casts"] += int(cast.sum())
+    Row("aim_not_cast_is_not_zero", comp & ~cast & AnyNonZero(aimhit))
+    kind = aimhit["Kind"]
+    dynamic = cast & (kind == HIT_DYNAMIC)
+    s.values["aim_dynamic"] += int(dynamic.sum())
+    Row("aim_kind_unknown", cast & (kind > HIT_DYNAMIC))
+    Row("aim_range_or_distance", cast & ((aimhit["MaxDistance"] <= 0) | (aimhit["Distance"] < 0) | (aimhit["Distance"] > aimhit["MaxDistance"] + 1.0e-3) |
+                                         ~np.isfinite(aimhit["Distance"])))
+    Row("aim_miss_is_not_empty", cast & (kind == HIT_MISS) & ((aimhit["Distance"] != aimhit["MaxDistance"]) | (VecBits(aimhit["Point"]) != 0).any(axis=-1) | (aimhit["Material"] != -1)))
+    Row("aim_point_is_not_on_the_ray", cast & (kind != HIT_MISS) & (np.abs(np.stack([aimhit["Point"]["X"], aimhit["Point"]["Y"], aimhit["Point"]["Z"]], axis=-1) -
+                                                                              (eyes + direction * aimhit["Distance"][..., None])).max(axis=-1) > 0.05))
+    Row("aim_not_dynamic_has_an_object", cast & (kind != HIT_DYNAMIC) & ((aimhit["ObjectHandle"] != NO_HANDLE) | (aimhit["PlayerRow"] != NO_ROW) | (aimhit["Function"] != 0) |
+                                                                          (aimhit["Subtype"] != 0) | (aimhit["Relation"] != RELATION_NONE) | (aimhit["RegionIndex"] != -1)))
+    Row("aim_surface_flags_outside_a_static_hit", cast & (kind != HIT_STATIC) & (aimhit["SurfaceFlags"] != 0))
+    Row("aim_is_head", cast & (aimhit["IsHead"] != 0))
+    Af, Ae = A["Af"], A["A"]
+    Row("aim_object_is_not_an_entity_of_the_tick", dynamic & ~Af)
+    Row("aim_object_copy", dynamic & Af & ((aimhit["Function"] != Ae["Function"]) | (aimhit["Subtype"] != Ae["Subtype"]) |
+                                           (aimhit["Relation"] != RelationOf(head["Team"].astype(np.int16), Ae["Team"].astype(np.int16), Af))))
+    biped_of_row = (P["BipedHandle"][:, None, :] == aimhit["ObjectHandle"][:, :, None]) & (idx[None, None, :] < n[:, None, None]) & (aimhit["ObjectHandle"][:, :, None] != NO_HANDLE)
+    last_row = np.where(biped_of_row.any(axis=2), R - 1 - biped_of_row[:, :, ::-1].argmax(axis=2), NO_ROW)
+    Row("aim_player_row", dynamic & (aimhit["PlayerRow"] != last_row))
+
+    # The rays of the pattern: the origin is the bounding center of the biped (a seated one rides a vehicle: only not zero), and each ray the same shape as the aim.
+    rays = V["Rays"]
+    origin = VecBits(V["RayOrigin"])
+    has_origin = (origin != 0).any(axis=-1)
+    Row("ray_origin_without_body", comp & ~body & has_origin)
+    Row("ray_origin_missing", body & ~has_origin)
+    seated = Bf & (B["Binding"] == sem.Binding.Seated)
+    Row("ray_origin_is_not_the_biped_center", body & ~seated & Bf & (origin != VecBits(B["BoundingCenter"])).any(axis=-1))
+    Row("ray_not_cast_is_not_zero", comp & ~has_origin & AnyNonZero(rays).any(axis=2))
+    rcast = has_origin[:, :, None] & comp[:, :, None] & AnyNonZero(rays)  # the rays past the pattern are zero bytes
+    s.values["ray_casts"] += int(rcast.sum())
+    rkind = rays["Kind"]
+    rdyn = rcast & (rkind == HIT_DYNAMIC)
+    s.values["ray_dynamic"] += int(rdyn.sum())
+    Row("ray_kind_or_distance", (rcast & ((rkind > HIT_DYNAMIC) | (rays["Distance"] < 0) | (rays["Distance"] > MAX_RAY_RANGE + 1.0e-3) | ~np.isfinite(rays["Distance"]))).any(axis=2))
+    Row("ray_miss_is_not_empty", (rcast & (rkind == HIT_MISS) & ((rays["Material"] != -1) | (rays["SurfaceFlags"] != 0))).any(axis=2))
+    Row("ray_not_dynamic_has_an_object", (rcast & (rkind != HIT_DYNAMIC) & ((rays["ObjectHandle"] != NO_HANDLE) | (rays["Function"] != 0) | (rays["Relation"] != RELATION_NONE))).any(axis=2))
+    Row("ray_surface_flags_outside_a_static_hit", (rcast & (rkind != HIT_STATIC) & (rays["SurfaceFlags"] != 0)).any(axis=2))
+    Rf, Rr = A["Rf"], A["Rr"]
+    Row("ray_object_is_not_an_entity_of_the_tick", (rdyn & ~Rf).any(axis=2))
+    Row("ray_object_copy", (rdyn & Rf & ((rays["Function"] != Rr["Function"]) |
+                                         (rays["Relation"] != RelationOf(head["Team"].astype(np.int16)[:, :, None], Rr["Team"].astype(np.int16), Rf)))).any(axis=2))
+
+
 # ---------------------------------------------------------------------------------------------------------------------------------
 # The general rules
 # ---------------------------------------------------------------------------------------------------------------------------------

@@ -101,7 +101,7 @@ def test_tables_and_ignored_fields_exist_in_bridge_xml():
     assert tickdump.TABLES == {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer",
                                "Entities": "BridgeEntity", "Events": "BridgeEvent", "Objectives": "BridgeObjective",
                                "Stands": "BridgeStand", "Weapons": "BridgeWeapon", "Projectiles": "BridgeProjectile",
-                               "Explosives": "BridgeExplosive", "Lifts": "BridgeLift"}
+                               "Explosives": "BridgeExplosive", "Lifts": "BridgeLift", "Views": "BridgeView"}
     assert {t: set(f) for t, f in tickdump.IGNORED.items()} == {
         "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc"},
         "Players": {"LocalIndex", "Connection", "CameraPosition", "CameraForward"}}
@@ -117,8 +117,8 @@ def test_reader_errors_raise_instead_of_exiting(tmp_path):
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(bad))
     data = bytearray(Film(range(2)).Bytes())
-    data[8] = 7
-    other = tmp_path / "v7.tdump"
+    data[8] = 8
+    other = tmp_path / "v8.tdump"
     other.write_bytes(bytes(data))
     with pytest.raises(tickdump.TickDumpError):
         tickdump.Dump(str(other))
@@ -575,7 +575,7 @@ def WeaponFilm(charged_at=None, ticks=range(6)):
 
 def test_weapons_and_projectiles_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "w.tdump", WeaponFilm(charged_at=3)))
-    assert d.version == 6 and not d.is_cut
+    assert d.version == 7 and not d.is_cut
     assert [len(r.explosives) for r in d.records] == [1] * 6
     assert float(d.records[0].explosives["Damage"][0]) == 200.0 and int(d.records[0].header["ExplosiveCount"]) == 1
     assert [len(r.weapons) for r in d.records] == [1] * 6
@@ -602,7 +602,7 @@ def LiftFilm(exit_speed=None, ticks=range(6)):
 
 def test_lifts_round_trip_through_the_reader_and_show_prints_them(tmp_path, capsys):
     d = tickdump.Dump(Save(tmp_path, "l.tdump", LiftFilm(exit_speed=6.5)))
-    assert d.version == 6 and not d.is_cut
+    assert d.version == 7 and not d.is_cut
     assert [len(r.lifts) for r in d.records] == [1] * 6
     assert int(d.records[0].header["LiftCount"]) == 1
     assert [int(r.lifts["HasExit"][0]) for r in d.records] == [0, 0, 0, 1, 1, 1]
@@ -647,7 +647,7 @@ def test_a_weapon_that_changes_energy_is_a_difference_of_its_table(tmp_path):
 
 def test_flags_and_stands_round_trip_through_the_reader(tmp_path):
     d = tickdump.Dump(Save(tmp_path, "a.tdump", FlagFilm(state_at=3)))
-    assert d.version == 6 and not d.is_cut
+    assert d.version == 7 and not d.is_cut
     assert [len(r.objectives) for r in d.records] == [2] * 6
     assert [len(r.stands) for r in d.records] == [1] * 6
     assert [int(r.objectives["State"][1]) for r in d.records] == [0, 0, 0, 1, 1, 1]
@@ -694,3 +694,59 @@ def test_a_golden_from_before_the_flags_is_read_and_reports_the_new_tables_as_sc
     assert "+ Header.ObjectiveCount" in r.schema and "+ Header.StandCount" in r.schema
     assert not any(k.startswith(("Objectives", "Stands")) for k in r.fields) and "Objectives" not in r.existence
 
+def ViewFilm(shield=0.5, ticks=range(4), computed=(1, 0)):
+    """A film of two players with one View per row. computed: IsComputed of each row. Row 0 sees row 1 on Others[1] from tick 2."""
+    w = Writer()
+    for t in ticks:
+        views = []
+        for i, handle in enumerate((P1, P2)):
+            view = {"Head": {"PlayerHandle": handle, "PlayerRow": i, "IsComputed": computed[i], "Mode": 1},
+                    "Self": {"Shield": shield + 0.25 * i, "Weapons": [{"Handle": 0xC1 + i, "Loaded": 8 + t}]},
+                    "Rays": [{"Distance": 10.0 + k} for k in range(16)]}
+            if i == 0 and t >= 2:
+                view["Others"] = [{}, {"Relation": 3, "Channels": 2, "IsAlive": 1, "Position": {"X": 1.0, "Y": 2.0, "Z": 3.0}}]
+            views.append(view)
+        mask = sum(1 << i for i in range(2) if computed[i])
+        w.Tick(t, players=[Player(P1), Player(P2)], entities=[Entity(H1)], views=views, header={"ViewMask": mask})
+    return w
+
+
+def test_v7_reads_views(tmp_path, capsys):
+    d = tickdump.Dump(Save(tmp_path, "v.tdump", ViewFilm()))
+    assert d.version == 7 and not d.is_cut
+    assert [len(r.views) for r in d.records] == [2] * 4
+    assert int(d.records[0].header["ViewCount"]) == 2 and int(d.records[0].header["ViewMask"]) == 1
+    assert [int(r.views["Head"]["PlayerHandle"][1]) for r in d.records] == [P2] * 4
+    assert float(d.records[3].views["Self"]["Shield"][1]) == 0.75
+    assert [int(r.views["Self"]["Weapons"][0][0]["Loaded"]) for r in d.records] == [8, 9, 10, 11]
+    assert float(d.records[0].views["Rays"][0][15]["Distance"]) == 25.0
+    assert float(d.records[3].views["Others"][0][1]["Position"]["Z"]) == 3.0
+    tickdump.ShowTick(d, 3)
+    assert "views 2 (computed 1)" in capsys.readouterr().out
+
+
+def test_v6_dump_has_no_views(tmp_path):
+    real, _ = RealLayout()
+    old_layout = ChangedLayout(real, drop={"BridgeTickHeader": ["ViewCount", "ViewMask"], "BridgeEvent": ["Position", "Amount"]})
+    old_layout["structs"] = [s for s in old_layout["structs"] if not s["name"].startswith("BridgeView")]
+    older = Writer(layout=old_layout, layout_hash=0x6)
+    assert older.Version() == 6
+    for t in range(4):
+        older.Tick(t, players=[Player(P1), Player(P2)], entities=[Entity(H1)])
+    d = tickdump.Dump(Save(tmp_path, "v6.tdump", older))
+    assert d.version == 6 and not d.is_cut
+    assert [len(r.views) for r in d.records] == [0] * 4
+    r = tickdump.Diff(d, tickdump.Dump(Save(tmp_path, "new.tdump", ViewFilm(computed=(0, 0)))))
+    assert any(line.startswith("+ Views (table of") for line in r.schema)
+    assert "+ Header.ViewCount" in r.schema and "+ Header.ViewMask" in r.schema and "+ Events.Position" in r.schema
+    assert all(not key.startswith("Views.") for key in r.fields)
+
+
+def test_a_view_that_changes_is_a_difference_of_its_table_by_row(tmp_path):
+    assert DiffOf(tmp_path, ViewFilm(), ViewFilm()).is_equal
+    r = DiffOf(tmp_path, ViewFilm(), ViewFilm(shield=0.75))
+    assert not r.is_equal and r.existence == {} and r.schema == []
+    assert "Views.Self" in r.fields and "Views.Head" not in r.fields
+    # The shield of both rows differs: the key of a View is its row.
+    assert (r.fields["Views.Self"].first_tick, r.fields["Views.Self"].keys, r.fields["Views.Self"].first_key) == (0, 2, 0)
+    assert tickdump.FormatDiff(r)[-1].startswith("DIFFERS")

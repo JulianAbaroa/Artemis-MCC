@@ -59,7 +59,7 @@ FOOTER = np.dtype([("Marker", "S4"), ("Reserved", "<u4"), ("RecordedTicks", "<u8
                    ("EventLosses", "<u8")])
 HAS_MATCH, EVENTS_LOST, KEYFRAME, TIME_MEASURED = 1, 2, 4, 8
 # Tables the layout of a file may not have, in the order of the blocks at the end of a record: Record slot, struct, count in the header.
-# Version 2 added the first two, version 3 the weapons and the projectiles, version 4 the explosives, version 5 the lifts. Version 6 changes no block (the header gains the possession of the user). Version 7 adds the views. A file whose layout lacks a block has none of it.
+# Version 2 added the first two, version 3 the weapons and the projectiles, version 4 the explosives, version 5 the lifts. Version 6 changes no block (the header gains the possession of the user). Version 7 adds the views (one row per row of Players, no Handle: the Diff aligns them by row). A file whose layout lacks a block has none of it.
 EXTRA_BLOCKS = (("objectives", "BridgeObjective", "ObjectiveCount"), ("stands", "BridgeStand", "StandCount"),
                 ("weapons", "BridgeWeapon", "WeaponCount"), ("projectiles", "BridgeProjectile", "ProjectileCount"),
                 ("explosives", "BridgeExplosive", "ExplosiveCount"), ("lifts", "BridgeLift", "LiftCount"), ("views", "BridgeView", "ViewCount"))
@@ -68,9 +68,9 @@ EMPTY_ROWS = np.dtype([("Handle", "<u4")])
 # Table name in the output -> struct of the layout (Bridge.xml).
 TABLES = {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "BridgePlayer", "Entities": "BridgeEntity",
           "Events": "BridgeEvent", "Objectives": "BridgeObjective", "Stands": "BridgeStand", "Weapons": "BridgeWeapon",
-          "Projectiles": "BridgeProjectile", "Explosives": "BridgeExplosive", "Lifts": "BridgeLift"}
+          "Projectiles": "BridgeProjectile", "Explosives": "BridgeExplosive", "Lifts": "BridgeLift", "Views": "BridgeView"}
 # Tables of the Diff that are compared tick by tick (the events are compared apart, by Sequence).
-TICK_TABLES = ("Header", "Match", "Players", "Entities", "Objectives", "Stands", "Weapons", "Projectiles", "Explosives", "Lifts")
+TICK_TABLES = ("Header", "Match", "Players", "Entities", "Objectives", "Stands", "Weapons", "Projectiles", "Explosives", "Lifts", "Views")
 # Fields that are not compared: the local view of the theater and the clock of the bridge (D170). Listed in every diff.
 IGNORED = {"Header": ("MatchId", "ActionTick", "Generation", "PublishQpc"),
            "Players": ("LocalIndex", "Connection", "CameraPosition", "CameraForward")}
@@ -317,6 +317,8 @@ def ShowTick(d, tick):
         print(f"explosive: {Row(x)}")
     for x in r.lifts:
         print(f"lift: {Row(x)}")
+    if len(r.views):
+        print(f"views {len(r.views)} (computed {int(np.count_nonzero(r.views['Head']['IsComputed']))})")
     print(f"entities {len(table)} ({len(r.entities)} written in this record), new events {len(r.events)}")
     for e in r.events:
         print(f"event: {Row(e)}")
@@ -531,8 +533,13 @@ class TableDiff:
             self.first = (tick[0], key, side, tick[1])
 
     def Compare(self, tick, golden, run, keyed):
+        """keyed True: rows aligned by Handle. keyed "row": by position (the Views, one per row of Players, have no Handle)."""
         keys = None
-        if keyed:
+        if keyed == "row":
+            keys = np.arange(min(len(golden), len(run)))
+            self.Existence(tick, np.arange(len(keys), len(golden)), np.arange(len(keys), len(run)))
+            golden, run = golden[:len(keys)], run[:len(keys)]
+        elif keyed:
             golden = SortedByHandle(golden, f"{self.where[0]} tick {tick[0]}#{tick[1]} {self.name}")
             run = SortedByHandle(run, f"{self.where[1]} tick {tick[0]}#{tick[1]} {self.name}")
             hg, hr = golden["Handle"], run["Handle"]
@@ -634,6 +641,8 @@ def Diff(golden, run, overlap=False):
                                    ("Explosives", rg.explosives, rr.explosives), ("Lifts", rg.lifts, rr.lifts)):
                     if tables[name].fields:
                         tables[name].Compare(key, a, b, True)
+                if tables["Views"].fields:
+                    tables["Views"].Compare(key, rg.views, rr.views, "row")
                 g, r = next(gs, None), next(rs, None)
     event_fields, event_existence = {}, None
     if both:
@@ -672,7 +681,7 @@ def FormatTick(tick, occurrence):
 
 
 def FormatKey(table, key):
-    return "" if key is None else (str(key) if table == "Events" else f"{key:08X}")
+    return "" if key is None else (str(key) if table in ("Events", "Views") else f"{key:08X}")
 
 
 def FormatDiff(result, max_fields=20):

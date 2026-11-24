@@ -11,3 +11,7 @@ sys.path.insert(0, HERE)
 from tdump_writer import Repo  # noqa: E402
 
 sys.path.insert(0, os.path.join(Repo(), "Tools"))
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: the views pass over the goldens (about two minutes in all); skip it with -m \"not slow\".")

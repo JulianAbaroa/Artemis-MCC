@@ -813,7 +813,8 @@ def test_lift_stage_rest(film):
 # ---------------------------------------------------------------------------------------------------------------------------------
 
 TICK_STRUCTS = ("BridgeTickHeader", "BridgeMatch", "BridgeEvent", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeObjective", "BridgeStand",
-                "BridgeWeapon", "BridgeMagazine", "BridgeProjectile", "BridgeExplosive", "BridgeLiftStage", "BridgeLift")
+                "BridgeWeapon", "BridgeMagazine", "BridgeProjectile", "BridgeExplosive", "BridgeLiftStage", "BridgeLift", "BridgeViewHead", "BridgeViewWeapon", "BridgeViewSelf", "BridgeViewAimHit", "BridgeViewRay",
+                "BridgeViewOther", "BridgeViewFlag", "BridgeViewSound", "BridgeViewNotice", "BridgeView")
 REPLAY = "ReplayTests."
 COVERED = {}
 
@@ -925,3 +926,131 @@ def test_every_tick_field_is_asserted():
                 wrong.append(f"{field}: {test} does not exist here or its docstring does not say 'Covers' that field")
     assert not wrong, "\n".join(wrong)
     assert all(reason for reason in EXEMPT.values())
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------
+# Views (F4.7): what each agent sees, in every tick of every film. The pass is tickchecks.CollectViews (about two minutes over the nine films, it is
+# cached per film and shared by the three tests: marked slow, "-m 'not slow'" skips them).
+# ---------------------------------------------------------------------------------------------------------------------------------
+
+@functools.lru_cache(maxsize=None)
+def ViewSurvey(film):
+    path = os.path.join(RecordingsFolder(), film, "golden.tdump")
+    if not os.path.isfile(path):
+        return None
+    dump = tickdump.Dump(path)
+    return tickchecks.CollectViews(film, dump)
+
+
+def Views(film):
+    s = ViewSurvey(film)
+    if s is None:
+        pytest.skip(f"no golden.tdump in {os.path.join(RecordingsFolder(), film)} (set ARTEMIS_RECORDINGS)")
+    return s
+
+
+def RulesOf(*prefixes):
+    """The names of the rules of CheckViewBatch (and of the events of CollectViews) that start with a prefix: a rule added there is asserted here."""
+    import inspect
+    source = inspect.getsource(tickchecks.CheckViewBatch) + inspect.getsource(tickchecks.CollectViews)
+    names = re.findall(r'(?:Row|Pair|Rec|Flag)\("(\w+)"', source)
+    return sorted({n for n in names if n.startswith(prefixes)})
+
+
+def Covers(struct, *fields):
+    """Cover(struct, test, fields...) for the decorated test, and the 'Covers:' line of its docstring with every Struct.Field."""
+    def Decorate(function):
+        names = ", ".join(f"{struct}.{f}" for f in fields)
+        function.__doc__ = (function.__doc__ or "") + "\n    Covers: " + names + "."
+        Cover(struct, function.__name__, *fields)
+        return function
+    return Decorate
+
+
+def CoversMany(*groups):
+    def Decorate(function):
+        for struct, fields in groups:
+            function = Covers(struct, *fields)(function)
+        return function
+    return Decorate
+
+
+slow = pytest.mark.slow
+
+
+@slow
+@ALL
+@CoversMany(("ViewHead", ("PlayerHandle", "PlayerRow", "LocalIndex", "BipedHandle", "IsComputed", "HasBody", "Team", "Side")),
+            ("View", ("Head", "Self", "Flags", "Others")),
+            ("TickHeader", ("ViewCount", "ViewMask")),
+            ("ViewSelf", ("Eye", "Feet", "FrameYaw", "AimPitch", "LinearVelocity", "OwnVelocity", "Vitality", "Shield", "Ground", "IsGrounded", "AirborneTicks",
+                          "CrouchFraction", "Zoom", "TicksAlive", "RespawnTicks", "Powerup", "PowerupTicks", "SelectedGrenade", "FragGrenades", "PlasmaGrenades",
+                          "Ability", "AbilityEnergy", "IsAbilityActive", "CarriesFlag", "TicksSinceDamage", "IsTracked", "Weapons")),
+            ("ViewWeapon", ("Handle", "Subtype", "IsEquipped", "Loaded", "Reserve", "Energy", "Heat", "IsOverheated", "IsReloading", "ChargeFraction",
+                            "CanFireNow")),
+            ("ViewOther", ("Relation", "Channels", "IsAlive", "Position", "Velocity", "FacingYaw", "Vitality", "Shield", "WeaponSubtype", "IsCrouching",
+                           "CarriesFlag")),
+            ("ViewFlag", ("State", "Position", "CarrierRow", "ResetTicks", "IsResetRunning", "AlliesInZone", "StandPosition")))
+def test_views_invariants(film):
+    """I1, I2, I3, I5, I6 and I7 of Diseno/19 sec. 3.3 on every tick, with the sight constants of Data/Views/Sight.xml and the cone from FrameYaw and AimPitch of Self.
+    ViewCount is PlayerCount and ViewMask the IsComputed of each row; Head is the player of its row (and Side the BaseTeam of the stand its team owns); a row that
+    is not computed is zero bytes. I1: Seen only with a body, a live target, within the range and inside the cone (two heads closer than 1e-4 are one point, inside,
+    as RaycastVision). I2: two eyes well inside each other's cone and range see each other or neither. I3: an ally is on the HUD, alive as its player and at the
+    origin of its biped. I5: a row with no channel is zero but for its Relation. I7: Self is Players, Entities and Weapons of the same handle bit by bit (Eye is above
+    the feet). The Others rows follow the teams (Relation) and the channels (HUD and Seen copies); Flags[0] is the flag of the own team, Flags[1] a rival, no
+    candidate is zero bytes (I6), with CarrierRow and StandPosition of the Objectives row and its entities. The cases are counted in s.values."""
+    s = Views(film)
+    for rule in RulesOf("view_", "i1_", "i2_", "i3_", "i5_", "i6_", "i7_"):
+        s.Clean(rule)
+    assert s.values["records"] > 0 and s.values["views"] > 0 and s.values["bodies"] > 0
+    assert s.values["flag_rows"] > 0
+
+
+@slow
+def test_views_exercised_the_families():
+    """The goldens exercise each family of the invariants (otherwise the assertions would be empty): Seen, mutual cones, allies, flag rows and tracking happen in
+    at least one film."""
+    totals = collections.Counter()
+    for film in FILMS:
+        s = ViewSurvey(film)
+        if s is None:
+            pytest.skip("goldens missing")
+        for key in ("seen_pairs", "mutual_pairs", "ally_pairs", "flag_rows", "tracked", "aim_dynamic", "ray_dynamic"):
+            totals[key] += s.values[key]
+    for key in ("seen_pairs", "mutual_pairs", "ally_pairs", "flag_rows", "tracked", "aim_dynamic", "ray_dynamic"):
+        assert totals[key] > 0, key
+
+
+@slow
+@ALL
+@CoversMany(("ViewAimHit", ("Distance", "MaxDistance", "Point", "Material", "Kind", "ObjectHandle", "Function", "Subtype", "Relation", "PlayerRow",
+                            "RegionIndex", "IsHead", "SurfaceFlags")),
+            ("ViewRay", ("Distance", "Kind", "ObjectHandle", "Material", "Function", "Relation", "SurfaceFlags")),
+            ("View", ("AimHit", "RayOrigin", "Rays")),
+            ("ViewHead", ("Mode",)))
+def test_views_aim_and_rays(film):
+    """The aim ray and the rays of the pattern. Without body or eye the AimHit is zero bytes; cast, Distance is within MaxDistance, Kind is Miss, Static or Dynamic,
+    a Miss has Distance MaxDistance, Point zero and Material -1, a hit is on the line of the eye along the aim, a non-dynamic hit has no object, PlayerRow 0xFF, Function,
+    Subtype and Relation None, RegionIndex -1 and SurfaceFlags only for Static, IsHead is 0 (F4.8), a Dynamic one is an entity of the tick whose Function, Subtype
+    and Relation are the entity ones, PlayerRow the last row of the biped. RayOrigin is the bounding center of the biped (not zero for a seated one) and zero without
+    body; the rays past the pattern are zero bytes and each cast one has the same shape (range 150). The Mode of every computed View is HumanLike (F4.8)."""
+    s = Views(film)
+    for rule in RulesOf("aim_", "ray_", "view_mode"):
+        s.Clean(rule)
+    assert s.values["aim_casts"] > 0 and s.values["ray_casts"] > 0
+
+
+@slow
+@ALL
+@CoversMany(("ViewSound", ("Kind", "SourceFunction", "SourceSubtype", "Direction", "Intensity", "AgeTicks")),
+            ("ViewNotice", ("Kind", "CauseRow", "EffectRow", "CauseRelation", "EffectRelation", "FlagSide", "AgeTicks")),
+            ("View", ("SoundCount", "Sounds", "NoticeCount", "Notices")),
+            ("ViewOther", ("Elevation",)),
+            ("Event", ("Position", "Amount")))
+def test_views_reserved_are_zero(film):
+    """What F4.5 (sounds, Elevation), F4.6 (notices, radar) and F4.8 (Position and Amount of the events, the IsHead and the mode) will fill is zero today: the Radar
+    bit of Channels and Elevation of every Others row, SoundCount and every byte of Sounds, NoticeCount and every byte of Notices, Event.Position and Event.Amount
+    of every event, and the Mode of each computed View is HumanLike (checked with the aim). ViewMask is the mask of IsComputed and ViewCount is PlayerCount."""
+    s = Views(film)
+    for rule in RulesOf("reserved_", "view_count", "view_mask", "view_mode"):
+        s.Clean(rule)
