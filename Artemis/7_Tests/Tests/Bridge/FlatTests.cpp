@@ -6,6 +6,7 @@ import Common.Semantic.Type;
 import Common.Team.Type;
 import Contract.Bridge.Type;
 import Blam.Layout.Player.Type;
+import Blam.Runtime.Interaction.Type;
 import Bridge.Codec.Flat.System;
 import Bridge.Codec.Tick.Type;
 import Perception.Details.Type;
@@ -125,6 +126,9 @@ namespace
                 .Reserve = static_cast<std::uint16_t>(next()), .Energy = static_cast<float>(next()), .Heat = static_cast<float>(next()),
                 .IsOverheated = true, .IsReloading = true, .ChargeFraction = static_cast<float>(next()), .CanFireNow = true };
         }
+        view.Interaction = { .Kind = (next() % 2) != 0 ? Blam::Runtime::Interaction::Type::Alive::InteractionKind::EnterVehicle : Blam::Runtime::Interaction::Type::Alive::InteractionKind::GrabObjective,
+            .Detail = static_cast<Blam::Runtime::Interaction::Type::Alive::InteractionDetail>(next()), .TargetHandle = next(),
+            .TargetFunction = static_cast<Function>(next()), .TargetSubtype = static_cast<std::uint8_t>(next()) };
         view.AimHit = { .Distance = static_cast<float>(next()), .MaxDistance = static_cast<float>(next()), .Point = vec(), .Material = static_cast<std::int16_t>(next()),
             .Kind = HitKind::Dynamic, .ObjectHandle = next(), .Function = static_cast<Function>(next()), .Subtype = static_cast<std::uint8_t>(next()),
             .Relation = relation(), .PlayerRow = static_cast<std::uint8_t>(next()), .RegionIndex = static_cast<std::int16_t>(next()), .IsHead = true,
@@ -223,6 +227,13 @@ namespace
             EXPECT_EQ(out.ChargeFraction, weapon.ChargeFraction);
             EXPECT_EQ(out.CanFireNow, 1);
         }
+
+        EXPECT_EQ(static_cast<std::uint8_t>(row.Interaction.Kind), static_cast<std::uint8_t>(view.Interaction.Kind));
+        EXPECT_NE(static_cast<std::uint8_t>(row.Interaction.Kind), 0);
+        EXPECT_EQ(row.Interaction.Detail, static_cast<std::uint8_t>(view.Interaction.Detail));
+        EXPECT_EQ(row.Interaction.TargetHandle, view.Interaction.TargetHandle);
+        EXPECT_EQ(row.Interaction.TargetFunction, static_cast<std::uint8_t>(view.Interaction.TargetFunction));
+        EXPECT_EQ(row.Interaction.TargetSubtype, view.Interaction.TargetSubtype);
 
         const auto& aim{ view.AimHit };
         EXPECT_EQ(row.AimHit.Distance, aim.Distance);

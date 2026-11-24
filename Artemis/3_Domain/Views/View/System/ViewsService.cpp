@@ -8,6 +8,7 @@ import Common.Team.Type;
 import Blam.MapModel.Definitions.Type;
 import Blam.MapModel.Definitions.State;
 import Blam.MapModel.World.System;
+import Blam.Runtime.Interaction.Type;
 import Blam.Runtime.Object.Type;
 import Perception.Details.Type;
 import Perception.Entities.Type;
@@ -25,6 +26,9 @@ namespace
     using Common::Semantic::Type::FlagState;
     using Common::Team::Type::Team;
     using Blam::MapModel::Definitions::Type::Bipd::Bipd;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionDetail;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
+    using Blam::Runtime::Interaction::Type::Alive::ObjectSelection;
     using Blam::Runtime::Object::Type::Alive::ObjectTable;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Perception::Details::Type::ObjectiveDetail;
@@ -59,6 +63,7 @@ namespace
     using Views::View::Type::ViewAimHit;
     using Views::View::Type::ViewChannel;
     using Views::View::Type::ViewFlag;
+    using Views::View::Type::ViewInteraction;
     using Views::View::Type::ViewOther;
     using Views::View::Type::ViewTable;
     using Views::View::Type::ViewRayHit;
@@ -80,6 +85,7 @@ namespace
     using Views::View::Type::k_ViewWeaponSlots;
 
     using Common::Engine::Type::k_MaxPlayers;
+    using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_PrimaryLocalUser;
 
@@ -391,6 +397,20 @@ namespace
     }
 
     // Copies a flag, where it is (or where its carrier is), who carries it and where its stand is.
+    // Copies the selection of the engine for the agent and the function and subtype of the entity it points at.
+    auto FillInteraction(ViewInteraction& out, const ObjectSelection& selection, const Entities* entities) -> void
+    {
+        out.Kind = selection.Kind;
+        out.Detail = selection.Detail;
+        out.TargetHandle = selection.TargetHandle;
+
+        const Entity* target{ entities && selection.TargetHandle != k_NoHandle ? entities->Find(selection.TargetHandle) : nullptr };
+        if (!target) return;
+
+        out.TargetFunction = target->Function;
+        out.TargetSubtype = target->Subtype;
+    }
+
     auto FillFlag(ViewFlag& out, const ObjectiveDetail& flag, const ObjectiveDetails& objectives, const Players& players,
         const Entities& entities) -> void
     {
@@ -457,6 +477,7 @@ namespace Views::View::System
         const auto objectives{ m_ObjectiveDetailsStore.Acquire() };
         const auto objects{ m_ObjectStore.Acquire() };
         const std::vector<std::uint32_t> locked{ LockedTargets(weapons.get()) };
+        const auto selections{ m_InteractionStore.AcquireSelections() };
 
         const std::size_t rows{ (std::min)(players->Rows.size(), k_MaxPlayers) };
 
@@ -514,10 +535,12 @@ namespace Views::View::System
             self.Zoom = ZoomLevel::None;
             self.Ability = k_NoHandle;
             self.TicksSinceDamage = k_NoHandle;
+            view.Interaction = ViewInteraction{ .Kind = InteractionKind::None, .Detail = InteractionDetail::None, .TargetHandle = k_NoHandle };
             for (ViewWeapon& slot : self.Weapons) slot.Handle = k_NoHandle;
             if (!player.Body) continue;
 
             const Body& body{ *player.Body };
+            if (selections) FillInteraction(view.Interaction, (*selections)[(player.Handle & k_HandleIndexMask) % k_MaxPlayers], entities.get());
             self.FrameYaw = std::atan2(body.Aim.Y, body.Aim.X);
             self.AimPitch = std::atan2(body.Aim.Z, std::hypot(body.Aim.X, body.Aim.Y));
             self.OwnVelocity = body.OwnVelocity;

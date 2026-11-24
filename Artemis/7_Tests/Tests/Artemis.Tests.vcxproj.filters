@@ -153,6 +153,9 @@
     <ClCompile Include="Views\RaycastBenchTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>
+    <ClCompile Include="Views\ViewInteractionTests.cpp">
+      <Filter>Views</Filter>
+    </ClCompile>
     <ClCompile Include="Views\ViewEyeTests.cpp">
       <Filter>Views</Filter>
     </ClCompile>

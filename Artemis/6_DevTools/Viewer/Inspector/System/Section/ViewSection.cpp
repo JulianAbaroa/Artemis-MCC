@@ -9,6 +9,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Math.System;
 import Common.Semantic.Type;
+import Blam.Runtime.Interaction.Type;
 import Views.View.Type;
 import DevTools.Viewer.Style.Type;
 import std;
@@ -18,6 +19,7 @@ namespace
     namespace VecMath = Common::Math::System;
     namespace SemanticType = Common::Semantic::Type;
 
+    using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Views::View::Type::View;
     using Views::View::Type::ViewChannel;
     using Views::View::Type::ViewFlag;
@@ -42,6 +44,20 @@ namespace
         case ViewRelation::Enemy:   return "Enemy";
         case ViewRelation::Neutral: return "Neutral";
         default:                    return "None";
+        }
+    }
+
+    auto InteractionName(InteractionKind kind) -> const char*
+    {
+        switch (kind)
+        {
+        case InteractionKind::GrabWeapon:        return "GrabWeapon";
+        case InteractionKind::GrabArmorAbility:  return "GrabArmorAbility";
+        case InteractionKind::TakeHealthStation: return "TakeHealthStation";
+        case InteractionKind::EnterVehicle:      return "EnterVehicle";
+        case InteractionKind::Hijack:            return "Hijack";
+        case InteractionKind::GrabObjective:     return "GrabObjective";
+        default:                                 return "None";
         }
     }
 
@@ -125,6 +141,10 @@ namespace DevTools::Viewer::Inspector::System
 
         ImGui::Text("Row %d | Mode %s | Side %u | Team %u", static_cast<int>(view->Head.PlayerRow),
             isFull ? "Full" : "HumanLike", static_cast<unsigned>(view->Head.Side), static_cast<unsigned>(view->Head.Team));
+
+        const std::string_view function{ SemanticType::NameOf(view->Interaction.TargetFunction) };
+        ImGui::Text("Interaction: %s | object 0x%08X | %.*s", InteractionName(view->Interaction.Kind),
+            static_cast<unsigned>(view->Interaction.TargetHandle), static_cast<int>(function.size()), function.data());
 
         ImGui::Separator();
         DrawOthers(*view);

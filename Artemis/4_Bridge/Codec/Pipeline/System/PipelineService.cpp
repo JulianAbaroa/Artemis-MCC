@@ -19,6 +19,7 @@ namespace Bridge::Codec::Pipeline::System
         m_Tables.m_PlayerService.UpdatePlayerTable(snapshot);
         if (!stage()) return;
         m_Tables.m_InteractionService.UpdateInteractionTable(snapshot);
+        m_Tables.m_InteractionService.UpdateObjectSelections(snapshot);
         if (!stage()) return;
         m_Tables.m_GameService.Update(snapshot);
         if (!stage()) return;

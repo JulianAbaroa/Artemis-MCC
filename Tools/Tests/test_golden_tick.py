@@ -813,7 +813,7 @@ def test_lift_stage_rest(film):
 # ---------------------------------------------------------------------------------------------------------------------------------
 
 TICK_STRUCTS = ("BridgeTickHeader", "BridgeMatch", "BridgeEvent", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeObjective", "BridgeStand",
-                "BridgeWeapon", "BridgeMagazine", "BridgeProjectile", "BridgeExplosive", "BridgeLiftStage", "BridgeLift", "BridgeViewHead", "BridgeViewWeapon", "BridgeViewSelf", "BridgeViewAimHit", "BridgeViewRay",
+                "BridgeWeapon", "BridgeMagazine", "BridgeProjectile", "BridgeExplosive", "BridgeLiftStage", "BridgeLift", "BridgeViewHead", "BridgeViewWeapon", "BridgeViewSelf", "BridgeViewInteraction", "BridgeViewAimHit", "BridgeViewRay",
                 "BridgeViewOther", "BridgeViewFlag", "BridgeViewSound", "BridgeViewNotice", "BridgeView")
 REPLAY = "ReplayTests."
 COVERED = {}
@@ -981,7 +981,8 @@ slow = pytest.mark.slow
 @slow
 @ALL
 @CoversMany(("ViewHead", ("PlayerHandle", "PlayerRow", "LocalIndex", "BipedHandle", "IsComputed", "HasBody", "Team", "Side")),
-            ("View", ("Head", "Self", "Flags", "Others")),
+            ("View", ("Head", "Self", "Interaction", "Flags", "Others")),
+            ("ViewInteraction", ("Kind", "Detail", "TargetHandle", "TargetFunction", "TargetSubtype")),
             ("TickHeader", ("ViewCount", "ViewMask")),
             ("ViewSelf", ("Eye", "Feet", "FrameYaw", "AimPitch", "LinearVelocity", "OwnVelocity", "Vitality", "Shield", "Ground", "IsGrounded", "AirborneTicks",
                           "CrouchFraction", "Zoom", "TicksAlive", "RespawnTicks", "Powerup", "PowerupTicks", "SelectedGrenade", "FragGrenades", "PlasmaGrenades",
@@ -998,7 +999,7 @@ def test_views_invariants(film):
     as RaycastVision). I2: two eyes well inside each other's cone and range see each other or neither. I3: an ally is on the HUD, alive as its player and at the
     origin of its biped. I5: a row with no channel is zero but for its Relation. I7: Self is Players, Entities and Weapons of the same handle bit by bit (Eye is above
     the feet). The Others rows follow the teams (Relation) and the channels (HUD and Seen copies); Flags[0] is the flag of the own team, Flags[1] a rival, no
-    candidate is zero bytes but for the stand of its side (I6, D370), HasFlag is the existence of the candidate, with CarrierRow and StandPosition of the Objectives row and its entities. The cases are counted in s.values."""
+    candidate is zero bytes but for the stand of its side (I6, D370), Interaction is None exactly when it has no target (None, detail 0xFF, no handle) and its function and subtype are those of the entity of the target (F5.1 A, D371), HasFlag is the existence of the candidate, with CarrierRow and StandPosition of the Objectives row and its entities. The cases are counted in s.values."""
     s = Views(film)
     for rule in RulesOf("view_", "i1_", "i2_", "i3_", "i5_", "i6_", "i7_"):
         s.Clean(rule)

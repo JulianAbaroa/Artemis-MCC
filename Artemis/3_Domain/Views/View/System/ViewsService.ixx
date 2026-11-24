@@ -4,6 +4,7 @@ import Common.Log.System;
 import Common.Math.Type;
 import Blam.MapModel.Definitions.State;
 import Blam.MapModel.World.System;
+import Blam.Runtime.Interaction.State;
 import Blam.Runtime.Object.State;
 import Perception.Collidable.System;
 import Perception.Details.State;
@@ -38,12 +39,14 @@ export namespace Views::View::System
     auto RaycastsOf(const Views::View::Type::View& view) -> Views::Raycast::Type::Raycasts;
 
     // Builds the View of every agent of the set, one per row of Players (F4, D307).
-    // note: F4.1 fills the head and Self, F4.2 the aim hit and the rays. The other sections are zero until F4.3 to F4.6.
+    // note: F5.1 A also fills Interaction from the selections of the interaction store (the action applied to the agent, D371).
+    // F4.1 fills the head and Self, F4.2 the aim hit and the rays. The other sections are zero until F4.3 to F4.6.
     class ViewsService
     {
     private:
         using Log = Common::Log::System::Log;
         using DefinitionsStore = Blam::MapModel::Definitions::State::DefinitionsStore;
+        using InteractionStore = Blam::Runtime::Interaction::State::InteractionStore;
         using ObjectTableStore = Blam::Runtime::Object::State::ObjectTableStore;
         using ObjectiveDetailsStore = Perception::Details::State::ObjectiveDetailsStore;
         using ObjectGraphStore = Perception::ObjectGraph::State::ObjectGraphStore;
@@ -57,11 +60,11 @@ export namespace Views::View::System
         using AgentSet = Views::View::Type::AgentSet;
 
     public:
-        ViewsService(Log& log, ObjectTableStore& objectStore, DefinitionsStore& definitionsStore,
+        ViewsService(Log& log, ObjectTableStore& objectStore, InteractionStore& interactionStore, DefinitionsStore& definitionsStore,
             EntitiesStore& entitiesStore, PlayersStore& playersStore, WeaponDetailsStore& weaponDetailsStore,
             ObjectiveDetailsStore& objectiveDetailsStore, ObjectGraphStore& graphStore, Raycaster& raycaster,
             CollidableService& collidableService, RaycastSceneStore& sceneStore, ViewsStore& viewsStore) : m_Log(log),
-            m_ObjectStore(objectStore), m_DefinitionsStore(definitionsStore), m_EntitiesStore(entitiesStore),
+            m_ObjectStore(objectStore), m_InteractionStore(interactionStore), m_DefinitionsStore(definitionsStore), m_EntitiesStore(entitiesStore),
             m_PlayersStore(playersStore), m_WeaponDetailsStore(weaponDetailsStore),
             m_ObjectiveDetailsStore(objectiveDetailsStore), m_GraphStore(graphStore), m_Raycaster(raycaster),
             m_CollidableService(collidableService), m_SceneStore(sceneStore), m_ViewsStore(viewsStore) {}
@@ -77,6 +80,7 @@ export namespace Views::View::System
     private:
         Log& m_Log;
         ObjectTableStore& m_ObjectStore;
+        InteractionStore& m_InteractionStore;
         DefinitionsStore& m_DefinitionsStore;
         EntitiesStore& m_EntitiesStore;
         PlayersStore& m_PlayersStore;

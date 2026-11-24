@@ -35,7 +35,7 @@ FOOTER = struct.Struct("<4sIQQQQ")
 HAS_MATCH, EVENTS_LOST, KEYFRAME, TIME_MEASURED = 1, 2, 4, 8
 DUMP_STRUCTS = ("BridgeVec3", "BridgeAgentInput", "BridgeTickHeader", "BridgeMatch", "BridgePlayerTraits", "BridgePlayer", "BridgeEntity", "BridgeEvent", "BridgeObjective",
                 "BridgeStand", "BridgeWeapon", "BridgeProjectile", "BridgeMagazine", "BridgeExplosive", "BridgeLiftStage", "BridgeLift",
-                "BridgeViewHead", "BridgeViewWeapon", "BridgeViewSelf", "BridgeViewAimHit", "BridgeViewRay", "BridgeViewOther", "BridgeViewFlag",
+                "BridgeViewHead", "BridgeViewWeapon", "BridgeViewSelf", "BridgeViewInteraction", "BridgeViewAimHit", "BridgeViewRay", "BridgeViewOther", "BridgeViewFlag",
                 "BridgeViewSound", "BridgeViewNotice", "BridgeView")
 SIZES = {"u8": 1, "i8": 1, "u16": 2, "i16": 2, "u32": 4, "i32": 4, "f32": 4, "u64": 8}
 

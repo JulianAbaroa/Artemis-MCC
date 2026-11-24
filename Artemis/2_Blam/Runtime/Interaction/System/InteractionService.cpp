@@ -2,6 +2,7 @@ module Blam.Runtime.Interaction.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
+import Blam.Layout.Action.Type;
 import Blam.Layout.Interaction.Type;
 import Blam.Layout.Player.Type;
 import Blam.Layout.Snapshot.Type;
@@ -13,10 +14,18 @@ namespace
     using Common::Math::Type::Vec3;
 
     using Blam::Runtime::Interaction::Type::Alive::LocalInteractions;
+    using Blam::Runtime::Interaction::Type::Alive::ObjectSelection;
+    using Blam::Runtime::Interaction::Type::Alive::ObjectSelections;
     using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Blam::Runtime::Interaction::Type::Alive::InteractionDetail;
 
     using Blam::Layout::Snapshot::Type::RegionId;
+
+    using Blam::Layout::Action::Type::Offset::k_ActionInteractionOffset;
+    using Blam::Layout::Action::Type::Offset::k_AppliedActionsOffset;
+    using Blam::Layout::Action::Type::Offset::k_AppliedMaskOffset;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
 
     using Blam::Layout::Interaction::Type::Offset::k_Kind;
     using Blam::Layout::Interaction::Type::Offset::k_Detail;
@@ -36,6 +45,7 @@ namespace
     using Blam::Layout::Player::Type::Mapping::k_EntryStride;
 
     using Common::Engine::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
     using Common::Engine::Type::k_HandleIndexMask;
 }
@@ -70,13 +80,41 @@ namespace Blam::Runtime::Interaction::System
         m_InteractionStore.Publish(interactions);
     }
 
+    auto InteractionService::ReadSelection(const Snapshot& snapshot, RegionId region, std::size_t recordOffset) -> ObjectSelection
+    {
+        return ObjectSelection{
+            .Kind = snapshot.Read<InteractionKind>(region, recordOffset + k_Kind),
+            .Detail = snapshot.Read<InteractionDetail>(region, recordOffset + k_Detail),
+            .TargetHandle = snapshot.Read<std::uint32_t>(region, recordOffset + k_TargetObjectHandle) };
+    }
+
+    auto InteractionService::UpdateObjectSelections(const Snapshot& snapshot) -> void
+    {
+        ObjectSelections selections{};
+
+        if (snapshot.IsCaptured(RegionId::PlayerActions))
+        {
+            const std::uint32_t mask{ snapshot.Read<std::uint32_t>(RegionId::PlayerActions, k_AppliedMaskOffset) };
+            for (std::size_t player{ 0 }; player < (std::min)(k_MaxPlayers, k_MaxActionPlayers); ++player)
+            {
+                if (((mask >> player) & 1u) == 0) continue;
+
+                selections[player] = this->ReadSelection(snapshot, RegionId::PlayerActions,
+                    k_AppliedActionsOffset + (player * k_PlayerActionSize) + k_ActionInteractionOffset);
+            }
+        }
+
+        m_InteractionStore.PublishSelections(selections);
+    }
+
     auto InteractionService::ReadInteraction(const Snapshot& snapshot, std::size_t interactionOffset) -> AliveInteraction
     {
         AliveInteraction interaction{};
 
-        interaction.Kind = snapshot.Read<InteractionKind>(RegionId::Interaction, interactionOffset + k_Kind);
-        interaction.InteractionSlotID = snapshot.Read<InteractionDetail>(RegionId::Interaction, interactionOffset + k_Detail);
-        interaction.TargetObjectHandle = snapshot.Read<std::uint32_t>(RegionId::Interaction, interactionOffset + k_TargetObjectHandle);
+        const ObjectSelection selection{ this->ReadSelection(snapshot, RegionId::Interaction, interactionOffset) };
+        interaction.Kind = selection.Kind;
+        interaction.InteractionSlotID = selection.Detail;
+        interaction.TargetObjectHandle = selection.TargetHandle;
 
         interaction.IsMeleeAvailable = snapshot.Read<std::uint8_t>(RegionId::Interaction, interactionOffset + k_IsMeleeAvailable);
         interaction.MeleeTargetHandle = snapshot.Read<std::uint32_t>(RegionId::Interaction, interactionOffset + k_MeleeTargetHandle);

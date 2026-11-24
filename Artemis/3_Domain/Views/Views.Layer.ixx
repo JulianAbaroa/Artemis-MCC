@@ -31,7 +31,7 @@ export namespace Views
         Layer(Log& log, Blam::MapModel::Layer& resolved, Blam::Runtime::Layer& tables,
             Perception::Layer& environment) :
             m_AffordanceService(log, tables.m_ObjectStore, tables.m_BoneMatricesStore, tables.m_InteractionStore, tables.m_PlayerStore, environment.m_ClassifierStore, environment.m_ObjectGraphStore, m_AffordanceStore, environment.m_CollidableService),
-            m_ViewsService(log, tables.m_ObjectStore, resolved.m_DefinitionsStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_WeaponDetailsStore, environment.m_ObjectiveDetailsStore, environment.m_ObjectGraphStore, resolved.m_Raycaster, environment.m_CollidableService, m_RaycastSceneStore, m_ViewsStore) {}
+            m_ViewsService(log, tables.m_ObjectStore, tables.m_InteractionStore, resolved.m_DefinitionsStore, environment.m_EntitiesStore, environment.m_PlayersStore, environment.m_WeaponDetailsStore, environment.m_ObjectiveDetailsStore, environment.m_ObjectGraphStore, resolved.m_Raycaster, environment.m_CollidableService, m_RaycastSceneStore, m_ViewsStore) {}
         ~Layer() = default;
 
         Layer(const Layer&) = delete;

@@ -3,6 +3,7 @@ module Bridge.Codec.Flat.System;
 import Common.Engine.Type;
 import Common.Math.Type;
 import Blam.Layout.Player.Type;
+import Blam.Runtime.Interaction.Type;
 import Blam.Runtime.Object.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
@@ -28,12 +29,14 @@ namespace
     using Perception::Details::Type::StandDetail;
     using Perception::Details::Type::WeaponDetail;
     using Blam::Layout::Player::Type::Traits::PlayerTraits;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Views::Raycast::Type::HitKind;
     using Views::View::Type::View;
     using Views::View::Type::ViewAimHit;
     using Views::View::Type::ViewChannel;
     using Views::View::Type::ViewFlag;
+    using Views::View::Type::ViewInteraction;
     using Views::View::Type::ViewFlagSide;
     using Views::View::Type::ViewHead;
     using Views::View::Type::ViewMode;
@@ -47,10 +50,12 @@ namespace
     using Views::View::Type::ViewWeapon;
     using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeHitKind;
+    using Contract::Bridge::Type::BridgeInteractionKind;
     using Contract::Bridge::Type::BridgeView;
     using Contract::Bridge::Type::BridgeViewAimHit;
     using Contract::Bridge::Type::BridgeViewChannel;
     using Contract::Bridge::Type::BridgeViewFlag;
+    using Contract::Bridge::Type::BridgeViewInteraction;
     using Contract::Bridge::Type::BridgeViewFlagSide;
     using Contract::Bridge::Type::BridgeViewHead;
     using Contract::Bridge::Type::BridgeViewMode;
@@ -118,6 +123,13 @@ namespace
     static_assert(std::to_underlying(BridgeViewFlagSide::NoSide) == std::to_underlying(ViewFlagSide::None) &&
         std::to_underlying(BridgeViewFlagSide::Mine) == std::to_underlying(ViewFlagSide::Mine) &&
         std::to_underlying(BridgeViewFlagSide::Rival) == std::to_underlying(ViewFlagSide::Rival));
+    static_assert(std::to_underlying(BridgeInteractionKind::NoInteraction) == std::to_underlying(InteractionKind::None) &&
+        std::to_underlying(BridgeInteractionKind::GrabWeapon) == std::to_underlying(InteractionKind::GrabWeapon) &&
+        std::to_underlying(BridgeInteractionKind::GrabArmorAbility) == std::to_underlying(InteractionKind::GrabArmorAbility) &&
+        std::to_underlying(BridgeInteractionKind::TakeHealthStation) == std::to_underlying(InteractionKind::TakeHealthStation) &&
+        std::to_underlying(BridgeInteractionKind::EnterVehicle) == std::to_underlying(InteractionKind::EnterVehicle) &&
+        std::to_underlying(BridgeInteractionKind::Hijack) == std::to_underlying(InteractionKind::Hijack) &&
+        std::to_underlying(BridgeInteractionKind::GrabObjective) == std::to_underlying(InteractionKind::GrabObjective));
     static_assert(std::to_underlying(BridgeHitKind::Miss) == std::to_underlying(HitKind::None) &&
         std::to_underlying(BridgeHitKind::Static) == std::to_underlying(HitKind::Static) &&
         std::to_underlying(BridgeHitKind::Dynamic) == std::to_underlying(HitKind::Dynamic));
@@ -459,6 +471,17 @@ namespace
         return row;
     }
 
+    auto ToBridge(const ViewInteraction& interaction) -> BridgeViewInteraction
+    {
+        BridgeViewInteraction row{ Zeroed<BridgeViewInteraction>() };
+        row.Kind = static_cast<BridgeInteractionKind>(interaction.Kind);
+        row.Detail = static_cast<std::uint8_t>(interaction.Detail);
+        row.TargetHandle = interaction.TargetHandle;
+        row.TargetFunction = static_cast<std::uint8_t>(interaction.TargetFunction);
+        row.TargetSubtype = interaction.TargetSubtype;
+        return row;
+    }
+
     auto ToBridge(const ViewAimHit& hit) -> BridgeViewAimHit
     {
         BridgeViewAimHit row{ Zeroed<BridgeViewAimHit>() };
@@ -553,6 +576,7 @@ namespace
         BridgeView row{ Zeroed<BridgeView>() };
         row.Head = ToBridge(view.Head);
         row.Self = ToBridge(view.Self);
+        row.Interaction = ToBridge(view.Interaction);
         row.AimHit = ToBridge(view.AimHit);
         row.RayOrigin = ToBridge(view.RayOrigin);
         for (std::size_t i{ 0 }; i < view.Rays.size(); ++i) row.Rays[i] = ToBridge(view.Rays[i]);

@@ -127,6 +127,15 @@
 		<value name="Mine" id="1" />
 		<value name="Rival" id="2" />
 	</enum>
+	<enum name="BridgeInteractionKind" type="u8" doc="Kind of object interaction the engine offers to a player (Blam Runtime Interaction InteractionKind).">
+		<value name="NoInteraction" id="0" />
+		<value name="GrabWeapon" id="2" />
+		<value name="GrabArmorAbility" id="3" />
+		<value name="TakeHealthStation" id="4" />
+		<value name="EnterVehicle" id="6" />
+		<value name="Hijack" id="9" />
+		<value name="GrabObjective" id="10" doc="The flag." />
+	</enum>
 	<enum name="BridgeHitKind" type="u8" doc="What a ray hit (Views Raycast HitKind).">
 		<value name="Miss" id="0" />
 		<value name="Static" id="1" doc="The BSP." />
@@ -530,6 +539,14 @@
 		<field name="Weapons" type="BridgeViewWeapon" count="ViewWeaponSlots" doc="The primary and the secondary weapon." />
 	</struct>
 
+	<struct name="BridgeViewInteraction" doc="The object the engine would have the agent use, from the action the simulation applied to it (Views ViewInteraction, D371). None / 0xFF / 0xFFFFFFFF without selection.">
+		<field name="Kind" type="u8" enum="BridgeInteractionKind" />
+		<field name="Detail" type="u8" doc="Depends on the kind: a seat for EnterVehicle and Hijack, 1 grab or 2 change for GrabWeapon, 0xFF none (InteractionDetail)." />
+		<field name="TargetHandle" type="u32" doc="NoHandle (0xFFFFFFFF) without selection." />
+		<field name="TargetFunction" type="u8" semantic="Function" doc="Function of the entity of the target, Unknown when it is not in Entities." />
+		<field name="TargetSubtype" type="u8" />
+	</struct>
+
 	<struct name="BridgeViewAimHit" doc="What the aim ray of the agent hits (Views ViewAimHit).">
 		<field name="Distance" type="f32" />
 		<field name="MaxDistance" type="f32" doc="Range of the ray (the autoaim of the weapon, capped), 0 when it was not cast." />
@@ -604,6 +621,7 @@
 	<struct name="BridgeView" doc="Everything one agent can know in one tick (Views View, F4 D307-D321): a copy, never a computation. World space and world units.">
 		<field name="Head" type="BridgeViewHead" />
 		<field name="Self" type="BridgeViewSelf" />
+		<field name="Interaction" type="BridgeViewInteraction" />
 		<field name="AimHit" type="BridgeViewAimHit" />
 		<field name="RayOrigin" type="BridgeVec3" doc="Where the rays of the pattern start from (bounding center of the vehicle or of the biped), zero when they were not cast." />
 		<field name="Rays" type="BridgeViewRay" count="ViewRayCount" />

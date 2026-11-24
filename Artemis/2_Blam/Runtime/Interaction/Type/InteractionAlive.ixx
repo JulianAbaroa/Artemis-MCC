@@ -9,6 +9,7 @@ namespace
     using Common::Math::Type::Vec3;
 
     using Common::Engine::Type::k_MaxLocalUsers;
+    using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_NoHandle;
 }
 
@@ -40,6 +41,19 @@ export namespace Blam::Runtime::Interaction::Type::Alive
         GrabWeapon = 0x01,
         ChangeWeapon = 0x02
     };
+
+    // The one object the engine picked for a player to use: the first record of an interaction (kind, detail and object), whichever
+    // source it was read from (the table of a local player or the action the simulation applied to any player).
+    struct ObjectSelection
+    {
+        InteractionKind Kind{ InteractionKind::None };
+        InteractionDetail Detail{ InteractionDetail::None };
+        std::uint32_t TargetHandle{ k_NoHandle };
+    };
+
+    // The selection of every player that had an applied action in the tick, by player table index (the low 16 bits of the handle).
+    // Players without an action are None / None / k_NoHandle.
+    struct ObjectSelections : std::array<ObjectSelection, k_MaxPlayers> {};
 
     // Snapshot of the engine interaction table of one local player: its object, melee and aim targets.
     struct AliveInteraction

@@ -6,6 +6,7 @@ import Common.Log.System;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
+import Blam.Layout.Action.Type;
 import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
 import Blam.Layout.Interaction.Type;
@@ -58,6 +59,7 @@ namespace
     using Blam::Layout::Player::Type::Traits::AbilityUsageMode;
     using Tests::Support::Blam::k_CtfCBaseTraits;
     using Tests::Support::Blam::CarrierTraits;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionDetail;
     using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Tests::Support::Blam::SyntheticTag;
     using Tests::Support::Blam::Fill;
@@ -1460,4 +1462,81 @@ TEST_F(RuntimeTests, CleanupForgetsEveryTable)
     // After a cleanup the same objects are discovered again (a new map).
     EXPECT_EQ(this->UpdateObjects(snapshot)->size(), 1u);
     EXPECT_EQ(this->UpdateGame(snapshot)->Events.size(), 3u);
+}
+
+// --- Object selections of the applied actions (F5.1 A, D371) ---
+
+namespace
+{
+    // Writes the first interaction record of the applied action of the player index into the region PlayerActions.
+    auto PutSelection(std::vector<std::uint8_t>& region, std::size_t player, InteractionKind kind, InteractionDetail detail, std::uint32_t handle) -> void
+    {
+        namespace ActionOffset = Blam::Layout::Action::Type::Offset;
+        const std::size_t record{ ActionOffset::k_AppliedActionsOffset + (player * Blam::Layout::Action::Type::Size::k_PlayerActionSize) +
+            ActionOffset::k_ActionInteractionOffset };
+        Put(region, record + InteractionOffset::k_Kind, static_cast<std::uint8_t>(kind));
+        Put(region, record + InteractionOffset::k_Detail, static_cast<std::uint8_t>(detail));
+        Put(region, record + InteractionOffset::k_TargetObjectHandle, handle);
+    }
+}
+
+TEST_F(RuntimeTests, ObjectSelectionIsTheFirstRecordOfEachAppliedActionWithItsMaskBit)
+{
+    Snapshot snapshot{};
+    std::vector<std::uint8_t>& actions{ CaptureRegion(snapshot, RegionId::PlayerActions, RegionSize(RegionId::PlayerActions)) };
+    PutSelection(actions, 1, InteractionKind::GrabWeapon, InteractionDetail::GrabWeapon, 0xAA010021);
+    PutSelection(actions, 5, InteractionKind::GrabObjective, InteractionDetail::None, 0xF1A60001);
+    PutSelection(actions, 9, InteractionKind::EnterVehicle, InteractionDetail::FirstSeat, 0xBB010031);
+    // Player 3 has data but no bit in the mask: no action this tick.
+    PutSelection(actions, 3, InteractionKind::Hijack, InteractionDetail::ZeroSeat, 0xCC010041);
+    // The second record of an action is not the selection of the engine.
+    namespace ActionOffset = Blam::Layout::Action::Type::Offset;
+    Put(actions, ActionOffset::k_AppliedActionsOffset + Blam::Layout::Action::Type::Size::k_PlayerActionSize + ActionOffset::k_ActionInteractionOffset + 0xC,
+        static_cast<std::uint8_t>(InteractionKind::Hijack));
+    Put(actions, ActionOffset::k_AppliedMaskOffset, static_cast<std::uint32_t>((1u << 1) | (1u << 5) | (1u << 9)));
+
+    m_Tables.m_InteractionService.UpdateObjectSelections(snapshot);
+    const auto selections{ m_Tables.m_InteractionStore.AcquireSelections() };
+    ASSERT_NE(selections, nullptr);
+
+    EXPECT_EQ((*selections)[1].Kind, InteractionKind::GrabWeapon);
+    EXPECT_EQ((*selections)[1].Detail, InteractionDetail::GrabWeapon);
+    EXPECT_EQ((*selections)[1].TargetHandle, 0xAA010021u);
+    EXPECT_EQ((*selections)[5].Kind, InteractionKind::GrabObjective);
+    EXPECT_EQ((*selections)[5].TargetHandle, 0xF1A60001u);
+    EXPECT_EQ((*selections)[9].Kind, InteractionKind::EnterVehicle);
+    EXPECT_EQ((*selections)[9].Detail, InteractionDetail::FirstSeat);
+    EXPECT_EQ((*selections)[9].TargetHandle, 0xBB010031u);
+
+    for (const std::size_t player : { std::size_t{ 0 }, std::size_t{ 3 }, std::size_t{ 15 } })
+    {
+        EXPECT_EQ((*selections)[player].Kind, InteractionKind::None) << player;
+        EXPECT_EQ((*selections)[player].Detail, InteractionDetail::None) << player;
+        EXPECT_EQ((*selections)[player].TargetHandle, k_NoHandle) << player;
+    }
+}
+
+TEST_F(RuntimeTests, ObjectSelectionsAreNoneWithAnEmptyRegionOrAnEmptyMask)
+{
+    // Not captured: a tick without published actions, no port, or a recording made before the region existed.
+    m_Tables.m_InteractionService.UpdateObjectSelections(Snapshot{});
+    auto selections{ m_Tables.m_InteractionStore.AcquireSelections() };
+    ASSERT_NE(selections, nullptr);
+    for (const auto& selection : *selections)
+    {
+        EXPECT_EQ(selection.Kind, InteractionKind::None);
+        EXPECT_EQ(selection.TargetHandle, k_NoHandle);
+    }
+
+    // Captured, mask 0.
+    Snapshot snapshot{};
+    std::vector<std::uint8_t>& actions{ CaptureRegion(snapshot, RegionId::PlayerActions, RegionSize(RegionId::PlayerActions)) };
+    PutSelection(actions, 2, InteractionKind::GrabWeapon, InteractionDetail::GrabWeapon, 0xAA010021);
+    m_Tables.m_InteractionService.UpdateObjectSelections(snapshot);
+    selections = m_Tables.m_InteractionStore.AcquireSelections();
+    ASSERT_NE(selections, nullptr);
+    for (const auto& selection : *selections) EXPECT_EQ(selection.Kind, InteractionKind::None);
+
+    m_Tables.m_InteractionService.Cleanup();
+    EXPECT_EQ(m_Tables.m_InteractionStore.AcquireSelections(), nullptr);
 }

@@ -13,8 +13,20 @@ namespace Blam::Runtime::Interaction::State
         return m_LocalInteractions.load(std::memory_order_acquire);
     }
 
+    auto InteractionStore::PublishSelections(ObjectSelections selections) -> void
+    {
+        auto snapshot = std::make_shared<const ObjectSelections>(std::move(selections));
+        m_Selections.store(snapshot, std::memory_order_release);
+    }
+
+    auto InteractionStore::AcquireSelections() const -> std::shared_ptr<const ObjectSelections>
+    {
+        return m_Selections.load(std::memory_order_acquire);
+    }
+
     auto InteractionStore::Cleanup() -> void
     {
         m_LocalInteractions.store(nullptr, std::memory_order_release);
+        m_Selections.store(nullptr, std::memory_order_release);
     }
 }

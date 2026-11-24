@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 2
-LAYOUT_HASH = 0xAB6105BB1F44D5F8
+LAYOUT_HASH = 0x3BBCD83EA7ACD91E
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -158,6 +158,17 @@ class BridgeViewFlagSide(enum.IntEnum):
     NoSide = 0
     Mine = 1
     Rival = 2
+
+
+class BridgeInteractionKind(enum.IntEnum):
+    """Kind of object interaction the engine offers to a player (Blam Runtime Interaction InteractionKind)."""
+    NoInteraction = 0
+    GrabWeapon = 2
+    GrabArmorAbility = 3
+    TakeHealthStation = 4
+    EnterVehicle = 6
+    Hijack = 9
+    GrabObjective = 10
 
 
 class BridgeHitKind(enum.IntEnum):
@@ -368,6 +379,14 @@ BridgeViewSelf = np.dtype({
     'itemsize': 184,
 })
 
+# The object the engine would have the agent use, from the action the simulation applied to it (Views ViewInteraction, D371). None / 0xFF / 0xFFFFFFFF without selection.
+BridgeViewInteraction = np.dtype({
+    'names': ['Kind', 'Detail', 'TargetHandle', 'TargetFunction', 'TargetSubtype'],
+    'formats': ['u1', 'u1', '<u4', 'u1', 'u1'],
+    'offsets': [0, 1, 4, 8, 9],
+    'itemsize': 12,
+})
+
 # What the aim ray of the agent hits (Views ViewAimHit).
 BridgeViewAimHit = np.dtype({
     'names': ['Distance', 'MaxDistance', 'Point', 'Material', 'Kind', 'ObjectHandle', 'Function', 'Subtype', 'Relation', 'PlayerRow', 'RegionIndex', 'IsHead', 'SurfaceFlags'],
@@ -418,18 +437,18 @@ BridgeViewNotice = np.dtype({
 
 # Everything one agent can know in one tick (Views View, F4 D307-D321): a copy, never a computation. World space and world units.
 BridgeView = np.dtype({
-    'names': ['Head', 'Self', 'AimHit', 'RayOrigin', 'Rays', 'Others', 'Flags', 'SoundCount', 'Sounds', 'NoticeCount', 'Notices'],
-    'formats': [BridgeViewHead, BridgeViewSelf, BridgeViewAimHit, BridgeVec3, (BridgeViewRay, (16,)), (BridgeViewOther, (16,)), (BridgeViewFlag, (2,)), 'u1', (BridgeViewSound, (8,)), 'u1', (BridgeViewNotice, (8,))],
-    'offsets': [0, 20, 204, 240, 252, 572, 1276, 1356, 1360, 1552, 1556],
-    'itemsize': 1652,
+    'names': ['Head', 'Self', 'Interaction', 'AimHit', 'RayOrigin', 'Rays', 'Others', 'Flags', 'SoundCount', 'Sounds', 'NoticeCount', 'Notices'],
+    'formats': [BridgeViewHead, BridgeViewSelf, BridgeViewInteraction, BridgeViewAimHit, BridgeVec3, (BridgeViewRay, (16,)), (BridgeViewOther, (16,)), (BridgeViewFlag, (2,)), 'u1', (BridgeViewSound, (8,)), 'u1', (BridgeViewNotice, (8,))],
+    'offsets': [0, 20, 204, 216, 252, 264, 584, 1288, 1368, 1372, 1564, 1568],
+    'itemsize': 1664,
 })
 
 # One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'Views', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (2048,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), (BridgeView, (16,)), '<u8'],
-    'offsets': [0, 8, 104, 3560, 216552, 216672, 216896, 216960, 220288, 229504, 235648, 236672, 246912, 273344],
-    'itemsize': 273408,
+    'offsets': [0, 8, 104, 3560, 216552, 216672, 216896, 216960, 220288, 229504, 235648, 236672, 246912, 273536],
+    'itemsize': 273600,
 })
 
 # Action of one player for one decision, written by Python (D109, D365). Artemis plays the input through its own client during the d ticks of the window.
@@ -444,8 +463,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 576, 547392],
-    'itemsize': 548032,
+    'offsets': [0, 576, 547776],
+    'itemsize': 548416,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -475,6 +494,7 @@ SEMANTIC_FIELDS = {
     ('BridgeViewHead', 'Side'): 'Team',
     ('BridgeViewSelf', 'Zoom'): 'ZoomLevel',
     ('BridgeViewSelf', 'SelectedGrenade'): 'GrenadeType',
+    ('BridgeViewInteraction', 'TargetFunction'): 'Function',
     ('BridgeViewAimHit', 'Function'): 'Function',
     ('BridgeViewRay', 'Function'): 'Function',
     ('BridgeViewFlag', 'State'): 'FlagState',
@@ -551,7 +571,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 528,
     'Control.Client.ActionSequence': 536,
     'Ticks': 576,
-    'Actions': 547392,
+    'Actions': 547776,
 }
 
-REGION_SIZE = 548032
+REGION_SIZE = 548416

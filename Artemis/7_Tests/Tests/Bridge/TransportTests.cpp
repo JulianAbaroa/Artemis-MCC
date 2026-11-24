@@ -613,11 +613,11 @@ TEST_F(TransportTests, TheClockCarriesTheLastWindowAndTheWindowsCloseEveryLatenc
 
 TEST_F(TransportTests, TheLayoutIsTheOneOfTheBridgeV2)
 {
-    EXPECT_EQ(k_BridgeLayoutHash, 0xAB6105BB1F44D5F8ULL);
+    EXPECT_EQ(k_BridgeLayoutHash, 0x3BBCD83EA7ACD91EULL);
     EXPECT_EQ(sizeof(BridgeAgentInput), 24u);
     EXPECT_EQ(sizeof(BridgeAction), 40u);
     EXPECT_EQ(offsetof(BridgeAction, Input), 16u);
-    EXPECT_EQ(sizeof(BridgeRegion), 548032u);
+    EXPECT_EQ(sizeof(BridgeRegion), 548416u);
 }
 
 TEST_F(TransportTests, ClockMarksDecisionTicks)

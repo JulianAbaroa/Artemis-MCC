@@ -186,6 +186,7 @@
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />
     <ClCompile Include="Views\ViewEyeTests.cpp" />
+    <ClCompile Include="Views\ViewInteractionTests.cpp" />
     <ClCompile Include="Views\ViewRaysTests.cpp" />
     <ClCompile Include="Views\ViewSightTests.cpp" />
     <ClCompile Include="Views\ViewsSelfTests.cpp" />

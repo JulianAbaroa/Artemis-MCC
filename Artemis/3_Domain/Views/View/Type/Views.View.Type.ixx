@@ -4,6 +4,7 @@ import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Semantic.Type;
 import Common.Team.Type;
+import Blam.Runtime.Interaction.Type;
 import Blam.Runtime.Object.Type;
 import Perception.Players.Type;
 import Views.Raycast.Type;
@@ -17,6 +18,8 @@ namespace
     using Common::Semantic::Type::Function;
     using Common::Semantic::Type::Subtype::Powerup;
     using Common::Team::Type::Team;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionDetail;
+    using Blam::Runtime::Interaction::Type::Alive::InteractionKind;
     using Blam::Runtime::Object::Type::Biped::GrenadeType;
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Perception::Players::Type::GroundKind;
@@ -193,6 +196,21 @@ export namespace Views::View::Type
         std::array<ViewWeapon, k_ViewWeaponSlots> Weapons{};
     };
 
+    // The one object the engine would have the agent use if it pressed Use: the selection of the engine (a single one at a time, the limit of
+    // Blam) that a human sees as the HUD prompt (D113, not an advantage), read from the action the simulation applied to the agent (D371).
+    // note: A computed View without selection (a dead agent, a tick without published actions) says None / None / 0xFFFFFFFF, a View that
+    // is not computed is all zero like the rest of it. The engine arms it from the
+    // world before the tick, so it describes the objects of the previous tick. TargetFunction and TargetSubtype are those of the entity
+    // (Unknown and 0 when the target is not in Entities).
+    struct ViewInteraction
+    {
+        InteractionKind Kind{};
+        InteractionDetail Detail{};
+        std::uint32_t TargetHandle{};
+        ::Function TargetFunction{};
+        std::uint8_t TargetSubtype{};
+    };
+
     // What the aim ray of the agent hits (F4.2).
     struct ViewAimHit
     {
@@ -297,6 +315,7 @@ export namespace Views::View::Type
     {
         ViewHead Head{};
         ViewSelf Self{};
+        ViewInteraction Interaction{};
         ViewAimHit AimHit{};
 
         // Where the rays of the pattern start from (bounding center of the vehicle or of the biped), zero when they were not cast.

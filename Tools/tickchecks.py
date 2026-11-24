@@ -798,6 +798,7 @@ def CollectViews(film, dump):
         # What the aim ray and the rays hit.
         V = d["V"]
         d["Af"], d["A"] = Lookup(tab, V["AimHit"]["ObjectHandle"])
+        d["If"], d["I"] = Lookup(tab, V["Interaction"]["TargetHandle"])
         rf, rr = Lookup(tab, V["Rays"]["ObjectHandle"].ravel())
         d["Rf"], d["Rr"] = rf.reshape(R, RAYS), rr.reshape(R, RAYS)
         # Flags, with the entity that gives their position, the row of the carrier, the stand and its origin.
@@ -886,6 +887,15 @@ def CheckViewBatch(s, batch):
     lift = eyes[..., 2] - feet[..., 2]
     Row("view_eye_is_not_above_the_feet", body & has_eye & ((np.abs(eyes[..., 0] - feet[..., 0]) > 0.15) | (np.abs(eyes[..., 1] - feet[..., 1]) > 0.15) | (lift < 0.4) | (lift > 0.65)))
     Row("view_eye_without_body_is_not_zero", comp & ~body & has_eye)
+
+    # The interaction (F5.1 A, D371): None exactly when there is no target, the detail 0xFF without kind, and the function and subtype of the entity
+    # of the target (Unknown and 0 when it is not in Entities). A row that is not computed is zero (view_not_computed_not_zero).
+    inter = V["Interaction"]
+    no_kind, no_target = inter["Kind"] == 0, inter["TargetHandle"] == NO_HANDLE
+    Row("view_interaction_none_is_not_no_target", comp & (no_kind != no_target))
+    Row("view_interaction_none_has_a_detail", comp & no_kind & (inter["Detail"] != 0xFF))
+    Row("view_interaction_function_is_not_the_entity", comp & np.where(A["If"], (A["I"]["Function"] != inter["TargetFunction"]) | (A["I"]["Subtype"] != inter["TargetSubtype"]),
+                                                                      (inter["TargetFunction"] != 0) | (inter["TargetSubtype"] != 0)))
 
     # Reserved until F4.5 (sounds), F4.6 (notices, radar) and F4.8 (the mode): zero in every View.
     others = V["Others"]
