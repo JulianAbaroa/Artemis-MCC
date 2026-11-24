@@ -6,7 +6,7 @@ import Bridge.Codec.Dump.System;
 import std;
 
 // The writer of the .tdump (M5c, D203): the delta of the entities and of the events between two records, and the sizes of the
-// blocks, read back with a reader written here from the sizes of the layout.
+// blocks, read back with a reader written here from the sizes of the layout (version 7: the Views block closes the record).
 
 namespace
 {
@@ -14,6 +14,8 @@ namespace
 
     using Contract::Bridge::Type::BridgeEntity;
     using Contract::Bridge::Type::BridgeEvent;
+    using Contract::Bridge::Type::BridgeExplosive;
+    using Contract::Bridge::Type::BridgeLift;
     using Contract::Bridge::Type::BridgeMatch;
     using Contract::Bridge::Type::BridgeObjective;
     using Contract::Bridge::Type::BridgeProjectile;
@@ -22,6 +24,7 @@ namespace
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeTick;
     using Contract::Bridge::Type::BridgeTickHeader;
+    using Contract::Bridge::Type::BridgeView;
 
     using Bridge::Codec::Dump::Type::TickDumpCounters;
     using Bridge::Codec::Dump::Type::TickDumpFileHeader;
@@ -31,6 +34,7 @@ namespace
 
     using Contract::Bridge::Type::k_BridgeLayoutJson;
     using Bridge::Codec::Dump::Type::k_TickDumpEndMarker;
+    using Bridge::Codec::Dump::Type::k_TickDumpVersion;
     using Bridge::Codec::Dump::Type::k_TickRecordEventsLost;
     using Bridge::Codec::Dump::Type::k_TickRecordHasMatch;
     using Bridge::Codec::Dump::Type::k_TickRecordKeyframe;
@@ -51,6 +55,9 @@ namespace
         std::vector<BridgeStand> Stands{};
         std::vector<BridgeWeapon> Weapons{};
         std::vector<BridgeProjectile> Projectiles{};
+        std::vector<BridgeExplosive> Explosives{};
+        std::vector<BridgeLift> Lifts{};
+        std::vector<BridgeView> Views{};
     };
 
     template <typename T>
@@ -82,6 +89,9 @@ namespace
         record.Stands = ReadRows<BridgeStand>(stream, record.Tick.StandCount);
         record.Weapons = ReadRows<BridgeWeapon>(stream, record.Tick.WeaponCount);
         record.Projectiles = ReadRows<BridgeProjectile>(stream, record.Tick.ProjectileCount);
+        record.Explosives = ReadRows<BridgeExplosive>(stream, record.Tick.ExplosiveCount);
+        record.Lifts = ReadRows<BridgeLift>(stream, record.Tick.LiftCount);
+        record.Views = ReadRows<BridgeView>(stream, record.Tick.ViewCount);
         return record;
     }
 
@@ -110,6 +120,7 @@ namespace
         flat->Players[0].Handle = 0xE5A1'0002;
         flat->Match.GameTick = gameTick;
         flat->Header.PlayerCount = 1;
+        flat->Header.ViewCount = 1;
         flat->Header.EntityCount = static_cast<std::uint16_t>(entities.size());
         flat->Header.EventCount = static_cast<std::uint16_t>(events.size());
         flat->Header.LastEventSequence = events.empty() ? 0 : events.back().Sequence;
@@ -131,6 +142,8 @@ TEST(TickDumpWriterTests, FileHeaderAndFooterHaveTheSizesOfTheLayout)
     const std::string bytes{ stream.str() };
     TickDumpFileHeader read{};
     std::memcpy(&read, bytes.data(), sizeof(read));
+    EXPECT_EQ(read.Version, k_TickDumpVersion);
+    EXPECT_EQ(read.Version, 7u);
     EXPECT_EQ(read.HeaderSize, sizeof(TickDumpFileHeader));
     EXPECT_EQ(read.LayoutJsonSize, k_BridgeLayoutJson.size());
     EXPECT_EQ(read.RecordHeaderSize, sizeof(TickRecordHeader));
@@ -345,4 +358,61 @@ TEST(TickDumpWriterTests, TwoRecordsWithMeasuredTimeReadBackTheirMicroseconds)
     EXPECT_EQ(second.Header.ElapsedMicroseconds, 0u);
     EXPECT_FALSE((third.Header.Flags & k_TickRecordTimeMeasured) != 0);
     EXPECT_EQ(third.Header.ElapsedMicroseconds, 0u);
+}
+
+TEST(TickDumpWriterTests, ViewsAreWrittenAfterLifts)
+{
+    TickDumpWriterState state{};
+    Writer::Begin(state);
+    std::stringstream stream{};
+
+    // One explosive, one lift and two views in the first record, nothing of the three in the second: each record carries the rows of its
+    // tick, and the views come last, so a reader that does not know them stops before them and one that does reads them in this order.
+    auto tickOne{ MakeTick({}, {}, 1) };
+    tickOne->Header.PlayerCount = 2;
+    tickOne->Players[1].Handle = 0xE5A1'0003;
+    tickOne->Explosives[0].Handle = 0xE1;
+    tickOne->Lifts[0].Handle = 0xF1;
+    tickOne->Header.ExplosiveCount = 1;
+    tickOne->Header.LiftCount = 1;
+    tickOne->Views[0].Head.PlayerHandle = 0xE5A1'0002;
+    tickOne->Views[0].Head.IsComputed = 1;
+    tickOne->Views[0].Self.Shield = 0.75f;
+    tickOne->Views[0].Others[3].Position.Z = 12.5f;
+    tickOne->Views[1].Head.PlayerHandle = 0xE5A1'0003;
+    tickOne->Views[1].Rays[15].Distance = 40.0f;
+    tickOne->Header.ViewCount = 2;
+    tickOne->Header.ViewMask = 1;
+    const auto one{ Writer::WriteRecord(stream, *tickOne, true, 0, std::nullopt, state) };
+
+    const auto tickTwo{ MakeTick({}, {}, 2) };
+    const auto two{ Writer::WriteRecord(stream, *tickTwo, true, 0, std::nullopt, state) };
+
+    EXPECT_EQ(one.Bytes + two.Bytes, static_cast<std::uint64_t>(stream.tellp()));
+    // The second record has one View and nothing else of the end of the record.
+    EXPECT_GE(two.Bytes, sizeof(BridgeView));
+
+    std::istringstream in{ stream.str() };
+    const ParsedRecord first{ ReadRecord(in) };
+    ASSERT_EQ(first.Explosives.size(), 1u);
+    EXPECT_EQ(first.Explosives[0].Handle, 0xE1u);
+    ASSERT_EQ(first.Lifts.size(), 1u);
+    EXPECT_EQ(first.Lifts[0].Handle, 0xF1u);
+    ASSERT_EQ(first.Views.size(), 2u);
+    EXPECT_EQ(first.Tick.ViewMask, 1u);
+    EXPECT_EQ(first.Views[0].Head.PlayerHandle, 0xE5A1'0002u);
+    EXPECT_EQ(first.Views[0].Head.IsComputed, 1u);
+    EXPECT_EQ(first.Views[0].Self.Shield, 0.75f);
+    EXPECT_EQ(first.Views[0].Others[3].Position.Z, 12.5f);
+    EXPECT_EQ(first.Views[1].Head.PlayerHandle, 0xE5A1'0003u);
+    EXPECT_EQ(first.Views[1].Rays[15].Distance, 40.0f);
+
+    const ParsedRecord second{ ReadRecord(in) };
+    EXPECT_TRUE(second.Explosives.empty());
+    EXPECT_TRUE(second.Lifts.empty());
+    ASSERT_EQ(second.Views.size(), 1u);
+    EXPECT_EQ(second.Views[0].Head.IsComputed, 0u);
+
+    in.peek();
+    EXPECT_TRUE(in.eof());
 }

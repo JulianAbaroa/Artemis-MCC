@@ -20,6 +20,7 @@ namespace
     using Contract::Bridge::Type::BridgeLift;
     using Contract::Bridge::Type::BridgePlayer;
     using Contract::Bridge::Type::BridgeTick;
+    using Contract::Bridge::Type::BridgeViewSelf;
     using Contract::Bridge::Type::BridgeWeapon;
     using Contract::Bridge::Type::k_BridgeLayoutJson;
     using Tests::Support::FilmPass::FilmOutcome;
@@ -68,6 +69,8 @@ namespace
     // - Lift ExitTick and ExitVelocity: a biped that enters and leaves a lift between two samples is dated and measured in the sample of the
     //   exit. The exit stays in the lift, so one difference is repeated in every later decision.
     // - ChargeFraction: a charge is seen first in the sample, so it under-estimates by up to period - 1 ticks.
+    // - BridgeView.Self: it copies four of the fields above (AirborneTicks, Ground, IsGrounded, OwnVelocity) for the same row, so its cap is the sum of
+    //   theirs, and CheckMagnitudes fails any difference of Self outside those four fields (the key of a nested struct is the field that holds it).
     // Nothing of the events, the flags, the match, the entities or the header differs: they are not in the list.
     const std::vector<Tolerance> k_Tolerances{
         { "BridgePlayer.AirborneTicks", 2'700 },
@@ -75,6 +78,7 @@ namespace
         { "BridgePlayer.GroundObject", 55 },
         { "BridgePlayer.IsGrounded", 45 },
         { "BridgePlayer.OwnVelocity", 15 },
+        { "BridgeView.Self", 2'805 },
         { "BridgeLift.ExitTick", 14'200 },
         { "BridgeLift.ExitVelocity", 41'200 },
         { "BridgeWeapon.ChargeFraction", 75 } };
@@ -203,7 +207,7 @@ namespace
     const std::map<std::string, std::string, std::less<>> k_CountFields{
         { "Players", "PlayerCount" }, { "Entities", "EntityCount" }, { "Objectives", "ObjectiveCount" }, { "Stands", "StandCount" },
         { "Events", "EventCount" }, { "Weapons", "WeaponCount" }, { "Projectiles", "ProjectileCount" }, { "Explosives", "ExplosiveCount" },
-        { "Lifts", "LiftCount" } };
+        { "Lifts", "LiftCount" }, { "Views", "ViewCount" } };
 
     class TickComparer
     {
@@ -347,6 +351,22 @@ namespace
                 if (!airborneDiffers && !objectDiffers && std::memcmp(&a.OwnVelocity, &b.OwnVelocity, sizeof(a.OwnVelocity)) != 0)
                 {
                     this->Violate("player OwnVelocity", std::format("player {:#x} OwnVelocity differs with equal AirborneTicks {} and GroundObject", a.Handle, a.AirborneTicks));
+                }
+            }
+
+            // The Self of a View copies the player of its row: it may differ only in the four fields the player may.
+            const std::size_t views{ (std::min)({ static_cast<std::size_t>(full.Header.ViewCount), static_cast<std::size_t>(sparse.Header.ViewCount), full.Views.size() }) };
+            for (std::size_t index{ 0 }; index < views; ++index)
+            {
+                const BridgeViewSelf& a{ full.Views[index].Self };
+                BridgeViewSelf b{ sparse.Views[index].Self };
+                b.AirborneTicks = a.AirborneTicks;
+                b.Ground = a.Ground;
+                b.IsGrounded = a.IsGrounded;
+                b.OwnVelocity = a.OwnVelocity;
+                if (std::memcmp(&a, &b, sizeof(BridgeViewSelf)) != 0)
+                {
+                    this->Violate("view Self", std::format("view {} Self differs outside AirborneTicks, Ground, IsGrounded and OwnVelocity", index));
                 }
             }
 

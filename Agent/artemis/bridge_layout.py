@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 2
-LAYOUT_HASH = 0x4B4E4E552E4DF04F
+LAYOUT_HASH = 0xF6FC2E7A673F77B2
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -20,6 +20,11 @@ MAX_EXPLOSIVES = 64
 MAX_LIFTS = 64
 MAX_LIFT_STAGES = 3
 MAX_TEAMS = 8
+VIEW_RAY_COUNT = 16
+VIEW_FLAGS = 2
+VIEW_SOUNDS = 8
+VIEW_NOTICES = 8
+VIEW_WEAPON_SLOTS = 2
 POWERUP_COUNT = 3
 PRESET_NAME_SIZE = 32
 MAP_NAME_SIZE = 64
@@ -127,6 +132,41 @@ class BridgePowerup(enum.IntEnum):
     Yellow = 3
 
 
+class BridgeViewMode(enum.IntEnum):
+    """How much of the world the agent sees (Views ViewMode, D321). Note that Full is 0."""
+    Full = 0
+    HumanLike = 1
+
+
+class BridgeViewRelation(enum.IntEnum):
+    """Relation of the agent to what it looks at or to another player, by the team of the player involved (Views ViewRelation)."""
+    NoRelation = 0
+    Self = 1
+    Ally = 2
+    Enemy = 3
+    Neutral = 4
+
+
+class BridgeViewSoundKind(enum.IntEnum):
+    """Kind of a sound the agent heard (Views ViewSoundKind)."""
+    Fire = 0
+    Explosion = 1
+
+
+class BridgeViewFlagSide(enum.IntEnum):
+    """Side of a flag in a notice, from the team of the agent (Views ViewFlagSide)."""
+    NoSide = 0
+    Mine = 1
+    Rival = 2
+
+
+class BridgeHitKind(enum.IntEnum):
+    """What a ray hit (Views Raycast HitKind)."""
+    Miss = 0
+    Static = 1
+    Dynamic = 2
+
+
 class BridgeTickFlag(enum.IntFlag):
     """Flags of a tick."""
     EntitiesTruncated = 0x1
@@ -135,6 +175,13 @@ class BridgeTickFlag(enum.IntFlag):
     ProjectilesTruncated = 0x8
     ExplosivesTruncated = 0x10
     LiftsTruncated = 0x20
+
+
+class BridgeViewChannel(enum.IntFlag):
+    """Bits of BridgeViewOther.Channels: how the agent knows of the other player (Views ViewChannel)."""
+    Hud = 0x1
+    Seen = 0x2
+    Radar = 0x4
 
 
 # Vector of three floats, world units or a direction.
@@ -163,9 +210,9 @@ BridgeArtemisControl = np.dtype({
 
 # Part of the control block written by Python only.
 BridgeClientControl = np.dtype({
-    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'RequestSparse', 'AgentMask', 'RequestEndRound', 'RequestSetupFields', 'RequestSetupPreset', 'RequestSetupMap', 'RequestSetupRoster', 'RequestSetup', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
-    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', 'u1', '<u4', '<u4', 'u1', ('u1', (32,)), ('u1', (64,)), BridgeRoster, '<u4', '<f4', '<u8', '<u8'],
-    'offsets': [0, 4, 5, 6, 7, 8, 12, 13, 16, 20, 24, 25, 57, 121, 132, 136, 144, 152],
+    'names': ['ClientPid', 'RequestOwner', 'RequestMode', 'RequestPeriod', 'RequestLatency', 'RequestScale', 'RequestPause', 'RequestSparse', 'AgentMask', 'RequestEndRound', 'RequestSetupFields', 'RequestSetupPreset', 'RequestSetupMap', 'RequestSetupRoster', 'RequestSetup', 'RequestViewMode', 'RequestTurnLimit', 'ClientHeartbeat', 'ActionSequence'],
+    'formats': ['<u4', 'u1', 'u1', 'u1', 'u1', '<f4', 'u1', 'u1', '<u4', '<u4', 'u1', ('u1', (32,)), ('u1', (64,)), BridgeRoster, '<u4', 'u1', '<f4', '<u8', '<u8'],
+    'offsets': [0, 4, 5, 6, 7, 8, 12, 13, 16, 20, 24, 25, 57, 121, 132, 136, 140, 144, 152],
     'itemsize': 192,
 })
 
@@ -187,10 +234,10 @@ BridgeAgentInput = np.dtype({
 
 # What the tick is: which match and which action tick.
 BridgeTickHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount', 'PossessedPlayer', 'PossessedInput'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2', '<u4', BridgeAgentInput],
-    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56, 58, 60, 64],
-    'itemsize': 88,
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount', 'ViewCount', 'ViewMask', 'PossessedPlayer', 'PossessedInput'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2', '<u2', '<u4', '<u4', BridgeAgentInput],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56, 58, 60, 64, 68, 72],
+    'itemsize': 96,
 })
 
 # State of the match (Environment Match, D103).
@@ -203,10 +250,10 @@ BridgeMatch = np.dtype({
 
 # One event of the engine (Environment Events, D104). Kind and Key: Semantic.xml (Event, eventkeys).
 BridgeEvent = np.dtype({
-    'names': ['Sequence', 'EngineSequence', 'GameTick', 'Key', 'CausePlayer', 'CauseObject', 'EffectPlayer', 'EffectObject', 'Kind', 'DamageReportingType', 'IsHeadshot', 'IsStuck'],
-    'formats': ['<u4', '<u4', '<u4', '<u4', '<u4', '<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1'],
-    'offsets': [0, 4, 8, 12, 16, 20, 24, 28, 32, 33, 34, 35],
-    'itemsize': 36,
+    'names': ['Sequence', 'EngineSequence', 'GameTick', 'Key', 'CausePlayer', 'CauseObject', 'EffectPlayer', 'EffectObject', 'Kind', 'DamageReportingType', 'IsHeadshot', 'IsStuck', 'Position', 'Amount'],
+    'formats': ['<u4', '<u4', '<u4', '<u4', '<u4', '<u4', '<u4', '<u4', 'u1', 'u1', 'u1', 'u1', BridgeVec3, '<f4'],
+    'offsets': [0, 4, 8, 12, 16, 20, 24, 28, 32, 33, 34, 35, 36, 48],
+    'itemsize': 52,
 })
 
 # Traits the engine applies to a player in this tick (Blam.Layout PlayerTraits, D262): already composed with the carried objective, the powerups and the respawn traits. Multipliers are 1.0 for 100%. A raw index outside its table reads NaN (floats), 0 (bools) or Unknown (enums).
@@ -297,12 +344,92 @@ BridgeLift = np.dtype({
     'itemsize': 160,
 })
 
+# Who a View belongs to (Views ViewHead).
+BridgeViewHead = np.dtype({
+    'names': ['PlayerHandle', 'PlayerRow', 'LocalIndex', 'BipedHandle', 'Mode', 'IsComputed', 'HasBody', 'Team', 'Side'],
+    'formats': ['<u4', 'u1', 'u1', '<u4', 'u1', 'u1', 'u1', 'u1', 'u1'],
+    'offsets': [0, 4, 5, 8, 12, 13, 14, 15, 16],
+    'itemsize': 20,
+})
+
+# A weapon of the agent (Views ViewWeapon). Repeats what the bridge gives on purpose, so an agent builds its observation without joins.
+BridgeViewWeapon = np.dtype({
+    'names': ['Handle', 'Subtype', 'IsEquipped', 'Loaded', 'Reserve', 'Energy', 'Heat', 'IsOverheated', 'IsReloading', 'ChargeFraction', 'CanFireNow'],
+    'formats': ['<u4', 'u1', 'u1', '<u2', '<u2', '<f4', '<f4', 'u1', 'u1', '<f4', 'u1'],
+    'offsets': [0, 4, 5, 6, 8, 12, 16, 20, 21, 24, 28],
+    'itemsize': 32,
+})
+
+# The agent itself: a copy of Players, Entities and Weapons, with the eye and the angles of the aim (Views ViewSelf). World space and world units.
+BridgeViewSelf = np.dtype({
+    'names': ['Eye', 'Feet', 'FrameYaw', 'AimPitch', 'LinearVelocity', 'OwnVelocity', 'Vitality', 'Shield', 'Ground', 'IsGrounded', 'AirborneTicks', 'CrouchFraction', 'Zoom', 'TicksAlive', 'RespawnTicks', 'Powerup', 'PowerupTicks', 'SelectedGrenade', 'FragGrenades', 'PlasmaGrenades', 'Ability', 'AbilityEnergy', 'IsAbilityActive', 'CarriesFlag', 'TicksSinceDamage', 'IsTracked', 'Weapons'],
+    'formats': [BridgeVec3, BridgeVec3, '<f4', '<f4', BridgeVec3, BridgeVec3, '<f4', '<f4', 'u1', 'u1', '<u4', '<f4', 'u1', '<u4', '<u4', 'u1', '<u4', 'u1', 'u1', 'u1', '<u4', '<f4', 'u1', 'u1', '<u4', 'u1', (BridgeViewWeapon, (2,))],
+    'offsets': [0, 12, 24, 28, 32, 44, 56, 60, 64, 65, 68, 72, 76, 80, 84, 88, 92, 96, 97, 98, 100, 104, 108, 109, 112, 116, 120],
+    'itemsize': 184,
+})
+
+# What the aim ray of the agent hits (Views ViewAimHit).
+BridgeViewAimHit = np.dtype({
+    'names': ['Distance', 'MaxDistance', 'Point', 'Material', 'Kind', 'ObjectHandle', 'Function', 'Subtype', 'Relation', 'PlayerRow', 'RegionIndex', 'IsHead', 'SurfaceFlags'],
+    'formats': ['<f4', '<f4', BridgeVec3, '<i2', 'u1', '<u4', 'u1', 'u1', 'u1', 'u1', '<i2', 'u1', 'u1'],
+    'offsets': [0, 4, 8, 20, 22, 24, 28, 29, 30, 31, 32, 34, 35],
+    'itemsize': 36,
+})
+
+# One ray of the perception pattern (Views ViewRayHit). The direction comes from the pattern and FrameYaw, it is not stored.
+BridgeViewRay = np.dtype({
+    'names': ['Distance', 'Kind', 'ObjectHandle', 'Material', 'Function', 'Relation', 'SurfaceFlags'],
+    'formats': ['<f4', 'u1', '<u4', '<i2', 'u1', 'u1', 'u1'],
+    'offsets': [0, 4, 8, 12, 14, 15, 16],
+    'itemsize': 20,
+})
+
+# What the agent knows of one row of Players (Views ViewOther).
+BridgeViewOther = np.dtype({
+    'names': ['Relation', 'Channels', 'IsAlive', 'Position', 'Velocity', 'FacingYaw', 'Vitality', 'Shield', 'WeaponSubtype', 'IsCrouching', 'CarriesFlag', 'Elevation'],
+    'formats': ['u1', 'u1', 'u1', BridgeVec3, BridgeVec3, '<f4', '<f4', '<f4', 'u1', 'u1', 'u1', 'i1'],
+    'offsets': [0, 1, 2, 4, 16, 28, 32, 36, 40, 41, 42, 43],
+    'itemsize': 44,
+})
+
+# One of the two flags of a View (Views ViewFlag).
+BridgeViewFlag = np.dtype({
+    'names': ['State', 'Position', 'CarrierRow', 'ResetTicks', 'IsResetRunning', 'AlliesInZone', 'StandPosition'],
+    'formats': ['u1', BridgeVec3, 'u1', '<u4', 'u1', 'u1', BridgeVec3],
+    'offsets': [0, 4, 16, 20, 24, 25, 28],
+    'itemsize': 40,
+})
+
+# A sound the agent heard (Views ViewSound). Zero until F4.5.
+BridgeViewSound = np.dtype({
+    'names': ['Kind', 'SourceFunction', 'SourceSubtype', 'Direction', 'Intensity', 'AgeTicks'],
+    'formats': ['u1', 'u1', 'u1', BridgeVec3, '<f4', '<u4'],
+    'offsets': [0, 1, 2, 4, 16, 20],
+    'itemsize': 24,
+})
+
+# An event the agent knows of (Views ViewNotice). Zero until F4.6.
+BridgeViewNotice = np.dtype({
+    'names': ['Kind', 'CauseRow', 'EffectRow', 'CauseRelation', 'EffectRelation', 'FlagSide', 'AgeTicks'],
+    'formats': ['u1', 'u1', 'u1', 'u1', 'u1', 'u1', '<u4'],
+    'offsets': [0, 1, 2, 3, 4, 5, 8],
+    'itemsize': 12,
+})
+
+# Everything one agent can know in one tick (Views View, F4 D307-D321): a copy, never a computation. World space and world units.
+BridgeView = np.dtype({
+    'names': ['Head', 'Self', 'AimHit', 'RayOrigin', 'Rays', 'Others', 'Flags', 'SoundCount', 'Sounds', 'NoticeCount', 'Notices'],
+    'formats': [BridgeViewHead, BridgeViewSelf, BridgeViewAimHit, BridgeVec3, (BridgeViewRay, (16,)), (BridgeViewOther, (16,)), (BridgeViewFlag, (2,)), 'u1', (BridgeViewSound, (8,)), 'u1', (BridgeViewNotice, (8,))],
+    'offsets': [0, 20, 204, 240, 252, 572, 1276, 1356, 1360, 1552, 1556],
+    'itemsize': 1652,
+})
+
 # One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.
 BridgeTick = np.dtype({
-    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'SequenceEnd'],
-    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (2048,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), '<u8'],
-    'offsets': [0, 8, 96, 3552, 216544, 216664, 216888, 216952, 219256, 228472, 234616, 235640, 245880],
-    'itemsize': 245888,
+    'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'Views', 'SequenceEnd'],
+    'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (2048,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), (BridgeView, (16,)), '<u8'],
+    'offsets': [0, 8, 104, 3560, 216552, 216672, 216896, 216960, 220288, 229504, 235648, 236672, 246912, 273344],
+    'itemsize': 273408,
 })
 
 # Action of one player for one decision, written by Python (D109, D365). Artemis plays the input through its own client during the d ticks of the window.
@@ -317,8 +444,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 576, 492352],
-    'itemsize': 492992,
+    'offsets': [0, 576, 547392],
+    'itemsize': 548032,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -344,6 +471,15 @@ SEMANTIC_FIELDS = {
     ('BridgeStand', 'BaseTeam'): 'Team',
     ('BridgeStand', 'OwnerTeam'): 'Team',
     ('BridgeWeapon', 'ChargeState'): 'ChargeState',
+    ('BridgeViewHead', 'Team'): 'Team',
+    ('BridgeViewHead', 'Side'): 'Team',
+    ('BridgeViewSelf', 'Zoom'): 'ZoomLevel',
+    ('BridgeViewSelf', 'SelectedGrenade'): 'GrenadeType',
+    ('BridgeViewAimHit', 'Function'): 'Function',
+    ('BridgeViewRay', 'Function'): 'Function',
+    ('BridgeViewFlag', 'State'): 'FlagState',
+    ('BridgeViewSound', 'SourceFunction'): 'Function',
+    ('BridgeViewNotice', 'Kind'): 'Event',
 }
 
 # Byte offset of each field of the region.
@@ -410,11 +546,12 @@ OFFSETS = {
     'Control.Client.RequestSetupRoster.Teams': 505,
     'Control.Client.RequestSetupRoster.Auto': 513,
     'Control.Client.RequestSetup': 516,
-    'Control.Client.RequestTurnLimit': 520,
+    'Control.Client.RequestViewMode': 520,
+    'Control.Client.RequestTurnLimit': 524,
     'Control.Client.ClientHeartbeat': 528,
     'Control.Client.ActionSequence': 536,
     'Ticks': 576,
-    'Actions': 492352,
+    'Actions': 547392,
 }
 
-REGION_SIZE = 492992
+REGION_SIZE = 548032

@@ -6,7 +6,7 @@ import std;
 
 export namespace Bridge::Codec::Flat::System
 {
-    // Flattens a Tick into a BridgeTick: Players, Entities, Objectives, Stands, Weapons, Projectiles, Match and the newest events as POD rows (D135, D141). Copies only, computes nothing (D37).
+    // Flattens a Tick into a BridgeTick: Players, Entities, Objectives, Stands, Weapons, Projectiles, Explosives, Lifts, Views, Match and the newest events as POD rows (D135, D141, D369). Copies only, computes nothing (D37).
     // The one thing it does is to order the flags and the stands, which Perception keeps by handle, by BaseTeam and handle. The weapons and the projectiles are ordered by handle.
     class FlatService
     {
@@ -22,7 +22,9 @@ export namespace Bridge::Codec::Flat::System
         FlatService(const FlatService&) = delete;
         auto operator=(const FlatService&) -> FlatService& = delete;
 
-        // Fills the players, the entities, the flags, the stands, the weapons, the projectiles, the match, the events, their counts, the flags and the generation of the tick.
+        // Fills the players, the entities, the flags, the stands, the weapons, the projectiles, the explosives, the lifts, the views, the match, the events, their counts, the flags and the generation of the tick.
+        // note: Views[i] is the View of Players[i] (the same rows, in the same order), copied as it is. The rows from PlayerCount on are zero, padding included.
+        // ViewCount is PlayerCount and bit i of ViewMask is Views[i].Head.IsComputed. The position and the amount of an event are zero until F4.5.
         // note: The clock fields of the header are the bridge's (BridgeService::EndTick): the action tick, the possessed player and the window of what it did.
         // Here the possessed player is NoHandle and its input zero.
         auto Flatten(const Tick& tick, BridgeTick& flat) const -> void;

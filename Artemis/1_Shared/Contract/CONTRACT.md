@@ -4,7 +4,7 @@ Group `1_Shared` - pure static library, generated - the layout C++ and Python sh
 
 ## Responsibility
 The binary contract of the bridge with the Python client: the POD structs of the `BridgeTick` (players, entities, the match with
-its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon`, the projectiles `BridgeProjectile` the explosives `BridgeExplosive` and the lifts `BridgeLift`, the events with both
+its round, team scores, round time, round limit and score to win, the flags `BridgeObjective` and the stands `BridgeStand` of a capture game, the weapons `BridgeWeapon`, the projectiles `BridgeProjectile` the explosives `BridgeExplosive`, the lifts `BridgeLift` and the views `BridgeView` of the agents, the events with both
 sequences) and the `BridgeAction` (v2, VW.9c.3 D, D365: `PlayerHandle`, `DecisionTick` and one `BridgeAgentInput`: the move axes, the look of the window in radians, and `Level` and `Edge`, one bit per control, in the order of `AgentControl`; the buttons, lanes, absolute yaw and pitch, throttle and requests of v1 are gone, with no compatibility), their constants, a `static_assert` per offset, the layout as JSON and its hash (`k_BridgeLayoutHash`), which Python compares with its own. `BridgeTickHeader` carries the imitation block (D364): `PossessedPlayer` (handle of the bot the user possesses, `NoHandle` when none) and `PossessedInput`, a `BridgeAgentInput` reduced from the last closed window of what the user did with it (zero without possession). `RequestTurnLimit` of the control block is the most radians per tick and per axis the look of each agent may ask. The control block carries the requests of the client that Artemis answers with a sequence and a result: end of round, and the match setup (LS.2, D286): one request, `RequestSetup` (counter) with `RequestSetupFields` (mask `k_BridgeSetupPreset`, `k_BridgeSetupMap`, `k_BridgeSetupRoster`), `RequestSetupPreset`, `RequestSetupMap` and `RequestSetupRoster` (a `BridgeRoster`: bots of each team and the auto ones), echoed in `SetupSequence` (written last) with `SetupResult` (`BridgeSetupResult`), `SetupRound`, `SetupReason` (64 bytes ASCII, no end zero when full), `ActivePreset`, `ActiveMap`, `ActiveRoster` and `ActiveHasRoster`. The one result is the one of the preset, the map and the roster together: nothing of a rejected request was applied.
 
 ## Does not
@@ -48,6 +48,19 @@ A client built for another layout sees a different hash and refuses to connect.
   position and direction in the world, the push along it and toward its axis, who it affects) and the measured exit of the last biped
   (`HasExit`, `ExitTick`, `ExitBiped`, `ExitVelocity`). The header carries `LiftCount` after `ExplosiveCount`, in the padding it already had, and the
   flag `LiftsTruncated` tells when rows were cut.
+- Views hold `k_MaxPlayers` (16, `MaxPlayers` of Bridge.xml) `BridgeView` rows after the lifts (F4.7, D307, D369): `Views[i]` is the View of `Players[i]`, same rows and same order, and the rows
+  from `PlayerCount` on are zero (padding included, as the determinism requirement asks). `BridgeView` copies `Views::View::Type::View` field by field, with the same names
+  and the same order: `Head`, `Self` (with `Weapons[k_BridgeViewWeaponSlots]`), `AimHit`, `RayOrigin`, `Rays[k_BridgeViewRayCount]`, `Others[k_MaxPlayers]`,
+  `Flags[k_BridgeViewFlags]`, `SoundCount`, `Sounds[k_BridgeViewSounds]`, `NoticeCount` and `Notices[k_BridgeViewNotices]`, in world space and world units.
+  `Vec3` is `BridgeVec3`, `bool` is `u8`, and the enums are `BridgeViewMode` (note that `Full` is 0 and `HumanLike` 1), `BridgeViewRelation`, `BridgeViewSoundKind`,
+  `BridgeViewFlagSide`, `BridgeHitKind` and the flags `BridgeViewChannel` (the field `Channels` keeps the raw integer), with the values of the types of `Views`
+  (`Bridge.Codec.Flat.System` asserts every value and every constant, because Contract cannot depend on Views). `None` is reserved in Python, so the members that are `None`
+  in Views are `NoRelation`, `NoSide` and `Miss`. The ground, the powerup, the team, the function, the flag state and the event kind reuse `BridgeGround`, `BridgePowerup`
+  and the `semantic=` ids of `Semantic.xml`. `Vitality` and `Shield` of `Self` and `Others` pass as they are, NaN included. `Radar` of `Channels`, `Elevation`, `Sounds` and
+  `Notices` are zero until F4.6, F4.5 and F4.6 fill them. The header carries `ViewCount` (equal to `PlayerCount`) and `ViewMask` (bit i is `Views[i].Head.IsComputed`, i being
+  the ROW of `Players`, not the player table index, so Python does not translate). `BridgeView` is 1652 bytes (about 12% padding, kept so the fields follow the type of Views)
+  and `BridgeTick` grows from 245888 to 273408 bytes. `BridgeEvent` ends with `Position` (`BridgeVec3`, world) and `Amount` (`f32`), zero until F4.5 (D314-D316): 36 to 52 bytes.
+  `BridgeClientControl.RequestViewMode` (u8, 0 = HumanLike, 1 = Full) takes padding that was there, and Artemis ignores it until F4.8 (D321).
 - The header also carries the `MapId` of the scnr of the loaded map (engine id, 0 while no map).
 - Each player row carries `RespawnTicks` (ticks left until it respawns, 0 while alive), right after `BipedHandle`: it takes the 2 bytes of padding
   the u8 block already had, so the layout adds 4 bytes per player and no new padding.

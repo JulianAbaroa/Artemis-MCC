@@ -18,6 +18,7 @@ namespace
     using Contract::Bridge::Type::BridgeProjectile;
     using Contract::Bridge::Type::BridgeExplosive;
     using Contract::Bridge::Type::BridgeLift;
+    using Contract::Bridge::Type::BridgeView;
     using Contract::Bridge::Type::BridgeStand;
     using Contract::Bridge::Type::BridgeWeapon;
 
@@ -150,6 +151,7 @@ namespace Bridge::Codec::Dump::System
         bytes += WriteRows(stream, std::span<const BridgeProjectile>{ flat.Projectiles.data(), flat.Header.ProjectileCount });
         bytes += WriteRows(stream, std::span<const BridgeExplosive>{ flat.Explosives.data(), flat.Header.ExplosiveCount });
         bytes += WriteRows(stream, std::span<const BridgeLift>{ flat.Lifts.data(), flat.Header.LiftCount });
+        bytes += WriteRows(stream, std::span<const BridgeView>{ flat.Views.data(), flat.Header.ViewCount });
         result.Bytes = bytes;
 
         if (stream.good())

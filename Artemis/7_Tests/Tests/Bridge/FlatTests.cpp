@@ -12,6 +12,8 @@ import Perception.Details.Type;
 import Perception.Events.Type;
 import Perception.Match.Type;
 import Perception.Players.Type;
+import Views.Raycast.Type;
+import Views.View.Type;
 import std;
 
 // The flags, the stands, the round and the team scores in the BridgeTick (B4h H.4), and the two sequences of an event.
@@ -23,11 +25,18 @@ namespace
     using Common::Math::Type::Vec3;
     using Common::Semantic::Type::ChargeState;
     using Common::Semantic::Type::Event;
+    using Common::Semantic::Type::Function;
     using Common::Semantic::Type::FlagState;
     using Common::Semantic::Type::RoundState;
     using Common::Team::Type::Team;
     using Blam::Layout::Player::Type::Traits::PlayerTraits;
     using Contract::Bridge::Type::BridgeGround;
+    using Contract::Bridge::Type::BridgeHitKind;
+    using Contract::Bridge::Type::BridgeView;
+    using Contract::Bridge::Type::BridgeViewFlagSide;
+    using Contract::Bridge::Type::BridgeViewMode;
+    using Contract::Bridge::Type::BridgeViewRelation;
+    using Contract::Bridge::Type::BridgeViewSoundKind;
     using Contract::Bridge::Type::BridgeInfiniteAmmo;
     using Contract::Bridge::Type::BridgeVehicleUse;
     using Contract::Bridge::Type::BridgeIdentityVisibility;
@@ -54,6 +63,13 @@ namespace
     using Perception::Players::Type::GroundKind;
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Players;
+    using Views::Raycast::Type::HitKind;
+    using Views::View::Type::View;
+    using Views::View::Type::ViewFlagSide;
+    using Views::View::Type::ViewMode;
+    using Views::View::Type::ViewRelation;
+    using Views::View::Type::ViewSoundKind;
+    using Views::View::Type::ViewTable;
 
     using Contract::Bridge::Type::k_BridgeMaxExplosives;
     using Contract::Bridge::Type::k_BridgeMaxLifts;
@@ -68,6 +84,234 @@ namespace
         auto flat{ std::make_unique<BridgeTick>() };
         FlatService{}.Flatten(tick, *flat);
         return flat;
+    }
+
+    // Every field of a View gets the next number after the base, in the order of the type. ExpectView walks the same order.
+    auto FillView(View& view, std::uint32_t base) -> void
+    {
+        std::uint32_t n{ base };
+        const auto next{ [&n] { return ++n; } };
+        const auto vec{ [&next] { return Vec3{ .X = static_cast<float>(next()), .Y = static_cast<float>(next()), .Z = static_cast<float>(next()) }; } };
+        const auto relation{ [&next] { return static_cast<ViewRelation>(1 + next() % 4); } };
+
+        view.Head = { .PlayerHandle = next(), .PlayerRow = static_cast<std::uint8_t>(next()), .LocalIndex = static_cast<std::uint8_t>(next()), .BipedHandle = next(),
+            .Mode = ViewMode::HumanLike, .IsComputed = true, .HasBody = true, .Team = Team::Red, .Side = Team::Blue };
+        view.Self.Eye = vec();
+        view.Self.Feet = vec();
+        view.Self.FrameYaw = static_cast<float>(next());
+        view.Self.AimPitch = static_cast<float>(next());
+        view.Self.LinearVelocity = vec();
+        view.Self.OwnVelocity = vec();
+        view.Self.Vitality = std::numeric_limits<float>::quiet_NaN();
+        view.Self.Shield = static_cast<float>(next());
+        view.Self.Ground = GroundKind::Object;
+        view.Self.IsGrounded = true;
+        view.Self.AirborneTicks = next();
+        view.Self.CrouchFraction = static_cast<float>(next());
+        view.Self.TicksAlive = next();
+        view.Self.RespawnTicks = next();
+        view.Self.PowerupTicks = next();
+        view.Self.FragGrenades = static_cast<std::uint8_t>(next());
+        view.Self.PlasmaGrenades = static_cast<std::uint8_t>(next());
+        view.Self.Ability = next();
+        view.Self.AbilityEnergy = static_cast<float>(next());
+        view.Self.IsAbilityActive = true;
+        view.Self.CarriesFlag = true;
+        view.Self.TicksSinceDamage = next();
+        view.Self.IsTracked = true;
+        for (auto& weapon : view.Self.Weapons)
+        {
+            weapon = { .Handle = next(), .Subtype = static_cast<std::uint8_t>(next()), .IsEquipped = true, .Loaded = static_cast<std::uint16_t>(next()),
+                .Reserve = static_cast<std::uint16_t>(next()), .Energy = static_cast<float>(next()), .Heat = static_cast<float>(next()),
+                .IsOverheated = true, .IsReloading = true, .ChargeFraction = static_cast<float>(next()), .CanFireNow = true };
+        }
+        view.AimHit = { .Distance = static_cast<float>(next()), .MaxDistance = static_cast<float>(next()), .Point = vec(), .Material = static_cast<std::int16_t>(next()),
+            .Kind = HitKind::Dynamic, .ObjectHandle = next(), .Function = static_cast<Function>(next()), .Subtype = static_cast<std::uint8_t>(next()),
+            .Relation = relation(), .PlayerRow = static_cast<std::uint8_t>(next()), .RegionIndex = static_cast<std::int16_t>(next()), .IsHead = true,
+            .SurfaceFlags = static_cast<std::uint8_t>(next()) };
+        view.RayOrigin = vec();
+        for (auto& ray : view.Rays)
+        {
+            ray = { .Distance = static_cast<float>(next()), .Kind = HitKind::Static, .ObjectHandle = next(), .Material = static_cast<std::int16_t>(next()),
+                .Function = static_cast<Function>(next()), .Relation = relation(), .SurfaceFlags = static_cast<std::uint8_t>(next()) };
+        }
+        for (auto& other : view.Others)
+        {
+            other = { .Relation = relation(), .Channels = static_cast<std::uint8_t>(next() & 7), .IsAlive = true, .Position = vec(), .Velocity = vec(),
+                .FacingYaw = static_cast<float>(next()), .Vitality = std::numeric_limits<float>::quiet_NaN(), .Shield = static_cast<float>(next()),
+                .WeaponSubtype = static_cast<std::uint8_t>(next()), .IsCrouching = true, .CarriesFlag = true, .Elevation = -1 };
+        }
+        for (auto& flag : view.Flags)
+        {
+            flag = { .State = FlagState::Dropped, .Position = vec(), .CarrierRow = static_cast<std::uint8_t>(next()), .ResetTicks = next(), .IsResetRunning = true,
+                .AlliesInZone = static_cast<std::uint8_t>(next()), .StandPosition = vec() };
+        }
+        view.SoundCount = static_cast<std::uint8_t>(next());
+        for (auto& sound : view.Sounds)
+        {
+            sound = { .Kind = ViewSoundKind::Explosion, .SourceFunction = static_cast<Function>(next()), .SourceSubtype = static_cast<std::uint8_t>(next()),
+                .Direction = vec(), .Intensity = static_cast<float>(next()), .AgeTicks = next() };
+        }
+        view.NoticeCount = static_cast<std::uint8_t>(next());
+        for (auto& notice : view.Notices)
+        {
+            notice = { .Kind = Event::FlagTaken, .CauseRow = static_cast<std::uint8_t>(next()), .EffectRow = static_cast<std::uint8_t>(next()),
+                .CauseRelation = relation(), .EffectRelation = relation(), .FlagSide = ViewFlagSide::Rival, .AgeTicks = next() };
+        }
+    }
+
+    auto ExpectVec(const Vec3& expected, const Contract::Bridge::Type::BridgeVec3& row) -> void
+    {
+        EXPECT_EQ(row.X, expected.X);
+        EXPECT_EQ(row.Y, expected.Y);
+        EXPECT_EQ(row.Z, expected.Z);
+    }
+
+    // Compares the bridge row with the View it was copied from, field by field. A float that is NaN in the View must be NaN in the row.
+    auto ExpectView(const View& view, const BridgeView& row) -> void
+    {
+        EXPECT_EQ(row.Head.PlayerHandle, view.Head.PlayerHandle);
+        EXPECT_EQ(row.Head.PlayerRow, view.Head.PlayerRow);
+        EXPECT_EQ(row.Head.LocalIndex, view.Head.LocalIndex);
+        EXPECT_EQ(row.Head.BipedHandle, view.Head.BipedHandle);
+        EXPECT_EQ(row.Head.Mode, BridgeViewMode::HumanLike);
+        EXPECT_EQ(row.Head.IsComputed, 1);
+        EXPECT_EQ(row.Head.HasBody, 1);
+        EXPECT_EQ(row.Head.Team, static_cast<std::uint8_t>(Team::Red));
+        EXPECT_EQ(row.Head.Side, static_cast<std::uint8_t>(Team::Blue));
+
+        const auto& self{ view.Self };
+        ExpectVec(self.Eye, row.Self.Eye);
+        ExpectVec(self.Feet, row.Self.Feet);
+        EXPECT_EQ(row.Self.FrameYaw, self.FrameYaw);
+        EXPECT_EQ(row.Self.AimPitch, self.AimPitch);
+        ExpectVec(self.LinearVelocity, row.Self.LinearVelocity);
+        ExpectVec(self.OwnVelocity, row.Self.OwnVelocity);
+        EXPECT_TRUE(std::isnan(row.Self.Vitality));
+        EXPECT_EQ(row.Self.Shield, self.Shield);
+        EXPECT_EQ(row.Self.Ground, BridgeGround::Object);
+        EXPECT_EQ(row.Self.IsGrounded, 1);
+        EXPECT_EQ(row.Self.AirborneTicks, self.AirborneTicks);
+        EXPECT_EQ(row.Self.CrouchFraction, self.CrouchFraction);
+        EXPECT_EQ(row.Self.Zoom, static_cast<std::uint8_t>(self.Zoom));
+        EXPECT_EQ(row.Self.TicksAlive, self.TicksAlive);
+        EXPECT_EQ(row.Self.RespawnTicks, self.RespawnTicks);
+        EXPECT_EQ(row.Self.Powerup, BridgePowerup::NoPowerup);
+        EXPECT_EQ(row.Self.PowerupTicks, self.PowerupTicks);
+        EXPECT_EQ(row.Self.SelectedGrenade, static_cast<std::uint8_t>(self.SelectedGrenade));
+        EXPECT_EQ(row.Self.FragGrenades, self.FragGrenades);
+        EXPECT_EQ(row.Self.PlasmaGrenades, self.PlasmaGrenades);
+        EXPECT_EQ(row.Self.Ability, self.Ability);
+        EXPECT_EQ(row.Self.AbilityEnergy, self.AbilityEnergy);
+        EXPECT_EQ(row.Self.IsAbilityActive, 1);
+        EXPECT_EQ(row.Self.CarriesFlag, 1);
+        EXPECT_EQ(row.Self.TicksSinceDamage, self.TicksSinceDamage);
+        EXPECT_EQ(row.Self.IsTracked, 1);
+        for (std::size_t i{ 0 }; i < self.Weapons.size(); ++i)
+        {
+            const auto& weapon{ self.Weapons[i] };
+            const auto& out{ row.Self.Weapons[i] };
+            EXPECT_EQ(out.Handle, weapon.Handle);
+            EXPECT_EQ(out.Subtype, weapon.Subtype);
+            EXPECT_EQ(out.IsEquipped, 1);
+            EXPECT_EQ(out.Loaded, weapon.Loaded);
+            EXPECT_EQ(out.Reserve, weapon.Reserve);
+            EXPECT_EQ(out.Energy, weapon.Energy);
+            EXPECT_EQ(out.Heat, weapon.Heat);
+            EXPECT_EQ(out.IsOverheated, 1);
+            EXPECT_EQ(out.IsReloading, 1);
+            EXPECT_EQ(out.ChargeFraction, weapon.ChargeFraction);
+            EXPECT_EQ(out.CanFireNow, 1);
+        }
+
+        const auto& aim{ view.AimHit };
+        EXPECT_EQ(row.AimHit.Distance, aim.Distance);
+        EXPECT_EQ(row.AimHit.MaxDistance, aim.MaxDistance);
+        ExpectVec(aim.Point, row.AimHit.Point);
+        EXPECT_EQ(row.AimHit.Material, aim.Material);
+        EXPECT_EQ(row.AimHit.Kind, BridgeHitKind::Dynamic);
+        EXPECT_EQ(row.AimHit.ObjectHandle, aim.ObjectHandle);
+        EXPECT_EQ(row.AimHit.Function, static_cast<std::uint8_t>(aim.Function));
+        EXPECT_EQ(row.AimHit.Subtype, aim.Subtype);
+        EXPECT_EQ(static_cast<std::uint8_t>(row.AimHit.Relation), static_cast<std::uint8_t>(aim.Relation));
+        EXPECT_EQ(row.AimHit.PlayerRow, aim.PlayerRow);
+        EXPECT_EQ(row.AimHit.RegionIndex, aim.RegionIndex);
+        EXPECT_EQ(row.AimHit.IsHead, 1);
+        EXPECT_EQ(row.AimHit.SurfaceFlags, aim.SurfaceFlags);
+
+        ExpectVec(view.RayOrigin, row.RayOrigin);
+        for (std::size_t i{ 0 }; i < view.Rays.size(); ++i)
+        {
+            const auto& ray{ view.Rays[i] };
+            EXPECT_EQ(row.Rays[i].Distance, ray.Distance);
+            EXPECT_EQ(row.Rays[i].Kind, BridgeHitKind::Static);
+            EXPECT_EQ(row.Rays[i].ObjectHandle, ray.ObjectHandle);
+            EXPECT_EQ(row.Rays[i].Material, ray.Material);
+            EXPECT_EQ(row.Rays[i].Function, static_cast<std::uint8_t>(ray.Function));
+            EXPECT_EQ(static_cast<std::uint8_t>(row.Rays[i].Relation), static_cast<std::uint8_t>(ray.Relation));
+            EXPECT_EQ(row.Rays[i].SurfaceFlags, ray.SurfaceFlags);
+        }
+        for (std::size_t i{ 0 }; i < view.Others.size(); ++i)
+        {
+            const auto& other{ view.Others[i] };
+            EXPECT_EQ(static_cast<std::uint8_t>(row.Others[i].Relation), static_cast<std::uint8_t>(other.Relation));
+            EXPECT_EQ(row.Others[i].Channels, other.Channels);
+            EXPECT_EQ(row.Others[i].IsAlive, 1);
+            ExpectVec(other.Position, row.Others[i].Position);
+            ExpectVec(other.Velocity, row.Others[i].Velocity);
+            EXPECT_EQ(row.Others[i].FacingYaw, other.FacingYaw);
+            EXPECT_TRUE(std::isnan(row.Others[i].Vitality));
+            EXPECT_EQ(row.Others[i].Shield, other.Shield);
+            EXPECT_EQ(row.Others[i].WeaponSubtype, other.WeaponSubtype);
+            EXPECT_EQ(row.Others[i].IsCrouching, 1);
+            EXPECT_EQ(row.Others[i].CarriesFlag, 1);
+            EXPECT_EQ(row.Others[i].Elevation, -1);
+        }
+        for (std::size_t i{ 0 }; i < view.Flags.size(); ++i)
+        {
+            const auto& flag{ view.Flags[i] };
+            EXPECT_EQ(row.Flags[i].State, static_cast<std::uint8_t>(FlagState::Dropped));
+            ExpectVec(flag.Position, row.Flags[i].Position);
+            EXPECT_EQ(row.Flags[i].CarrierRow, flag.CarrierRow);
+            EXPECT_EQ(row.Flags[i].ResetTicks, flag.ResetTicks);
+            EXPECT_EQ(row.Flags[i].IsResetRunning, 1);
+            EXPECT_EQ(row.Flags[i].AlliesInZone, flag.AlliesInZone);
+            ExpectVec(flag.StandPosition, row.Flags[i].StandPosition);
+        }
+        EXPECT_EQ(row.SoundCount, view.SoundCount);
+        for (std::size_t i{ 0 }; i < view.Sounds.size(); ++i)
+        {
+            const auto& sound{ view.Sounds[i] };
+            EXPECT_EQ(row.Sounds[i].Kind, BridgeViewSoundKind::Explosion);
+            EXPECT_EQ(row.Sounds[i].SourceFunction, static_cast<std::uint8_t>(sound.SourceFunction));
+            EXPECT_EQ(row.Sounds[i].SourceSubtype, sound.SourceSubtype);
+            ExpectVec(sound.Direction, row.Sounds[i].Direction);
+            EXPECT_EQ(row.Sounds[i].Intensity, sound.Intensity);
+            EXPECT_EQ(row.Sounds[i].AgeTicks, sound.AgeTicks);
+        }
+        EXPECT_EQ(row.NoticeCount, view.NoticeCount);
+        for (std::size_t i{ 0 }; i < view.Notices.size(); ++i)
+        {
+            const auto& notice{ view.Notices[i] };
+            EXPECT_EQ(row.Notices[i].Kind, static_cast<std::uint8_t>(Event::FlagTaken));
+            EXPECT_EQ(row.Notices[i].CauseRow, notice.CauseRow);
+            EXPECT_EQ(row.Notices[i].EffectRow, notice.EffectRow);
+            EXPECT_EQ(static_cast<std::uint8_t>(row.Notices[i].CauseRelation), static_cast<std::uint8_t>(notice.CauseRelation));
+            EXPECT_EQ(static_cast<std::uint8_t>(row.Notices[i].EffectRelation), static_cast<std::uint8_t>(notice.EffectRelation));
+            EXPECT_EQ(row.Notices[i].FlagSide, BridgeViewFlagSide::Rival);
+            EXPECT_EQ(row.Notices[i].AgeTicks, notice.AgeTicks);
+        }
+    }
+
+    // return: A Tick with this many players and, when views is not null, those Views.
+    auto WithViews(std::size_t playerCount, std::shared_ptr<const ViewTable> views) -> Tick
+    {
+        auto players{ std::make_shared<Players>() };
+        for (std::size_t i{ 0 }; i < playerCount; ++i) players->Rows.push_back(Player{ .Handle = static_cast<std::uint32_t>(0xE5A10000 + i) });
+        Tick tick{};
+        tick.Players = players;
+        tick.Views = std::move(views);
+        return tick;
     }
 
     auto Flag(std::uint32_t handle, Team baseTeam) -> ObjectiveDetail
@@ -609,4 +853,93 @@ TEST(FlatTests, EventsCarryTheSequenceOfArtemisAndTheOneOfTheEngine)
     EXPECT_EQ(flat->Events[1].Sequence, 2u);
     EXPECT_EQ(flat->Events[1].EngineSequence, 0u);
     EXPECT_EQ(flat->Header.LastEventSequence, 2u);
+}
+
+TEST(FlatTests, ViewsAreCopiedRowByRow)
+{
+    auto views{ std::make_shared<ViewTable>() };
+    FillView((*views)[0], 100);
+    FillView((*views)[1], 5'000);
+    (*views)[1].Head.Mode = ViewMode::Full;
+
+    const auto flat{ Flat(WithViews(2, views)) };
+
+    ASSERT_EQ(flat->Header.ViewCount, 2u);
+    ExpectView((*views)[0], flat->Views[0]);
+
+    // The second row is the second player: the same View the table has in that row, with the mode it carries.
+    EXPECT_EQ(flat->Views[1].Head.PlayerHandle, (*views)[1].Head.PlayerHandle);
+    EXPECT_EQ(flat->Views[1].Head.Mode, BridgeViewMode::Full);
+    EXPECT_EQ(flat->Views[1].Self.Shield, (*views)[1].Self.Shield);
+    EXPECT_EQ(flat->Views[1].Others[7].Shield, (*views)[1].Others[7].Shield);
+    EXPECT_NE(flat->Views[0].Head.PlayerHandle, flat->Views[1].Head.PlayerHandle);
+}
+
+TEST(FlatTests, ViewMaskAndCountFollowComputedRows)
+{
+    auto views{ std::make_shared<ViewTable>() };
+    (*views)[0].Head.IsComputed = true;
+    (*views)[2].Head.IsComputed = true;
+    (*views)[5].Head.IsComputed = true;
+
+    // The mask is by row of Players: row 5 is outside the three players of the tick, so it is not counted.
+    const auto flat{ Flat(WithViews(3, views)) };
+
+    EXPECT_EQ(flat->Header.ViewCount, 3u);
+    EXPECT_EQ(flat->Header.ViewMask, 0b101u);
+
+    // Without a Views table the count follows the players and nothing is computed.
+    const auto without{ Flat(WithViews(3, nullptr)) };
+    EXPECT_EQ(without->Header.ViewCount, 3u);
+    EXPECT_EQ(without->Header.ViewMask, 0u);
+    EXPECT_EQ(Flat(Tick{})->Header.ViewCount, 0u);
+}
+
+TEST(FlatTests, RowsOutsideTheSetAreZero)
+{
+    auto views{ std::make_shared<ViewTable>() };
+    FillView((*views)[0], 10);
+    FillView((*views)[1], 20);
+    FillView((*views)[2], 30);
+
+    // A buffer that held a bigger tick before: whatever was in the rows past the players, and in the padding, must not survive.
+    auto flat{ std::make_unique<BridgeTick>() };
+    std::memset(flat->Views.data(), 0xAB, sizeof(flat->Views));
+    FlatService{}.Flatten(WithViews(1, views), *flat);
+
+    ASSERT_EQ(flat->Header.ViewCount, 1u);
+    const BridgeView zero{ [] { BridgeView value{}; std::memset(&value, 0, sizeof(value)); return value; }() };
+    for (std::size_t row{ 1 }; row < flat->Views.size(); ++row)
+    {
+        EXPECT_EQ(std::memcmp(&flat->Views[row], &zero, sizeof(BridgeView)), 0) << "row " << row;
+    }
+
+    // A computed row with every field zero is zero bytes too, so the padding of the rows in use is clean.
+    auto empty{ std::make_shared<ViewTable>() };
+    auto dirty{ std::make_unique<BridgeTick>() };
+    std::memset(dirty->Views.data(), 0xAB, sizeof(dirty->Views));
+    FlatService{}.Flatten(WithViews(2, empty), *dirty);
+    EXPECT_EQ(std::memcmp(&dirty->Views[0], &zero, sizeof(BridgeView)), 0);
+    EXPECT_EQ(std::memcmp(&dirty->Views[1], &zero, sizeof(BridgeView)), 0);
+}
+
+TEST(FlatTests, EventPositionAndAmountAreZero)
+{
+    EventLog log{};
+    log.Rows.push_back(GameEvent{ .Sequence = 1, .EngineSequence = 57, .GameTick = 10, .Kind = Event::FlagTaken });
+    log.LastSequence = 1;
+    Tick tick{};
+    tick.Events = std::make_shared<const EventLog>(std::move(log));
+
+    // Perception has no position or amount yet (F4.5): the fields cross as zero even over a buffer that was not.
+    auto flat{ std::make_unique<BridgeTick>() };
+    std::memset(flat->Events.data(), 0xAB, sizeof(flat->Events));
+    FlatService{}.Flatten(tick, *flat);
+
+    ASSERT_EQ(flat->Header.EventCount, 1u);
+    EXPECT_EQ(flat->Events[0].Sequence, 1u);
+    EXPECT_EQ(flat->Events[0].Position.X, 0.0f);
+    EXPECT_EQ(flat->Events[0].Position.Y, 0.0f);
+    EXPECT_EQ(flat->Events[0].Position.Z, 0.0f);
+    EXPECT_EQ(flat->Events[0].Amount, 0.0f);
 }

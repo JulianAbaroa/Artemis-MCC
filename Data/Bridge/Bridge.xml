@@ -18,6 +18,11 @@
 	<const name="MaxLifts" value="64" doc="Live lifts a tick carries: man cannons and gravity lifts (D261)." />
 	<const name="MaxLiftStages" value="3" doc="Stages (phantom types that push players or bipeds) a lift carries. The tags have 3 at most (D261)." />
 	<const name="MaxTeams" value="8" owner="Common.Engine.Type:k_MaxTeams" doc="Teams of a match (Common.Engine k_MaxTeams): the length of the team score arrays." />
+	<const name="ViewRayCount" value="16" doc="Rays of the perception pattern of a View (Views k_ViewRayCount)." />
+	<const name="ViewFlags" value="2" doc="Flags of a View: [0] is the one of the team of the agent in this round, [1] the rival one (Views k_ViewFlags)." />
+	<const name="ViewSounds" value="8" doc="Sounds a View keeps (Views k_ViewSounds)." />
+	<const name="ViewNotices" value="8" doc="Notices a View keeps (Views k_ViewNotices)." />
+	<const name="ViewWeaponSlots" value="2" doc="Weapons of a ViewSelf: the primary and the secondary one (Views k_ViewWeaponSlots)." />
 	<const name="PowerupCount" value="3" doc="Powerups of a game variant (red, blue, yellow): the length of the powerup duration array." />
 	<const name="PresetNameSize" value="32" doc="Bytes of a gametype preset name, with its end zero (Engine.Base.Preset k_MaxPresetNameLength is 31)." />
 	<const name="MapNameSize" value="64" doc="Bytes of a map variant name: the name of a recorded match configuration (Engine.Match k_MaxMatchConfigNameLength is 64 characters). A name of 64 characters has no end zero." />
@@ -102,6 +107,31 @@
 		<value name="Blue" id="2" />
 		<value name="Yellow" id="3" />
 	</enum>
+	<enum name="BridgeViewMode" type="u8" doc="How much of the world the agent sees (Views ViewMode, D321). Note that Full is 0.">
+		<value name="Full" id="0" doc="Every living player, without cone or rays." />
+		<value name="HumanLike" id="1" doc="Through the cone and the line of sight (D310)." />
+	</enum>
+	<enum name="BridgeViewRelation" type="u8" doc="Relation of the agent to what it looks at or to another player, by the team of the player involved (Views ViewRelation).">
+		<value name="NoRelation" id="0" />
+		<value name="Self" id="1" />
+		<value name="Ally" id="2" />
+		<value name="Enemy" id="3" />
+		<value name="Neutral" id="4" />
+	</enum>
+	<enum name="BridgeViewSoundKind" type="u8" doc="Kind of a sound the agent heard (Views ViewSoundKind).">
+		<value name="Fire" id="0" />
+		<value name="Explosion" id="1" />
+	</enum>
+	<enum name="BridgeViewFlagSide" type="u8" doc="Side of a flag in a notice, from the team of the agent (Views ViewFlagSide).">
+		<value name="NoSide" id="0" />
+		<value name="Mine" id="1" />
+		<value name="Rival" id="2" />
+	</enum>
+	<enum name="BridgeHitKind" type="u8" doc="What a ray hit (Views Raycast HitKind).">
+		<value name="Miss" id="0" />
+		<value name="Static" id="1" doc="The BSP." />
+		<value name="Dynamic" id="2" doc="A living object." />
+	</enum>
 	<flags name="BridgeTickFlag" type="u32" doc="Flags of a tick.">
 		<bit name="EntitiesTruncated" index="0" doc="The tick had more live objects than MaxEntities." />
 		<bit name="ObjectivesTruncated" index="1" doc="The tick had more flags or more stands than MaxObjectives." />
@@ -109,6 +139,12 @@
 		<bit name="ProjectilesTruncated" index="3" doc="The tick had more live projectiles than MaxProjectiles." />
 		<bit name="ExplosivesTruncated" index="4" doc="The tick had more live explosives than MaxExplosives." />
 		<bit name="LiftsTruncated" index="5" doc="The tick had more live lifts than MaxLifts." />
+	</flags>
+
+	<flags name="BridgeViewChannel" type="u8" doc="Bits of BridgeViewOther.Channels: how the agent knows of the other player (Views ViewChannel).">
+		<bit name="Hud" index="0" doc="Seen on the HUD." />
+		<bit name="Seen" index="1" doc="Seen through the cone and the line of sight." />
+		<bit name="Radar" index="2" doc="Known by the motion tracker. Zero until F4.6." />
 	</flags>
 
 	<struct name="BridgeVec3" doc="Vector of three floats, world units or a direction.">
@@ -181,6 +217,7 @@
 		<field name="RequestSetupMap" type="u8" count="MapNameSize" doc="Map variant wanted (a recorded match configuration), zero filled. Empty with its bit set means the map the match loaded with." />
 		<field name="RequestSetupRoster" type="BridgeRoster" doc="Bot roster wanted." />
 		<field name="RequestSetup" type="u32" doc="Counter: a raise asks for one match setup with the fields of RequestSetupFields (LS.2). Taken only while Python owns the instance and dropped when it loses it. Starts from SetupSequence." />
+		<field name="RequestViewMode" type="u8" doc="How much of the world the agents see: 0 = HumanLike, 1 = Full (the zero is HumanLike). Ignored until F4.8 (D321)." />
 		<field name="RequestTurnLimit" type="f32" doc="Most radians per tick and per axis the look of each agent may ask (D363). What it cuts is lost. 0 = no limit." />
 		<field name="ClientHeartbeat" type="u64" doc="Counter Python raises at least every 500 ms." />
 		<field name="ActionSequence" type="u64" doc="Action tick of the last decision whose actions are complete. Written last." />
@@ -217,6 +254,8 @@
 		<field name="MapId" type="i32" doc="MapId of the scnr tag of the loaded map, engine id. 0 while no map." />
 		<field name="ExplosiveCount" type="u16" doc="Rows of Explosives in use." />
 		<field name="LiftCount" type="u16" doc="Rows of Lifts in use." />
+		<field name="ViewCount" type="u16" doc="Rows of Views in use: equal to PlayerCount. Row i is the View of Players[i]." />
+		<field name="ViewMask" type="u32" doc="Bit i is 1 when Views[i].Head.IsComputed. i is the row of Players, not the index of the player table, so Python does not translate." />
 		<field name="PossessedPlayer" type="u32" doc="Handle of the bot the user possesses, NoHandle when none (D364). Written by the bridge with the clock fields, read on the game thread together with PossessedInput: a pair of the same moment. NoHandle in every .tdump (the dump has no clock)." />
 		<field name="PossessedInput" type="BridgeAgentInput" doc="What the possessed player did in the last closed window, reduced to an AgentInput (D364). The window closed at the last multiple of d counted from the decision tick: it covers the d action ticks that end just before ActionTick (the last window of a period is shorter when d does not divide N). With N greater than d a client in sparse mode sees only the last window of each period. Zero without a possessed player and in every .tdump. Python reads it and does not use it yet." />
 	</struct>
@@ -256,6 +295,8 @@
 		<field name="DamageReportingType" type="u8" />
 		<field name="IsHeadshot" type="u8" />
 		<field name="IsStuck" type="u8" />
+		<field name="Position" type="BridgeVec3" doc="World position of the event. Zero until F4.5 (D314-D316)." />
+		<field name="Amount" type="f32" doc="Amount of the event (damage and the like). Zero until F4.5 (D314-D316)." />
 	</struct>
 
 	<struct name="BridgePlayerTraits" doc="Traits the engine applies to a player in this tick (Blam.Layout PlayerTraits, D262): already composed with the carried objective, the powerups and the respawn traits. Multipliers are 1.0 for 100%. A raw index outside its table reads NaN (floats), 0 (bools) or Unknown (enums).">
@@ -433,6 +474,146 @@
 		<field name="Stages" type="BridgeLiftStage" count="MaxLiftStages" doc="Only the first StageCount are meaningful, in the order of the tag." />
 	</struct>
 
+	<struct name="BridgeViewHead" doc="Who a View belongs to (Views ViewHead).">
+		<field name="PlayerHandle" type="u32" />
+		<field name="PlayerRow" type="u8" doc="Row of the player in Players." />
+		<field name="LocalIndex" type="u8" doc="Split-screen user of the player, 0xFF (NotLocal) when it is not a local one." />
+		<field name="BipedHandle" type="u32" doc="Handle of the biped of the player, NoHandle without one." />
+		<field name="Mode" type="u8" enum="BridgeViewMode" doc="Effective mode of the View (D321)." />
+		<field name="IsComputed" type="u8" doc="1 when the player is in the AgentSet and the View was computed. A View that is not computed is all zero." />
+		<field name="HasBody" type="u8" />
+		<field name="Team" type="u8" semantic="Team" />
+		<field name="Side" type="u8" semantic="Team" doc="BaseTeam of the stand that the team owns in this round, Neutral when it owns none." />
+	</struct>
+
+	<struct name="BridgeViewWeapon" doc="A weapon of the agent (Views ViewWeapon). Repeats what the bridge gives on purpose, so an agent builds its observation without joins.">
+		<field name="Handle" type="u32" />
+		<field name="Subtype" type="u8" />
+		<field name="IsEquipped" type="u8" />
+		<field name="Loaded" type="u16" doc="Rounds of the first magazine, 0 on an energy weapon." />
+		<field name="Reserve" type="u16" />
+		<field name="Energy" type="f32" />
+		<field name="Heat" type="f32" />
+		<field name="IsOverheated" type="u8" />
+		<field name="IsReloading" type="u8" />
+		<field name="ChargeFraction" type="f32" />
+		<field name="CanFireNow" type="u8" />
+	</struct>
+
+	<struct name="BridgeViewSelf" doc="The agent itself: a copy of Players, Entities and Weapons, with the eye and the angles of the aim (Views ViewSelf). World space and world units.">
+		<field name="Eye" type="BridgeVec3" doc="Eye of the agent (D309), zero when the biped has no tag." />
+		<field name="Feet" type="BridgeVec3" />
+		<field name="FrameYaw" type="f32" doc="Heading of Body.Aim, radians." />
+		<field name="AimPitch" type="f32" doc="Pitch of Body.Aim, radians." />
+		<field name="LinearVelocity" type="BridgeVec3" />
+		<field name="OwnVelocity" type="BridgeVec3" />
+		<field name="Vitality" type="f32" doc="Copied as is: NaN without vitality." />
+		<field name="Shield" type="f32" doc="Copied as is: NaN without shield." />
+		<field name="Ground" type="u8" enum="BridgeGround" />
+		<field name="IsGrounded" type="u8" />
+		<field name="AirborneTicks" type="u32" />
+		<field name="CrouchFraction" type="f32" />
+		<field name="Zoom" type="u8" semantic="ZoomLevel" />
+		<field name="TicksAlive" type="u32" />
+		<field name="RespawnTicks" type="u32" />
+		<field name="Powerup" type="u8" enum="BridgePowerup" />
+		<field name="PowerupTicks" type="u32" />
+		<field name="SelectedGrenade" type="u8" semantic="GrenadeType" />
+		<field name="FragGrenades" type="u8" />
+		<field name="PlasmaGrenades" type="u8" />
+		<field name="Ability" type="u32" />
+		<field name="AbilityEnergy" type="f32" />
+		<field name="IsAbilityActive" type="u8" />
+		<field name="CarriesFlag" type="u8" />
+		<field name="TicksSinceDamage" type="u32" doc="NoHandle (0xFFFFFFFF) when unknown." />
+		<field name="IsTracked" type="u8" doc="A weapon that tracks the agent (or the vehicle it sits in) is locked on it." />
+		<field name="Weapons" type="BridgeViewWeapon" count="ViewWeaponSlots" doc="The primary and the secondary weapon." />
+	</struct>
+
+	<struct name="BridgeViewAimHit" doc="What the aim ray of the agent hits (Views ViewAimHit).">
+		<field name="Distance" type="f32" />
+		<field name="MaxDistance" type="f32" doc="Range of the ray (the autoaim of the weapon, capped), 0 when it was not cast." />
+		<field name="Point" type="BridgeVec3" doc="World point of a hit, zero on a miss." />
+		<field name="Material" type="i16" />
+		<field name="Kind" type="u8" enum="BridgeHitKind" />
+		<field name="ObjectHandle" type="u32" />
+		<field name="Function" type="u8" semantic="Function" />
+		<field name="Subtype" type="u8" />
+		<field name="Relation" type="u8" enum="BridgeViewRelation" />
+		<field name="PlayerRow" type="u8" doc="Row of the player whose biped was hit, 0xFF when it is not one." />
+		<field name="RegionIndex" type="i16" />
+		<field name="IsHead" type="u8" />
+		<field name="SurfaceFlags" type="u8" />
+	</struct>
+
+	<struct name="BridgeViewRay" doc="One ray of the perception pattern (Views ViewRayHit). The direction comes from the pattern and FrameYaw, it is not stored.">
+		<field name="Distance" type="f32" />
+		<field name="Kind" type="u8" enum="BridgeHitKind" />
+		<field name="ObjectHandle" type="u32" />
+		<field name="Material" type="i16" doc="Global material of a static hit, -1 for none." />
+		<field name="Function" type="u8" semantic="Function" />
+		<field name="Relation" type="u8" enum="BridgeViewRelation" />
+		<field name="SurfaceFlags" type="u8" />
+	</struct>
+
+	<struct name="BridgeViewOther" doc="What the agent knows of one row of Players (Views ViewOther).">
+		<field name="Relation" type="u8" enum="BridgeViewRelation" />
+		<field name="Channels" type="u8" doc="Bits of BridgeViewChannel." />
+		<field name="IsAlive" type="u8" />
+		<field name="Position" type="BridgeVec3" />
+		<field name="Velocity" type="BridgeVec3" />
+		<field name="FacingYaw" type="f32" />
+		<field name="Vitality" type="f32" doc="Copied as is: NaN without vitality." />
+		<field name="Shield" type="f32" doc="Copied as is: NaN without shield." />
+		<field name="WeaponSubtype" type="u8" />
+		<field name="IsCrouching" type="u8" />
+		<field name="CarriesFlag" type="u8" />
+		<field name="Elevation" type="i8" doc="-1 below the agent, 0 level, 1 above. Radar only: zero until F4.6." />
+	</struct>
+
+	<struct name="BridgeViewFlag" doc="One of the two flags of a View (Views ViewFlag).">
+		<field name="State" type="u8" semantic="FlagState" />
+		<field name="Position" type="BridgeVec3" />
+		<field name="CarrierRow" type="u8" doc="Row of the carrier, 0xFF without one." />
+		<field name="ResetTicks" type="u32" />
+		<field name="IsResetRunning" type="u8" />
+		<field name="AlliesInZone" type="u8" />
+		<field name="StandPosition" type="BridgeVec3" />
+	</struct>
+
+	<struct name="BridgeViewSound" doc="A sound the agent heard (Views ViewSound). Zero until F4.5.">
+		<field name="Kind" type="u8" enum="BridgeViewSoundKind" />
+		<field name="SourceFunction" type="u8" semantic="Function" />
+		<field name="SourceSubtype" type="u8" />
+		<field name="Direction" type="BridgeVec3" />
+		<field name="Intensity" type="f32" />
+		<field name="AgeTicks" type="u32" />
+	</struct>
+
+	<struct name="BridgeViewNotice" doc="An event the agent knows of (Views ViewNotice). Zero until F4.6.">
+		<field name="Kind" type="u8" semantic="Event" />
+		<field name="CauseRow" type="u8" />
+		<field name="EffectRow" type="u8" />
+		<field name="CauseRelation" type="u8" enum="BridgeViewRelation" />
+		<field name="EffectRelation" type="u8" enum="BridgeViewRelation" />
+		<field name="FlagSide" type="u8" enum="BridgeViewFlagSide" />
+		<field name="AgeTicks" type="u32" />
+	</struct>
+
+	<struct name="BridgeView" doc="Everything one agent can know in one tick (Views View, F4 D307-D321): a copy, never a computation. World space and world units.">
+		<field name="Head" type="BridgeViewHead" />
+		<field name="Self" type="BridgeViewSelf" />
+		<field name="AimHit" type="BridgeViewAimHit" />
+		<field name="RayOrigin" type="BridgeVec3" doc="Where the rays of the pattern start from (bounding center of the vehicle or of the biped), zero when they were not cast." />
+		<field name="Rays" type="BridgeViewRay" count="ViewRayCount" />
+		<field name="Others" type="BridgeViewOther" count="MaxPlayers" doc="One per row of Players." />
+		<field name="Flags" type="BridgeViewFlag" count="ViewFlags" />
+		<field name="SoundCount" type="u8" doc="Sounds in use. Zero until F4.5." />
+		<field name="Sounds" type="BridgeViewSound" count="ViewSounds" doc="Only the first SoundCount are meaningful." />
+		<field name="NoticeCount" type="u8" doc="Notices in use. Zero until F4.6." />
+		<field name="Notices" type="BridgeViewNotice" count="ViewNotices" doc="Only the first NoticeCount are meaningful." />
+	</struct>
+
 	<struct name="BridgeTick" align="64" doc="One flattened Tick. Sequence and SequenceEnd are equal and even when the tick is complete.">
 		<field name="Sequence" type="u64" />
 		<field name="Header" type="BridgeTickHeader" />
@@ -446,6 +627,7 @@
 		<field name="Projectiles" type="BridgeProjectile" count="MaxProjectiles" doc="Live projectiles, sorted by Handle." />
 		<field name="Explosives" type="BridgeExplosive" count="MaxExplosives" doc="Live explosives, sorted by Handle." />
 		<field name="Lifts" type="BridgeLift" count="MaxLifts" doc="Live lifts, sorted by Handle." />
+		<field name="Views" type="BridgeView" count="MaxPlayers" doc="One per row of Players, same order (F4, D307). Rows from PlayerCount on are zero." />
 		<field name="SequenceEnd" type="u64" />
 	</struct>
 
