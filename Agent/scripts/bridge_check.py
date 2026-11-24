@@ -13,6 +13,7 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
         [--pause-every K --pause-seconds S]  P.5 (D143): every K decisions holds a pause of S s, alternating after answering the
                                            decision and before answering it (the game waits inside the tick). No tick may run
                                            during a pause and the known answer must hold across it.
+                                           --seconds counts the time played, not the seconds held in a pause.
     endround [--round-seconds 10] [--seconds 300] [--scale S] [--stale]
                                            D144: asks for the end of each round after --round-seconds of play (from the start, or
                                            the first Spawn after a RoundEnd) and checks that RoundEnd follows, or GameOver in the
@@ -240,7 +241,9 @@ def Run(args):
         first_pos, last_pos = {}, {}
         pauses, paused_seconds, pause_just_ended = [], 0.0, False
         start = time.time()
-        while time.time() - start < args.seconds:
+        # note: --seconds is time played: the seconds held in a pause (--pause-every) are not counted (F4.9: with them counted, 60 s of wall
+        # clock and 5 s pauses every 300 decisions ended the run at 14.9 s played).
+        while time.time() - start - paused_seconds < args.seconds:
             published = bridge.wait_tick(2.0)
             if published is None:
                 if not bridge.is_alive:

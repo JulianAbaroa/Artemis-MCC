@@ -139,6 +139,10 @@ class PublishedTick:
         self.explosives = data["Explosives"][: int(self.header["ExplosiveCount"])]
         # Live lifts with the stages of their tag and the measured exit of the last biped they pushed, sorted by Handle (D261).
         self.lifts = data["Lifts"][: int(self.header["LiftCount"])]
+        # The View of each row of Players (same order, D369). Views are computed only for the AgentSet (a bit of ViewMask, Head.IsComputed):
+        # a row that is not computed is all zero.
+        self.views = data["Views"][: int(self.header["ViewCount"])]
+        self.view_mask = int(self.header["ViewMask"])
         # The newest events of the match up to this tick, oldest first. Bridge.new_events keeps only the unseen ones (D141).
         self.events = data["Events"][: int(self.header["EventCount"])]
         self.last_event_sequence = int(self.header["LastEventSequence"])
@@ -148,6 +152,7 @@ class PublishedTick:
         self.possessed_input = self.header["PossessedInput"]
         self.match_id = int(self.header["MatchId"])
         self.received_qpc = received_qpc
+        self.publish_qpc = int(self.header["PublishQpc"])
 
 
     @property
@@ -198,6 +203,8 @@ class Bridge:
         self.qpc_frequency = int(self.artemis["QpcFrequency"]) or 1
         self.last_published_ticks = int(self.artemis["PublishedTicks"])
         self.tears = 0
+        # Cost in ns of the copy of the last read_tick (the measurement of F4.9: CtfConfig.timing).
+        self.last_copy_ns = 0
         # Cursor of new_events: last event sequence returned, the match it belongs to, and events lost from the window.
         self.event_cursor = 0
         self.event_gaps = 0
@@ -416,7 +423,9 @@ class Bridge:
             if before & 1:
                 self.tears += 1
                 continue
+            started = time.perf_counter_ns()
             data = self.buffers[index:index + 1].copy()[0]
+            self.last_copy_ns = time.perf_counter_ns() - started
             after = int(self.buffers["Sequence"][index])
             if after == before and int(data["Sequence"]) == before and int(data["SequenceEnd"]) == before:
                 return PublishedTick(data, qpc())

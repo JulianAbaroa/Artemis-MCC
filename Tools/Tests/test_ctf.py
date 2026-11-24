@@ -2,14 +2,17 @@
 test_ctf.py
 The environment of stage 0 (Agent/artemis/env/ctf.py) over synthetic frames, with no game: the bridge is a fake that hands out the
 ticks of a list. The real Bridge needs Windows shared memory, so a stand-in module takes its place for the import. B4h H.5: the side
-of an agent comes from the OwnerTeam of the stands, and the flag state from the rows of the tick. P.6 (D255): the clock and the score
-of the round come from the Match.
+of an agent is Head.Side of its View, and the flags come from the View too (F4.9: the observation reads only the View and the Match, and
+the frames write Self, Flags and Head of the Views, no Entities, Objectives or Stands, for the observation). P.6 (D255): the clock and
+the score of the round come from the Match.
 """
 import ctypes
 import importlib
+import inspect
 import math
 import os
 import sys
+import time
 from typing import NamedTuple
 from unittest import mock
 
@@ -24,10 +27,12 @@ FLAG_RED, FLAG_BLUE, STAND_RED, STAND_BLUE = 0xE5A00001, 0xE5A00002, 0xE5A00003,
 RED, BLUE = 0, 1
 NONE = 0xFFFFFFFF
 HOME, CARRIED, DROPPED = 0, 1, 2
+MAP_SHIFT = (1.0, 1.0, 0.0)
 
 
 class FakeTick:
-    def __init__(self, layout, players, entities, objectives, stands, events=(), game_tick=100, match_id=1, action_tick=1, match=None):
+    def __init__(self, layout, players, entities, objectives, stands, events=(), game_tick=100, match_id=1, action_tick=1, match=None,
+                 views=(), publish_qpc=0):
         def Rows(name, rows):
             out = np.zeros(len(rows), getattr(layout, name))
             for i, row in enumerate(rows):
@@ -40,7 +45,11 @@ class FakeTick:
         self.stands = Rows("BridgeStand", stands)
         self.events = Rows("BridgeEvent", list(events))
         self.match = Rows("BridgeMatch", [{"GameTick": game_tick, "RoundTicksRemaining": -1, **(match or {})}])[0]
-        self.match_id, self.action_tick = match_id, action_tick
+        self.match_id, self.action_tick, self.publish_qpc = match_id, action_tick, publish_qpc
+        # One View per row of Players; a row left out is all zero (not computed).
+        self.views = np.zeros(len(players), layout.BridgeView)
+        for i, row in enumerate(views):
+            self.views[i] = row
 
 
 class SetupAnswer(NamedTuple):
@@ -113,8 +122,27 @@ def ctf(monkeypatch):
         sys.modules.pop(name, None)
 
 
+def ViewRow(layout, team=RED, side=RED, feet=(5.0, 0.0, 0.0), yaw=0.0, pitch=0.0, velocity=(0.0, 0.0, 0.0), vitality=1.0, shield=1.0,
+            carries=False, own=None, enemy=None, computed=True, has_body=True, handle=P0):
+    """One View. own / enemy: (State, Position, StandPosition) of Flags[0] and Flags[1], None for a row of zeros."""
+    row = np.zeros(1, layout.BridgeView)[0]
+    head, me = row["Head"], row["Self"]
+    head["PlayerHandle"], head["IsComputed"], head["HasBody"], head["Team"], head["Side"] = handle, int(computed), int(has_body), team, side
+    for field, value in (("Feet", feet), ("LinearVelocity", velocity)):
+        for axis, v in zip("XYZ", value):
+            me[field][axis] = v
+    me["FrameYaw"], me["AimPitch"], me["Vitality"], me["Shield"], me["CarriesFlag"] = yaw, pitch, vitality, shield, int(carries)
+    for k, flag in enumerate((own, enemy)):
+        if flag is not None:
+            row["Flags"]["State"][k] = flag[0]
+            for field, value in (("Position", flag[1]), ("StandPosition", flag[2])):
+                for axis, v in zip("XYZ", value):
+                    row["Flags"][field][axis][k] = v
+    return row
+
+
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None):
+          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None, shield=1.0, computed=True, publish_qpc=0):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
     home. match: fields of the Match (by default a round without time limit). The agent is the player P0 of team RED, aiming at +x."""
@@ -133,7 +161,20 @@ def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=Fa
                   {"Handle": FLAG_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1], "State": flags[1],
                    "CarrierPlayer": P0 if flags[1] == CARRIED else NONE, "CarrierBiped": B0 if flags[1] == CARRIED else NONE}]
     stands = [{"Handle": STAND_RED, "BaseTeam": RED, "OwnerTeam": owners[0]}, {"Handle": STAND_BLUE, "BaseTeam": BLUE, "OwnerTeam": owners[1]}][:stand_count]
-    return FakeTick(L, players, entities, objectives, stands, events, game_tick, match_id=match_id, action_tick=action_tick, match=match)
+    # The View of the agent: Side is the BaseTeam of the stand its team owns, Flags[0] the flag of that side and Flags[1] the other one.
+    # note: a View row that is all zero is a side without flag, and the red base of the omniscient rows is the origin, so the positions of
+    # the View carry a shift of the whole map (the distances and the directions do not change).
+    def Shifted(p):
+        return tuple(a + b for a, b in zip(p, MAP_SHIFT))
+    side = owners.index(RED) if RED in owners else None
+    own = enemy = None
+    if side is not None:
+        own = (flags[side], Shifted(flag_pos[side]), Shifted(stand_at[side]))
+        enemy = (flags[1 - side], Shifted(flag_pos[1 - side]), Shifted(stand_at[1 - side]))
+    views = [ViewRow(L, side=side if side is not None else ctf.NEUTRAL_TEAM, feet=Shifted(agent_at), vitality=vitality, shield=shield,
+                     carries=carrying, own=own, enemy=enemy, computed=computed)]
+    return FakeTick(L, players, entities, objectives, stands, events, game_tick, match_id=match_id, action_tick=action_tick, match=match,
+                    views=views, publish_qpc=publish_qpc)
 
 
 def Reset(ctf, *frames):
@@ -204,7 +245,7 @@ def test_sides_swap_between_rounds_with_the_owner_team_of_the_stands(ctf):
 
 def test_team_that_owns_no_stand_has_no_side_and_sees_no_flags(ctf):
     env, obs = Reset(ctf, Frame(ctf, owners=(BLUE, 2)))
-    assert env.states[P0].side is None
+    assert env.states[P0].side == ctf.NEUTRAL_TEAM
     assert not obs[7:19].any()
 
 
@@ -573,3 +614,142 @@ def test_a_reset_whose_round_never_starts_raises_a_timeout(ctf):
     # Ticks come but the bot never lives: the wall clock bounds the wait.
     with pytest.raises(TimeoutError, match="no round with every agent alive"):
         env.reset()
+
+
+# --- F4.9: the observation of the policy comes from the View and the Match -------------------------------------------------------
+
+
+def Nothing(ctf):
+    return np.zeros(len(ctf.ActionNvec("stage0")), dtype=np.int64)
+
+
+def test_observation_reads_only_the_view_and_the_match(ctf):
+    L = ctf.layout
+    nvec = ctf.ActionNvec("stage0")
+    last = np.array([2, 1, 8, 2, 2, 0])
+    # Facing +y (yaw pi / 2), at (10, 20, 1), moving 5 m/s toward +x (the agent's right), carrying nothing; the enemy flag lies 30 m ahead
+    # (+y) and 40 m to the right (+x) and the own stand is 10 m behind.
+    view = ViewRow(L, side=BLUE, feet=(10.0, 20.0, 1.0), yaw=math.pi / 2, pitch=0.25, velocity=(5.0, 0.0, 0.0), vitality=0.5, shield=0.75,
+                   own=(HOME, (10.0, 10.0, 1.0), (10.0, 10.0, 1.0)), enemy=(DROPPED, (50.0, 50.0, 1.0), (200.0, 0.0, 0.0)))
+    match = Frame(ctf, match={"RoundClockTicks": 1800, "RoundTicksRemaining": -1, "ScoreToWin": 4, "TeamRoundScores": [1, 3, 0, 0, 0, 0, 0, 0]}).match
+    obs, phi = ctf.Observe(view, match, last, nvec, 120.0)
+    M = ctf.METERS
+    # Local frame: x forward (+y of the world), y to the left (-x of the world).
+    assert obs[0:3] == pytest.approx([0.0, -0.5, 0.0], abs=1e-6)
+    assert obs[3] == pytest.approx(0.25) and obs[4] == pytest.approx(0.5) and obs[5] == pytest.approx(0.75)
+    assert obs[6] == 0.0 and obs[13] == 0.0
+    assert obs[7:10] == pytest.approx([30.0 / M, -40.0 / M, 0.0], abs=1e-6) and obs[10] == pytest.approx(50.0 / M)
+    assert obs[11] == 0.0 and obs[12] == 1.0
+    assert obs[14:17] == pytest.approx([-10.0 / M, 0.0, 0.0], abs=1e-6) and obs[17] == pytest.approx(10.0 / M)
+    assert obs[18] == 1.0
+    assert obs[19] == pytest.approx(0.75)
+    # Own team RED has 1 of 4: 3/4 left; the enemy has the best other score, 3 of 4: 1/4 left.
+    assert obs[20] == pytest.approx(0.75) and obs[21] == pytest.approx(0.25)
+    assert phi == pytest.approx(-(50.0 + math.dist((50, 50, 1), (10, 10, 1))) / M)
+    assert obs[ctf.STATE_SIZE:].sum() == len(nvec)
+    assert obs[ctf.STATE_SIZE + 2] == 1.0 and obs[ctf.STATE_SIZE + 3 + 1] == 1.0
+    # The omniscient rows of the tick say the opposite and change nothing.
+    env_a, a = Reset(ctf, Frame(ctf))
+    frame = Frame(ctf)
+    frame.entities["WorldOrigin"]["X"] += 500.0
+    frame.entities["Vitality"] = 0.1
+    frame.players["Aim"]["Y"], frame.players["Aim"]["X"] = 1.0, 0.0
+    frame.players["Shield"] = 0.0
+    frame.players["Objective"] = FLAG_BLUE
+    frame.objectives["State"] = DROPPED
+    frame.objectives["BaseTeam"] = frame.objectives["BaseTeam"][::-1]
+    frame.stands["OwnerTeam"] = frame.stands["OwnerTeam"][::-1]
+    _, b = Reset(ctf, frame)
+    assert np.array_equal(a, b)
+
+
+def test_the_environment_no_longer_reads_entities_objectives_or_stands_for_the_observation(ctf):
+    for function in (ctf.Observe, ctf.CtfEnv._observe, ctf.TimeLeft, ctf.ScoreLeft, ctf.IsFlag):
+        source = inspect.getsource(function).lower()
+        for word in ("entities", "objectives", "stands", "bipedhandle", "players"):
+            assert word not in source, (function.__name__, word)
+
+
+def test_reset_waits_until_the_views_of_every_agent_are_computed(ctf):
+    # The tick in which the mask is set has no View yet: the environment answers with nothing and goes on until it has one.
+    bridge = FakeBridge([Frame(ctf, computed=False, action_tick=1), Frame(ctf, computed=False, action_tick=2), Frame(ctf, action_tick=3)])
+    env = ctf.CtfEnv(bridge)
+    observations, _ = env.reset()
+    assert [tick for tick, _ in bridge.written] == [1, 2] and all(actions == {} for _, actions in bridge.written)
+    assert bridge.controls[-1]["agents"] == 1 << (P0 & 0xFFFF)
+    assert observations[P0][11] == 1.0 and observations[P0][4] == 1.0
+    # Views that never come: a clear TimeoutError, no endless wait.
+    class Slow(FakeBridge):
+        def wait_tick(self, timeout):
+            time.sleep(0.002)
+            return super().wait_tick(timeout)
+    env = ctf.CtfEnv(Slow([Frame(ctf, computed=False) for _ in range(5000)]), ctf.CtfConfig(tick_timeout=0.001, reset_timeout=0.1))
+    with pytest.raises(TimeoutError, match="Views of the agents were not computed"):
+        env.reset()
+
+
+def test_an_agent_without_a_computed_view_observes_no_body(ctf):
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, computed=False, action_tick=2, match=Clock(1800))]))
+    env.reset()
+    last = np.array([2, 1, 8, 2, 2, 0])
+    observations, rewards, _, _, _ = env.step({P0: last})
+    obs = observations[P0]
+    assert not obs[:19].any() and not obs[20:22].any()
+    assert obs[19] == pytest.approx(0.75)
+    assert obs[ctf.STATE_SIZE:].sum() == len(last) and env.states[P0].phi is None
+    # The same for an agent that left the Players (no row, no View) and for a body that is gone.
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf, action_tick=1)]))
+    env.reset()
+    env.published.players["Handle"] = 0xEC7000FF
+    env._rows = None
+    assert env._observe(P0)[1] is None and not env._observe(P0)[0][:19].any()
+    view = ViewRow(ctf.layout, has_body=False)
+    obs, phi = ctf.Observe(view, Frame(ctf).match, last, ctf.ActionNvec("stage0"), 120.0)
+    assert phi is None and not obs[:19].any()
+
+
+def test_enemy_score_is_the_best_other_team(ctf):
+    L = ctf.layout
+    nvec = ctf.ActionNvec("stage0")
+    last = np.zeros(len(nvec), dtype=np.int64)
+
+    def Scores(team, scores, to_win=5):
+        match = Frame(ctf, match={"ScoreToWin": to_win, "TeamRoundScores": scores + [0] * (8 - len(scores))}).match
+        obs, _ = ctf.Observe(ViewRow(L, team=team), match, last, nvec, 120.0)
+        return float(obs[20]), float(obs[21])
+    assert Scores(RED, [1, 4]) == pytest.approx((0.8, 0.2))
+    assert Scores(BLUE, [1, 4]) == pytest.approx((0.2, 0.8))
+    # More than two teams: the enemy is the other team that is nearest to winning, not the first one.
+    assert Scores(0, [2, 0, 3, 1]) == pytest.approx((0.6, 0.4))
+    assert Scores(2, [2, 0, 3, 1]) == pytest.approx((0.4, 0.6))
+
+
+def test_shield_nan_is_zero(ctf):
+    _, obs = Reset(ctf, Frame(ctf, shield=0.5))
+    assert obs[5] == pytest.approx(0.5)
+    _, obs = Reset(ctf, Frame(ctf, shield=float("nan")))
+    assert obs[5] == 0.0 and np.all(np.isfinite(obs))
+
+
+def test_timing_is_off_by_default_and_counts_each_phase_when_on(ctf, monkeypatch):
+    assert ctf.CtfConfig().timing is False
+    frames = lambda: [Frame(ctf, action_tick=1, publish_qpc=1000), Frame(ctf, action_tick=2, publish_qpc=1200), Frame(ctf, action_tick=3)]
+    env = ctf.CtfEnv(FakeBridge(frames()))
+    env.reset()
+    env.step({P0: Nothing(ctf)})
+    env.step({P0: Nothing(ctf)})
+    assert all(not values for values in env.timings.values()) and env.slack_ms == []
+
+    bridge = FakeBridge(frames())
+    bridge.qpc_frequency, bridge.last_copy_ns = 1000, 777
+    monkeypatch.setattr(ctf, "qpc", lambda: 1500)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(timing=True))
+    env.reset()
+    assert all(not values for values in env.timings.values())  # the reset is not a decision
+    env.step({P0: Nothing(ctf)})
+    env.step({P0: Nothing(ctf)})
+    assert tuple(env.timings) == ctf.PHASES
+    assert all(len(values) == 2 for values in env.timings.values())
+    assert env.timings["copy"] == [777, 777] and all(v >= 0 for values in env.timings.values() for v in values)
+    # publish -> answer: (1500 - publish_qpc) counts of 1 ms each; the first step answers the tick of publish 1000, the second the one of 1200.
+    assert env.slack_ms == pytest.approx([500.0, 300.0])
