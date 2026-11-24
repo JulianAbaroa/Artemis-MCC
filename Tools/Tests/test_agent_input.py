@@ -75,7 +75,7 @@ def test_a_read_tick_carries_the_imitation_block(client):
 
 def test_the_profiles_give_the_branches(client):
     _, _, _, ctf = client
-    assert ctf.ActionNvec("stage0") == (3, 3, 9, 5, 4, 4)
+    assert ctf.ActionNvec("stage0") == (3, 3, 9, 5, 4, 4, 4)
     assert ctf.ActionNvec("keyboard") == (3, 3, 9, 5) + (4,) * 13
     assert ctf.CtfConfig().profile == "stage0"
 
@@ -105,4 +105,4 @@ def test_an_unknown_profile_is_refused(client):
     with pytest.raises(ValueError, match="profile"):
         ctf.CtfEnv(None, ctf.CtfConfig(profile="gamepad"))
     env = ctf.CtfEnv(None, ctf.CtfConfig(profile="keyboard"))
-    assert env.nvec == ctf.ActionNvec("keyboard") and env.obs_size == ctf.STATE_SIZE + sum(env.nvec)
+    assert env.nvec == ctf.ActionNvec("keyboard") and env.obs_size == ctf.ACTION_AT + sum(env.nvec)

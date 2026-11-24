@@ -123,10 +123,12 @@ def ctf(monkeypatch):
 
 
 def ViewRow(layout, team=RED, side=RED, feet=(5.0, 0.0, 0.0), yaw=0.0, pitch=0.0, velocity=(0.0, 0.0, 0.0), vitality=1.0, shield=1.0,
-            carries=False, own=None, enemy=None, computed=True, has_body=True, handle=P0):
+            carries=False, own=None, enemy=None, computed=True, has_body=True, handle=P0, interaction=(0, 0xFF)):
     """One View. own / enemy: (State, Position, StandPosition) of Flags[0] and Flags[1] (HasFlag 1), (None, None, StandPosition) for a
-    side whose flag the engine is recreating (HasFlag 0, only the stand), None for a row of zeros."""
+    side whose flag the engine is recreating (HasFlag 0, only the stand), None for a row of zeros. interaction: (Kind, Detail) of
+    View.Interaction, by default no selection (Kind 0, Detail 0xFF before the first action, TargetHandle 0xFFFFFFFF)."""
     row = np.zeros(1, layout.BridgeView)[0]
+    row["Interaction"]["Kind"], row["Interaction"]["Detail"], row["Interaction"]["TargetHandle"] = *interaction, NONE
     head, me = row["Head"], row["Self"]
     head["PlayerHandle"], head["IsComputed"], head["HasBody"], head["Team"], head["Side"] = handle, int(computed), int(has_body), team, side
     for field, value in (("Feet", feet), ("LinearVelocity", velocity)):
@@ -147,7 +149,7 @@ def ViewRow(layout, team=RED, side=RED, feet=(5.0, 0.0, 0.0), yaw=0.0, pitch=0.0
 
 
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None, shield=1.0, computed=True, publish_qpc=0, recreating=False):
+          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None, shield=1.0, computed=True, publish_qpc=0, recreating=False, interaction=(0, 0xFF)):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
     home. match: fields of the Match (by default a round without time limit). recreating: the own flag does not exist in this tick (the engine
@@ -178,7 +180,7 @@ def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=Fa
         own = (None if recreating else flags[side], None if recreating else Shifted(flag_pos[side]), Shifted(stand_at[side]))
         enemy = (flags[1 - side], Shifted(flag_pos[1 - side]), Shifted(stand_at[1 - side]))
     views = [ViewRow(L, side=side if side is not None else ctf.NEUTRAL_TEAM, feet=Shifted(agent_at), vitality=vitality, shield=shield,
-                     carries=carrying, own=own, enemy=enemy, computed=computed)]
+                     carries=carrying, own=own, enemy=enemy, computed=computed, interaction=interaction)]
     return FakeTick(L, players, entities, objectives, stands, events, game_tick, match_id=match_id, action_tick=action_tick, match=match,
                     views=views, publish_qpc=publish_qpc)
 
@@ -192,7 +194,7 @@ def Reset(ctf, *frames):
 def test_enemy_flag_at_its_stand_is_home(ctf):
     env, obs = Reset(ctf, Frame(ctf))
     assert env.states[P0].side == RED
-    assert obs.shape == (ctf.STATE_SIZE + sum(ctf.ActionNvec("stage0")),)
+    assert obs.shape == (ctf.ACTION_AT + sum(ctf.ActionNvec("stage0")),)
     assert obs[11] == 1.0 and obs[12] == 0.0 and obs[6] == 0.0
     assert obs[18] == 1.0
     assert obs[10] == pytest.approx(95.0 / ctf.METERS)
@@ -278,13 +280,26 @@ def test_a_step_writes_the_agent_input_of_the_profile(ctf):
     env = ctf.CtfEnv(bridge, ctf.CtfConfig(turn_limit=0.1))
     env.reset()
     # forward, left nothing, yaw to the right, pitch to the middle, jump press and hold, crouch nothing
-    env.step({P0: np.array([2, 1, 8, 2, 2, 0])})
+    env.step({P0: np.array([2, 1, 8, 2, 2, 0, 0])})
     tick, actions = bridge.written[-1]
     action = actions[P0 & 0xFFFF]
     assert tick == 1 and action.handle == P0
     assert (action.forward, action.left) == (1.0, 0.0)
     assert action.yaw_delta == pytest.approx(4 * 0.1) and action.pitch_delta == 0.0  # N = d = 4 ticks of the turn limit
     assert (action.level, action.edge) == (1, 1)
+
+
+def test_the_use_control_of_the_profile_is_level_and_edge_by_state(ctf):
+    use = importlib.import_module("artemis.bridge").CONTROLS.index("Use")
+    assert ctf.PROFILES["stage0"] == ("Jump", "Crouch", "Use") and len(ctf.ActionNvec("stage0")) == 7 and ctf.ActionNvec("stage0")[-1] == 4
+    # nothing, tap (edge), press and hold (level and edge), still held (level)
+    for state, (level, edge) in enumerate(((0, 0), (0, 1), (1, 1), (1, 0))):
+        bridge = FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, action_tick=2)])
+        env = ctf.CtfEnv(bridge)
+        env.reset()
+        env.step({P0: np.array([1, 1, 4, 2, 0, 0, state])})
+        action = bridge.written[-1][1][P0 & 0xFFFF]
+        assert (action.level >> use & 1, action.edge >> use & 1) == (level, edge) and action.level & ~(1 << use) == 0 and action.edge & ~(1 << use) == 0
 
 
 def test_rewards_come_from_the_flag_events_of_artemis(ctf):
@@ -378,7 +393,8 @@ def test_the_cap_of_the_environment_truncates_and_the_end_of_the_round_terminate
 
 def test_the_environment_measures_no_time_of_its_own(ctf):
     source = open(ctf.__file__, encoding="utf-8").read()
-    assert "GameTick" not in source and "start_tick" not in source
+    # GameTick is read once, to tell a new match from the same one (D372), never as a clock of the episode.
+    assert source.count('["GameTick"]') == 1 and "start_tick" not in source
 
 
 def test_reset_with_a_preset_requests_it_and_ends_the_round(ctf):
@@ -650,7 +666,7 @@ def Nothing(ctf):
 def test_observation_reads_only_the_view_and_the_match(ctf):
     L = ctf.layout
     nvec = ctf.ActionNvec("stage0")
-    last = np.array([2, 1, 8, 2, 2, 0])
+    last = np.array([2, 1, 8, 2, 2, 0, 0])
     # Facing +y (yaw pi / 2), at (10, 20, 1), moving 5 m/s toward +x (the agent's right), carrying nothing; the enemy flag lies 30 m ahead
     # (+y) and 40 m to the right (+x) and the own stand is 10 m behind.
     view = ViewRow(L, side=BLUE, feet=(10.0, 20.0, 1.0), yaw=math.pi / 2, pitch=0.25, velocity=(5.0, 0.0, 0.0), vitality=0.5, shield=0.75,
@@ -670,8 +686,8 @@ def test_observation_reads_only_the_view_and_the_match(ctf):
     # Own team RED has 1 of 4: 3/4 left; the enemy has the best other score, 3 of 4: 1/4 left.
     assert obs[20] == pytest.approx(0.75) and obs[21] == pytest.approx(0.25)
     assert phi == pytest.approx(-(50.0 + math.dist((50, 50, 1), (10, 10, 1))) / M)
-    assert obs[ctf.STATE_SIZE:].sum() == len(nvec)
-    assert obs[ctf.STATE_SIZE + 2] == 1.0 and obs[ctf.STATE_SIZE + 3 + 1] == 1.0
+    assert obs[ctf.ACTION_AT:].sum() == len(nvec)
+    assert obs[ctf.ACTION_AT + 2] == 1.0 and obs[ctf.ACTION_AT + 3 + 1] == 1.0
     # The omniscient rows of the tick say the opposite and change nothing.
     env_a, a = Reset(ctf, Frame(ctf))
     frame = Frame(ctf)
@@ -715,12 +731,12 @@ def test_reset_waits_until_the_views_of_every_agent_are_computed(ctf):
 def test_an_agent_without_a_computed_view_observes_no_body(ctf):
     env = ctf.CtfEnv(FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, computed=False, action_tick=2, match=Clock(1800))]))
     env.reset()
-    last = np.array([2, 1, 8, 2, 2, 0])
+    last = np.array([2, 1, 8, 2, 2, 0, 0])
     observations, rewards, _, _, _ = env.step({P0: last})
     obs = observations[P0]
     assert not obs[:19].any() and not obs[20:22].any()
     assert obs[19] == pytest.approx(0.75)
-    assert obs[ctf.STATE_SIZE:].sum() == len(last) and env.states[P0].phi is None
+    assert obs[ctf.ACTION_AT:].sum() == len(last) and env.states[P0].phi is None
     # The same for an agent that left the Players (no row, no View) and for a body that is gone.
     env = ctf.CtfEnv(FakeBridge([Frame(ctf, action_tick=1)]))
     env.reset()
@@ -777,3 +793,164 @@ def test_timing_is_off_by_default_and_counts_each_phase_when_on(ctf, monkeypatch
     assert env.timings["copy"] == [777, 777] and all(v >= 0 for values in env.timings.values() for v in values)
     # publish -> answer: (1500 - publish_qpc) counts of 1 ms each; the first step answers the tick of publish 1000, the second the one of 1200.
     assert env.slack_ms == pytest.approx([500.0, 300.0])
+
+
+# --- F5.1 B: interaction in the observation, new match, Seek -------------------------------------------------------------------
+
+
+def InteractionEntries(ctf, kind, detail=0, **kw):
+    L = ctf.layout
+    view = ViewRow(L, side=RED, own=(HOME, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), enemy=(HOME, (100.0, 0.0, 0.0), (100.0, 0.0, 0.0)),
+                   interaction=(kind, detail), **kw)
+    obs, _ = ctf.Observe(view, Frame(ctf).match, Nothing(ctf), ctf.ActionNvec("stage0"), 120.0)
+    return obs[ctf.INTERACTION_AT:ctf.ACTION_AT]
+
+
+def test_view_row_and_frame_accept_the_interaction_with_no_selection_by_default(ctf):
+    view = Frame(ctf).views[0]
+    assert (int(view["Interaction"]["Kind"]), int(view["Interaction"]["Detail"]), int(view["Interaction"]["TargetHandle"])) == (0, 0xFF, NONE)
+    view = Frame(ctf, interaction=(10, 0)).views[0]
+    assert (int(view["Interaction"]["Kind"]), int(view["Interaction"]["Detail"])) == (10, 0)
+    assert (ctf.STATE_SIZE, ctf.INTERACTION_SIZE, ctf.ACTION_AT) == (22, 7, 29)
+
+
+def test_interaction_kind_is_one_hot_in_the_observation(ctf):
+    kinds = list(ctf.BridgeInteractionKind)
+    assert len(kinds) == 7 == ctf.INTERACTION_SIZE
+    for i, kind in enumerate(kinds):
+        entries = InteractionEntries(ctf, int(kind))
+        assert entries.sum() == 1.0 and entries[i] == 1.0, kind
+    assert ctf.GRAB_OBJECTIVE_AT == ctf.INTERACTION_AT + 6
+
+
+def test_no_selection_is_the_none_entry_whatever_the_detail(ctf):
+    for detail in (0xFF, 0x00):
+        entries = InteractionEntries(ctf, 0, detail)
+        assert entries[0] == 1.0 and entries.sum() == 1.0
+    assert np.array_equal(InteractionEntries(ctf, 10, 0xFF), InteractionEntries(ctf, 10, 0x00))
+
+
+def test_no_body_or_no_view_has_no_interaction_entries(ctf):
+    assert not InteractionEntries(ctf, 10, has_body=False).any()
+    assert not InteractionEntries(ctf, 10, computed=False).any()
+    obs, phi = ctf.Observe(None, Frame(ctf).match, Nothing(ctf), ctf.ActionNvec("stage0"), 120.0)
+    assert not obs[ctf.INTERACTION_AT:ctf.ACTION_AT].any() and phi is None
+
+
+def test_an_unknown_kind_sets_no_entry(ctf):
+    for kind in (1, 5, 7, 11, 255):
+        assert not InteractionEntries(ctf, kind).any(), kind
+
+
+def test_the_interaction_reaches_the_observation_of_a_step(ctf):
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, action_tick=2, interaction=(10, 0))]))
+    env.reset()
+    observations, *_ = env.step({P0: Nothing(ctf)})
+    assert observations[P0][ctf.GRAB_OBJECTIVE_AT] == 1.0
+
+
+def Crossing(ctf, first, second):
+    env = ctf.CtfEnv(FakeBridge([first, second]))
+    env.reset()
+    return env, env.step({P0: Nothing(ctf)})
+
+
+def test_a_new_match_truncates_the_episode(ctf):
+    env, (_, _, terminated, truncated, _) = Crossing(ctf, Frame(ctf, match_id=1, game_tick=100), Frame(ctf, action_tick=2, match_id=2, game_tick=104))
+    assert truncated[P0] and not terminated[P0] and env.is_waiting_round
+
+
+def test_a_lower_game_tick_truncates_the_episode(ctf):
+    env, (_, _, terminated, truncated, _) = Crossing(ctf, Frame(ctf, game_tick=100), Frame(ctf, action_tick=2, game_tick=40))
+    assert truncated[P0] and not terminated[P0] and env.is_waiting_round
+    # The same match and the clock going on: nothing happens.
+    env, (_, _, terminated, truncated, _) = Crossing(ctf, Frame(ctf, game_tick=100), Frame(ctf, action_tick=2, game_tick=104))
+    assert not truncated[P0] and not terminated[P0] and not env.is_waiting_round
+
+
+def test_round_end_and_new_match_in_one_step_terminates(ctf):
+    end = {"Sequence": 1, "Kind": ctf.Event.GameOver, "CausePlayer": NONE, "EffectPlayer": NONE}
+    env, (_, _, terminated, truncated, _) = Crossing(ctf, Frame(ctf, match_id=1, game_tick=100),
+                                                      Frame(ctf, action_tick=2, match_id=2, game_tick=4, events=[end]))
+    assert terminated[P0] and not truncated[P0] and env.is_waiting_round
+
+
+def test_reset_after_a_new_match_waits_for_its_round(ctf):
+    for second in (Frame(ctf, action_tick=2, match_id=2, game_tick=4), Frame(ctf, action_tick=2, game_tick=4)):
+        bridge = FakeBridge([Frame(ctf, game_tick=100), second])
+        env = ctf.CtfEnv(bridge)
+        env.reset()
+        _, _, _, truncated, _ = env.step({P0: Nothing(ctf)})
+        assert truncated[P0]
+        # The new match has no body yet, then the round starts with a Spawn: reset() goes on past the ticks without a round.
+        dead = Frame(ctf, action_tick=3, match_id=second.match_id, game_tick=8)
+        dead.players["IsAlive"] = 0
+        spawn = {"Sequence": 1, "Kind": ctf.Event.Spawn, "CausePlayer": P0, "EffectPlayer": NONE}
+        bridge.ticks += [dead, Frame(ctf, action_tick=4, match_id=second.match_id, game_tick=12, events=[spawn])]
+        observations, _ = env.reset()
+        assert P0 in observations and not bridge.ticks and not env.is_waiting_round
+        # The episode of the new round runs: the reference is the one of the new tick.
+        bridge.ticks.append(Frame(ctf, action_tick=5, match_id=second.match_id, game_tick=16))
+        _, _, terminated, truncated, _ = env.step({P0: Nothing(ctf)})
+        assert not truncated[P0] and not terminated[P0]
+
+
+def EnvCheck(ctf):
+    """Agent/scripts/env_check.py imported over the stand-in bridge of the ctf fixture."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("env_check_under_test", os.path.join(AGENT, "scripts", "env_check.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class Rng:
+    def __init__(self, value):
+        self.value = value
+
+    def random(self):
+        return self.value
+
+
+def SeekWith(ctf, last_use=0, interaction=(0, 0xFF), carrying=False, flags=(HOME, HOME), jump=1.0, **kw):
+    """The Seek action over the observation of a frame; last_use: state of Use in the last action; jump: what rng.random() gives."""
+    config = ctf.CtfConfig()
+    nvec = ctf.ActionNvec("stage0")
+    last = np.array([2, 1, 4, 2, 0, 0, last_use])
+    frame = Frame(ctf, interaction=interaction, carrying=carrying, flags=flags, **kw)
+    obs, _ = ctf.Observe(frame.views[0], frame.match, last, nvec, 120.0)
+    return EnvCheck(ctf).Seek(obs, config, Rng(jump))
+
+
+def test_seek_holds_use_on_grab_objective_2_and_then_3(ctf):
+    first = SeekWith(ctf, last_use=0, interaction=(10, 0))
+    assert first[4:].tolist() == [0, 0, 2]
+    for last_use, state in ((1, 2), (2, 3), (3, 3)):
+        assert SeekWith(ctf, last_use=last_use, interaction=(10, 0))[6] == state, last_use
+
+
+def test_seek_stops_while_grabbing(ctf):
+    throttle = ctf.THROTTLE
+    assert throttle[SeekWith(ctf, interaction=(10, 0))[0]] == 0.0
+    assert throttle[SeekWith(ctf, interaction=(10, 0), jump=0.0)[0]] == 0.0
+    # The yaw still points at the flag (straight ahead here: the middle bin).
+    assert SeekWith(ctf, interaction=(10, 0))[2] == 4
+
+
+def test_seek_releases_use_when_carrying_or_without_selection(ctf):
+    carried = dict(carrying=True, flags=(HOME, CARRIED), flag_at=(5.0, 0.0, 0.5))
+    assert SeekWith(ctf, last_use=3, interaction=(10, 0), **carried)[6] == 0
+    assert SeekWith(ctf, last_use=3)[6] == 0
+    assert SeekWith(ctf, last_use=2, interaction=(2, 0))[6] == 0
+    assert SeekWith(ctf, last_use=2, interaction=(0, 0))[6] == 0
+
+
+def test_seek_is_unchanged_without_interaction(ctf):
+    throttle = ctf.THROTTLE
+    walk = SeekWith(ctf)
+    assert walk.tolist() == [2, 1, 4, 2, 0, 0, 0] and throttle[walk[0]] == 1.0
+    assert SeekWith(ctf, jump=0.0).tolist() == [2, 1, 4, 2, 1, 0, 0]
+    # Carrying: the stand (behind, the agent faces +x) decides the yaw, as before.
+    behind = SeekWith(ctf, carrying=True, flags=(HOME, CARRIED), flag_at=(5.0, 0.0, 0.5))
+    assert behind[0] == 2 and behind[2] in (0, len(ctf.YAW_STEPS) - 1) and behind[6] == 0
+

@@ -12,6 +12,8 @@ Position, the carrier's when carried). A flag row that is all zero is a side wit
 whether the round started, the end of the match, the events and the rewards) is read from the omniscient tick: it is the management of
 the environment, not information of the agent. The rewards read the FlagTaken and FlagCaptured events Artemis generates, whose cause is
 the carrier. The clock and the score of the round come from the Match of the tick (P.6, D255): the environment measures no time of its own.
+The observation is [22 of state | 7 of View.Interaction.Kind (one-hot, D372) | one-hot of the last action]. An episode that crosses to
+another match (a new match_id or a lower GameTick with no RoundEnd / GameOver) ends truncated (D372, P.3).
 """
 import logging
 import math
@@ -21,21 +23,33 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..bridge import CONTROL_STATES, CONTROLS, Action, Bridge, BridgeMode, BridgeOwner, PackControls, qpc
-from ..bridge_layout import NOT_LOCAL, BridgePhase, BridgeSetupResult
+from ..bridge_layout import NOT_LOCAL, BridgeInteractionKind, BridgePhase, BridgeSetupResult
 from ..match_setup import MatchSetup, is_relative_roster, resolve_roster
 from ..semantic import Event, FlagState
 
 METERS = 50.0
 
 # Input profiles (D365, Diseno/22 5.3): the controls the policy may use. The others stay on "nothing" and are not in the action space.
-PROFILES = {"keyboard": CONTROLS, "stage0": ("Jump", "Crouch")}
+PROFILES = {"keyboard": CONTROLS, "stage0": ("Jump", "Crouch", "Use")}
 # MultiDiscrete branches: forward, left, yaw delta, pitch delta, then one of the four states of CONTROL_STATES per control of the profile.
 MOVE_NVEC = (3, 3, 9, 5)
 THROTTLE = (-1.0, 0.0, 1.0)
 YAW_STEPS = (-1.0, -0.5, -0.25, -0.1, 0.0, 0.1, 0.25, 0.5, 1.0)
 PITCH_STEPS = (-0.5, -0.2, 0.0, 0.2, 0.5)
-# Entries of the state before the one-hot of the last action: 19 = time left, 20 and 21 = score left of the own and the enemy team.
+# Entries of the state before the interaction and the one-hot of the last action: 19 = time left, 20 and 21 = score left of the own and the enemy team.
 STATE_SIZE = 22
+# Entries of the state: 6 carries the flag, 7-9 the vector to the enemy flag, 14-16 the vector to the own stand (the ones Seek of env_check reads).
+CARRIES_AT = 6
+ENEMY_FLAG_AT = slice(7, 9)
+OWN_STAND_AT = slice(14, 16)
+# D372: after the state, one entry per BridgeInteractionKind (in the order of the generated enum: None, GrabWeapon, GrabArmorAbility,
+# TakeHealthStation, EnterVehicle, Hijack, GrabObjective) = the one-hot of View.Interaction.Kind. Detail is not read.
+INTERACTION_KINDS = tuple(int(kind) for kind in BridgeInteractionKind)
+INTERACTION_SIZE = len(INTERACTION_KINDS)
+INTERACTION_AT = STATE_SIZE
+GRAB_OBJECTIVE_AT = INTERACTION_AT + INTERACTION_KINDS.index(int(BridgeInteractionKind.GrabObjective))
+# Entries before the one-hot of the last action (state + interaction): where the last action starts.
+ACTION_AT = STATE_SIZE + INTERACTION_SIZE
 # Common.Team.Type: Head.Side of a View whose team owns no stand in this round.
 NEUTRAL_TEAM = 8
 # Phases of a decision that CtfConfig.timing measures (ns): blocked in wait_tick, copy of read_tick, new_events, the observations, write_actions.
@@ -97,7 +111,8 @@ class CtfEnv:
     """Stage 0 environment over one Artemis instance. reset() waits for the agents to spawn in a round; step() answers the current
     tick with the actions and returns what the next one says. Episode = one round: it ends with RoundEnd or GameOver
     (terminated, also when the time limit of the round runs out: the time left is in the observation) or is cut with
-    Bridge.end_round when the round clock of the Match reaches max_seconds (truncated), the cap of the environment."""
+    Bridge.end_round when the round clock of the Match reaches max_seconds (truncated), the cap of the environment. It is also truncated when
+    the match changes under it (match_id or a lower GameTick with no RoundEnd / GameOver in the step)."""
 
     def __init__(self, bridge: Bridge, config: CtfConfig = None, setups=None):
         """setups: an object with next_setup() (a TrainingList). A reset() that is not given a setup of its own asks for the next one."""
@@ -106,7 +121,7 @@ class CtfEnv:
         if self.config.profile not in PROFILES:
             raise ValueError(f"unknown input profile {self.config.profile!r} (have: {', '.join(PROFILES)})")
         self.nvec = ActionNvec(self.config.profile)
-        self.obs_size = STATE_SIZE + sum(self.nvec)
+        self.obs_size = ACTION_AT + sum(self.nvec)
         self.setups = setups
         self.agents = []
         self.states = {}
@@ -114,6 +129,8 @@ class CtfEnv:
         self.match_id = None
         self.is_waiting_round = False
         self.is_cut = False
+        # (match_id, GameTick) of the last tick the episode saw: a step that finds another match or an earlier tick crossed a match end.
+        self._reference = None
         self.events = []
         self._rows = None
         # With config.timing: the ns of each phase of every decision (PHASES) and the ms from the publication of a tick to its answer.
@@ -295,11 +312,15 @@ class CtfEnv:
         self.bridge.set_control(agents=mask)
         self.is_cut = False
         self._wait_views()
+        self._reference = self._clock()
         observations = {}
         for handle in self.agents:
             observations[handle], phi = self._observe(handle)
             self.states[handle].phi = phi
         return observations, {handle: {key: dict(value) for key, value in info.items()} for handle in self.agents}
+
+    def _clock(self):
+        return self.published.match_id, int(self.published.match["GameTick"])
 
     def _wait_views(self):
         """The Views are computed only for the agents of the mask, so the tick in which the mask is set has none: advances ticks (answering
@@ -357,8 +378,15 @@ class CtfEnv:
                 infos[handle]["events"].append(Event(kind).name)
         if is_round_over:
             self.is_waiting_round = True
+        # D372 (P.3): a match that ended under the episode without RoundEnd / GameOver (another match_id, or the clock went back) cuts it
+        # truncated; reset() then waits for the round of the new match as after any end.
+        reference, self._reference = self._reference, self._clock()
+        is_new_match = (not is_round_over and reference is not None
+                        and (self._reference[0] != reference[0] or self._reference[1] < reference[1]))
+        if is_new_match:
+            self.is_waiting_round = True
 
-        is_timeout = not is_round_over and not self.is_cut and int(self.published.match["RoundClockTicks"]) >= c.max_seconds * 60
+        is_timeout = not is_round_over and not is_new_match and not self.is_cut and int(self.published.match["RoundClockTicks"]) >= c.max_seconds * 60
         if is_timeout:
             # The RoundEnd of the cut comes a few ticks later: reset() waits for the next round past it.
             self.bridge.end_round(wait=False)
@@ -378,7 +406,7 @@ class CtfEnv:
         if c.timing:
             self.timings["observe"].append(time.perf_counter_ns() - started)
         terminated = {handle: is_round_over for handle in self.agents}
-        truncated = {handle: is_timeout for handle in self.agents}
+        truncated = {handle: is_timeout or is_new_match for handle in self.agents}
         return observations, rewards, terminated, truncated, infos
 
     # --- Observation ------------------------------------------------------------------------------------------------------------
@@ -430,9 +458,11 @@ def Observe(view, match, last_action, nvec, max_seconds):
     reads nothing else. view is None, or a row not computed, for an agent with no View. The potential is None without body, without side
     or without both flags (no shaping). Entries: 0-2 velocity, 3 pitch, 4 vitality, 5 shield, 6 carries the flag, 7-9 and 10 vector and
     distance to the enemy flag, 11 / 12 it is home / dropped, 13 carries, 14-16 and 17 vector and distance to the own stand, 18 the own
-    flag is home, 19 time left, 20 and 21 score left of the own and the enemy team, then the one-hot of the last action."""
-    obs = np.zeros(STATE_SIZE + sum(nvec), dtype=np.float32)
-    offset = STATE_SIZE
+    flag is home, 19 time left, 20 and 21 score left of the own and the enemy team, 22-28 the one-hot of View.Interaction.Kind (D372; order of
+    BridgeInteractionKind: None, GrabWeapon, GrabArmorAbility, TakeHealthStation, EnterVehicle, Hijack, GrabObjective; all zero without
+    View or body, none for a Kind outside the enum; Detail is not read), then the one-hot of the last action."""
+    obs = np.zeros(ACTION_AT + sum(nvec), dtype=np.float32)
+    offset = ACTION_AT
     for branch, n in zip(last_action, nvec):
         obs[offset + int(branch)] = 1.0
         offset += n
@@ -443,6 +473,10 @@ def Observe(view, match, last_action, nvec, max_seconds):
     obs[20:22] = ScoreLeft(match, int(head["Team"]))
     if not int(head["HasBody"]):
         return obs, None
+    # An interaction Kind outside the enum sets no entry (no exception, no log: it would be one per tick).
+    kind = int(view["Interaction"]["Kind"])
+    if kind in INTERACTION_KINDS:
+        obs[INTERACTION_AT + INTERACTION_KINDS.index(kind)] = 1.0
     position = Vec(me["Feet"])
     yaw, pitch = float(me["FrameYaw"]), float(me["AimPitch"])
     cos, sin = math.cos(-yaw), math.sin(-yaw)

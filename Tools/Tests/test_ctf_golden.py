@@ -73,8 +73,8 @@ def ReferenceObserve(ctf, players, table, objectives, stands, match, player, las
             return max(0, to_win - int(scores[t])) / to_win
         return Left(team), Left(enemies[0] if enemies else None)
 
-    obs = np.zeros(ctf.STATE_SIZE + sum(nvec), dtype=np.float32)
-    offset = ctf.STATE_SIZE
+    obs = np.zeros(ctf.ACTION_AT + sum(nvec), dtype=np.float32)
+    offset = ctf.ACTION_AT
     for branch, n in zip(last_action, nvec):
         obs[offset + int(branch)] = 1.0
         offset += n
@@ -144,7 +144,7 @@ def Compare(ctf, film):
     count of the carried class). The only class with a looser bound is the enemy flag Carried (F4.9-1 aceptado: la View pone la bandera en
     el portador, D370): obs 7-10 and, if the agent is not the carrier, the potential, within CARRIED_TOLERANCE."""
     nvec = ctf.ActionNvec("stage0")
-    last = np.array([2, 1, 4, 2, 0, 0])
+    last = np.array([2, 1, 4, 2, 0, 0, 0])
     worst = np.zeros(ctf.STATE_SIZE)
     count, classes, cases = 0, {"carried": 0}, []
     for r, table in tickdump.Dump(GoldenPath(film)).states():
@@ -190,3 +190,28 @@ def test_the_observation_from_the_view_is_the_one_of_the_omniscient_tick(ctf, fi
         Report(film, count, worst, cases, classes)
     assert count > 0 and classes["carried"] > 0
     assert not cases, f"{len(cases)} differences; first: {cases[:3]} (tick, row, [(entry, view, reference)])"
+
+
+@slow
+@pytest.mark.parametrize("film", FILMS)
+def test_the_interaction_entries_of_the_goldens_are_the_none_entry_or_zero_without_body(ctf, film):
+    """D371: the old .sdump have no Interaction region (all zero = Kind 0): every computed View with a body has the None entry (22) and no
+    other, one without body (or not computed) has the 7 entries at zero."""
+    if not os.path.isfile(GoldenPath(film)):
+        pytest.skip(f"{film} has no golden.tdump")
+    nvec = ctf.ActionNvec("stage0")
+    last = np.zeros(len(nvec), dtype=np.int64)
+    expected = np.zeros(ctf.INTERACTION_SIZE, dtype=np.float32)
+    expected[0] = 1.0
+    with_body = without = 0
+    for r, _ in tickdump.Dump(GoldenPath(film)).states():
+        for view in r.views:
+            got = ctf.Observe(view, r.match, last, nvec, 120.0)[0][ctf.INTERACTION_AT:ctf.ACTION_AT]
+            if int(view["Head"]["IsComputed"]) and int(view["Head"]["HasBody"]):
+                with_body += 1
+                assert np.array_equal(got, expected)
+            else:
+                without += 1
+                assert not got.any()
+    assert with_body > 0
+

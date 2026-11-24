@@ -2,8 +2,10 @@
 env_check.py
 Checks the stage 0 environment against a running CTF match (Diseno/14 sec. 9.2): plays --episodes rounds with a policy and prints,
 per episode, steps, return, how it ended, the events of the agents and the time and score left of the observation (from the Match, P.6)
-at its start and its end. Policies: random, or seek (steer toward the enemy flag, or
-the own stand while carrying it, with the vectors of the observation; walk forward).
+at its start and its end, and how many decisions had the engine's interaction on GrabObjective (the selection reaches the observation).
+Policies: random, or seek (steer toward the enemy flag, or the own stand while carrying it, with the vectors of the observation; walk
+forward; F5.1 B: while the interaction is GrabObjective and it carries no flag, stop and hold Use: press and hold the first decision,
+still held after; otherwise Use on nothing and Jump taps now and then).
 python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing]
 --timing (F4.9): at the end, per phase of a decision (wait for the tick, copy of read_tick, new_events, observe, answer, and the policy, measured here),
 p50 / p95 / max in ms and its share of the Python side (copy + events + observe + answer + policy; the wait is not Python's); the slack of the
@@ -21,20 +23,33 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np  # noqa: E402
 
-from artemis.bridge import Bridge, discover  # noqa: E402
+from artemis.bridge import CONTROL_STATES, Bridge, discover  # noqa: E402
 from artemis.env import PROFILES, ActionNvec, CtfConfig, CtfEnv  # noqa: E402
-from artemis.env.ctf import YAW_STEPS  # noqa: E402
+from artemis.env.ctf import (ACTION_AT, CARRIES_AT, ENEMY_FLAG_AT, GRAB_OBJECTIVE_AT, MOVE_NVEC, OWN_STAND_AT,  # noqa: E402
+                             YAW_STEPS)
 from artemis.training import load_list  # noqa: E402
 
 
 def Seek(obs, config, rng):
-    vector = obs[14:16] if obs[6] > 0.5 else obs[7:9]
+    is_carrying = obs[CARRIES_AT] > 0.5
+    vector = obs[OWN_STAND_AT] if is_carrying else obs[ENEMY_FLAG_AT]
     error = math.atan2(float(vector[1]), float(vector[0]))
     per_decision = min(config.period, config.latency) * config.turn_limit
     yaw_bin = int(np.argmin([abs(step * per_decision - error) for step in YAW_STEPS]))
-    # Every control of the profile on "nothing" (state 0) but Jump, which taps now and then (state 1).
-    states = [1 if name == "Jump" and rng.random() < 0.05 else 0 for name in PROFILES[config.profile]]
-    return np.array([2, 1, yaw_bin, 2, *states])
+    names = PROFILES[config.profile]
+    is_grabbing = obs[GRAB_OBJECTIVE_AT] > 0.5 and not is_carrying
+    # Every control of the profile on "nothing" (state 0) but Jump, which taps now and then (state 1), and Use while grabbing (below).
+    states = [1 if name == "Jump" and rng.random() < 0.05 else 0 for name in names]
+    forward = 2
+    if is_grabbing and "Use" in names:
+        # Stand still and hold Use: 2 (press and hold) if the last action had it up, 3 (still held) if it had it down. The last action is
+        # read from its one-hot in the observation, so Seek stays a function of the observation.
+        use = names.index("Use")
+        start = ACTION_AT + sum(MOVE_NVEC) + len(CONTROL_STATES) * use
+        last = int(np.argmax(obs[start:start + len(CONTROL_STATES)]))
+        states[use] = 3 if last in (2, 3) else 2
+        forward = 1
+    return np.array([forward, 1, yaw_bin, 2, *states])
 
 
 def Random(obs, config, rng):
@@ -114,6 +129,7 @@ def Main():
                 first = {h: float(o[10]) * 50 for h, o in observations.items()}
                 clock = {h: o[19:22].copy() for h, o in observations.items()}
                 closest = dict(first)
+                grabbing = {h: 0 for h in env.agents}
                 while ending is None:
                     decided = time.perf_counter_ns()
                     actions = {h: policy(o, config, rng) for h, o in observations.items()}
@@ -122,6 +138,7 @@ def Main():
                     observations, rewards, terminated, truncated, infos = env.step(actions)
                     steps += 1
                     for h in env.agents:
+                        grabbing[h] += int(observations[h][GRAB_OBJECTIVE_AT] > 0.5)
                         returns[h] += rewards[h]
                         if observations[h][4] > 0.5 and observations[h][6] < 0.5:
                             closest[h] = min(closest[h], float(observations[h][10]) * 50)
@@ -134,7 +151,8 @@ def Main():
                         ending = "truncated"
                 for h in env.agents:
                     print(f"episode {episode} agent {h:#010x}: {steps} steps, return {returns[h]:+.3f}, {ending}, "
-                          f"events {events[h]}, flag at {first[h]:.0f} m, closest {closest[h]:.0f} m, {time.time() - started:.1f} s")
+                          f"events {events[h]}, flag at {first[h]:.0f} m, closest {closest[h]:.0f} m, GrabObjective in {grabbing[h]} decisions, "
+                          f"{time.time() - started:.1f} s")
                     start, end = clock[h], observations[h][19:22]
                     print(f"  time left {start[0]:.3f} -> {end[0]:.3f}, score left own/enemy {start[1]:.2f}/{start[2]:.2f} -> "
                           f"{end[1]:.2f}/{end[2]:.2f}")
