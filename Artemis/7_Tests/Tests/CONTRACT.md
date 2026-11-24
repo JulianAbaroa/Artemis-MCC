@@ -31,6 +31,8 @@ Not applicable.
 ## Threads
 Tests may start threads to test thread-safe stores; none waits for the game.
 
+F5.1 A (D371): `SnapshotRecordTests` (`WritesPlayerActions`, `ReadsNineRegionFiles`: a version 3 file made by hand, nine regions, is read with `PlayerActions` empty), `LayoutTests` (the ten regions and the size of `PlayerActions`) and `CaptureServiceTests` (the region from a hand made `PlayerActionStore`, empty without a port, and the order of the tick).
+
 ## Errors
 Missing external data (a `.map`, a recording) or data of another version (size, CRC-32, layout hash) skips the test with its reason
 (`GTEST_SKIP`); it never passes silently.

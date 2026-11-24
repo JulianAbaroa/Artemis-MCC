@@ -2,6 +2,7 @@ export module Engine.Capture.System;
 
 import Common.Log.System;
 import Services.Telemetry.State;
+import Engine.Base.Action.Type;
 import Engine.Base.Lifecycle.State;
 import Engine.Base.Memory.System;
 import Engine.Capture.Type;
@@ -23,6 +24,8 @@ export namespace Engine::Capture::System
         using Log = Common::Log::System::Log;
 
         using TelemetryStore = Services::Telemetry::State::TelemetryStore;
+
+        using AppliedActionsPort = Engine::Base::Action::Type::AppliedActionsPort;
 
         using LifecycleStore = Engine::Base::Lifecycle::State::LifecycleStore;
         using MemoryReaderService = Engine::Base::Memory::System::MemoryReaderService;
@@ -55,6 +58,10 @@ export namespace Engine::Capture::System
         // note: Game thread only, like Capture. It takes no telemetry and never checks the capacities.
         auto CaptureLight() -> std::shared_ptr<const Snapshot>;
 
+        // Connects the owner of the applied actions, which Capture copies into the region PlayerActions (D371). Null disconnects it.
+        // note: Without one the region stays empty (no error, no log). Connect it before the tick hooks go in, disconnect it after they are out.
+        auto SetAppliedActionsPort(AppliedActionsPort* port) -> void;
+
         // Clears the stored addresses and snapshot.
         auto Cleanup() -> void;
 
@@ -64,6 +71,9 @@ export namespace Engine::Capture::System
         MemoryReaderService& m_MemoryReaderService;
         CaptureStore& m_CaptureStore;
         TelemetryStore& m_TelemetryStore;
+        std::atomic<AppliedActionsPort*> m_AppliedActionsPort{ nullptr };
+        // Sequence of the actions the last full capture copied, 0 when none. Game thread only.
+        std::uint64_t m_LastAppliedSequence{ 0 };
 
         // Snapshots Capture reuses (D276). The pool is filled and changed only by Capture, on the game thread (D305), and the AI thread
         // releases a Snapshot by dropping its reference: the pool takes one again when only it holds it. A new teardown epoch starts a new
@@ -99,6 +109,12 @@ export namespace Engine::Capture::System
         // Copies RegionSize(id) bytes from the address into the region.
         // note: An address of 0 or a failed read leave the region as not captured.
         auto CopyRegion(Snapshot& snapshot, RegionId id, std::uintptr_t address) -> void;
+
+        // Lays out the actions the simulation applied in the tick that just completed as the region PlayerActions. The region is empty
+        // when there is no port, nothing was published yet, or the Sequence did not advance since the previous full capture (a tick that
+        // published nothing, as the end of a match: the actions would be a stale repeat).
+        // note: Game thread only. It is not memory of the game: the port gives it.
+        auto CopyAppliedActions(Snapshot& snapshot) -> void;
 
         // return: Address of the placement array of the map variant, or 0 outside multiplayer games or if a pointer is missing.
         // note: The map variant changes with every game, so it is resolved from the thread context on every call.

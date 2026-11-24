@@ -55,6 +55,17 @@ namespace Engine::Control::Input::State
         out = m_Latest;
     }
 
+    auto PlayerActionStore::CopyApplied(AppliedActions& out) const -> bool
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        if (m_Latest.Sequence == 0) return false;
+
+        out.Sequence = m_Latest.Sequence;
+        out.Mask = m_Latest.Mask;
+        for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player) out.Actions[player] = m_Latest.Actions[player].Data;
+        return true;
+    }
+
     auto PlayerActionStore::CopyWatch(std::size_t playerIndex, ActionWatch& out) const -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };

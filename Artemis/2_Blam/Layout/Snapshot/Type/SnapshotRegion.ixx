@@ -1,6 +1,7 @@
 export module Blam.Layout.Snapshot.Type:Region;
 
 import Common.Engine.Type;
+import Blam.Layout.Action.Type;
 import Blam.Layout.Object.Type;
 import Blam.Layout.Player.Type;
 import Blam.Layout.Interaction.Type;
@@ -10,6 +11,9 @@ namespace
 {
     using Common::Engine::Type::k_MaxPlayers;
     using Common::Engine::Type::k_MaxLocalUsers;
+    using Blam::Layout::Action::Type::Offset::k_AppliedActionsOffset;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
     using Blam::Layout::Object::Type::Constant::k_MappingGlobalsSize;
     using Blam::Layout::Object::Type::Constant::k_TimeGlobalsSize;
     using Blam::Layout::Object::Type::Constant::k_GameEngineGlobalsSize;
@@ -38,11 +42,17 @@ export namespace Blam::Layout::Snapshot::Type
         Placements,
         GameGlobals,
         // Elements of the megalo objects data array: the Megalo state of each object (D250).
-        MegaloObjects
+        MegaloObjects,
+        // The mask and the 16 actions the simulation applied in the tick (D371, D249: the whole block, the interaction at +0x54 of each
+        // action is the first reader). Layout: Blam.Layout.Action.Type k_AppliedMaskOffset and k_AppliedActionsOffset.
+        // note: Not memory the capture reads: Engine.Capture copies it from the owner of the applied actions through a port, and leaves
+        // it empty without one and in recordings made before it existed. The actions are those of the same tick as the rest of the
+        // Snapshot (the hook publishes them before the engine applies them, inside the tick, and the capture closes the tick after).
+        PlayerActions
     };
 
     // Number of regions, the size of Snapshot::Regions.
-    inline constexpr std::size_t k_RegionCount{ 9 };
+    inline constexpr std::size_t k_RegionCount{ 10 };
 
     // One block of game memory as it was when the snapshot was taken.
     struct Region
@@ -75,6 +85,7 @@ export namespace Blam::Layout::Snapshot::Type
         case RegionId::Placements: return static_cast<std::size_t>(k_MaxPlacements) * k_PlacementSize;
         case RegionId::GameGlobals: return k_GameGlobalsSize;
         case RegionId::MegaloObjects: return k_MaxMegaloObjects * k_MegaloObjectSize;
+        case RegionId::PlayerActions: return k_AppliedActionsOffset + (k_MaxActionPlayers * k_PlayerActionSize);
         }
 
         return 0;

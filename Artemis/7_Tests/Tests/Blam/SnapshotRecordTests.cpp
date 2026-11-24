@@ -30,6 +30,10 @@ namespace
 
     using Blam::Layout::Snapshot::Type::k_RegionCount;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpRegionCountV3;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpVersion;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpVersionV3;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpMagic;
     using Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
     using Blam::Layout::Snapshot::Type::k_SnapshotHasObjectTable;
     using Blam::Layout::Snapshot::Type::k_SnapshotHasThreadContext;
@@ -205,6 +209,116 @@ TEST_F(SnapshotRecordTests, RoundTripFull)
     ASSERT_TRUE(record.Record.LoadInfo.has_value());
     EXPECT_EQ(record.Record.LoadInfo->MapFileSize, 332328960u);
     EXPECT_EQ(record.Record.LoadInfo->MapFileName, info.MapFileName);
+}
+
+// D371: the region PlayerActions is written and read like any other, and a delta of it between two records is exact.
+TEST_F(SnapshotRecordTests, WritesPlayerActions)
+{
+    Snapshot first{};
+    SetRegion(first, RegionId::PlayerArray, 0x7FF000001000, RegionSize(RegionId::PlayerArray), 1);
+    SetRegion(first, RegionId::PlayerActions, 0, RegionSize(RegionId::PlayerActions), 5);
+    Snapshot second{ first };
+    second.Regions[static_cast<std::size_t>(RegionId::PlayerActions)].Bytes[1000] ^= 0x5A;
+
+    this->WriteHeader();
+    this->Write(first, 0, 1);
+    this->Write(second, 0, 2);
+    this->WriteFooter(2);
+
+    std::istringstream in{ m_Stream.str() };
+    ASSERT_EQ(Codec::OpenReader(in, m_Reader), "");
+    EXPECT_EQ(m_Reader.Header.Version, k_SnapshotDumpVersion);
+    EXPECT_EQ(m_Reader.Header.RegionCount, k_RegionCount);
+    EXPECT_EQ(m_Reader.Header.RegionSizes[static_cast<std::size_t>(RegionId::PlayerActions)], RegionSize(RegionId::PlayerActions));
+
+    const SnapshotReadResult a{ Codec::ReadRecord(in, m_Reader) };
+    ASSERT_EQ(a.Status, SnapshotReadStatus::Record);
+    EXPECT_TRUE(SameSnapshot(first, *a.Record.Snapshot));
+    EXPECT_TRUE(a.Record.Snapshot->IsCaptured(RegionId::PlayerActions));
+
+    const SnapshotReadResult b{ Codec::ReadRecord(in, m_Reader) };
+    ASSERT_EQ(b.Status, SnapshotReadStatus::Record);
+    EXPECT_TRUE(SameSnapshot(second, *b.Record.Snapshot));
+}
+
+// D371: the nine golden films were recorded with version 3 (nine regions, a header of 160 bytes): they are still read, and the
+// region PlayerActions is empty in every record.
+TEST_F(SnapshotRecordTests, ReadsNineRegionFiles)
+{
+    Snapshot first{};
+    first.HasThreadContext = true;
+    SetRegion(first, RegionId::PlayerArray, 0x7FF000001000, RegionSize(RegionId::PlayerArray), 1);
+    SetRegion(first, RegionId::MegaloObjects, 0x7FF000002000, RegionSize(RegionId::MegaloObjects), 2);
+    AddObject(first, 0xE001'0002, 40, 10, 1);
+    Snapshot second{ first };
+    second.Regions[static_cast<std::size_t>(RegionId::PlayerArray)].Bytes[16] ^= 0x33;
+
+    this->WriteHeader();
+    const std::size_t newHeaderBytes{ static_cast<std::size_t>(m_Stream.tellp()) };
+    this->Write(first, 0, 1);
+    this->Write(second, 0, 2);
+    this->WriteFooter(2);
+    const std::string current{ m_Stream.str() };
+
+    // The header of version 3 by hand: the same prefix, nine sizes, then the start time and the source.
+    std::string legacy(160, '\0');
+    const auto put = [&](std::size_t offset, const auto& value) { std::memcpy(legacy.data() + offset, &value, sizeof(value)); };
+    put(0, k_SnapshotDumpMagic);
+    put(8, k_SnapshotDumpVersionV3);
+    put(12, std::uint32_t{ 160 });
+    put(16, k_LayoutHash);
+    put(24, static_cast<std::uint32_t>(k_SnapshotDumpRegionCountV3));
+    for (std::size_t i{ 0 }; i < k_SnapshotDumpRegionCountV3; ++i)
+    {
+        put(28 + (i * 4), static_cast<std::uint32_t>(RegionSize(static_cast<RegionId>(i))));
+    }
+    std::memcpy(legacy.data() + 64, k_StartTime.data(), k_StartTime.size());
+    std::memcpy(legacy.data() + 96, "test", 4);
+
+    std::istringstream in{ legacy + current.substr(newHeaderBytes) };
+    ASSERT_EQ(Codec::OpenReader(in, m_Reader), "");
+    EXPECT_EQ(m_Reader.Header.Version, k_SnapshotDumpVersionV3);
+    EXPECT_EQ(m_Reader.Header.RegionCount, k_SnapshotDumpRegionCountV3);
+    EXPECT_EQ(m_Reader.Header.BridgeLayoutHash, k_LayoutHash);
+    EXPECT_STREQ(m_Reader.Header.StartTime.data(), k_StartTime.data());
+    EXPECT_STREQ(m_Reader.Header.Source.data(), "test");
+
+    const SnapshotReadResult a{ Codec::ReadRecord(in, m_Reader) };
+    ASSERT_EQ(a.Status, SnapshotReadStatus::Record);
+    EXPECT_TRUE(SameSnapshot(first, *a.Record.Snapshot));
+    EXPECT_FALSE(a.Record.Snapshot->IsCaptured(RegionId::PlayerActions));
+
+    const SnapshotReadResult b{ Codec::ReadRecord(in, m_Reader) };
+    ASSERT_EQ(b.Status, SnapshotReadStatus::Record);
+    EXPECT_TRUE(SameSnapshot(second, *b.Record.Snapshot));
+    EXPECT_FALSE(b.Record.Snapshot->IsCaptured(RegionId::PlayerActions));
+
+    EXPECT_EQ(Codec::ReadRecord(in, m_Reader).Status, SnapshotReadStatus::End);
+
+    // A version 3 file with a block of region 9 is corrupt: it can never fill PlayerActions.
+    std::stringstream withActions{};
+    SnapshotWriterState writer{};
+    Codec::WriteFileHeader(withActions, k_LayoutHash, k_StartTime, "test");
+    Snapshot full{ first };
+    SetRegion(full, RegionId::PlayerActions, 0, RegionSize(RegionId::PlayerActions), 9);
+    Codec::WriteRecord(withActions, std::make_shared<const Snapshot>(full), 1, 0, 0, std::nullopt, writer);
+    SnapshotReaderState bad{};
+    std::istringstream badIn{ legacy + withActions.str().substr(newHeaderBytes) };
+    ASSERT_EQ(Codec::OpenReader(badIn, bad), "");
+    const SnapshotReadResult rejected{ Codec::ReadRecord(badIn, bad) };
+    EXPECT_EQ(rejected.Status, SnapshotReadStatus::Error);
+    EXPECT_NE(rejected.Reason.find("region id 9"), std::string::npos) << rejected.Reason;
+}
+
+TEST_F(SnapshotRecordTests, WritesTheHeaderByteForByte)
+{
+    std::stringstream other{};
+    Codec::WriteFileHeader(other, k_LayoutHash, k_StartTime, "test");
+    this->WriteHeader();
+    const std::string bytes{ m_Stream.str() };
+    EXPECT_EQ(bytes, other.str());
+    ASSERT_EQ(bytes.size(), sizeof(SnapshotDumpFileHeader));
+    EXPECT_EQ(bytes.substr(bytes.size() - 4), std::string(4, '\0'));
 }
 
 TEST_F(SnapshotRecordTests, DeltaSequence)

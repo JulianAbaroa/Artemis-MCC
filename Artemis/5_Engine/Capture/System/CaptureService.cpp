@@ -1,6 +1,8 @@
 module Engine.Capture.System;
 
 import Common.Engine.Type;
+import Engine.Base.Action.Type;
+import Blam.Layout.Action.Type;
 import Blam.Layout.Object.Type;
 import std;
 
@@ -11,6 +13,12 @@ namespace
     using Blam::Layout::Snapshot::Type::RegionSize;
     using Blam::Layout::Snapshot::Type::k_LightKindId;
     using Blam::Layout::Snapshot::Type::k_RegionCount;
+
+    using Blam::Layout::Action::Type::Offset::k_AppliedActionsOffset;
+    using Blam::Layout::Action::Type::Offset::k_AppliedMaskOffset;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
+    using Engine::Base::Action::Type::AppliedActions;
 
     using Common::Engine::Type::k_MaxObjects;
     using Common::Engine::Type::k_MaxPlayers;
@@ -94,6 +102,7 @@ namespace Engine::Capture::System
         this->CopyRegion(*snapshot, RegionId::MegaloObjects, megaloObjects != 0 ? reader.Read<std::uintptr_t>(megaloObjects, k_DataArrayData) : 0);
 
         this->CopyRegion(*snapshot, RegionId::Placements, this->FindPlacements(threadContext));
+        this->CopyAppliedActions(*snapshot);
 
         m_CaptureStore.Publish(snapshot);
 
@@ -265,6 +274,40 @@ namespace Engine::Capture::System
         }
     }
 
+    auto CaptureService::SetAppliedActionsPort(AppliedActionsPort* port) -> void
+    {
+        m_AppliedActionsPort.store(port);
+    }
+
+    auto CaptureService::CopyAppliedActions(Snapshot& snapshot) -> void
+    {
+        Region& region{ snapshot.Regions[static_cast<std::size_t>(RegionId::PlayerActions)] };
+        region.OriginalAddress = 0;
+
+        const AppliedActionsPort* const port{ m_AppliedActionsPort.load() };
+        AppliedActions applied{};
+        if (port == nullptr || !port->CopyApplied(applied))
+        {
+            region.Bytes.clear();
+            m_LastAppliedSequence = 0;
+            return;
+        }
+
+        if (applied.Sequence == m_LastAppliedSequence)
+        {
+            region.Bytes.clear();
+            return;
+        }
+        m_LastAppliedSequence = applied.Sequence;
+
+        region.Bytes.resize(RegionSize(RegionId::PlayerActions));
+        std::memcpy(region.Bytes.data() + k_AppliedMaskOffset, &applied.Mask, sizeof(applied.Mask));
+        for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
+        {
+            std::memcpy(region.Bytes.data() + k_AppliedActionsOffset + (player * k_PlayerActionSize), applied.Actions[player].data(), k_PlayerActionSize);
+        }
+    }
+
     auto CaptureService::FindPlacements(std::uintptr_t threadContext) -> std::uintptr_t
     {
         if (threadContext == 0) return 0;
@@ -287,6 +330,7 @@ namespace Engine::Capture::System
     auto CaptureService::Cleanup() -> void
     {
         m_CaptureStore.Cleanup();
+        m_LastAppliedSequence = 0;
 
         m_Log.Message("[CaptureService] INFO: Cleanup completed.");
     }

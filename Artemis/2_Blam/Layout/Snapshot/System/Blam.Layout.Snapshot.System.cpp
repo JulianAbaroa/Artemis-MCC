@@ -1,3 +1,7 @@
+module;
+
+#include <cstddef>
+
 module Blam.Layout.Snapshot.System;
 
 import Common.Engine.Type;
@@ -35,13 +39,18 @@ namespace
     using Blam::Layout::Snapshot::Type::k_RegionCount;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpEndMarker;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpMagic;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpRegionCountV3;
     using Blam::Layout::Snapshot::Type::k_SnapshotDumpVersion;
+    using Blam::Layout::Snapshot::Type::k_SnapshotDumpVersionV3;
     using Blam::Layout::Snapshot::Type::k_SnapshotFirstAfterLoad;
     using Blam::Layout::Snapshot::Type::k_SnapshotHasObjectTable;
     using Blam::Layout::Snapshot::Type::k_SnapshotHasThreadContext;
     using Blam::Layout::Snapshot::Type::k_SnapshotRecordMarker;
     using Blam::Layout::Snapshot::Type::k_SnapshotSpanGap;
     using Blam::Layout::Snapshot::Type::k_SnapshotViewerActive;
+
+    // Bytes of the file header up to the region sizes: the fields every version has in the same place (magic to region count).
+    constexpr std::size_t k_HeaderPrefixBytes{ offsetof(SnapshotDumpFileHeader, RegionSizes) };
 
     // Largest region or object a reader accepts, so a corrupt size cannot ask for gigabytes.
     constexpr std::uint32_t k_MaxBlockBytes{ 64 * 1024 * 1024 };
@@ -315,19 +324,38 @@ namespace Blam::Layout::Snapshot::System
     {
         state = SnapshotReaderState{};
 
+        // The fields after the region sizes sit at another place in each version, so the header is read field by field.
         SnapshotDumpFileHeader header{};
-        if (!ReadValue(stream, header)) return "the file is shorter than the header of a .sdump";
+        constexpr std::string_view tooShort{ "the file is shorter than the header of a .sdump" };
+        if (ReadRaw(stream, std::as_writable_bytes(std::span<SnapshotDumpFileHeader, 1>{ &header, 1 }).first(k_HeaderPrefixBytes)) != k_HeaderPrefixBytes)
+        {
+            return std::string{ tooShort };
+        }
         if (header.Magic != k_SnapshotDumpMagic) return "the file is not a .sdump (wrong magic)";
-        if (header.Version != k_SnapshotDumpVersion)
+
+        const bool isVersion3{ header.Version == k_SnapshotDumpVersionV3 };
+        if (header.Version != k_SnapshotDumpVersion && !isVersion3)
         {
-            return std::format("the version is {}, this reader knows {}", header.Version, k_SnapshotDumpVersion);
+            return std::format("the version is {}, this reader knows {} and {}", header.Version, k_SnapshotDumpVersionV3, k_SnapshotDumpVersion);
         }
-        if (header.HeaderSize < sizeof(SnapshotDumpFileHeader)) return std::format("the header size is {}", header.HeaderSize);
-        if (header.RegionCount != k_RegionCount)
+
+        // A version 3 file has no region PlayerActions: it is left empty in every record.
+        const std::size_t fileRegions{ isVersion3 ? k_SnapshotDumpRegionCountV3 : k_RegionCount };
+        if (header.RegionCount != fileRegions)
         {
-            return std::format("the file has {} regions, the layout has {}", header.RegionCount, k_RegionCount);
+            return std::format("the file has {} regions, the layout has {}", header.RegionCount, fileRegions);
         }
-        for (std::size_t i{ 0 }; i < k_RegionCount; ++i)
+
+        const auto sizes{ std::span{ header.RegionSizes }.first(fileRegions) };
+        const std::size_t sizesBytes{ sizes.size_bytes() };
+        if (ReadRaw(stream, std::as_writable_bytes(sizes)) != sizesBytes) return std::string{ tooShort };
+        if (ReadRaw(stream, std::as_writable_bytes(std::span{ header.StartTime })) != header.StartTime.size()) return std::string{ tooShort };
+        if (ReadRaw(stream, std::as_writable_bytes(std::span{ header.Source })) != header.Source.size()) return std::string{ tooShort };
+
+        const std::size_t readBytes{ k_HeaderPrefixBytes + sizesBytes + header.StartTime.size() + header.Source.size() };
+        if (header.HeaderSize < readBytes) return std::format("the header size is {}", header.HeaderSize);
+
+        for (std::size_t i{ 0 }; i < fileRegions; ++i)
         {
             const std::size_t expected{ Type::RegionSize(static_cast<RegionId>(i)) };
             if (header.RegionSizes[i] != expected)
@@ -336,7 +364,7 @@ namespace Blam::Layout::Snapshot::System
             }
         }
 
-        stream.ignore(static_cast<std::streamsize>(header.HeaderSize - sizeof(SnapshotDumpFileHeader)));
+        stream.ignore(static_cast<std::streamsize>(header.HeaderSize - readBytes));
         if (!stream) return "the file is cut inside the header";
 
         state.Header = header;
@@ -401,7 +429,8 @@ namespace Blam::Layout::Snapshot::System
         {
             SnapshotRegionBlock block{};
             if (!ReadValue(stream, block)) return Fail(SnapshotReadStatus::Cut, "the file is cut inside a region block");
-            if (block.RegionId >= k_RegionCount) return Fail(SnapshotReadStatus::Error, std::format("region id {} does not exist", block.RegionId));
+            // The regions of the file, not of the layout: a version 3 file can never fill PlayerActions.
+            if (block.RegionId >= state.Header.RegionCount) return Fail(SnapshotReadStatus::Error, std::format("region id {} does not exist", block.RegionId));
             if (block.Size > k_MaxBlockBytes) return Fail(SnapshotReadStatus::Error, std::format("a region of {} bytes is too large", block.Size));
 
             Region& region{ snapshot->Regions[block.RegionId] };

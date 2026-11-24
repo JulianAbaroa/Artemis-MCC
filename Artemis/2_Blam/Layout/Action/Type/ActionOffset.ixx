@@ -10,6 +10,12 @@ export namespace Blam::Layout::Action::Type::Offset
     // First action inside the simulation update. The action of a player is at this offset + k_PlayerActionSize * its table index.
     inline constexpr std::uintptr_t k_UpdateActionsOffset{ 0x10 };
 
+    // Layout of the PlayerActions region of the Snapshot, the copy of what the simulation applied in a tick: the mask (uint32, the same
+    // meaning as at k_UpdateActionMaskOffset) and then the actions in the order of the update queue, so the action of a player is at
+    // k_AppliedActionsOffset + k_PlayerActionSize * its table index.
+    inline constexpr std::uintptr_t k_AppliedMaskOffset{ 0x00 };
+    inline constexpr std::uintptr_t k_AppliedActionsOffset{ 0x04 };
+
     // Unit of the action: +0x00 (uint32) = 1 and +0x04 (uint8) = action slot of the unit (unit +0x288), so the engine moves that
     // unit with the action (A9 sec. 13.10). The empty action has 0 and 0xFF. The engine writes them for a local player (0x628b0).
     inline constexpr std::uintptr_t k_ActionHasUnitOffset{ 0x00 };

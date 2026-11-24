@@ -10,8 +10,11 @@ import Engine.Base.Memory.System;
 import Engine.Capture.State;
 import Engine.Capture.Type;
 import Engine.Capture.System;
+import Engine.Control.Input.State;
+import Engine.Control.Input.Type;
 import Services.Telemetry.State;
 import Services.Telemetry.Type;
+import Blam.Layout.Action.Type;
 import Blam.Layout.Object.Type;
 import Blam.Layout.Snapshot.System;
 import Blam.Layout.Snapshot.Type;
@@ -31,6 +34,12 @@ namespace
     using Common::Log::Type::LogLevel;
     using Common::State::Type::BoundedQueue;
     using Engine::Base::Lifecycle::State::LifecycleStore;
+    using Engine::Control::Input::State::PlayerActionStore;
+    using Engine::Control::Input::Type::PlayerActions;
+    using Blam::Layout::Action::Type::Offset::k_AppliedActionsOffset;
+    using Blam::Layout::Action::Type::Offset::k_AppliedMaskOffset;
+    using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
+    using Blam::Layout::Action::Type::Size::k_PlayerActionSize;
     using Engine::Base::Lifecycle::Type::Status;
     using Engine::Base::Memory::System::MemoryReaderService;
     using Engine::Capture::State::CaptureStore;
@@ -667,4 +676,116 @@ TEST_F(CaptureServiceTests, SnapshotsCapturedOnOneThreadAndReleasedOnAnotherAreN
 
     EXPECT_EQ(overwritten.load(), 0);
     EXPECT_EQ(duplicated.load(), 0);
+}
+
+
+// F5.1 A (D371): the region PlayerActions is not game memory, the owner of the applied actions gives it through a port.
+namespace
+{
+    // The actions of one tick as the hook of the engine publishes them: tick number in the mask and a pattern in each action.
+    auto MakeActions(std::uint64_t tick) -> PlayerActions
+    {
+        PlayerActions actions{};
+        actions.Sequence = tick;
+        actions.Mask = static_cast<std::uint32_t>(0x8000'0000u | tick);
+        for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
+        {
+            for (std::size_t i{ 0 }; i < k_PlayerActionSize; ++i)
+            {
+                actions.Actions[player].Data[i] = static_cast<std::uint8_t>(tick + (player * 13) + (i * 3));
+            }
+        }
+        return actions;
+    }
+
+    auto MaskOf(const Snapshot& snapshot) -> std::uint32_t
+    {
+        return snapshot.Read<std::uint32_t>(RegionId::PlayerActions, k_AppliedMaskOffset);
+    }
+}
+
+TEST_F(CaptureServiceTests, PlayerActionsHasTheMaskAndTheSixteenActionsOfThePort)
+{
+    PlayerActionStore actions{};
+    const PlayerActions published{ MakeActions(7) };
+    actions.Publish(published);
+    m_Service.SetAppliedActionsPort(&actions);
+
+    const auto snapshot{ m_Service.Capture() };
+
+    ASSERT_TRUE(snapshot->IsCaptured(RegionId::PlayerActions));
+    EXPECT_EQ(snapshot->Regions[static_cast<std::size_t>(RegionId::PlayerActions)].Bytes.size(), RegionSize(RegionId::PlayerActions));
+    EXPECT_EQ(MaskOf(*snapshot), published.Mask);
+    for (std::size_t player{ 0 }; player < k_MaxActionPlayers; ++player)
+    {
+        const auto copy{ snapshot->ReadArray<std::uint8_t, k_PlayerActionSize>(RegionId::PlayerActions, k_AppliedActionsOffset + (player * k_PlayerActionSize)) };
+        EXPECT_EQ(copy, published.Actions[player].Data) << "player " << player;
+    }
+}
+
+TEST_F(CaptureServiceTests, PlayerActionsIsEmptyWithoutAPortOrBeforeTheFirstTick)
+{
+    // No port: empty, and the rest of the capture is untouched.
+    EXPECT_FALSE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions));
+
+    PlayerActionStore actions{};
+    m_Service.SetAppliedActionsPort(&actions);
+    EXPECT_FALSE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions)) << "nothing published yet";
+
+    actions.Publish(MakeActions(1));
+    EXPECT_TRUE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions));
+
+    // A reused snapshot never keeps the region of an older capture.
+    m_Service.SetAppliedActionsPort(nullptr);
+    for (int tick{ 0 }; tick < 10; ++tick) EXPECT_FALSE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions));
+
+    m_Service.SetAppliedActionsPort(&actions);
+    actions.Cleanup();
+    for (int tick{ 0 }; tick < 10; ++tick) EXPECT_FALSE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions));
+    EXPECT_EQ(m_Sink.m_Messages.size(), 0u) << "no log per tick";
+}
+
+// What it checks: the region is the latest the port gave when the capture runs. It cannot see the order of the hooks: that the capture
+// that closes tick N runs after PlayerActionDetour published tick N and before tick N + 1 is read from ExecuteGameFrameDetour and
+// PlayerActionDetour (still to confirm in game: the tick of TimeGlobals against the Sequence).
+TEST_F(CaptureServiceTests, PlayerActionsAreTheLatestThePortGaveWhenTheCaptureRuns)
+{
+    PlayerActionStore actions{};
+    m_Service.SetAppliedActionsPort(&actions);
+
+    for (std::uint64_t tick{ 1 }; tick <= 12; ++tick)
+    {
+        actions.Publish(MakeActions(tick));
+        const auto closed{ m_Service.Capture() };
+        EXPECT_EQ(MaskOf(*closed), static_cast<std::uint32_t>(0x8000'0000u | tick)) << "tick " << tick;
+    }
+}
+
+// A tick that publishes nothing (the null update at the end of a match) leaves the Sequence as it was: its region would be a stale repeat.
+TEST_F(CaptureServiceTests, PlayerActionsAreEmptyWhenTheSequenceDidNotAdvance)
+{
+    PlayerActionStore actions{};
+    m_Service.SetAppliedActionsPort(&actions);
+
+    actions.Publish(MakeActions(5));
+    const auto first{ m_Service.Capture() };
+    ASSERT_TRUE(first->IsCaptured(RegionId::PlayerActions));
+    EXPECT_EQ(MaskOf(*first), static_cast<std::uint32_t>(0x8000'0000u | 5));
+
+    for (int tick{ 0 }; tick < 3; ++tick) EXPECT_FALSE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions));
+
+    actions.Publish(MakeActions(6));
+    const auto next{ m_Service.Capture() };
+    ASSERT_TRUE(next->IsCaptured(RegionId::PlayerActions));
+    EXPECT_EQ(MaskOf(*next), static_cast<std::uint32_t>(0x8000'0000u | 6));
+}
+
+TEST_F(CaptureServiceTests, ALightCaptureHasNoPlayerActions)
+{
+    PlayerActionStore actions{};
+    actions.Publish(MakeActions(3));
+    m_Service.SetAppliedActionsPort(&actions);
+
+    EXPECT_TRUE(m_Service.Capture()->IsCaptured(RegionId::PlayerActions));
+    for (int tick{ 0 }; tick < 10; ++tick) EXPECT_FALSE(m_Service.CaptureLight()->IsCaptured(RegionId::PlayerActions));
 }

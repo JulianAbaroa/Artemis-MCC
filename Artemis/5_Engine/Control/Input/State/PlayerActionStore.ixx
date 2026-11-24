@@ -2,6 +2,7 @@ export module Engine.Control.Input.State:PlayerAction;
 
 import Control.Action.Type;
 import Control.Client.Type;
+import Engine.Base.Action.Type;
 import Engine.Control.Input.Type;
 import Blam.Layout.Action.Type;
 import std;
@@ -17,11 +18,13 @@ export namespace Engine::Control::Input::State
     // Player actions of the latest tick, what each action did since the watch was cleared, and the overrides Artemis writes (A9 M4).
     // note: Thread-safe. The PlayerAction hook reads the overrides and publishes the actions on the game thread once per tick.
     // Players are indexed by their player table index.
-    class PlayerActionStore
+    class PlayerActionStore : public Engine::Base::Action::Type::AppliedActionsPort
     {
     private:
         using ActionOverride = ::Control::Action::Type::ActionOverride;
         using ClientRequests = ::Control::Action::Type::ClientRequests;
+
+        using AppliedActions = Engine::Base::Action::Type::AppliedActions;
 
         using PlayerActions = Engine::Control::Input::Type::PlayerActions;
         using ActionWatch = Engine::Control::Input::Type::ActionWatch;
@@ -31,7 +34,7 @@ export namespace Engine::Control::Input::State
 
     public:
         PlayerActionStore() = default;
-        ~PlayerActionStore() = default;
+        ~PlayerActionStore() override = default;
 
         PlayerActionStore(const PlayerActionStore&) = delete;
         auto operator=(const PlayerActionStore&) -> PlayerActionStore& = delete;
@@ -41,6 +44,12 @@ export namespace Engine::Control::Input::State
 
         // param out: Out. Actions of the latest tick.
         auto CopyLatest(PlayerActions& out) const -> void;
+
+        // Copies the sequence, the mask and the actions of the latest tick for the capture (D371): data only, the layout is the capture's.
+        // return: False before the first tick was published (or after Cleanup), and nothing is written.
+        // note: The hook publishes the actions of a tick right before the engine applies them, inside the tick. A tick without
+        // Publish leaves the previous one, with the same Sequence.
+        auto CopyApplied(AppliedActions& out) const -> bool override;
 
         // param out: Out. Watch of the player.
         auto CopyWatch(std::size_t playerIndex, ActionWatch& out) const -> void;

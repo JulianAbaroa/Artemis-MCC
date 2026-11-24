@@ -98,6 +98,7 @@ namespace Mod
 
         m_Base.m_LifecycleService.RaiseUnhook();
         m_Base.m_MatchSetupService.SetRosterPort(nullptr);
+        m_Capture.m_CaptureService.SetAppliedActionsPort(nullptr);
 
         m_Base.m_LifecycleService.RaiseShutdown();
 
@@ -116,6 +117,9 @@ namespace Mod
 
         // The tick producer is connected before the tick hooks go in too.
         m_Capture.m_ExecuteGameFrameDetour.SetTickProducer(m_TickProducer);
+
+        // The capture copies the applied actions of the tick from the store of Engine.Control (D371): neither project sees the other.
+        m_Capture.m_CaptureService.SetAppliedActionsPort(&m_Control.m_PlayerActionStore);
 
         // The setup service applies the bots through the bots service (D286): Engine.Base cannot see Engine.Control.
         m_Base.m_MatchSetupService.SetRosterPort(&m_Control.m_BotService);

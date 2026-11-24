@@ -30,8 +30,8 @@ try:
 except ImportError:
     sys.exit("numpy is required: pip install numpy")
 
-REGIONS = ["PlayerArray", "PlayerMapping", "Interaction", "TimeGlobals", "GameEngineGlobals", "EventGlobals", "Placements", "GameGlobals", "MegaloObjects"]
-SHORT = {"gee": 4, "gg": 7, "ev": 5, "time": 3, "players": 0, "mapping": 1, "placements": 6, "interaction": 2, "megalo": 8}
+REGIONS = ["PlayerArray", "PlayerMapping", "Interaction", "TimeGlobals", "GameEngineGlobals", "EventGlobals", "Placements", "GameGlobals", "MegaloObjects", "PlayerActions"]
+SHORT = {"gee": 4, "gg": 7, "ev": 5, "time": 3, "players": 0, "mapping": 1, "placements": 6, "interaction": 2, "megalo": 8, "actions": 9}
 TRACKED = (0, 3, 4, 5, 7, 8)
 TYPES = {"u8": "<u1", "i8": "<i1", "u16": "<u2", "i16": "<i2", "u32": "<u4", "i32": "<i4", "f32": "<f4"}
 TIME, EVENTS = 3, 5
@@ -50,6 +50,7 @@ def Parse(path):
     head = f.read(160)
     if head[:6] != b"ASDUMP": sys.exit("ERROR: not a .sdump")
     version, headerSize = struct.unpack_from("<II", head, 8)
+    if version not in (3, 4): sys.exit(f"ERROR: .sdump version {version} (this script reads 3 and 4)")
     regionCount = struct.unpack_from("<I", head, 24)[0]
     sizes = struct.unpack_from(f"<{regionCount}I", head, 28)
     f.seek(headerSize)

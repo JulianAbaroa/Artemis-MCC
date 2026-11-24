@@ -25,6 +25,12 @@
     <Filter Include="Hook\Type">
       <UniqueIdentifier>{01d06faa-8783-5710-9766-4475350fd512}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Action">
+      <UniqueIdentifier>{5a1d2c70-3b44-4f0e-9a51-8e7c6d2b1f90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Action\Type">
+      <UniqueIdentifier>{c3e9b8a2-61d7-4b35-b0f4-2a9d7e5c4116}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Pov">
       <UniqueIdentifier>{3ffbc611-01d7-4533-9f0f-2c8252708de6}</UniqueIdentifier>
     </Filter>
@@ -318,6 +324,9 @@
     </ClCompile>
     <ClCompile Include="Memory\State\CameraOverrideStore.cpp">
       <Filter>Memory\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Action\Type\Engine.Base.Action.Type.ixx">
+      <Filter>Action\Type</Filter>
     </ClCompile>
     <ClCompile Include="Pov\Engine.Base.Pov.State.ixx">
       <Filter>Pov</Filter>

@@ -19,6 +19,7 @@ namespace
     using Blam::Layout::Snapshot::Type::BlockRange;
     using Blam::Layout::Snapshot::Type::Snapshot;
     using Blam::Layout::Snapshot::Type::RegionSize;
+    using Blam::Layout::Snapshot::Type::IsLightRegion;
 
     using Blam::Layout::Snapshot::Type::k_RegionCount;
     using Common::Engine::Type::k_MaxPlayers;
@@ -39,9 +40,9 @@ namespace
     using Blam::Layout::Game::Type::Offset::k_EventRingSlots;
     using Blam::Layout::Game::Type::Offset::k_EventEntrySize;
 
-    constexpr std::array<RegionId, 9> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
+    constexpr std::array<RegionId, 10> k_AllRegions{ RegionId::PlayerArray, RegionId::PlayerMapping, RegionId::Interaction,
         RegionId::TimeGlobals, RegionId::GameEngineGlobals, RegionId::EventGlobals, RegionId::Placements, RegionId::GameGlobals,
-        RegionId::MegaloObjects };
+        RegionId::MegaloObjects, RegionId::PlayerActions };
 
     auto RegionOf(Snapshot& snapshot, RegionId id) -> Region&
     {
@@ -174,6 +175,13 @@ TEST(SnapshotTest, RegionSizesAreTheEngineAllocations)
     EXPECT_EQ(RegionSize(RegionId::Placements), 0x28Bu * 0x4Cu);
     EXPECT_EQ(RegionSize(RegionId::GameGlobals), 0x1F0E0u);
     EXPECT_EQ(RegionSize(RegionId::MegaloObjects), 0x200u * 0x94u);
+    // The mask and the 16 actions the simulation applied.
+    EXPECT_EQ(RegionSize(RegionId::PlayerActions), 4u + (16u * 0xA8u));
+}
+
+TEST(SnapshotTest, PlayerActionsIsNotALightRegion)
+{
+    EXPECT_FALSE(IsLightRegion(RegionId::PlayerActions));
 }
 
 TEST(SnapshotTest, RegionSizesCoverTheFieldsTheyHold)

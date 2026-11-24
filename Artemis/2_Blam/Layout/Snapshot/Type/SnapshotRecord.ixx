@@ -9,7 +9,13 @@ import std;
 export namespace Blam::Layout::Snapshot::Type
 {
     // Version of the .sdump format (D202). Raised when a header, a block or the order of the blocks changes.
-    inline constexpr std::uint32_t k_SnapshotDumpVersion{ 3 };
+    // note: 4 added the region PlayerActions (D371): the header has ten region sizes. Version 3 files (nine regions) are still read, with
+    // that region empty.
+    inline constexpr std::uint32_t k_SnapshotDumpVersion{ 4 };
+
+    // The version before the region PlayerActions, and the regions it has.
+    inline constexpr std::uint32_t k_SnapshotDumpVersionV3{ 3 };
+    inline constexpr std::uint32_t k_SnapshotDumpRegionCountV3{ 9 };
 
     // First bytes of a .sdump file.
     inline constexpr std::array<char, 8> k_SnapshotDumpMagic{ 'A', 'S', 'D', 'U', 'M', 'P', '\0', '\0' };
@@ -49,9 +55,11 @@ export namespace Blam::Layout::Snapshot::Type
         std::array<char, 32> StartTime{};
         // What was recorded, the same text as the .tdump.
         std::array<char, 64> Source{};
+        // Zero: the padding that aligns the header to 8 bytes, written explicitly so the files are byte for byte deterministic.
+        std::array<std::uint8_t, 4> Reserved{};
     };
 
-    static_assert(sizeof(SnapshotDumpFileHeader) == 160);
+    static_assert(sizeof(SnapshotDumpFileHeader) == 168);
 
     // Start of one record, followed by SnapshotLoadInfo when Flags has k_SnapshotFirstAfterLoad, then ChangedRegionCount region
     // blocks, ChangedObjectCount object blocks in ascending index order and RemovedObjectCount u32 handles.

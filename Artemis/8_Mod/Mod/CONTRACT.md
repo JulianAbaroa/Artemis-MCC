@@ -13,6 +13,8 @@ hooks and runs the threads:
 - Bridge, Dump, Bench: the bridge transport, the TickDump writer and the in-game bench.
 `DllMain` and `Proxy/` forward the real `wtsapi32` exports.
 
+`WireEngine` also connects the `PlayerActionStore` of `Engine.Control` to `CaptureService::SetAppliedActionsPort` (D371), and the unhook disconnects it, next to the roster port.
+
 ## Does not
 - Contain domain logic: it only builds, orders, connects and measures.
 
