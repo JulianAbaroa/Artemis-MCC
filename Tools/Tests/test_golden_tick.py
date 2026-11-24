@@ -990,7 +990,7 @@ slow = pytest.mark.slow
                             "CanFireNow")),
             ("ViewOther", ("Relation", "Channels", "IsAlive", "Position", "Velocity", "FacingYaw", "Vitality", "Shield", "WeaponSubtype", "IsCrouching",
                            "CarriesFlag")),
-            ("ViewFlag", ("State", "Position", "CarrierRow", "ResetTicks", "IsResetRunning", "AlliesInZone", "StandPosition")))
+            ("ViewFlag", ("State", "Position", "CarrierRow", "HasFlag", "ResetTicks", "IsResetRunning", "AlliesInZone", "StandPosition")))
 def test_views_invariants(film):
     """I1, I2, I3, I5, I6 and I7 of Diseno/19 sec. 3.3 on every tick, with the sight constants of Data/Views/Sight.xml and the cone from FrameYaw and AimPitch of Self.
     ViewCount is PlayerCount and ViewMask the IsComputed of each row; Head is the player of its row (and Side the BaseTeam of the stand its team owns); a row that
@@ -998,7 +998,7 @@ def test_views_invariants(film):
     as RaycastVision). I2: two eyes well inside each other's cone and range see each other or neither. I3: an ally is on the HUD, alive as its player and at the
     origin of its biped. I5: a row with no channel is zero but for its Relation. I7: Self is Players, Entities and Weapons of the same handle bit by bit (Eye is above
     the feet). The Others rows follow the teams (Relation) and the channels (HUD and Seen copies); Flags[0] is the flag of the own team, Flags[1] a rival, no
-    candidate is zero bytes (I6), with CarrierRow and StandPosition of the Objectives row and its entities. The cases are counted in s.values."""
+    candidate is zero bytes but for the stand of its side (I6, D370), HasFlag is the existence of the candidate, with CarrierRow and StandPosition of the Objectives row and its entities. The cases are counted in s.values."""
     s = Views(film)
     for rule in RulesOf("view_", "i1_", "i2_", "i3_", "i5_", "i6_", "i7_"):
         s.Clean(rule)

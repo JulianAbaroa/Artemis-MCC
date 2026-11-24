@@ -515,6 +515,7 @@ namespace
         row.State = static_cast<std::uint8_t>(flag.State);
         row.Position = ToBridge(flag.Position);
         row.CarrierRow = flag.CarrierRow;
+        row.HasFlag = flag.HasFlag ? 1 : 0;
         row.ResetTicks = flag.ResetTicks;
         row.IsResetRunning = flag.IsResetRunning ? 1 : 0;
         row.AlliesInZone = flag.AlliesInZone;

@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 2
-LAYOUT_HASH = 0xF6FC2E7A673F77B2
+LAYOUT_HASH = 0xAB6105BB1F44D5F8
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -394,9 +394,9 @@ BridgeViewOther = np.dtype({
 
 # One of the two flags of a View (Views ViewFlag).
 BridgeViewFlag = np.dtype({
-    'names': ['State', 'Position', 'CarrierRow', 'ResetTicks', 'IsResetRunning', 'AlliesInZone', 'StandPosition'],
-    'formats': ['u1', BridgeVec3, 'u1', '<u4', 'u1', 'u1', BridgeVec3],
-    'offsets': [0, 4, 16, 20, 24, 25, 28],
+    'names': ['State', 'Position', 'CarrierRow', 'HasFlag', 'ResetTicks', 'IsResetRunning', 'AlliesInZone', 'StandPosition'],
+    'formats': ['u1', BridgeVec3, 'u1', 'u1', '<u4', 'u1', 'u1', BridgeVec3],
+    'offsets': [0, 4, 16, 17, 20, 24, 25, 28],
     'itemsize': 40,
 })
 

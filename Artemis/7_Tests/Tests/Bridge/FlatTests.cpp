@@ -143,7 +143,7 @@ namespace
         }
         for (auto& flag : view.Flags)
         {
-            flag = { .State = FlagState::Dropped, .Position = vec(), .CarrierRow = static_cast<std::uint8_t>(next()), .ResetTicks = next(), .IsResetRunning = true,
+            flag = { .State = FlagState::Dropped, .Position = vec(), .CarrierRow = static_cast<std::uint8_t>(next()), .HasFlag = (next() % 2) != 0, .ResetTicks = next(), .IsResetRunning = true,
                 .AlliesInZone = static_cast<std::uint8_t>(next()), .StandPosition = vec() };
         }
         view.SoundCount = static_cast<std::uint8_t>(next());
@@ -273,6 +273,7 @@ namespace
             EXPECT_EQ(row.Flags[i].State, static_cast<std::uint8_t>(FlagState::Dropped));
             ExpectVec(flag.Position, row.Flags[i].Position);
             EXPECT_EQ(row.Flags[i].CarrierRow, flag.CarrierRow);
+            EXPECT_EQ(row.Flags[i].HasFlag, flag.HasFlag ? 1 : 0);
             EXPECT_EQ(row.Flags[i].ResetTicks, flag.ResetTicks);
             EXPECT_EQ(row.Flags[i].IsResetRunning, 1);
             EXPECT_EQ(row.Flags[i].AlliesInZone, flag.AlliesInZone);

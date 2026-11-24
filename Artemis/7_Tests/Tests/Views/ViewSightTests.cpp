@@ -110,7 +110,7 @@ namespace
 
     auto IsZeroFlag(const ViewFlag& flag) -> bool
     {
-        return flag.State == FlagState::Home && IsZeroVec(flag.Position) && flag.CarrierRow == 0 && flag.ResetTicks == 0 && !flag.IsResetRunning &&
+        return flag.State == FlagState::Home && IsZeroVec(flag.Position) && flag.CarrierRow == 0 && !flag.HasFlag && flag.ResetTicks == 0 && !flag.IsResetRunning &&
             flag.AlliesInZone == 0 && IsZeroVec(flag.StandPosition);
     }
 
@@ -590,6 +590,9 @@ TEST_F(ViewFlagsTests, OwnAndEnemyBySideOfTheRound)
     EXPECT_EQ(views[1].Flags[0].State, FlagState::Dropped);
     EXPECT_EQ(views[1].Flags[1].State, FlagState::Home);
 
+    EXPECT_TRUE(views[0].Flags[0].HasFlag);
+    EXPECT_TRUE(views[0].Flags[1].HasFlag);
+
     // Without a team there is no side, and without flags (not a capture game) both rows are zero.
     EXPECT_TRUE(IsZeroFlag(views[2].Flags[0]));
     EXPECT_TRUE(IsZeroFlag(views[2].Flags[1]));
@@ -597,6 +600,87 @@ TEST_F(ViewFlagsTests, OwnAndEnemyBySideOfTheRound)
     views = this->Compute(AgentSet::All());
     EXPECT_TRUE(IsZeroFlag(views[0].Flags[0]));
     EXPECT_TRUE(IsZeroFlag(views[0].Flags[1]));
+}
+
+// While the engine recreates a flag (reset, return, capture) the row keeps the stand of its side and says that there is no flag (D370).
+TEST_F(ViewFlagsTests, StandIsKeptWhileTheFlagIsRecreated)
+{
+    this->Put(0, Team::Blue, { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f });
+    this->Put(1, Team::Red, { 0.0f, 20.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+    Entity red{ MakeEntity(k_FlagRed, Function::Weapon, Team::Red) };
+    red.WorldOrigin = { 1.0f, 2.0f, 3.0f };
+    m_FlagEntities = { red };
+    const std::vector<StandDetail> stands{ StandDetail{ .Handle = k_StandRed, .BaseTeam = Team::Red, .OwnerTeam = Team::Red, .WorldOrigin = { 10.0f, 20.0f, 30.0f } },
+        StandDetail{ .Handle = k_StandBlue, .BaseTeam = Team::Blue, .OwnerTeam = Team::Blue, .WorldOrigin = { 40.0f, 50.0f, 60.0f } } };
+
+    // The blue flag does not exist: Blue has its stand and no flag, Red has the blue stand in its rival row.
+    this->PublishObjectives({ ObjectiveDetail{ .Handle = k_FlagRed, .BaseTeam = Team::Red, .OwnerTeam = Team::Red, .State = FlagState::Dropped, .HomeStand = k_StandRed,
+        .ResetTicks = 50, .AlliesInZone = 1 } }, stands);
+    this->Publish();
+    ViewTable views{ this->Compute(AgentSet::All()) };
+    EXPECT_FALSE(views[0].Flags[0].HasFlag);
+    EXPECT_TRUE(IsSamePoint(views[0].Flags[0].StandPosition, { 40.0f, 50.0f, 60.0f }));
+    ViewFlag onlyStand{ views[0].Flags[0] };
+    onlyStand.StandPosition = {};
+    EXPECT_TRUE(IsZeroFlag(onlyStand));
+    EXPECT_TRUE(views[0].Flags[1].HasFlag);
+    EXPECT_TRUE(IsSamePoint(views[0].Flags[1].StandPosition, { 10.0f, 20.0f, 30.0f }));
+    EXPECT_TRUE(views[1].Flags[0].HasFlag);
+    EXPECT_FALSE(views[1].Flags[1].HasFlag);
+    EXPECT_TRUE(IsSamePoint(views[1].Flags[1].StandPosition, { 40.0f, 50.0f, 60.0f }));
+    onlyStand = views[1].Flags[1];
+    onlyStand.StandPosition = {};
+    EXPECT_TRUE(IsZeroFlag(onlyStand));
+
+    // No flag at all: both rows are the stands, whatever the handle order of several stands of a side.
+    this->PublishObjectives({}, { stands[0], stands[1], StandDetail{ .Handle = k_StandRed + 100, .BaseTeam = Team::Red, .OwnerTeam = Team::Red, .WorldOrigin = { 7.0f, 7.0f, 7.0f } } });
+    views = this->Compute(AgentSet::All());
+    for (const auto& [row, own, rival] : { std::tuple{ 0, Vec3{ 40.0f, 50.0f, 60.0f }, Vec3{ 10.0f, 20.0f, 30.0f } }, std::tuple{ 1, Vec3{ 10.0f, 20.0f, 30.0f }, Vec3{ 40.0f, 50.0f, 60.0f } } })
+    {
+        EXPECT_FALSE(views[row].Flags[0].HasFlag) << row;
+        EXPECT_FALSE(views[row].Flags[1].HasFlag) << row;
+        EXPECT_TRUE(IsSamePoint(views[row].Flags[0].StandPosition, own)) << row;
+        EXPECT_TRUE(IsSamePoint(views[row].Flags[1].StandPosition, rival)) << row;
+    }
+}
+
+// HasFlag is true exactly when ObjectiveDetails has the flag of the side, in any state, and says nothing of the stand.
+TEST_F(ViewFlagsTests, HasFlagFollowsTheObjective)
+{
+    this->Put(0, Team::Blue, { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f });
+    Entity blue{ MakeEntity(k_FlagBlue, Function::Weapon, Team::Blue) };
+    blue.WorldOrigin = { 5.0f, 5.0f, 5.0f };
+    m_FlagEntities = { blue };
+    for (const FlagState state : { FlagState::Home, FlagState::Carried, FlagState::Dropped })
+    {
+        this->PublishObjectives({ ObjectiveDetail{ .Handle = k_FlagBlue, .BaseTeam = Team::Blue, .OwnerTeam = Team::Blue, .State = state, .CarrierPlayer = k_PlayerHandles[0],
+            .CarrierBiped = k_BipedHandles[0] } }, {});
+        this->Publish();
+        const ViewTable views{ this->Compute(AgentSet::All()) };
+        EXPECT_TRUE(views[0].Flags[0].HasFlag) << static_cast<int>(state);
+        EXPECT_FALSE(views[0].Flags[1].HasFlag) << static_cast<int>(state);
+        EXPECT_TRUE(IsZeroVec(views[0].Flags[0].StandPosition)) << static_cast<int>(state);
+    }
+
+    this->PublishObjectives({}, {});
+    const ViewTable views{ this->Compute(AgentSet::All()) };
+    EXPECT_FALSE(views[0].Flags[0].HasFlag);
+    EXPECT_TRUE(IsZeroFlag(views[0].Flags[0]));
+}
+
+// A team without side (Neutral, or one that owns no stand) has no own stand to keep: its own row stays zero, and Neutral has no rival row either.
+TEST_F(ViewFlagsTests, NoSideLeavesTheRowZero)
+{
+    this->Put(0, Team::Blue, { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f });
+    this->Put(1, Team::Neutral, { 0.0f, 20.0f, 0.0f }, { 0.0f, 1.0f, 0.0f });
+    this->PublishObjectives({}, { StandDetail{ .Handle = k_StandRed, .BaseTeam = Team::Red, .OwnerTeam = Team::Red, .WorldOrigin = { 10.0f, 20.0f, 30.0f } } });
+    this->Publish();
+    const ViewTable views{ this->Compute(AgentSet::All()) };
+    EXPECT_TRUE(IsZeroFlag(views[0].Flags[0]));
+    EXPECT_FALSE(views[0].Flags[1].HasFlag);
+    EXPECT_TRUE(IsSamePoint(views[0].Flags[1].StandPosition, { 10.0f, 20.0f, 30.0f }));
+    EXPECT_TRUE(IsZeroFlag(views[1].Flags[0]));
+    EXPECT_TRUE(IsZeroFlag(views[1].Flags[1]));
 }
 
 // A flag in hands is where its carrier is, and its row is the carrier's row, whether the carrier is a player of the table or only a biped.
@@ -794,7 +878,18 @@ namespace
                 const ViewFlag& row{ viewer.Flags[index] };
                 if (candidates.empty())
                 {
-                    if (!IsZeroFlag(row)) Fail(check, record, std::format("I6: row {} of {} is not zero", index, a));
+                    // No flag in this tick: the row is zero but for the stand of the side (D370).
+                    const StandDetail* stand{ nullptr };
+                    for (const auto& [handle, candidate] : objectives->Stands)
+                    {
+                        const bool isMatch{ viewer.Head.Team != Team::Neutral && (index == 0 ? candidate.OwnerTeam == viewer.Head.Team : (candidate.OwnerTeam != viewer.Head.Team && candidate.OwnerTeam != Team::Neutral)) };
+                        if (isMatch && (!stand || handle < stand->Handle)) stand = &candidate;
+                    }
+
+                    ViewFlag withoutStand{ row };
+                    withoutStand.StandPosition = {};
+                    if (!IsZeroFlag(withoutStand)) Fail(check, record, std::format("I6: row {} of {} is not zero but for the stand", index, a));
+                    if (!IsSamePoint(row.StandPosition, stand ? stand->WorldOrigin : Vec3{})) Fail(check, record, std::format("I6: row {} of {} has not the stand of the side", index, a));
                     continue;
                 }
 
@@ -802,7 +897,7 @@ namespace
                 const bool isFound{ std::ranges::any_of(candidates, [&](const ObjectiveDetail* flag) {
                     const Entity* carrier{ flag->State == FlagState::Carried ? entities->Find(flag->CarrierBiped) : nullptr };
                     const Entity* where{ carrier ? carrier : entities->Find(flag->Handle) };
-                    return row.State == flag->State && row.ResetTicks == flag->ResetTicks && row.IsResetRunning == flag->IsResetRunning &&
+                    return row.HasFlag && row.State == flag->State && row.ResetTicks == flag->ResetTicks && row.IsResetRunning == flag->IsResetRunning &&
                         row.AlliesInZone == flag->AlliesInZone && (!where || IsSamePoint(row.Position, where->WorldOrigin));
                 }) };
                 if (!isFound) Fail(check, record, std::format("I6: row {} of {} is none of the flags", index, a));

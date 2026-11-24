@@ -3,7 +3,8 @@ test_ctf_golden.py
 F4.9 (D317): the observation of the policy from the View (Observe of Agent/artemis/env/ctf.py) against the one the environment computed
 from the omniscient tick before (Players, Entities, Objectives and Stands), over every tick and every computed View with a body of the
 goldens ctf_c and ctf_d (v7). If the View carried the same information, both are the same vector: 1e-4 in what is continuous, equality in
-the flags (obs 6, 11, 12, 13 and 18) and in whether the shaping potential exists. The count of comparisons and the worst error by entry are
+the flags (obs 6, 11, 12, 13 and 18) and in whether the shaping potential exists; 0.03 in obs 7-10 and in the potential while the enemy flag is
+Carried (F4.9-1 aceptado: la View pone la bandera en el portador, D370). The count of comparisons and the worst error by entry are
 printed (pytest -s). A film without golden.tdump skips its test.
 """
 import math
@@ -22,6 +23,8 @@ sys.path.insert(0, os.path.join(Repo(), "Agent"))
 slow = pytest.mark.slow
 FILMS = ("ctf_c", "ctf_d")
 TOLERANCE = 1e-4
+CARRIED_TOLERANCE = 0.03
+CARRIED_PHI_TOLERANCE = 0.05  # the potential adds two distances through the flag (to it and from it to the stand): up to 2 m / METERS
 FLAG_ENTRIES = (6, 11, 12, 13, 18)
 NO_HANDLE = 0xFFFFFFFF
 
@@ -136,13 +139,14 @@ def ReferenceObserve(ctf, players, table, objectives, stands, match, player, las
     return obs, (float(phi) if phi is not None else None)
 
 
-def Compare(ctf, film, known):
-    """Observe from the View against the reference over the film. known: skip the two classes of difference that the F4.9 found (HALLAZGO
-    F4.9-1 and F4.9-2, see below). Returns (comparisons, worst error by entry, the cases that differ, the counts of each class)."""
+def Compare(ctf, film):
+    """Observe from the View against the reference over the film. Returns (comparisons, worst error by entry, the cases that differ, the
+    count of the carried class). The only class with a looser bound is the enemy flag Carried (F4.9-1 aceptado: la View pone la bandera en
+    el portador, D370): obs 7-10 and, if the agent is not the carrier, the potential, within CARRIED_TOLERANCE."""
     nvec = ctf.ActionNvec("stage0")
     last = np.array([2, 1, 4, 2, 0, 0])
     worst = np.zeros(ctf.STATE_SIZE)
-    count, classes, cases = 0, {"carried": 0, "no_own_flag": 0}, []
+    count, classes, cases = 0, {"carried": 0}, []
     for r, table in tickdump.Dump(GoldenPath(film)).states():
         for row, view in enumerate(r.views):
             head = view["Head"]
@@ -151,25 +155,17 @@ def Compare(ctf, film, known):
             expected, expected_phi = ReferenceObserve(ctf, r.players, table, r.objectives, r.stands, r.match, r.players[row], last, nvec, 120.0)
             got, phi = ctf.Observe(view, r.match, last, nvec, 120.0)
             count += 1
-            skip, skip_phi = [], False
             flags = view["Flags"]
-            # HALLAZGO F4.9-1: the View puts a carried flag at the position of its carrier (Position of Flags, CONTRACT), the old observation
-            # at the flag entity, which hangs from the carrier up to about a metre away: obs 7-10 (and the potential, if the agent is not the
-            # carrier) differ by up to 0.02 (1 m / METERS).
-            if int(head["Side"]) != ctf.NEUTRAL_TEAM and int(flags[1]["State"]) == 1 and ctf.IsFlag(flags[1]):
-                classes["carried"] += 1
-                skip += [7, 8, 9, 10]
-                skip_phi = skip_phi or not int(view["Self"]["CarriesFlag"])
-            # HALLAZGO F4.9-2: while the own flag does not exist (the engine recreates it after a capture or a return) Flags[0] is all zero and
-            # the View has no StandPosition: obs 14-17 and the potential are lost (the reference finds the stand in Stands).
-            if int(head["Side"]) != ctf.NEUTRAL_TEAM and not ctf.IsFlag(flags[0]):
-                classes["no_own_flag"] += 1
-                skip += [14, 15, 16, 17]
-                skip_phi = True
+            # F4.9-1 aceptado: la View pone la bandera en el portador (D370). A carried flag is at the position of its carrier (Position of
+            # Flags, CONTRACT), the old observation at the flag entity, which hangs from the carrier up to about a metre away.
+            is_carried = int(head["Side"]) != ctf.NEUTRAL_TEAM and int(flags[1]["HasFlag"]) and int(flags[1]["State"]) == 1
+            classes["carried"] += int(bool(is_carried))
+            tolerance = [CARRIED_TOLERANCE if is_carried and i in (7, 8, 9, 10) else TOLERANCE for i in range(ctf.STATE_SIZE)]
+            phi_tolerance = CARRIED_PHI_TOLERANCE if is_carried and not int(view["Self"]["CarriesFlag"]) else TOLERANCE
             error = np.abs(got[:ctf.STATE_SIZE].astype(np.float64) - expected[:ctf.STATE_SIZE])
             worst = np.maximum(worst, error)
-            bad = [i for i in range(ctf.STATE_SIZE) if (error[i] != 0 if i in FLAG_ENTRIES else error[i] > TOLERANCE) and not (known and i in skip)]
-            if not (known and skip_phi) and ((phi is None) != (expected_phi is None) or (phi is not None and abs(phi - expected_phi) > TOLERANCE)):
+            bad = [i for i in range(ctf.STATE_SIZE) if (error[i] != 0 if i in FLAG_ENTRIES else error[i] > tolerance[i])]
+            if (phi is None) != (expected_phi is None) or (phi is not None and abs(phi - expected_phi) > phi_tolerance):
                 bad.append(-1)
             if bad:
                 cases.append((r.game_tick, row, [(i, float(got[i]) if i >= 0 else phi, float(expected[i]) if i >= 0 else expected_phi) for i in bad[:3]]))
@@ -183,23 +179,14 @@ def Report(film, count, worst, cases, classes):
 
 @slow
 @pytest.mark.parametrize("film", FILMS)
-def test_the_observation_from_the_view_is_the_one_of_the_omniscient_tick_but_for_two_known_classes(ctf, film, capsys):
+def test_the_observation_from_the_view_is_the_one_of_the_omniscient_tick(ctf, film, capsys):
+    """F4.9-2 (the stand while the own flag is recreated) is fixed by the View (D370): stand, potential and flags are the reference's, 0
+    differences. F4.9-1 aceptado: la View pone la bandera en el portador (D370): a carried enemy flag is compared with 0.03 in obs 7-10
+    and with 0.05 in the potential."""
     if not os.path.isfile(GoldenPath(film)):
         pytest.skip(f"{film} has no golden.tdump")
-    count, worst, cases, classes = Compare(ctf, film, known=True)
+    count, worst, cases, classes = Compare(ctf, film)
     with capsys.disabled():
         Report(film, count, worst, cases, classes)
-    assert count > 0 and classes["carried"] > 0 and classes["no_own_flag"] > 0
-    assert not cases, f"{len(cases)} differences outside the known classes; first: {cases[:3]} (tick, row, [(entry, view, reference)])"
-
-
-@slow
-@pytest.mark.xfail(strict=True, reason="HALLAZGO F4.9-1 and F4.9-2 of the report: the View carries a carried flag at its carrier and no stand while the own "
-                                       "flag does not exist; Opus decides whether that is a View bug (it passes when both are fixed)")
-@pytest.mark.parametrize("film", FILMS)
-def test_the_observation_from_the_view_is_exactly_the_one_of_the_omniscient_tick(ctf, film):
-    if not os.path.isfile(GoldenPath(film)):
-        pytest.skip(f"{film} has no golden.tdump")
-    count, worst, cases, classes = Compare(ctf, film, known=False)
-    assert count > 0
-    assert not cases
+    assert count > 0 and classes["carried"] > 0
+    assert not cases, f"{len(cases)} differences; first: {cases[:3]} (tick, row, [(entry, view, reference)])"

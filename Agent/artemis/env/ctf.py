@@ -420,10 +420,9 @@ def ScoreLeft(match, team):
     return Left(scores[team]) if 0 <= team < len(scores) else 0.0, Left(max(others)) if others else 0.0
 
 
-def IsFlag(flag):
-    """Whether a row of View.Flags is a flag: a row with no flag is all zero (Views CONTRACT), and State 0 is Home, so the position of
-    the flag or of its stand tells."""
-    return any(float(flag[field][axis]) != 0.0 for field in ("Position", "StandPosition") for axis in "XYZ")
+def HasStand(flag):
+    """Whether a row of View.Flags has the stand of its side: the View fills StandPosition whenever the side has a stand, flag or not (D370)."""
+    return any(float(flag["StandPosition"][axis]) != 0.0 for axis in "XYZ")
 
 
 def Observe(view, match, last_action, nvec, max_seconds):
@@ -459,16 +458,16 @@ def Observe(view, match, last_action, nvec, max_seconds):
     obs[5] = 0.0 if math.isnan(shield) else shield
     obs[6] = float(is_carrying)
     flags = view["Flags"]
-    # A team with no side (it owns no stand) sees no flags: obs[7:19] stay zero. A row of Flags that is all zero is a flag the View does not
-    # have (a flag the engine is recreating, or a side without one): its entries stay zero and, without both the enemy flag and the own
-    # stand, there is no potential.
+    # A team with no side (it owns no stand) sees no flags: obs[7:19] stay zero. HasFlag says whether the flag exists in this tick (State 0
+    # is Home, a row without flag looks Home): the flag entries stay zero without it. The stand is there whenever the side has one, even
+    # while the engine recreates the flag (D370). Without both the enemy flag and the own stand there is no potential.
     if int(head["Side"]) == NEUTRAL_TEAM:
         return obs, None
     own, enemy = flags[0], flags[1]
-    has_stand = IsFlag(own)
+    has_stand = HasStand(own)
     stand_position = Vec(own["StandPosition"])
     phi = None
-    if IsFlag(enemy):
+    if int(enemy["HasFlag"]):
         flag_position = Vec(enemy["Position"])
         to_flag = flag_position - position
         obs[7:10] = Local(to_flag) / METERS
@@ -486,5 +485,5 @@ def Observe(view, match, last_action, nvec, max_seconds):
         to_stand = stand_position - position
         obs[14:17] = Local(to_stand) / METERS
         obs[17] = np.linalg.norm(to_stand) / METERS
-        obs[18] = float(int(own["State"]) == FlagState.Home)
+        obs[18] = float(int(own["HasFlag"]) != 0 and int(own["State"]) == FlagState.Home)
     return obs, (float(phi) if phi is not None else None)

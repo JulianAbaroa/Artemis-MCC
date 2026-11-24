@@ -260,6 +260,9 @@ export namespace Views::View::Type
 
         // Row of the carrier, 0xFF without one.
         std::uint8_t CarrierRow{};
+
+        // The flag exists in this tick. False while the engine recreates it (then only StandPosition is filled).
+        bool HasFlag{};
         std::uint32_t ResetTicks{};
         bool IsResetRunning{};
         std::uint8_t AlliesInZone{};

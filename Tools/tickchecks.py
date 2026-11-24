@@ -822,6 +822,15 @@ def CollectViews(film, dump):
         owns = (stands["OwnerTeam"][None, :] == P["Team"][:, None]) & (np.arange(S)[None, :] < k)
         lowest = np.where(owns, stands["Handle"][None, :].astype(np.int64), 1 << 40).argmin(axis=1)
         d["side"] = np.where(owns.any(axis=1), stands["BaseTeam"][lowest], int(Team.Neutral))
+        # The stand of each side (D370): [0] the one the team owns, [1] a rival one (owner not the team and not Neutral), the lowest handle.
+        live_stand, owner = np.arange(S)[None, :] < k, stands["OwnerTeam"][None, :]
+        has_team = (P["Team"] != int(Team.Neutral))[:, None]
+        side_masks = np.stack([owns & has_team, (owner != P["Team"][:, None]) & (owner != int(Team.Neutral)) & live_stand & has_team], axis=1)
+        low = np.where(side_masks, stands["Handle"][None, None, :].astype(np.int64), 1 << 40).argmin(axis=2)
+        d["side_stand_found"] = side_masks.any(axis=2)
+        stand_found, stand_entity = Lookup(tab, stands["Handle"])
+        stand_at = np.where(stand_found[:, None], VecBits(stand_entity["WorldOrigin"]), 0)
+        d["side_stand_origin"] = np.where(d["side_stand_found"][..., None], stand_at[low], 0)
         if len(r.events):
             ev = r.events
             s.Flag("reserved_event_position", Bits32(ev["Position"]["X"]) | Bits32(ev["Position"]["Y"]) | Bits32(ev["Position"]["Z"]), np.full(len(ev), r.game_tick),
@@ -980,7 +989,7 @@ def CheckViewBatch(s, batch):
 
     # I6: Flags[0] is the flag of the team of the agent in this round, Flags[1] a rival one: State, ResetTicks, IsResetRunning, AlliesInZone, Position (the
     # biped of the carrier when carried, the flag otherwise), CarrierRow and StandPosition as the Objectives row and its entities have them. No
-    # candidate: the row is zero bytes.
+    # candidate: the row is zero bytes but for StandPosition, which is always the stand of its side (D370); HasFlag is the existence of a candidate.
     OB = A["OB"]
     live = np.arange(OB.shape[1])[None, :] < A["m"][:, None]
     team = head["Team"].astype(np.int16)
@@ -998,7 +1007,14 @@ def CheckViewBatch(s, batch):
     has_candidate = candidates.any(axis=-1)
     s.values["flag_rows"] += int(has_candidate.sum())
     Row("i6_flag_row_is_none_of_the_flags", (has_candidate & ~(candidates & same).any(axis=-1)).any(axis=2))
-    Row("i6_flag_row_without_candidate_is_not_zero", (comp[:, :, None] & ~has_candidate & AnyNonZero(flags)).any(axis=2))
+    without_stand = flags.copy()
+    without_stand["StandPosition"] = 0
+    Row("i6_flag_row_without_candidate_is_not_zero", (comp[:, :, None] & ~has_candidate & AnyNonZero(without_stand)).any(axis=2))
+    Row("i6_has_flag_is_not_the_objective", (comp[:, :, None] & ((flags["HasFlag"] != 0) != has_candidate)).any(axis=2))
+    stand_bits, found = VecBits(flags["StandPosition"]), A["side_stand_found"]
+    Row("i6_flag_row_without_candidate_has_not_the_stand_of_its_side",
+        (comp[:, :, None] & ~has_candidate & (stand_bits != A["side_stand_origin"]).any(axis=-1)).any(axis=2))
+    Row("i6_side_has_a_stand_but_the_row_has_none", (comp[:, :, None] & found & (stand_bits == 0).all(axis=-1)).any(axis=2))
 
     # The aim ray: not cast (no body or no eye) is zero bytes. Cast: a range, a kind, and what the kind leaves.
     aimhit = V["AimHit"]

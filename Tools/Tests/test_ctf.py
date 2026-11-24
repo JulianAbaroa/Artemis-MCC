@@ -124,7 +124,8 @@ def ctf(monkeypatch):
 
 def ViewRow(layout, team=RED, side=RED, feet=(5.0, 0.0, 0.0), yaw=0.0, pitch=0.0, velocity=(0.0, 0.0, 0.0), vitality=1.0, shield=1.0,
             carries=False, own=None, enemy=None, computed=True, has_body=True, handle=P0):
-    """One View. own / enemy: (State, Position, StandPosition) of Flags[0] and Flags[1], None for a row of zeros."""
+    """One View. own / enemy: (State, Position, StandPosition) of Flags[0] and Flags[1] (HasFlag 1), (None, None, StandPosition) for a
+    side whose flag the engine is recreating (HasFlag 0, only the stand), None for a row of zeros."""
     row = np.zeros(1, layout.BridgeView)[0]
     head, me = row["Head"], row["Self"]
     head["PlayerHandle"], head["IsComputed"], head["HasBody"], head["Team"], head["Side"] = handle, int(computed), int(has_body), team, side
@@ -134,18 +135,23 @@ def ViewRow(layout, team=RED, side=RED, feet=(5.0, 0.0, 0.0), yaw=0.0, pitch=0.0
     me["FrameYaw"], me["AimPitch"], me["Vitality"], me["Shield"], me["CarriesFlag"] = yaw, pitch, vitality, shield, int(carries)
     for k, flag in enumerate((own, enemy)):
         if flag is not None:
-            row["Flags"]["State"][k] = flag[0]
+            if flag[0] is not None:
+                row["Flags"]["State"][k] = flag[0]
+                row["Flags"]["HasFlag"][k] = 1
             for field, value in (("Position", flag[1]), ("StandPosition", flag[2])):
+                if value is None:
+                    continue
                 for axis, v in zip("XYZ", value):
                     row["Flags"][field][axis][k] = v
     return row
 
 
 def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=False, events=(), game_tick=100, agent_at=(5.0, 0.0, 0.0),
-          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None, shield=1.0, computed=True, publish_qpc=0):
+          action_tick=1, match_id=1, match=None, vitality=1.0, stand_count=2, local_team=None, shield=1.0, computed=True, publish_qpc=0, recreating=False):
     """One tick of a round on a map with a red base at x = 0 and a blue base at x = 100. owners: OwnerTeam of the stands of BaseTeam 0
     and 1 in this round. flags: state of the flag of BaseTeam 0 and 1. flag_at: position of the flag of BaseTeam 1 when it is not
-    home. match: fields of the Match (by default a round without time limit). The agent is the player P0 of team RED, aiming at +x."""
+    home. match: fields of the Match (by default a round without time limit). recreating: the own flag does not exist in this tick (the engine
+    recreates it): the View keeps the own stand, HasFlag 0. The agent is the player P0 of team RED, aiming at +x."""
     L = ctf.layout
     stand_at = {RED: (0.0, 0.0, 0.0), BLUE: (100.0, 0.0, 0.0)}
     flag_pos = [stand_at[RED], flag_at or stand_at[BLUE]]
@@ -169,7 +175,7 @@ def Frame(ctf, owners=(RED, BLUE), flags=(HOME, HOME), flag_at=None, carrying=Fa
     side = owners.index(RED) if RED in owners else None
     own = enemy = None
     if side is not None:
-        own = (flags[side], Shifted(flag_pos[side]), Shifted(stand_at[side]))
+        own = (None if recreating else flags[side], None if recreating else Shifted(flag_pos[side]), Shifted(stand_at[side]))
         enemy = (flags[1 - side], Shifted(flag_pos[1 - side]), Shifted(stand_at[1 - side]))
     views = [ViewRow(L, side=side if side is not None else ctf.NEUTRAL_TEAM, feet=Shifted(agent_at), vitality=vitality, shield=shield,
                      carries=carrying, own=own, enemy=enemy, computed=computed)]
@@ -192,6 +198,24 @@ def test_enemy_flag_at_its_stand_is_home(ctf):
     assert obs[10] == pytest.approx(95.0 / ctf.METERS)
     # Facing +x: the enemy flag is straight ahead and the own stand behind.
     assert obs[7] > 0 and obs[14] < 0
+
+
+def test_the_own_stand_is_seen_while_the_own_flag_is_recreated(ctf):
+    _, whole = Reset(ctf, Frame(ctf))
+    env, recreated = Reset(ctf, Frame(ctf, recreating=True))
+    # The stand is still there: its vector and distance, and the enemy flag, are the same as with the flag; only obs[18] (the own flag is home) is off.
+    assert env.states[P0].side == RED
+    assert recreated[14] < 0 and recreated[17] > 0
+    keep = np.arange(len(whole)) != 18
+    assert np.array_equal(whole[keep], recreated[keep])
+    assert whole[18] == 1.0 and recreated[18] == 0.0
+    # The shaping (phi) does not switch off: the same potential as with the flag.
+    view = lambda **kw: Frame(ctf, **kw).views[0]
+    match = Frame(ctf).match
+    nvec, last = ctf.ActionNvec("stage0"), np.zeros(len(ctf.ActionNvec("stage0")), dtype=int)
+    _, phi_whole = ctf.Observe(view(), match, last, nvec, 120.0)
+    _, phi_recreated = ctf.Observe(view(recreating=True), match, last, nvec, 120.0)
+    assert phi_whole is not None and phi_recreated == pytest.approx(phi_whole)
 
 
 def test_obs_4_follows_the_vitality_of_the_biped_and_nan_is_zero(ctf):
@@ -664,7 +688,7 @@ def test_observation_reads_only_the_view_and_the_match(ctf):
 
 
 def test_the_environment_no_longer_reads_entities_objectives_or_stands_for_the_observation(ctf):
-    for function in (ctf.Observe, ctf.CtfEnv._observe, ctf.TimeLeft, ctf.ScoreLeft, ctf.IsFlag):
+    for function in (ctf.Observe, ctf.CtfEnv._observe, ctf.TimeLeft, ctf.ScoreLeft, ctf.HasStand):
         source = inspect.getsource(function).lower()
         for word in ("entities", "objectives", "stands", "bipedhandle", "players"):
             assert word not in source, (function.__name__, word)

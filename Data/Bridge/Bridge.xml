@@ -575,6 +575,7 @@
 		<field name="State" type="u8" semantic="FlagState" />
 		<field name="Position" type="BridgeVec3" />
 		<field name="CarrierRow" type="u8" doc="Row of the carrier, 0xFF without one." />
+		<field name="HasFlag" type="u8" doc="The flag exists in this tick; 0 while the engine recreates it (then only StandPosition is filled)." />
 		<field name="ResetTicks" type="u32" />
 		<field name="IsResetRunning" type="u8" />
 		<field name="AlliesInZone" type="u8" />

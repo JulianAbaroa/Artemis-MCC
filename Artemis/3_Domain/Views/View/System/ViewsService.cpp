@@ -29,6 +29,7 @@ namespace
     using Blam::Runtime::Object::Type::Biped::ZoomLevel;
     using Perception::Details::Type::ObjectiveDetail;
     using Perception::Details::Type::ObjectiveDetails;
+    using Perception::Details::Type::StandDetail;
     using Perception::Details::Type::WeaponDetail;
     using Perception::Details::Type::WeaponDetails;
     using Perception::Entities::Type::Entities;
@@ -234,19 +235,26 @@ namespace
         return value.value_or(std::numeric_limits<float>::quiet_NaN());
     }
 
-    // return: The BaseTeam of the stand the team owns in this round, Neutral when it owns none.
-    // note: With more than one stand of the team the one of the lowest handle gives it, so the answer does not depend on the map order.
-    auto SideOf(const ObjectiveDetails& objectives, Team team) -> Team
+    // return: The stand the team owns in this round (the lowest handle if several, so the answer does not depend on the map order), or the
+    // one of a rival team (isOwn false). Null for a team without a side or a game without that stand.
+    auto StandOfSide(const ObjectiveDetails& objectives, Team team, bool isOwn) -> const StandDetail*
     {
-        Team side{ Team::Neutral };
-        std::uint32_t best{ k_NoHandle };
+        if (team == Team::Neutral) return nullptr;
+
+        const StandDetail* best{ nullptr };
         for (const auto& [handle, stand] : objectives.Stands)
         {
-            if (stand.OwnerTeam != team || handle >= best) continue;
-            best = handle;
-            side = stand.BaseTeam;
+            const bool isMatch{ isOwn ? stand.OwnerTeam == team : (stand.OwnerTeam != team && stand.OwnerTeam != Team::Neutral) };
+            if (isMatch && (!best || handle < best->Handle)) best = &stand;
         }
-        return side;
+        return best;
+    }
+
+    // return: The BaseTeam of the stand the team owns in this round, Neutral when it owns none.
+    auto SideOf(const ObjectiveDetails& objectives, Team team) -> Team
+    {
+        const StandDetail* stand{ StandOfSide(objectives, team, true) };
+        return stand ? stand->BaseTeam : Team::Neutral;
     }
 
     auto FillWeapon(ViewWeapon& slot, std::uint32_t handle, std::uint32_t equipped, const Entities* entities,
@@ -386,6 +394,7 @@ namespace
     auto FillFlag(ViewFlag& out, const ObjectiveDetail& flag, const ObjectiveDetails& objectives, const Players& players,
         const Entities& entities) -> void
     {
+        out.HasFlag = true;
         out.State = flag.State;
         out.CarrierRow = k_NoRow;
         out.ResetTicks = flag.ResetTicks;
@@ -413,12 +422,20 @@ namespace
     }
 
     // Fills the two flags of the View: [0] the one that the team of the agent plays in this round, [1] the rival one (D113, always).
+    // While the engine recreates a flag (reset, return, capture) the row has no flag but keeps the stand of its side (D370).
     auto FillFlags(View& view, const ObjectiveDetails& objectives, const Players& players, const Entities& entities) -> void
     {
         for (std::size_t index{ 0 }; index < view.Flags.size(); ++index)
         {
             const ObjectiveDetail* flag{ FlagOfSide(objectives, view.Head.Team, index == 0) };
-            if (flag) FillFlag(view.Flags[index], *flag, objectives, players, entities);
+            if (flag)
+            {
+                FillFlag(view.Flags[index], *flag, objectives, players, entities);
+                continue;
+            }
+
+            const StandDetail* stand{ StandOfSide(objectives, view.Head.Team, index == 0) };
+            if (stand) view.Flags[index].StandPosition = stand->WorldOrigin;
         }
     }
 }
