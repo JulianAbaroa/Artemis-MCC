@@ -16,6 +16,7 @@ import std;
 namespace
 {
     using DevTools::Viewer::Hud::System::ToImColor;
+    using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Scalar;
     using DevTools::Viewer::Roster::System::IndexOfPlayer;
     using DevTools::Viewer::Roster::System::StripOf;
@@ -43,6 +44,8 @@ namespace DevTools::Viewer::Hud::System
 {
     auto AgentStripService::Draw() -> void
     {
+        if (!m_OptionsStore.IsEnabled(Flag::AgentStrip)) return;
+
         const std::uint32_t playerHandle{ m_SelectionStore.GetSelectedPlayer() };
         if (playerHandle == k_NoHandle) return;
 

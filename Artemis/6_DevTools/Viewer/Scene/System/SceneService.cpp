@@ -40,6 +40,7 @@ namespace
     using DevTools::Viewer::Director::System::MakeFixedShot;
     using DevTools::Viewer::Director::System::OrbitFromPose;
     using DevTools::Viewer::Roster::System::IndexOfPlayer;
+    using DevTools::Viewer::Roster::System::KeepAgents;
     using DevTools::Viewer::Roster::System::SortRoster;
     using DevTools::Viewer::Roster::System::StepFrom;
     using DevTools::Viewer::Roster::Type::RosterEntry;
@@ -320,6 +321,7 @@ namespace DevTools::Viewer::Scene::System
         }
 
         SortRoster(roster);
+        if (m_OptionsStore.IsEnabled(Flag::RosterAgentsOnly)) KeepAgents(roster);
         return roster;
     }
 

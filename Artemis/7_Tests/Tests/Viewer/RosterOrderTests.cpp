@@ -11,6 +11,7 @@ namespace
 {
     using Common::Team::Type::Team;
     using DevTools::Viewer::Roster::System::IndexOfPlayer;
+    using DevTools::Viewer::Roster::System::KeepAgents;
     using DevTools::Viewer::Roster::System::SortRoster;
     using DevTools::Viewer::Roster::System::StepFrom;
     using DevTools::Viewer::Roster::System::StripOf;
@@ -112,4 +113,21 @@ TEST(RosterOrderTests, ThreeOrMorePlayersShowBothNeighboursWrapping)
     const auto last{ StripOf(3, 2) };
     EXPECT_EQ(last.Previous, std::optional<std::size_t>{ 1 });
     EXPECT_EQ(last.Next, std::optional<std::size_t>{ 0 });
+}
+
+TEST(RosterOrderTests, KeepAgentsDropsHumansAndKeepsTheOrder)
+{
+    std::vector<RosterEntry> roster{ Human(1, "a", Team::Green), Bot(2, 0, Team::Red), Human(3, "b", Team::Blue), Bot(4, 1, Team::Blue) };
+    KeepAgents(roster);
+    EXPECT_EQ(HandlesOf(roster), (std::vector<std::uint32_t>{ 2, 4 }));
+
+    // Nobody left: an empty roster, and the arrows have nothing to do.
+    std::vector<RosterEntry> humans{ Human(1, "a", Team::Green) };
+    KeepAgents(humans);
+    EXPECT_TRUE(humans.empty());
+    EXPECT_EQ(StepFrom(humans.size(), std::nullopt, 1), std::nullopt);
+
+    // A selected human is not in the roster: right gives the first agent and left the last.
+    EXPECT_EQ(StepFrom(roster.size(), IndexOfPlayer(roster, 1), 1), std::optional<std::size_t>{ 0 });
+    EXPECT_EQ(StepFrom(roster.size(), IndexOfPlayer(roster, 1), -1), std::optional<std::size_t>{ 1 });
 }

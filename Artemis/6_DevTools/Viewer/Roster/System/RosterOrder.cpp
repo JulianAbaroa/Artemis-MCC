@@ -55,6 +55,11 @@ namespace DevTools::Viewer::Roster::System
         return observed;
     }
 
+    auto KeepAgents(std::vector<RosterEntry>& roster) -> void
+    {
+        std::erase_if(roster, [](const RosterEntry& entry) { return !entry.BotNumber.has_value(); });
+    }
+
     auto StripOf(std::size_t count, std::size_t current) -> RosterStrip
     {
         RosterStrip strip{ .Current = current };

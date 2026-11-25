@@ -23,6 +23,9 @@ export namespace DevTools::Viewer::Roster::System
     // param isObservedBot: The observed player is an Artemis bot of the roster. It stays true while the bot is dead: the selection follows the player.
     auto DecidePossession(bool isOptionOn, bool isGameMode, std::uint32_t observed, bool isObservedBot) -> std::optional<std::uint32_t>;
 
+    // Drops the rows that are not Artemis bots (no bot number), keeping the order of the rest.
+    auto KeepAgents(std::vector<Roster::Type::RosterEntry>& roster) -> void;
+
     // return: The previous, current and next positions of the strip. One player has no neighbours. With two, the other one is shown only as the next.
     auto StripOf(std::size_t count, std::size_t current) -> Roster::Type::RosterStrip;
 }

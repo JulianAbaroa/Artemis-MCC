@@ -111,6 +111,8 @@ export namespace DevTools::Viewer::Options::Type
         WatchPov,
         PossessBot,
         DirectorCutOnRound,
+        AgentStrip,
+        RosterAgentsOnly,
 
         Count
     };
@@ -399,6 +401,12 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::DirectorCutOnRound, Group::Director, Layer::Count, Level::Full, "DirectorCutOnRound", "Cut on new round",
             "While the director plays, a new round (or a new match) also ends the shot, unless it started less than 3 seconds ago.", true },
+
+        { Flag::AgentStrip, Group::Camera, Layer::Count, Level::Full, "AgentStrip", "Agent strip",
+            "Draws the strip with the previous, current and next player at the top of the frame. Off: nothing is drawn, for clean frames.", true },
+
+        { Flag::RosterAgentsOnly, Group::Camera, Layer::Count, Level::Full, "RosterAgentsOnly", "Roster: agents only",
+            "The roster that the strip, the up and down arrows and the director's POV pick walk keeps only the Artemis bots. A selected human is then not in the roster.", false },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

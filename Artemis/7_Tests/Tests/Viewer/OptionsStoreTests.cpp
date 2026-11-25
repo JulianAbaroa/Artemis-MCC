@@ -295,3 +295,25 @@ TEST(OptionsStoreTests, TheDirectorOptionsHaveTheirOwnKeysAndDefaults)
     store.ResetToDefaults();
     EXPECT_TRUE(store.IsEnabled(Flag::DirectorCutOnRound));
 }
+
+TEST(OptionsStoreTests, TheAgentStripAndRosterOptionsHaveTheirOwnKeysAndDefaults)
+{
+    OptionsStore store{};
+
+    // The strip is on and the roster has everyone, as before.
+    EXPECT_TRUE(store.IsEnabled(Flag::AgentStrip));
+    EXPECT_FALSE(store.IsEnabled(Flag::RosterAgentsOnly));
+
+    store.Load("AgentStrip", "0");
+    store.Load("RosterAgentsOnly", "1");
+    EXPECT_FALSE(store.IsEnabled(Flag::AgentStrip));
+    EXPECT_TRUE(store.IsEnabled(Flag::RosterAgentsOnly));
+
+    const std::string saved{ Snapshot(store) };
+    EXPECT_NE(saved.find("Viewer_AgentStrip=0\n"), std::string::npos);
+    EXPECT_NE(saved.find("Viewer_RosterAgentsOnly=1\n"), std::string::npos);
+
+    store.ResetToDefaults();
+    EXPECT_TRUE(store.IsEnabled(Flag::AgentStrip));
+    EXPECT_FALSE(store.IsEnabled(Flag::RosterAgentsOnly));
+}

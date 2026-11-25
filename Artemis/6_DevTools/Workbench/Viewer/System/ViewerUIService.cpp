@@ -225,6 +225,8 @@ namespace DevTools::Workbench::Viewer::System
         this->DrawFlag(Flag::HideGameHud);
         this->DrawFlag(Flag::HideFirstPerson);
         this->DrawFlag(Flag::WatchPov);
+        this->DrawFlag(Flag::AgentStrip);
+        this->DrawFlag(Flag::RosterAgentsOnly);
         this->DrawFlag(Flag::PossessBot);
         this->DrawScalars(Group::Camera, Layer::Count);
 
