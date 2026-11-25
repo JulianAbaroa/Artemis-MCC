@@ -48,6 +48,10 @@ HEARTBEAT_INTERVAL = 0.2
 
 # Copies of a tick tried before giving up on it (each failed copy means Artemis was writing that buffer).
 READ_RETRIES = 8
+# read_tick_view (P.3 B, D374): the blocks it copies, with the Count field of the header that cuts each one (Match has none), and the blocks of
+# the omniscient world (D370) it leaves in the shared buffer: published.entities and the like come back empty, never torn.
+COPIED_BLOCKS = (("Players", "PlayerCount"), ("Objectives", "ObjectiveCount"), ("Stands", "StandCount"), ("Events", "EventCount"))
+OMNISCIENT_BLOCKS = ("Entities", "Weapons", "Projectiles", "Explosives", "Lifts")
 
 
 class BridgeError(Exception):
@@ -152,6 +156,10 @@ class PublishedTick:
         self.possessed_input = self.header["PossessedInput"]
         self.match_id = int(self.header["MatchId"])
         self.received_qpc = received_qpc
+        # Set by Bridge.read_tick_view only: the buffer the views still live in and the Sequence it had when they were read.
+        # Bridge.is_unchanged tells whether they are still good. None in a whole copy (read_tick), which is never torn.
+        self.buffer_index = None
+        self.sequence = None
         self.publish_qpc = int(self.header["PublishQpc"])
         # The QPC marks of the tick on its way (game thread capture, AI thread in and out, bridge thread flatten start, all 0 when not set) and
         # the last decision the game thread needed in Lockstep with when it arrived at its tick plus d and when the decision was available
@@ -443,14 +451,64 @@ class Bridge:
             self.tears += 1
         return None
 
-    def wait_tick(self, timeout=2.0):
+    def read_tick_view(self):
+        """The last published tick WITHOUT copying the Views (P.3 B, D374), or None if Artemis was writing it every time.
+        Header, Players, Match, Objectives, Stands and Events are copies (small: they are kept and used after deciding); views is a numpy view
+        on the shared buffer, so it can change under the reader: whoever reads it calls is_unchanged(published) afterwards and, if it is False,
+        reread_tick(). The omniscient blocks (entities, weapons, projectiles, explosives, lifts) are not copied and not read: they come back
+        empty. last_copy_ns is the cost of the small copies. published.buffer_index and published.sequence say where the views are and which
+        tick they were read from."""
+        for _ in range(READ_RETRIES):
+            index = int(self.artemis["ActiveBuffer"])
+            before = int(self.buffers["Sequence"][index])
+            if before & 1:
+                self.tears += 1
+                continue
+            tick = self.buffers[index]
+            started = time.perf_counter_ns()
+            header = tick["Header"].copy()
+            blocks = {"Header": header, "Match": tick["Match"].copy(), "Views": tick["Views"]}
+            for name, count in COPIED_BLOCKS:
+                blocks[name] = tick[name][: int(header[count])].copy()
+            for name in OMNISCIENT_BLOCKS:
+                blocks[name] = tick[name][:0]
+            self.last_copy_ns = time.perf_counter_ns() - started
+            # The copies are one snapshot only if the tick did not change while they were made.
+            if self._has_sequence(index, before):
+                published = PublishedTick(blocks, qpc())
+                published.buffer_index, published.sequence = index, before
+                return published
+            self.tears += 1
+        return None
+
+    def _has_sequence(self, index, sequence) -> bool:
+        return int(self.buffers["Sequence"][index]) == sequence and int(self.buffers["SequenceEnd"][index]) == sequence
+
+    def is_unchanged(self, published) -> bool:
+        """Whether the views of a read_tick_view are still the tick they were read from: Sequence and SequenceEnd of its buffer equal the
+        (even) Sequence read at the start. A copy of read_tick is always True. Call it after the last read of the views."""
+        if published.buffer_index is None:
+            return True
+        return self._has_sequence(published.buffer_index, published.sequence)
+
+    def reread_tick(self):
+        """After is_unchanged said False: the newest published tick, read again without copy (None if it could not be read). The next
+        wait_tick goes on after it."""
+        published = self.read_tick_view()
+        if published is not None:
+            published.skipped = 0
+            self.last_published_ticks = int(self.artemis["PublishedTicks"])
+        return published
+
+    def wait_tick(self, timeout=2.0, copy=True):
         """The next tick after the last one returned, or None after the timeout (no match running, or no client connected yet).
-        In Free mode ticks may be skipped if this client is slower than the decisions (PublishedTick.skipped tells how many)."""
+        In Free mode ticks may be skipped if this client is slower than the decisions (PublishedTick.skipped tells how many).
+        copy=False reads it with read_tick_view (CtfEnv): the views stay in the shared buffer, see is_unchanged."""
         end = time.time() + timeout
         while True:
             count = int(self.artemis["PublishedTicks"])
             if count != self.last_published_ticks:
-                published = self.read_tick()
+                published = self.read_tick() if copy else self.read_tick_view()
                 if published is not None:
                     published.skipped = max(0, count - self.last_published_ticks - 1)
                     self.last_published_ticks = count

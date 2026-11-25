@@ -51,7 +51,12 @@ def Main():
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit,
                                           sparse=not args.no_sparse, profile=args.profile), setups)
-        if not env.take_control():
+        try:
+            is_taken = env.take_control()
+        except RuntimeError as error:
+            Log(f"FAIL {error}")
+            return 1
+        if not is_taken:
             Log("FAIL Artemis did not hand the instance over")
             return 1
         try:

@@ -11,6 +11,13 @@ python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random] [--epi
 p50 / p95 / max in ms and its share of the Python side (copy + events + observe + answer + policy; the wait is not Python's); the slack of the
 Lockstep (publish -> answer against the budget of d ticks at the effective scale, scale 0 taken as 1x) and what the counters of Artemis did
 per decision (waits, wait per wait, longest wait, flatten per tick).
+--timing ends with the timeline of P.3 C (artemis.timeline: per decision, p50 / p95 / max in ms of each stretch from the QPC marks: ai_queue capture -> AI thread,
+ai, bridge_queue, flatten, wake = Python wakes and copies, python = decides and answers, game_to_need = the game up to t + d, slack = need - answered
+(negative: the game waited), wait = wait of the game thread; and how many decisions made the game wait) and a first line "sparse: granted / not requested".
+Since P.3 B the environment reads the Views in place from the shared buffer (copy = only the small blocks) and
+validates them with the seqlock; "reread N" counts the ticks read again (0 in Lockstep). --sparse is only a request: when Artemis keeps every tick
+(a match with "events" or "tickdump", or a bench scenario without "every_tick": false) take_control raises and this script prints FAIL with the
+reason and exits 1, so a measurement never goes on without the sparse pipeline unnoticed.
 Exit code 0 when every episode ended (terminated or truncated) and the observations were finite.
 """
 import argparse
@@ -69,7 +76,8 @@ def TimingReport(env, policy_ns, before, after, config):
     python = {phase: env.timings[phase] for phase in ("copy", "events", "observe", "answer")}
     python["policy"] = policy_ns
     total = sum(sum(values) for values in python.values()) or 1
-    lines = [f"timing over {decisions} decisions (ms per decision: p50 / p95 / max, share of the Python side):"]
+    lines = [f"sparse: {'granted' if getattr(env, 'is_sparse', False) else 'not requested'}   reread: {getattr(env, 'reread', 0)}",
+             f"timing over {decisions} decisions (ms per decision: p50 / p95 / max, share of the Python side):"]
 
     def Line(name, values, share):
         ms = [v / 1e6 for v in values]
@@ -117,7 +125,12 @@ def Main():
     policy_ns = []
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, config)
-        if not env.take_control():
+        try:
+            is_taken = env.take_control()
+        except RuntimeError as error:
+            print(f"FAIL {error}")
+            return 1
+        if not is_taken:
             print("FAIL Artemis did not hand the instance over")
             return 1
         before = bridge.counters()

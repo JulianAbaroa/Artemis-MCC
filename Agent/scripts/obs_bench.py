@@ -3,6 +3,7 @@ obs_bench.py
 Offline measurement of the Python side of a decision (F4.9, D317 B, R1 of Diseno/19), with no MCC: takes real ticks of a golden .tdump (v7)
 and builds them as a BridgeTick buffer with the dtype of bridge_layout, then times in microseconds (p50 / p95 over N repetitions):
   copy_full    the copy of a whole BridgeTick (what Bridge.read_tick does)
+  copy_small   what Bridge.read_tick_view copies (P.3 B, D374): Header + Players + Match + Objectives + Stands + Events; the Views stay in place
   copy_b       the copy of only Header + Players + Match + Objectives + Stands + Events + Views (what would be left with D317 B)
   copy_views   the copy of only Header + Views + Match
   observeN     ObserveBatch of the agents whose View is computed in the tick (the golden has as many as it has)
@@ -34,6 +35,7 @@ AGENTS = 16
 EVENTS = 64
 REPETITIONS = 300
 GROUPS = {
+    "copy_small": ("Header", "Players", "Match", "Objectives", "Stands", "Events"),
     "copy_b": ("Header", "Players", "Match", "Objectives", "Stands", "Events", "Views"),
     "copy_views": ("Header", "Views", "Match"),
 }

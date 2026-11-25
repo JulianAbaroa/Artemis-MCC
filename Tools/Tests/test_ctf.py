@@ -81,7 +81,19 @@ class FakeBridge:
     def wait_control(self, *args, **kwargs):
         return True
 
-    def wait_tick(self, timeout):
+    def wait_tick(self, timeout, copy=True):
+        self.copies = getattr(self, "copies", []) + [copy]
+        return self.ticks.pop(0) if self.ticks else None
+
+    def is_unchanged(self, published):
+        """P.3 B: the validation of the Views read in place. changed = how many of the next checks say the buffer changed."""
+        self.checks = getattr(self, "checks", 0) + 1
+        if getattr(self, "changed", 0) > 0:
+            self.changed -= 1
+            return False
+        return True
+
+    def reread_tick(self):
         return self.ticks.pop(0) if self.ticks else None
 
     def new_events(self, published):
@@ -620,9 +632,9 @@ class EndedBridge(FakeBridge):
         self.phase = phase
         self.waits = 0
 
-    def wait_tick(self, timeout):
+    def wait_tick(self, timeout, copy=True):
         self.waits += 1
-        return super().wait_tick(timeout)
+        return super().wait_tick(timeout, copy)
 
 
 def test_reset_raises_and_does_not_hang_when_the_match_ended_with_a_team_left_empty(ctf):
@@ -720,9 +732,9 @@ def test_reset_waits_until_the_views_of_every_agent_are_computed(ctf):
     assert observations[P0][11] == 1.0 and observations[P0][4] == 1.0
     # Views that never come: a clear TimeoutError, no endless wait.
     class Slow(FakeBridge):
-        def wait_tick(self, timeout):
+        def wait_tick(self, timeout, copy=True):
             time.sleep(0.002)
-            return super().wait_tick(timeout)
+            return super().wait_tick(timeout, copy)
     env = ctf.CtfEnv(Slow([Frame(ctf, computed=False) for _ in range(5000)]), ctf.CtfConfig(tick_timeout=0.001, reset_timeout=0.1))
     with pytest.raises(TimeoutError, match="Views of the agents were not computed"):
         env.reset()
@@ -1165,3 +1177,72 @@ def test_the_environment_observes_all_agents_in_one_batch(ctf):
         assert (env.states[h].phi is None) == (phi is None)
     assert not observations[handles[2]][:19].any() and observations[handles[0]][19] == pytest.approx(0.75)
     assert env.states[handles[0]].side == RED and env.states[handles[2]].side == RED
+
+
+# --- P.3 B (D374): the Views are read in place and validated; the guard of the sparse mode ---------------------------------------------
+
+
+def test_the_environment_reads_without_copy_and_validates_every_observation(ctf):
+    bridge = FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, action_tick=2), Frame(ctf, action_tick=3)])
+    env = ctf.CtfEnv(bridge)
+    env.reset()
+    assert bridge.checks == 1 and env.reread == 0
+    env.step({P0: Nothing(ctf)})
+    assert bridge.checks == 2 and env.reread == 0
+    assert set(bridge.copies) == {False}
+
+
+def test_a_tick_that_changes_under_the_observation_is_read_again_and_the_observation_is_the_new_tick(ctf):
+    def Event(kind, sequence):
+        return {"Sequence": sequence, "Kind": kind, "CausePlayer": P0, "EffectPlayer": NONE}
+    first = Frame(ctf, action_tick=1)
+    torn = Frame(ctf, action_tick=2, agent_at=(5.0, 0.0, 0.0), events=[Event(ctf.Event.FlagTaken, 1)])
+    new = Frame(ctf, action_tick=3, agent_at=(40.0, 0.0, 0.0), game_tick=101, events=[Event(ctf.Event.FlagCaptured, 2)])
+    last = Frame(ctf, action_tick=4, game_tick=102)
+    env = ctf.CtfEnv(FakeBridge([first, torn, new, last]))
+    env.reset()
+    env.bridge.changed = 1
+    observations, _, _, _, infos = env.step({P0: Nothing(ctf)})
+    assert env.reread == 1 and env.published is new and env.bridge.checks == 3
+    # The observation is the one of the new tick, byte for byte what a step on it gives.
+    reference = ctf.CtfEnv(FakeBridge([first, new]))
+    reference.reset()
+    expected, _, _, _, _ = reference.step({P0: Nothing(ctf)})
+    assert observations[P0].tobytes() == expected[P0].tobytes()
+    # The rewards of this step come from the tick it was read as; the events of the new tick are not lost: they go to the next step.
+    assert infos[P0]["events"] == ["FlagTaken"]
+    _, _, _, _, infos = env.step({P0: Nothing(ctf)})
+    assert infos[P0]["events"] == ["FlagCaptured"]
+    assert env.reread == 1
+
+
+def test_a_tick_that_keeps_changing_raises_instead_of_looping(ctf):
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf, action_tick=1), Frame(ctf, action_tick=2)] + [Frame(ctf, action_tick=3 + i) for i in range(100)]))
+    env.reset()
+    env.bridge.changed = 10 ** 6
+    with pytest.raises(RuntimeError, match="changed under the observation"):
+        env.step({P0: Nothing(ctf)})
+    assert env.reread == ctf.MAX_REREADS
+
+
+class RefusedSparse(FakeBridge):
+    """Artemis keeps every tick: IsSparse never goes to 1."""
+    def wait_control(self, *args, **kwargs):
+        return "IsSparse" not in kwargs
+
+
+def test_a_sparse_request_that_artemis_does_not_grant_raises_with_the_reason(ctf):
+    bridge = RefusedSparse([Frame(ctf)])
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(sparse=True))
+    with pytest.raises(RuntimeError, match=r"IsSparse 0.*events.*tickdump.*every_tick"):
+        env.take_control()
+    assert env.is_sparse is False
+    assert bridge.controls[-1]["sparse"] is False  # the instance goes back to the UI
+    # Without the request there is nothing to check.
+    off = ctf.CtfEnv(RefusedSparse([Frame(ctf)]))
+    assert off.take_control() is True and off.is_sparse is False
+
+
+def test_a_sparse_request_that_artemis_grants_goes_on(ctf):
+    env = ctf.CtfEnv(FakeBridge([Frame(ctf)]), ctf.CtfConfig(sparse=True))
+    assert env.take_control() is True and env.is_sparse is True

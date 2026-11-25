@@ -53,7 +53,11 @@ GRAB_OBJECTIVE_AT = INTERACTION_AT + INTERACTION_KINDS.index(int(BridgeInteracti
 ACTION_AT = STATE_SIZE + INTERACTION_SIZE
 # Common.Team.Type: Head.Side of a View whose team owns no stand in this round.
 NEUTRAL_TEAM = 8
-# Phases of a decision that CtfConfig.timing measures (ns): blocked in wait_tick, copy of read_tick, new_events, the observations, write_actions.
+# Seconds take_control waits for Artemis to grant a sparse request (it applies it in its control update, every 50 ms), and the most times in a row
+# the tick may change under one observation before _observe_all gives up (P.3 B).
+SPARSE_TIMEOUT = 2.0
+MAX_REREADS = 50
+# Phases of a decision that CtfConfig.timing measures (ns): blocked in wait_tick, the small copy of read_tick_view, new_events, the observations, write_actions.
 PHASES = ("wait", "copy", "events", "observe", "answer")
 
 
@@ -78,7 +82,9 @@ class CtfConfig:
     scale: float = 0.0
     turn_limit: float = 0.1
     profile: str = "stage0"
-    # Asks Artemis for its pipeline only on decision ticks (Q101). Off by default: the checks of env_check read every tick.
+    # Asks Artemis for its pipeline only on decision ticks (Q101). Off by default: the checks of env_check read every tick. It is only a
+    # request: Artemis keeps every tick while a tool needs them (a match with "events" or "tickdump", or without "every_tick": false in a bench
+    # scenario), so take_control checks IsSparse and raises RuntimeError when it was not granted (P.3 B): measuring without noticing is out.
     sparse: bool = False
     max_seconds: float = 120.0
     shaping: float = 0.1
@@ -127,6 +133,12 @@ class CtfEnv:
         self.agents = []
         self.states = {}
         self.published = None
+        # P.3 B (D374): the Views of self.published stay in the shared buffer (read_tick_view). reread counts the ticks read again because
+        # the buffer changed while the observation was built; its events wait here for the next step.
+        self.reread = 0
+        self._late_events = []
+        # Whether take_control saw the sparse mode granted (IsSparse 1).
+        self.is_sparse = False
         self.match_id = None
         self.is_waiting_round = False
         self.is_cut = False
@@ -149,7 +161,16 @@ class CtfEnv:
         self.bridge.set_control(owner=BridgeOwner.Python, mode=BridgeMode.Lockstep, period=c.period, latency=c.latency,
                                 scale=c.scale, agents=agents_mask, turn_limit=c.turn_limit,
                                 sparse=c.sparse)
-        return self.bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1)
+        if not self.bridge.wait_control(Owner=BridgeOwner.Python, IsClientConnected=1):
+            return False
+        # Artemis applies the request in its next control update (50 ms): a short wait for IsSparse tells granted from refused.
+        self.is_sparse = bool(c.sparse) and self.bridge.wait_control(SPARSE_TIMEOUT, IsSparse=1)
+        if c.sparse and not self.is_sparse:
+            self.release()
+            raise RuntimeError("sparse was asked for but Artemis keeps every tick (IsSparse 0): it happens when the match has \"events\" or "
+                               "\"tickdump\" on, or a bench scenario without \"every_tick\": false, because those tools need every tick. "
+                               "Measuring like this would not be the sparse pipeline: fix the match or run without sparse")
+        return True
 
     def release(self):
         self.bridge.set_control(owner=BridgeOwner.UI, scale=0.0, agents=0, turn_limit=0.0, sparse=False)
@@ -173,7 +194,7 @@ class CtfEnv:
         waited = 0.0
         started = time.perf_counter_ns()
         while published is None:
-            published = self.bridge.wait_tick(self.config.tick_timeout)
+            published = self.bridge.wait_tick(self.config.tick_timeout, copy=False)
             if published is not None:
                 break
             if not self.bridge.is_alive:
@@ -194,7 +215,8 @@ class CtfEnv:
             self.timings["copy"].append(copy)
             self.timings["wait"].append(max(0, time.perf_counter_ns() - started - copy))
             started = time.perf_counter_ns()
-        self.events = list(self.bridge.new_events(published))
+        self.events = self._late_events + list(self.bridge.new_events(published))
+        self._late_events = []
         if measured:
             self.timings["events"].append(time.perf_counter_ns() - started)
         return published
@@ -228,7 +250,8 @@ class CtfEnv:
         """The View of the agent in the current tick, or None when it has no row or no View (a row past ViewCount)."""
         row = self._row_of(handle)
         views = self.published.views
-        return views[row] if row is not None and row < len(views) else None
+        # A copy: the Views are in the shared buffer and the caller may keep the row.
+        return views[row].copy() if row is not None and row < len(views) else None
 
     def _players(self):
         return {int(p["Handle"]): p for p in self.published.players}
@@ -433,7 +456,27 @@ class CtfEnv:
         """{handle: (observation, potential)} of every agent of the episode in ONE ObserveBatch over their Views (potential None while it has
         no body, side or both flags). Also records Head.Side in state.side of the agents whose View is computed. The observations are rows
         of a single float32 array [N, obs_size] (views, not copies): the consumers read them and never write on them (ppo.py stacks them
-        into a new array, env_check copies what it keeps); whoever must modify one copies it."""
+        into a new array, env_check copies what it keeps); whoever must modify one copies it.
+        The Views are read in place from the shared buffer (D374): when the buffer changed under the read (Sequence / SequenceEnd), the tick is
+        read again and the observation redone with it (counted in reread). Nothing reads the Views of self.published after this returns."""
+        for _ in range(MAX_REREADS):
+            result = self._observe_published()
+            if self.bridge.is_unchanged(self.published):
+                return result
+            self._reread()
+        raise RuntimeError(f"the tick changed under the observation {MAX_REREADS} times in a row")
+
+    def _reread(self):
+        """The tick of the buffer again, in place of self.published (its events, not seen yet, wait for the next step)."""
+        published = self.bridge.reread_tick()
+        if published is None:
+            raise RuntimeError("the tick could not be read again after it changed under the observation")
+        self.reread += 1
+        self.published = published
+        self._rows = None
+        self._late_events += list(self.bridge.new_events(published))
+
+    def _observe_published(self):
         views = self._agent_views()
         count = len(self.agents)
         last = np.array([self.states[handle].last_action for handle in self.agents], dtype=np.int64).reshape(count, len(self.nvec))

@@ -100,6 +100,7 @@
     <Compile Include="Tools\Tests\tdump_writer.py" />
     <Compile Include="Tools\Tests\test_agent_input.py" />
     <Compile Include="Tools\Tests\test_timeline.py" />
+    <Compile Include="Tools\Tests\test_bridge_view.py" />
     <Compile Include="Tools\Tests\test_control_check.py" />
     <Compile Include="Tools\Tests\test_components.py" />
     <Compile Include="Tools\Tests\test_bridge_map.py" />
