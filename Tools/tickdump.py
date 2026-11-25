@@ -72,7 +72,7 @@ TABLES = {"Header": "BridgeTickHeader", "Match": "BridgeMatch", "Players": "Brid
 # Tables of the Diff that are compared tick by tick (the events are compared apart, by Sequence).
 TICK_TABLES = ("Header", "Match", "Players", "Entities", "Objectives", "Stands", "Weapons", "Projectiles", "Explosives", "Lifts", "Views")
 # Fields that are not compared: the local view of the theater and the clock of the bridge (D170). Listed in every diff.
-IGNORED = {"Header": ("MatchId", "ActionTick", "Generation", "PublishQpc"),
+IGNORED = {"Header": ("MatchId", "ActionTick", "Generation", "PublishQpc", "CaptureQpc", "AiStartQpc", "AiEndQpc", "FlattenStartQpc", "NeedDecision", "NeedQpc", "NeedEndQpc", "NeedFlags"),
            "Players": ("LocalIndex", "Connection", "CameraPosition", "CameraForward")}
 
 

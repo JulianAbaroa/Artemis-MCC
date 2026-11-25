@@ -27,6 +27,7 @@ from artemis.bridge import CONTROL_STATES, Bridge, discover  # noqa: E402
 from artemis.env import PROFILES, ActionNvec, CtfConfig, CtfEnv  # noqa: E402
 from artemis.env.ctf import (ACTION_AT, CARRIES_AT, ENEMY_FLAG_AT, GRAB_OBJECTIVE_AT, MOVE_NVEC, OWN_STAND_AT,  # noqa: E402
                              YAW_STEPS)
+from artemis.timeline import join_decisions, timeline_lines  # noqa: E402
 from artemis.training import load_list  # noqa: E402
 
 
@@ -86,6 +87,7 @@ def TimingReport(env, policy_ns, before, after, config):
     waits, published = delta["LockstepWaits"], delta["PublishedTicks"]
     lines.append(f"  counters: waits/decision {waits / decisions:.3f}, wait per wait {(delta['LockstepWaitNs'] / waits / 1e6) if waits else 0:.3f} ms, "
                  f"longest wait {after['LockstepWaitMaxNs'] / 1e6:.3f} ms (since load), flatten per tick {(delta['FlattenNs'] / published / 1e6) if published else 0:.3f} ms")
+    lines += timeline_lines(join_decisions(env.decisions, env.needs), getattr(env.bridge, "qpc_frequency", 0))
     return lines
 
 

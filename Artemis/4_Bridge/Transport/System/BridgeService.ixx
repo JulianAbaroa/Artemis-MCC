@@ -67,10 +67,13 @@ export namespace Bridge::Transport::System
         // still.
         auto Update() -> void;
 
+        // return: QueryPerformanceCounter, the clock of PublishQpc and of every mark of BridgeClock. Any thread.
+        static auto ReadQpc() -> std::uint64_t;
+
         // Reads the clock of the tick about to be copied, with the possessed player and the last window of what it did, read together (D364). Game thread,
         // between two ticks, right before the capture (D305).
         // param isConsecutive: False after dropped ticks or a reset, so a jump is not counted as a clock skip.
-        // note: The first read of a new match is not a skip either: every engine starts the clock again (D139).
+        // note: Sets CaptureQpc and copies the Need marks Apply left (P.3 C). The first read of a new match is not a skip either: every engine starts the clock again (D139).
         auto CaptureClock(bool isConsecutive, BridgeClock& out) -> void;
 
         // Forgets the last read tick. Game thread, when the first tick of a new teardown epoch is produced.
@@ -84,7 +87,7 @@ export namespace Bridge::Transport::System
         // note: Bridge thread. Every BeginTick is followed by EndTick.
         auto BeginTick() -> BridgeTick*;
 
-        // Completes the BridgeTick of BeginTick with the clock, publishes it and wakes the client.
+        // Completes the BridgeTick of BeginTick with the clock (the QPC marks and the Need block included), publishes it and wakes the client.
         auto EndTick(BridgeTick& flat, const BridgeClock& clock) -> void;
 
         // Gives the AgentInput of the client to its players before the engine applies the actions of a tick, waiting for them in
@@ -108,7 +111,8 @@ export namespace Bridge::Transport::System
         auto WriteArtemisControl(BridgeRegion& region, const BridgeControlState& control) -> void;
         auto ApplyPause(bool isRequested) -> void;
 
-        auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t;
+        // param needFlags: BridgeNeedFlag bits of how the wait ended (TimedOut, PauseSeen, Cut) are added to it.
+        auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook, std::uint32_t& needFlags) -> std::uint64_t;
         auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, std::uint8_t windowTicks, BridgeHookState& hook) -> void;
         auto ReleasePlayers(BridgeHookState& hook, std::uint32_t keepMask) -> void;
         auto ReleasePlayer(BridgeHookState& hook, std::size_t player, const BridgeSlot& slot) -> void;

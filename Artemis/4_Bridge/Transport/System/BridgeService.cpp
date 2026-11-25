@@ -24,6 +24,7 @@ namespace
     using Control::Lockstep::System::DecideControl;
     using Control::Lockstep::System::GetApplyTiming;
     using Control::Lockstep::System::GetDueDecision;
+    using Control::Lockstep::System::GetNeedDecision;
     using Control::Lockstep::System::IsDecisionTick;
     using Control::Lockstep::System::IsImitationWindowEnd;
     using Control::Lockstep::System::IsSparse;
@@ -35,6 +36,7 @@ namespace
 
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgeNeedFlag;
     using Contract::Bridge::Type::BridgePhase;
     using Bridge::Transport::Type::BridgeCounters;
     using Bridge::Transport::Type::BridgeImitation;
@@ -294,8 +296,16 @@ namespace Bridge::Transport::System
         this->WriteArtemisControl(*region, control);
     }
 
+    auto BridgeService::ReadQpc() -> std::uint64_t
+    {
+        LARGE_INTEGER counter{};
+        QueryPerformanceCounter(&counter);
+        return static_cast<std::uint64_t>(counter.QuadPart);
+    }
+
     auto BridgeService::CaptureClock(bool isConsecutive, BridgeClock& out) -> void
     {
+        out.CaptureQpc = this->ReadQpc();
         out.ActionTick = m_BridgeStore.GetActionTick();
 
         // A tick where the engine applied no actions (the action tick repeats, seen when a match ends) is not a new action tick, so
@@ -324,6 +334,12 @@ namespace Bridge::Transport::System
         {
             out.AppliedDecisions[player] = m_BridgeStore.GetAppliedDecision(player);
         }
+
+        const BridgeHookState& hook{ m_BridgeStore.GetHookState() };
+        out.NeedDecision = hook.NeedDecision;
+        out.NeedQpc = hook.NeedQpc;
+        out.NeedEndQpc = hook.NeedEndQpc;
+        out.NeedFlags = hook.NeedFlags;
 
         const BridgeImitation imitation{ m_Engine.GetImitation() };
         out.PossessedPlayer = imitation.PlayerHandle;
@@ -368,14 +384,19 @@ namespace Bridge::Transport::System
         BridgeRegion* region{ m_BridgeStore.GetRegion() };
         if (region == nullptr) return;
 
-        LARGE_INTEGER counter{};
-        QueryPerformanceCounter(&counter);
-
         flat.Header.MatchId = static_cast<std::uint32_t>(m_Engine.GetEngineStarts());
         flat.Header.ActionTick = clock.ActionTick;
         flat.Header.PossessedPlayer = clock.PossessedPlayer;
         flat.Header.PossessedInput = clock.PossessedInput;
-        flat.Header.PublishQpc = static_cast<std::uint64_t>(counter.QuadPart);
+        flat.Header.CaptureQpc = clock.CaptureQpc;
+        flat.Header.AiStartQpc = clock.AiStartQpc;
+        flat.Header.AiEndQpc = clock.AiEndQpc;
+        flat.Header.FlattenStartQpc = clock.FlattenStartQpc;
+        flat.Header.NeedDecision = clock.NeedDecision;
+        flat.Header.NeedQpc = clock.NeedQpc;
+        flat.Header.NeedEndQpc = clock.NeedEndQpc;
+        flat.Header.NeedFlags = clock.NeedFlags;
+        flat.Header.PublishQpc = this->ReadQpc();
 
         // The actions of a slot must carry the handle of its player in this tick (D40).
         std::array<BridgeSlot, k_MaxPlayers> slots{};
@@ -421,8 +442,28 @@ namespace Bridge::Transport::System
             std::uint64_t sequence{ LoadShared(region->Control.Client.ActionSequence) };
 
             // In Lockstep the tick of a decision plus the latency waits for the actions of that decision (D105), if it was published.
+            // The arrival at the tick t + d of a decision is marked for the timeline of the tick (P.3 C): QPC on arrival, and at the end of
+            // the wait, or the same instant when the answer was there. Only the marks are measured here, the rule is GetNeedDecision.
+            const std::uint64_t need{ GetNeedDecision(actionTick, control, hook, m_BridgeStore.GetPushedDecision()) };
+            if (need != 0)
+            {
+                hook.NeedDecision = need;
+                hook.NeedQpc = this->ReadQpc();
+                hook.NeedEndQpc = hook.NeedQpc;
+                hook.NeedFlags = 0;
+            }
+
             const std::uint64_t due{ GetDueDecision(actionTick, control, hook, m_BridgeStore.GetPushedDecision(), sequence) };
-            if (due != 0) sequence = this->WaitForDecision(*region, due, hook);
+            if (due != 0)
+            {
+                std::uint32_t needFlags{ static_cast<std::uint32_t>(BridgeNeedFlag::Waited) };
+                sequence = this->WaitForDecision(*region, due, hook, needFlags);
+                if (need != 0)
+                {
+                    hook.NeedEndQpc = this->ReadQpc();
+                    hook.NeedFlags = needFlags;
+                }
+            }
 
             if (ResumeIfAnswered(hook, sequence)) m_Log.Message("[BridgeService] INFO: The client answers again: Lockstep resumed.");
 
@@ -569,7 +610,8 @@ namespace Bridge::Transport::System
             m_BridgeStore.GetActionTick());
     }
 
-    auto BridgeService::WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook) -> std::uint64_t
+    auto BridgeService::WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook, std::uint32_t& needFlags)
+        -> std::uint64_t
     {
         const auto start{ steady_clock::now() };
         auto deadline{ start + k_LockstepTimeout };
@@ -614,6 +656,9 @@ namespace Bridge::Transport::System
         else if (m_BridgeStore.IsStopped() || isClientGone) result = WaitResult::Cut;
 
         if (result == WaitResult::TimedOut) m_BridgeStore.AddLockstepTimeout();
+        if (result == WaitResult::TimedOut) needFlags |= static_cast<std::uint32_t>(BridgeNeedFlag::TimedOut);
+        if (result == WaitResult::Cut) needFlags |= static_cast<std::uint32_t>(BridgeNeedFlag::Cut);
+        if (isPauseSeen) needFlags |= static_cast<std::uint32_t>(BridgeNeedFlag::PauseSeen);
         if (RecordWait(hook, result))
         {
             m_Log.Message("[BridgeService] WARNING: No actions for decision {} after {} waits of {} ms: Lockstep suspended until "

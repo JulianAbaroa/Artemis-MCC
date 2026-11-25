@@ -153,6 +153,17 @@ class PublishedTick:
         self.match_id = int(self.header["MatchId"])
         self.received_qpc = received_qpc
         self.publish_qpc = int(self.header["PublishQpc"])
+        # The QPC marks of the tick on its way (game thread capture, AI thread in and out, bridge thread flatten start, all 0 when not set) and
+        # the last decision the game thread needed in Lockstep with when it arrived at its tick plus d and when the decision was available
+        # (NeedFlags: bit 0 waited, 1 timed out, 2 pause seen, 3 cut). Same clock as publish_qpc and qpc() (P.3 C, D373).
+        self.capture_qpc = int(self.header["CaptureQpc"])
+        self.ai_start_qpc = int(self.header["AiStartQpc"])
+        self.ai_end_qpc = int(self.header["AiEndQpc"])
+        self.flatten_start_qpc = int(self.header["FlattenStartQpc"])
+        self.need_decision = int(self.header["NeedDecision"])
+        self.need_qpc = int(self.header["NeedQpc"])
+        self.need_end_qpc = int(self.header["NeedEndQpc"])
+        self.need_flags = int(self.header["NeedFlags"])
 
 
     @property

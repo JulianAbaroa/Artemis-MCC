@@ -26,6 +26,7 @@ from ..bridge import CONTROL_STATES, CONTROLS, Action, Bridge, BridgeMode, Bridg
 from ..bridge_layout import NOT_LOCAL, BridgeInteractionKind, BridgePhase, BridgeSetupResult, BridgeView
 from ..match_setup import MatchSetup, is_relative_roster, resolve_roster
 from ..semantic import Event, FlagState
+from ..timeline import need_marks, tick_marks
 
 METERS = 50.0
 
@@ -136,6 +137,10 @@ class CtfEnv:
         # With config.timing: the ns of each phase of every decision (PHASES) and the ms from the publication of a tick to its answer.
         self.timings = {phase: [] for phase in PHASES}
         self.slack_ms = []
+        # With config.timing: the QPC marks of each decision and the Need of the ticks after it, both by (match_id, action tick of the decision),
+        # joined by artemis.timeline.join_decisions (P.3 C).
+        self.decisions = {}
+        self.needs = {}
 
     # --- Control ----------------------------------------------------------------------------------------------------------------
 
@@ -163,6 +168,7 @@ class CtfEnv:
                 self.timings["answer"].append(time.perf_counter_ns() - started)
                 frequency = getattr(self.bridge, "qpc_frequency", 1)
                 self.slack_ms.append((answered - getattr(self.published, "publish_qpc", answered)) * 1000.0 / frequency)
+                self.decisions[(self.published.match_id, self.published.action_tick)] = {**tick_marks(self.published), "answered": answered}
         published = None
         waited = 0.0
         started = time.perf_counter_ns()
@@ -179,6 +185,10 @@ class CtfEnv:
                 raise RuntimeError(self._ended(f"no tick for {waited:.0f} s"))
         self.published = published
         self._rows = None
+        if self.config.timing:
+            need = need_marks(published)
+            if need is not None:
+                self.needs.setdefault((published.match_id, need[0]), need[1:])
         if measured:
             copy = int(getattr(self.bridge, "last_copy_ns", 0))
             self.timings["copy"].append(copy)

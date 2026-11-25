@@ -55,8 +55,9 @@ namespace Mod::Thread::System
 
     auto BridgeThread::Publish() -> void
     {
-        const auto request{ m_Export.m_FlatStore.WaitPop(k_ControlInterval) };
+        auto request{ m_Export.m_FlatStore.WaitPop(k_ControlInterval) };
         if (!request || !request->Snapshot) return;
+        request->Clock.FlattenStartQpc = m_Transport.m_BridgeService.ReadQpc();
 
         BridgeTick* flat{ m_Transport.m_BridgeService.BeginTick() };
         if (flat == nullptr) return;

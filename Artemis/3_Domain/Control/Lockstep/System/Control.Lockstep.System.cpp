@@ -114,6 +114,17 @@ namespace Control::Lockstep::System
         return 0;
     }
 
+    auto GetNeedDecision(std::uint64_t actionTick, const BridgeControlState& control, const BridgeHookState& hook,
+        std::uint64_t pushedDecision) -> std::uint64_t
+    {
+        if (control.Mode != BridgeMode::Lockstep || hook.IsLockstepSuspended || actionTick < control.Latency) return 0;
+
+        const std::uint64_t decision{ (actionTick - control.Latency) / control.DecisionPeriod * control.DecisionPeriod };
+        if (decision == 0 || decision > pushedDecision || actionTick != decision + control.Latency) return 0;
+
+        return decision == hook.NeedDecision ? 0 : decision;
+    }
+
     auto RecordWait(BridgeHookState& hook, WaitResult result) -> bool
     {
         switch (result)

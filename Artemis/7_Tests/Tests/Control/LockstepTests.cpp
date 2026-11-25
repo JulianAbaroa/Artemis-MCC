@@ -23,6 +23,7 @@ namespace
     using Control::Lockstep::System::DecideControl;
     using Control::Lockstep::System::GetApplyTiming;
     using Control::Lockstep::System::GetDueDecision;
+    using Control::Lockstep::System::GetNeedDecision;
     using Control::Lockstep::System::IsDecisionTick;
     using Control::Lockstep::System::IsImitationWindowEnd;
     using Control::Lockstep::System::IsLightTick;
@@ -251,6 +252,46 @@ TEST(LockstepTests, GetDueDecision)
     BridgeHookState suspended{};
     suspended.IsLockstepSuspended = true;
     EXPECT_EQ(GetDueDecision(6, control, suspended, 4, 3), 0u);
+}
+
+// The tick t + d of a decision, with or without its answer: the arrival the timeline of the tick measures (P.3 C).
+TEST(LockstepTests, GetNeedDecision)
+{
+    const BridgeControlState control{ MakeLockstep(4, 2) };
+    const BridgeHookState hook{};
+
+    // Tick 6 is decision 4 plus d, whether or not the client answered: the answer is not an input.
+    EXPECT_EQ(GetNeedDecision(6, control, hook, 4), 4u);
+    EXPECT_EQ(GetNeedDecision(10, control, hook, 8), 8u);
+
+    // Not the tick of the decision plus d: before it, after it (d below N) and the decision tick itself.
+    EXPECT_EQ(GetNeedDecision(5, control, hook, 4), 0u);
+    EXPECT_EQ(GetNeedDecision(7, control, hook, 4), 0u);
+    EXPECT_EQ(GetNeedDecision(8, control, hook, 8), 0u);
+    EXPECT_EQ(GetNeedDecision(2, control, hook, 4), 0u);
+    EXPECT_EQ(GetNeedDecision(1, control, hook, 4), 0u);
+
+    // A decision that was not handed to the AI thread is not needed.
+    EXPECT_EQ(GetNeedDecision(6, control, hook, 3), 0u);
+
+    // d equal to N: the tick of the next decision is the one that needs the previous.
+    const BridgeControlState equal{ MakeLockstep(4, 4) };
+    EXPECT_EQ(GetNeedDecision(8, equal, hook, 4), 4u);
+    EXPECT_EQ(GetNeedDecision(7, equal, hook, 4), 0u);
+
+    // Once per decision: a repeated action tick gives 0 after it was recorded, the next decision is a new one.
+    BridgeHookState seen{};
+    seen.NeedDecision = 4;
+    EXPECT_EQ(GetNeedDecision(6, control, seen, 4), 0u);
+    EXPECT_EQ(GetNeedDecision(10, control, seen, 8), 8u);
+
+    BridgeControlState free{ control };
+    free.Mode = BridgeMode::Free;
+    EXPECT_EQ(GetNeedDecision(6, free, hook, 4), 0u);
+
+    BridgeHookState suspended{};
+    suspended.IsLockstepSuspended = true;
+    EXPECT_EQ(GetNeedDecision(6, control, suspended, 4), 0u);
 }
 
 TEST(LockstepTests, RecordWaitSuspendsAfterTwoTimeouts)

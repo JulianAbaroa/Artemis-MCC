@@ -102,7 +102,11 @@ namespace Mod::Thread::System
             case Status::Running:
             {
                 std::optional<CapturedTick> tick{ m_TickQueue.WaitPop(k_PopTimeout) };
-                if (tick.has_value()) this->ProcessTick(*tick);
+                if (tick.has_value())
+                {
+                    tick->Clock.AiStartQpc = m_Transport.m_BridgeService.ReadQpc();
+                    this->ProcessTick(*tick);
+                }
                 break;
             }
 
@@ -191,7 +195,9 @@ namespace Mod::Thread::System
 
         if (tick.Clock.IsDecision)
         {
-            m_Export.m_FlatStore.Push(FlatRequest{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = tick.Clock });
+            FlatRequest request{ .Snapshot = m_Export.m_TickStore.Acquire(), .Clock = tick.Clock };
+            request.Clock.AiEndQpc = m_Transport.m_BridgeService.ReadQpc();
+            m_Export.m_FlatStore.Push(std::move(request));
         }
         this->EndStage();
 

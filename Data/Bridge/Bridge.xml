@@ -149,6 +149,12 @@
 		<bit name="ExplosivesTruncated" index="4" doc="The tick had more live explosives than MaxExplosives." />
 		<bit name="LiftsTruncated" index="5" doc="The tick had more live lifts than MaxLifts." />
 	</flags>
+	<flags name="BridgeNeedFlag" type="u32" doc="Flags of BridgeTickHeader.NeedFlags: how the game thread got the decision NeedDecision at tick NeedDecision + d (P.3 C, D373).">
+		<bit name="Waited" index="0" doc="The game thread had to wait for the answer (it was not there when it arrived)." />
+		<bit name="TimedOut" index="1" doc="The wait ended at the time cap without the answer." />
+		<bit name="PauseSeen" index="2" doc="The wait held a pause of the client." />
+		<bit name="Cut" index="3" doc="The wait was cut: the client left or was lost, or the bridge stopped." />
+	</flags>
 
 	<flags name="BridgeViewChannel" type="u8" doc="Bits of BridgeViewOther.Channels: how the agent knows of the other player (Views ViewChannel).">
 		<bit name="Hud" index="0" doc="Seen on the HUD." />
@@ -253,6 +259,14 @@
 		<field name="ActionTick" type="u64" doc="Action tick of the state of the tick. Answers carry it as DecisionTick." />
 		<field name="Generation" type="u64" doc="Id of the Tick snapshot (not game time)." />
 		<field name="PublishQpc" type="u64" doc="QueryPerformanceCounter when the tick was published." />
+		<field name="CaptureQpc" type="u64" doc="The game thread started to capture this tick (before the clock read and the capture). All the QPC marks of this block are QueryPerformanceCounter, the clock of PublishQpc, and 0 in every .tdump (the dump has no clock) and when they do not apply (P.3 C, D373)." />
+		<field name="AiStartQpc" type="u64" doc="The AI thread took this tick out of the tick queue. 0 in a tick that did not go through it. All the QPC marks of this block are QueryPerformanceCounter, the clock of PublishQpc, and 0 in every .tdump (the dump has no clock) and when they do not apply (P.3 C, D373)." />
+		<field name="AiEndQpc" type="u64" doc="The AI thread queued this tick for the bridge thread. All the QPC marks of this block are QueryPerformanceCounter, the clock of PublishQpc, and 0 in every .tdump (the dump has no clock) and when they do not apply (P.3 C, D373)." />
+		<field name="FlattenStartQpc" type="u64" doc="The bridge thread took this tick out of its queue, before BeginTick and Flatten. All the QPC marks of this block are QueryPerformanceCounter, the clock of PublishQpc, and 0 in every .tdump (the dump has no clock) and when they do not apply (P.3 C, D373)." />
+		<field name="NeedDecision" type="u64" doc="ActionTick of the last decision the game thread needed in Lockstep up to the capture of this tick, 0 = none yet. Sticky: it repeats in the ticks after it. The game thread needs decision t at the action tick t + d (game thread, Apply)." />
+		<field name="NeedQpc" type="u64" doc="When the game thread arrived, in Apply, at the tick NeedDecision + d. All the QPC marks of this block are QueryPerformanceCounter, the clock of PublishQpc, and 0 in every .tdump (the dump has no clock) and when they do not apply (P.3 C, D373)." />
+		<field name="NeedEndQpc" type="u64" doc="When the decision NeedDecision was available to the game thread: NeedQpc if the answer was already there (no wait), the end of the wait if it waited, also when the wait was cut. All the QPC marks of this block are QueryPerformanceCounter, the clock of PublishQpc, and 0 in every .tdump (the dump has no clock) and when they do not apply (P.3 C, D373)." />
+		<field name="NeedFlags" type="u32" enum="BridgeNeedFlag" doc="How the wait for NeedDecision went. 0 in every .tdump." />
 		<field name="Flags" type="u32" enum="BridgeTickFlag" />
 		<field name="EventCount" type="u16" doc="Rows of Events in use, oldest first." />
 		<field name="LastEventSequence" type="u32" doc="Sequence of the newest event of the match up to this tick (0 = none yet)." />

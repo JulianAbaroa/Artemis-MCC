@@ -28,6 +28,7 @@ namespace
     using Contract::Bridge::Type::BridgeAction;
     using Contract::Bridge::Type::BridgeAgentInput;
     using Contract::Bridge::Type::BridgeMode;
+    using Contract::Bridge::Type::BridgeNeedFlag;
     using Contract::Bridge::Type::BridgeOwner;
     using Contract::Bridge::Type::BridgePhase;
     using Contract::Bridge::Type::BridgeRoster;
@@ -495,6 +496,116 @@ TEST_F(TransportTests, LockstepAnsweredByTheClient)
     EXPECT_EQ(m_Service.TakeLockstepWaitMax(), 0u);
 }
 
+// P.3 C (D373): the arrival of the game thread at the tick t + d of a decision, with the answer already there.
+TEST_F(TransportTests, ApplyMarksTheNeedWithoutAWait)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+    Answer(*m_Region, 4);
+
+    BridgeClock clock{};
+    m_Service.Apply(5);
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedDecision, 0u);
+    EXPECT_EQ(clock.NeedQpc, 0u);
+
+    m_Service.Apply(6);
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedDecision, 4u);
+    EXPECT_GT(clock.NeedQpc, 0u);
+    EXPECT_EQ(clock.NeedEndQpc, clock.NeedQpc);
+    EXPECT_EQ(clock.NeedFlags, 0u);
+
+    // Sticky until the next decision, and not written again by a repeated tick or by the ticks between decisions.
+    m_Service.Apply(6);
+    m_Service.Apply(7);
+    BridgeClock later{};
+    m_Service.CaptureClock(true, later);
+    EXPECT_EQ(later.NeedDecision, 4u);
+    EXPECT_EQ(later.NeedQpc, clock.NeedQpc);
+}
+
+// With a wait the end of the wait is after the arrival, and the flags say it waited.
+TEST_F(TransportTests, ApplyMarksTheNeedWithAWaitForALateClient)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+
+    const std::string eventName{ m_Name + std::string(k_BridgeActionEventSuffix) };
+    HANDLE actionEvent{ OpenEventW(EVENT_MODIFY_STATE, FALSE, std::wstring(eventName.begin(), eventName.end()).c_str()) };
+    ASSERT_NE(actionEvent, nullptr);
+
+    std::thread client([this, actionEvent] {
+        std::this_thread::sleep_for(milliseconds{ 50 });
+        WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+        Answer(*m_Region, 4);
+        SetEvent(actionEvent);
+    });
+    m_Service.Apply(6);
+    client.join();
+    CloseHandle(actionEvent);
+
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedDecision, 4u);
+    EXPECT_GT(clock.NeedEndQpc, clock.NeedQpc);
+    EXPECT_EQ(clock.NeedFlags, static_cast<std::uint32_t>(BridgeNeedFlag::Waited));
+
+    // The wait took at least about 50 ms of the QPC clock.
+    const double seconds{ static_cast<double>(clock.NeedEndQpc - clock.NeedQpc) / static_cast<double>(m_Region->Control.Artemis.QpcFrequency) };
+    EXPECT_GE(seconds, 0.03);
+}
+
+// A wait cut by the client leaving still gets its end, with the Cut flag.
+TEST_F(TransportTests, ApplyMarksTheNeedOfACutWait)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Stop();
+    m_Service.Apply(6);
+
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedDecision, 4u);
+    EXPECT_GE(clock.NeedEndQpc, clock.NeedQpc);
+    EXPECT_EQ(clock.NeedFlags, static_cast<std::uint32_t>(BridgeNeedFlag::Waited) | static_cast<std::uint32_t>(BridgeNeedFlag::Cut));
+}
+
+TEST_F(TransportTests, CaptureClockSetsCaptureQpcAndEndTickCopiesTheMarks)
+{
+    this->Connect(BridgeOwner::Python, BridgeMode::Free, 0);
+
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_GT(clock.CaptureQpc, 0u);
+
+    clock.AiStartQpc = 11;
+    clock.AiEndQpc = 12;
+    clock.FlattenStartQpc = 13;
+    clock.NeedDecision = 8;
+    clock.NeedQpc = 14;
+    clock.NeedEndQpc = 15;
+    clock.NeedFlags = 5;
+
+    BridgeTick* flat{ m_Service.BeginTick() };
+    ASSERT_NE(flat, nullptr);
+    m_Service.EndTick(*flat, clock);
+    EXPECT_EQ(flat->Header.CaptureQpc, clock.CaptureQpc);
+    EXPECT_EQ(flat->Header.AiStartQpc, 11u);
+    EXPECT_EQ(flat->Header.AiEndQpc, 12u);
+    EXPECT_EQ(flat->Header.FlattenStartQpc, 13u);
+    EXPECT_EQ(flat->Header.NeedDecision, 8u);
+    EXPECT_EQ(flat->Header.NeedQpc, 14u);
+    EXPECT_EQ(flat->Header.NeedEndQpc, 15u);
+    EXPECT_EQ(flat->Header.NeedFlags, 5u);
+    EXPECT_GE(flat->Header.PublishQpc, clock.CaptureQpc);
+    EXPECT_EQ(m_Service.ReadQpc() >= flat->Header.PublishQpc, true);
+}
+
 TEST_F(TransportTests, StopEndsTheWait)
 {
     this->PublishPlayer(k_Handle, k_BridgeNotLocal);
@@ -613,11 +724,11 @@ TEST_F(TransportTests, TheClockCarriesTheLastWindowAndTheWindowsCloseEveryLatenc
 
 TEST_F(TransportTests, TheLayoutIsTheOneOfTheBridgeV2)
 {
-    EXPECT_EQ(k_BridgeLayoutHash, 0x3BBCD83EA7ACD91EULL);
+    EXPECT_EQ(k_BridgeLayoutHash, 0x23D459EF0A4133BFULL);
     EXPECT_EQ(sizeof(BridgeAgentInput), 24u);
     EXPECT_EQ(sizeof(BridgeAction), 40u);
     EXPECT_EQ(offsetof(BridgeAction, Input), 16u);
-    EXPECT_EQ(sizeof(BridgeRegion), 548416u);
+    EXPECT_EQ(sizeof(BridgeRegion), 548544u);
 }
 
 TEST_F(TransportTests, ClockMarksDecisionTicks)

@@ -27,6 +27,8 @@ NO_HANDLE = bl.NO_HANDLE
 NOT_LOCAL = bl.NOT_LOCAL
 MAX_PLAYERS = bl.MAX_PLAYERS
 TICK_RATE = 60.0
+# BridgeTickHeader fields of the timeline of a decision (P.3 C, D373): 0 in every .tdump.
+TIMELINE_FIELDS = ("CaptureQpc", "AiStartQpc", "AiEndQpc", "FlattenStartQpc", "NeedDecision", "NeedQpc", "NeedEndQpc", "NeedFlags")
 
 # Enums of the engine that Semantic.xml and Bridge.xml do not generate for Python (Common and Blam in C++).
 
@@ -190,6 +192,9 @@ def Collect(film, dump):
             s.Add("header_possessed_player", tick, 0, f"0x{int(header['PossessedPlayer']):X}")
         if any(float(x) != 0.0 for x in header["PossessedInput"]):
             s.Add("header_possessed_input", tick, 0, str(header["PossessedInput"]))
+        # The timeline marks come from the clock of the bridge: a dump has none (P.3 C, D373).
+        if any(int(header[name]) != 0 for name in TIMELINE_FIELDS if name in header.dtype.names):
+            s.Add("header_timeline", tick, 0, str({name: int(header[name]) for name in TIMELINE_FIELDS if name in header.dtype.names}))
         # Entities: the rows that changed, with the kind of their parent in the table of the tick.
         e = r.entities
         if len(e):
@@ -1089,7 +1094,7 @@ def _Names(prefix, names, suffix=""):
 # counts that depend on a film (event objects gone, hits without a drop, ticks alive steps, loadout not with the biped).
 GENERAL_RULES = (
     _Names("header_count_", ("PlayerCount", "EntityCount", "ObjectiveCount", "StandCount", "WeaponCount", "ProjectileCount", "ExplosiveCount", "LiftCount")) +
-    ("header_flags", "header_possessed_player", "header_possessed_input", "header_last_event_sequence", "table_not_sorted_or_repeated") +
+    ("header_flags", "header_possessed_player", "header_possessed_input", "header_timeline", "header_last_event_sequence", "table_not_sorted_or_repeated") +
     _Names("entity_unknown_", ("Kind", "Function", "Group", "Lifecycle", "Binding", "Physics")) +
     ("entity_capability_bit_unknown", "entity_handle_repeated_in_a_record", "entity_forward_not_unit", "entity_up_not_unit",
      "entity_forward_not_perpendicular_to_up", "entity_binding_vs_bound_to", "entity_bound_to_vs_parent_handle", "entity_bound_to_not_in_the_tick",

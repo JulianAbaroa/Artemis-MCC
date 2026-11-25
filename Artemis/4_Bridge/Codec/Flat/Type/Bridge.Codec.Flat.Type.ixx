@@ -29,6 +29,21 @@ export namespace Bridge::Codec::Flat::Type
         std::uint32_t PossessedPlayer{ k_NoHandle };
         BridgeAgentInput PossessedInput{};
 
+        // QueryPerformanceCounter marks of the tick, one per hand-off between threads (P.3 C, D373). 0 = not set.
+        // CaptureQpc: the game thread started to capture. AiStartQpc: the AI thread took the tick out of the tick queue. AiEndQpc: the AI
+        // thread queued it for the bridge thread. FlattenStartQpc: the bridge thread took it out of its queue.
+        std::uint64_t CaptureQpc{ 0 };
+        std::uint64_t AiStartQpc{ 0 };
+        std::uint64_t AiEndQpc{ 0 };
+        std::uint64_t FlattenStartQpc{ 0 };
+
+        // Last decision the game thread needed in Lockstep up to the capture, when it arrived at its tick plus the latency and when the
+        // decision was available (BridgeHookState.Need*), read on the game thread. NeedFlags are BridgeNeedFlag bits. 0 = none yet.
+        std::uint64_t NeedDecision{ 0 };
+        std::uint64_t NeedQpc{ 0 };
+        std::uint64_t NeedEndQpc{ 0 };
+        std::uint32_t NeedFlags{ 0 };
+
         // Whether this state is a decision tick of a connected client (a tick goes out).
         bool IsDecision{ false };
 

@@ -762,6 +762,16 @@ namespace Bridge::Codec::Flat::System
         flat.Header.Generation = tick.Generation;
         flat.Header.PossessedPlayer = k_NoHandle;
         flat.Header.PossessedInput = BridgeAgentInput{};
+
+        // The QPC marks and the Need block come from the clock of the bridge (EndTick): a dump has no clock (P.3 C, D373).
+        flat.Header.CaptureQpc = 0;
+        flat.Header.AiStartQpc = 0;
+        flat.Header.AiEndQpc = 0;
+        flat.Header.FlattenStartQpc = 0;
+        flat.Header.NeedDecision = 0;
+        flat.Header.NeedQpc = 0;
+        flat.Header.NeedEndQpc = 0;
+        flat.Header.NeedFlags = 0;
         flat.Header.MapId = tick.MapId;
         flat.Header.Flags = flags;
     }

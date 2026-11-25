@@ -103,7 +103,7 @@ def test_tables_and_ignored_fields_exist_in_bridge_xml():
                                "Stands": "BridgeStand", "Weapons": "BridgeWeapon", "Projectiles": "BridgeProjectile",
                                "Explosives": "BridgeExplosive", "Lifts": "BridgeLift", "Views": "BridgeView"}
     assert {t: set(f) for t, f in tickdump.IGNORED.items()} == {
-        "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc"},
+        "Header": {"MatchId", "ActionTick", "Generation", "PublishQpc", "CaptureQpc", "AiStartQpc", "AiEndQpc", "FlattenStartQpc", "NeedDecision", "NeedQpc", "NeedEndQpc", "NeedFlags"},
         "Players": {"LocalIndex", "Connection", "CameraPosition", "CameraForward"}}
     layout, _ = RealLayout()
     fields = {s["name"]: {f[0] for f in s["fields"]} for s in layout["structs"]}
@@ -172,7 +172,8 @@ def test_two_recordings_differ_only_in_ignored_fields(tmp_path):
                                          "LocalIndex": 0, "Connection": 2})
     r = DiffOf(tmp_path, golden, run)
     assert r.is_equal, tickdump.FormatDiff(r)
-    assert set(r.ignored) == {"Header.MatchId", "Header.ActionTick", "Header.Generation", "Header.PublishQpc",
+    assert set(r.ignored) == {"Header.MatchId", "Header.ActionTick", "Header.Generation", "Header.PublishQpc", "Header.CaptureQpc", "Header.AiStartQpc",
+                              "Header.AiEndQpc", "Header.FlattenStartQpc", "Header.NeedDecision", "Header.NeedQpc", "Header.NeedEndQpc", "Header.NeedFlags",
                               "Players.LocalIndex", "Players.Connection", "Players.CameraPosition", "Players.CameraForward"}
 
 

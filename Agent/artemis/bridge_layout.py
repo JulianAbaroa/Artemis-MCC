@@ -8,7 +8,7 @@ import enum
 import numpy as np
 
 LAYOUT_VERSION = 2
-LAYOUT_HASH = 0x3BBCD83EA7ACD91E
+LAYOUT_HASH = 0x23D459EF0A4133BF
 MAGIC = 0x42544241
 MAX_PLAYERS = 16
 MAX_ENTITIES = 0x800
@@ -188,6 +188,14 @@ class BridgeTickFlag(enum.IntFlag):
     LiftsTruncated = 0x20
 
 
+class BridgeNeedFlag(enum.IntFlag):
+    """Flags of BridgeTickHeader.NeedFlags: how the game thread got the decision NeedDecision at tick NeedDecision + d (P.3 C, D373)."""
+    Waited = 0x1
+    TimedOut = 0x2
+    PauseSeen = 0x4
+    Cut = 0x8
+
+
 class BridgeViewChannel(enum.IntFlag):
     """Bits of BridgeViewOther.Channels: how the agent knows of the other player (Views ViewChannel)."""
     Hud = 0x1
@@ -245,10 +253,10 @@ BridgeAgentInput = np.dtype({
 
 # What the tick is: which match and which action tick.
 BridgeTickHeader = np.dtype({
-    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount', 'ViewCount', 'ViewMask', 'PossessedPlayer', 'PossessedInput'],
-    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2', '<u2', '<u4', '<u4', BridgeAgentInput],
-    'offsets': [0, 4, 6, 8, 16, 24, 32, 36, 40, 44, 46, 48, 50, 52, 56, 58, 60, 64, 68, 72],
-    'itemsize': 96,
+    'names': ['MatchId', 'PlayerCount', 'EntityCount', 'ActionTick', 'Generation', 'PublishQpc', 'CaptureQpc', 'AiStartQpc', 'AiEndQpc', 'FlattenStartQpc', 'NeedDecision', 'NeedQpc', 'NeedEndQpc', 'NeedFlags', 'Flags', 'EventCount', 'LastEventSequence', 'ObjectiveCount', 'StandCount', 'WeaponCount', 'ProjectileCount', 'MapId', 'ExplosiveCount', 'LiftCount', 'ViewCount', 'ViewMask', 'PossessedPlayer', 'PossessedInput'],
+    'formats': ['<u4', '<u2', '<u2', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u8', '<u4', '<u4', '<u2', '<u4', '<u2', '<u2', '<u2', '<u2', '<i4', '<u2', '<u2', '<u2', '<u4', '<u4', BridgeAgentInput],
+    'offsets': [0, 4, 6, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 92, 96, 100, 104, 106, 108, 110, 112, 116, 118, 120, 124, 128, 132],
+    'itemsize': 160,
 })
 
 # State of the match (Environment Match, D103).
@@ -447,8 +455,8 @@ BridgeView = np.dtype({
 BridgeTick = np.dtype({
     'names': ['Sequence', 'Header', 'Players', 'Entities', 'Match', 'Objectives', 'Stands', 'Events', 'Weapons', 'Projectiles', 'Explosives', 'Lifts', 'Views', 'SequenceEnd'],
     'formats': ['<u8', BridgeTickHeader, (BridgePlayer, (16,)), (BridgeEntity, (2048,)), BridgeMatch, (BridgeObjective, (8,)), (BridgeStand, (8,)), (BridgeEvent, (64,)), (BridgeWeapon, (256,)), (BridgeProjectile, (256,)), (BridgeExplosive, (64,)), (BridgeLift, (64,)), (BridgeView, (16,)), '<u8'],
-    'offsets': [0, 8, 104, 3560, 216552, 216672, 216896, 216960, 220288, 229504, 235648, 236672, 246912, 273536],
-    'itemsize': 273600,
+    'offsets': [0, 8, 168, 3624, 216616, 216736, 216960, 217024, 220352, 229568, 235712, 236736, 246976, 273600],
+    'itemsize': 273664,
 })
 
 # Action of one player for one decision, written by Python (D109, D365). Artemis plays the input through its own client during the d ticks of the window.
@@ -463,8 +471,8 @@ BridgeAction = np.dtype({
 BridgeRegion = np.dtype({
     'names': ['Control', 'Ticks', 'Actions'],
     'formats': [BridgeControl, (BridgeTick, (2,)), (BridgeAction, (16,))],
-    'offsets': [0, 576, 547776],
-    'itemsize': 548416,
+    'offsets': [0, 576, 547904],
+    'itemsize': 548544,
 })
 
 # Fields that hold an id of Data/Semantic/Semantic.xml or of Common (artemis.semantic has the Semantic.xml ones).
@@ -571,7 +579,7 @@ OFFSETS = {
     'Control.Client.ClientHeartbeat': 528,
     'Control.Client.ActionSequence': 536,
     'Ticks': 576,
-    'Actions': 547776,
+    'Actions': 547904,
 }
 
-REGION_SIZE = 548416
+REGION_SIZE = 548544

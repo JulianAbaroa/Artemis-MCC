@@ -60,6 +60,14 @@ export namespace Control::Lockstep::System
     auto GetDueDecision(std::uint64_t actionTick, const BridgeControlState& control, const BridgeHookState& hook,
         std::uint64_t pushedDecision, std::uint64_t sequence) -> std::uint64_t;
 
+    // return: The decision the game thread reaches at this action tick in Lockstep (the tick of the decision plus the latency), whether or not
+    // its answer is already there, or 0 when this tick is not one of those.
+    // param pushedDecision: Last decision tick handed to the AI thread, as in GetDueDecision.
+    // note: Only in Lockstep, not suspended, and once per decision: a repeated action tick, or the ticks between t + d and the next decision
+    // when d is below N, give 0. A decision already recorded in the hook (NeedDecision) gives 0.
+    auto GetNeedDecision(std::uint64_t actionTick, const BridgeControlState& control, const BridgeHookState& hook,
+        std::uint64_t pushedDecision) -> std::uint64_t;
+
     // Records how a wait ended in the state of the hook.
     // return: True only when this wait suspended Lockstep, so the caller logs it.
     auto RecordWait(BridgeHookState& hook, WaitResult result) -> bool;

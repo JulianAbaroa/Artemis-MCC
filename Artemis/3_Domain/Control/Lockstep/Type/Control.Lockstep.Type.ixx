@@ -54,6 +54,13 @@ export namespace Control::Lockstep::Type
         // Lockstep timeouts in a row, and whether Lockstep is suspended until the client answers a decision again.
         std::uint32_t TimeoutsInRow{ 0 };
         bool IsLockstepSuspended{ false };
+
+        // Last decision the game thread needed at its tick plus the latency (0 = none), when it arrived there and when the decision was
+        // available (QueryPerformanceCounter: the same instant when no wait was needed), and how the wait went (BridgeNeedFlag bits). P.3 C.
+        std::uint64_t NeedDecision{ 0 };
+        std::uint64_t NeedQpc{ 0 };
+        std::uint64_t NeedEndQpc{ 0 };
+        std::uint32_t NeedFlags{ 0 };
     };
 
     // How a wait of the Lockstep for a decision ended.

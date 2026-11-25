@@ -32,7 +32,7 @@ Other projects may import only these modules; everything else in the project is 
 | `Bridge.Codec.Pipeline.System` | `PipelineService::Run` (it takes the `AgentSet` of the tick, every player by default) and the names of its stages (23, `Affordance` and `Views` last before `Assemble`), and `RunLight` (Q101): decodes a light Snapshot into the light stores of Blam.Runtime and runs the flag pass of Perception. It touches no store of the full tick and assembles no Tick. |
 | `Bridge.Codec.Pipeline.Type` | `CapturedTick` and `TickQueue`: one tick the game thread copied and queued for the AI thread (Snapshot, bridge clock, generation, epoch, light, lost before, first after load), and the queue that carries them (D305). `ObservedTick`: what the AI thread hands to the tick observers. |
 | `Bridge.Codec.Tick.Type`, `Bridge.Codec.Tick.State` | The Tick and its store. |
-| `Bridge.Codec.Flat.Type`, `Bridge.Codec.Flat.System` | `BridgeClock` (with `PossessedInput`, `IsDecision` and `IsSparse`), `FlatRequest`, `FlatService::Flatten`. |
+| `Bridge.Codec.Flat.Type`, `Bridge.Codec.Flat.System` | `BridgeClock` (with `PossessedInput`, the QPC marks `CaptureQpc`, `AiStartQpc`, `AiEndQpc` and `FlattenStartQpc` and the Need block `NeedDecision`, `NeedQpc`, `NeedEndQpc` and `NeedFlags` of the timeline of a decision, P.3 C, D373, `IsDecision` and `IsSparse`), `FlatRequest`, `FlatService::Flatten`. |
 | `Bridge.Codec.Dump.Type`, `Bridge.Codec.Dump.System` | The `.tdump` format and writer. |
 
 ## Depends on
