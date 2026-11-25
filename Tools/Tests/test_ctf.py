@@ -324,7 +324,7 @@ def test_rewards_come_from_the_flag_events_of_artemis(ctf):
     again = Frame(ctf, flags=(HOME, CARRIED), flag_at=(5.0, 0.0, 0.5), carrying=True, action_tick=3,
                   events=[Event(ctf.Event.FlagTaken, cause=0xEC700001, sequence=2), Event(ctf.Event.FlagTaken, sequence=3)])
     captured = Frame(ctf, action_tick=4, events=[Event(ctf.Event.FlagCaptured, sequence=4)])
-    env = ctf.CtfEnv(FakeBridge([start, taken, again, captured]))
+    env = ctf.CtfEnv(FakeBridge([start, taken, again, captured]), ctf.CtfConfig(shaping=0.1))
     env.reset()
     nothing = np.zeros(len(ctf.ActionNvec("stage0")), dtype=np.int64)
     config = env.config
@@ -640,7 +640,7 @@ class EndedBridge(FakeBridge):
 def test_reset_raises_and_does_not_hang_when_the_match_ended_with_a_team_left_empty(ctf):
     # The round ended with the agent bot and the local player on team 0 and nobody on team 1: Reach ended the match.
     bridge = EndedBridge([Frame(ctf, local_team=RED)], phase=ctf.layout.BridgePhase.Idle)
-    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.001, reset_timeout=1.0))
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.001, reset_timeout=1.0, match_gap_timeout=0.001))
     with pytest.raises(RuntimeError, match="match ended by the gametype: a team was left empty"):
         env.reset(roster={"0": 1})
         env.reset()
@@ -1246,3 +1246,119 @@ def test_a_sparse_request_that_artemis_does_not_grant_raises_with_the_reason(ctf
 def test_a_sparse_request_that_artemis_grants_goes_on(ctf):
     env = ctf.CtfEnv(FakeBridge([Frame(ctf)]), ctf.CtfConfig(sparse=True))
     assert env.take_control() is True and env.is_sparse is True
+
+
+# --- P.3 E: the training crosses the change of match of a scenario ----------------------------------------------------------------
+
+P1 = 0xEC700010
+
+
+def OtherMatch(ctf, handle=P1, match_id=2, **kwargs):
+    """A tick of the next match of the scenario: another match_id and the agent bot re-added with another handle."""
+    frame = Frame(ctf, match_id=match_id, **kwargs)
+    frame.players["Handle"][0] = handle
+    return frame
+
+
+class IdleBridge(FakeBridge):
+    """A bridge with the phase Idle (the bench is in the lobby): a None in the list of ticks is a wait_tick that timed out."""
+    def __init__(self, ticks, phase=None):
+        super().__init__(ticks)
+        self.phase = phase
+
+
+def GameEvent(ctf, kind, cause=NONE, effect=NONE, sequence=1):
+    return {"Sequence": sequence, "Kind": kind, "CausePlayer": cause, "EffectPlayer": effect}
+
+
+def test_idle_shorter_than_the_gap_and_then_another_match_truncates_every_agent_and_reset_starts_the_new_one(ctf):
+    taken = GameEvent(ctf, ctf.Event.FlagTaken, cause=P0)
+    spawn = GameEvent(ctf, ctf.Event.Spawn, cause=P1, sequence=2)
+    bridge = IdleBridge([Frame(ctf, action_tick=1), Frame(ctf, action_tick=2)] + [None] * 5
+                        + [OtherMatch(ctf, action_tick=1, events=[taken, spawn]), OtherMatch(ctf, action_tick=2)],
+                        phase=ctf.layout.BridgePhase.Idle)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.001, reset_timeout=1.0, match_gap_timeout=1.0))
+    env.reset()
+    old_observation = env._observations[P0].copy()
+    observations, rewards, terminated, truncated, infos = env.step({P0: Nothing(ctf)})
+    assert not truncated[P0] and env.agents == [P0]
+    observations, rewards, terminated, truncated, infos = env.step({P0: Nothing(ctf)})
+    # Nothing of the new match enters the old step (its FlagTaken of another handle's world does not reward the old agent) and the
+    # observation is the last one of the old agent.
+    assert truncated == {P0: True} and terminated == {P0: False} and rewards == {P0: 0.0}
+    assert infos[P0]["new_match"] is True and infos[P0]["events"] == []
+    assert env.is_waiting_round and env.match_id == 1
+    assert observations[P0].shape == old_observation.shape
+    observations, infos = env.reset()
+    assert list(observations) == [P1] and env.agents == [P1] and list(env.states) == [P1] and env.match_id == 2
+    assert not env.is_waiting_round
+    assert bridge.controls[-1]["agents"] == 1 << (P1 & 0xFFFF)
+
+
+def test_idle_longer_than_the_gap_raises_with_the_time_waited(ctf):
+    bridge = IdleBridge([Frame(ctf)] + [None] * 100, phase=ctf.layout.BridgePhase.Idle)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.01, reset_timeout=0.05, match_gap_timeout=0.05))
+    env.reset()
+    with pytest.raises(RuntimeError, match=r"the match ended: Artemis has no running match after 0 s"):
+        env.step({P0: Nothing(ctf)})
+    # A gap longer than reset_timeout is not cut by it: Idle is counted by the gap alone.
+    bridge = IdleBridge([Frame(ctf)] + [None] * 8 + [OtherMatch(ctf)], phase=ctf.layout.BridgePhase.Idle)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.01, reset_timeout=0.05, match_gap_timeout=1.0))
+    env.reset()
+    _, _, _, truncated, _ = env.step({P0: Nothing(ctf)})
+    assert truncated[P0]
+
+
+def test_the_gap_error_names_the_seconds_of_the_gap(ctf):
+    bridge = IdleBridge([Frame(ctf)] + [None] * 1000, phase=ctf.layout.BridgePhase.Idle)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.5, reset_timeout=1.0, match_gap_timeout=2.0))
+    env.reset()
+    with pytest.raises(RuntimeError, match=r"after 2 s"):
+        env.step({P0: Nothing(ctf)})
+    assert bridge.ticks.count(None) == 1000 - 4
+
+
+def test_a_dead_bridge_during_idle_keeps_the_closed_bridge_error(ctf):
+    bridge = IdleBridge([Frame(ctf)] + [None] * 10, phase=ctf.layout.BridgePhase.Idle)
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(tick_timeout=0.001, reset_timeout=1.0, match_gap_timeout=1.0))
+    env.reset()
+    bridge.is_alive = False
+    with pytest.raises(RuntimeError, match="Artemis closed the bridge"):
+        env.step({P0: Nothing(ctf)})
+
+
+def test_control_is_not_asked_again_by_the_change_of_match_and_the_sparse_guard_stays_with_take_control(ctf):
+    # Artemis keeps owner, mode, N, d and sparse of the client between matches (BridgeService::BeginMatch leaves the control alone), so
+    # the change of match asks for the AgentMask of the new handles only: no owner, mode or sparse in that request.
+    bridge = FakeBridge([Frame(ctf, action_tick=1), OtherMatch(ctf, action_tick=1), OtherMatch(ctf, action_tick=2)])
+    env = ctf.CtfEnv(bridge, ctf.CtfConfig(sparse=True))
+    assert env.take_control() is True
+    env.reset()
+    env.step({P0: Nothing(ctf)})
+    env.reset()
+    controls = bridge.controls
+    assert sum(1 for c in controls if "owner" in c) == 1 and sum(1 for c in controls if c.get("sparse")) == 1
+    assert [c["agents"] for c in controls if set(c) == {"agents"}] == [1 << (P0 & 0xFFFF), 1 << (P1 & 0xFFFF)]
+
+
+def test_ppo_closes_the_rows_of_the_old_handles_at_a_change_of_match_and_gae_does_not_cross(ctf):
+    pytest.importorskip("torch")
+    import torch
+    ppo_module = importlib.import_module("artemis.train.ppo")
+    frames = [Frame(ctf, action_tick=1), Frame(ctf, action_tick=2), Frame(ctf, action_tick=3),
+              OtherMatch(ctf, action_tick=1), OtherMatch(ctf, action_tick=2), OtherMatch(ctf, action_tick=3), OtherMatch(ctf, action_tick=4)]
+    bridge = FakeBridge(frames)
+    env = ctf.CtfEnv(bridge)
+    config = ppo_module.PpoConfig(steps=5, minibatch=4)
+    ppo = ppo_module.Ppo(env, bridge, env.obs_size, env.nvec, config, log=lambda line: None)
+    batch = ppo.collect()
+    # Rows in order: P0, P0, P0 (the third is the cut), then P1, P1 of the new match.
+    assert list(batch["dones"]) == [0.0, 0.0, 1.0, 0.0, 0.0]
+    assert list(ppo.observations) == [P1]
+    # The advantage of the cut row is its own delta (nothing after it is mixed in) and the first rows of the new match do not see the old ones.
+    values, rewards = batch["values"], batch["rewards"]
+    assert batch["advantages"][2] == pytest.approx(rewards[2] - values[2])
+    last = float(ppo.policy.value(torch.as_tensor(ppo.observations[P1])[None])[0])
+    delta = rewards[4] + config.gamma * last - values[4]
+    assert batch["advantages"][4] == pytest.approx(delta, abs=1e-5)
+

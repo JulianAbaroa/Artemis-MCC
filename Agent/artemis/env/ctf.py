@@ -87,12 +87,17 @@ class CtfConfig:
     # scenario), so take_control checks IsSparse and raises RuntimeError when it was not granted (P.3 B): measuring without noticing is out.
     sparse: bool = False
     max_seconds: float = 120.0
-    shaping: float = 0.1
+    shaping: float = 1.0
     take_reward: float = 0.2
     capture_reward: float = 1.0
     death_reward: float = -0.2
     tick_timeout: float = 5.0
     reset_timeout: float = 120.0
+    # Seconds to wait for the next match while the bridge is Idle (a match of a bench scenario ended: the bench goes back to the lobby and
+    # starts the next one, tens of seconds with the load, P.3 E). Past it _next_tick raises the "match ended" error, so the last match of a
+    # scenario ends the training with a clear message instead of a hang. Counted only while the phase is Idle: a load that publishes no
+    # ticks (Loading) is bounded by reset_timeout as before.
+    match_gap_timeout: float = 300.0
     # Measures the phases of each decision and the slack of the Lockstep (CtfEnv.timings). Off by default: no cost outside the measurement.
     timing: bool = False
 
@@ -140,6 +145,9 @@ class CtfEnv:
         # Whether take_control saw the sparse mode granted (IsSparse 1).
         self.is_sparse = False
         self.match_id = None
+        # The last observation of each agent the episode returned: step answers it, as the state the episode was cut in, when the match
+        # changes under it (the agents of the new match have other handles, P.3 E).
+        self._observations = {}
         self.is_waiting_round = False
         self.is_cut = False
         # (match_id, GameTick) of the last tick the episode saw: a step that finds another match or an earlier tick crossed a match end.
@@ -179,7 +187,12 @@ class CtfEnv:
 
     def _next_tick(self, actions=None, measured=False):
         """Answers the current tick (Lockstep needs an answer for every tick) and waits for the next one.
-        measured: records the phases of this decision (only with config.timing)."""
+        measured: records the phases of this decision (only with config.timing).
+        A bridge that goes Idle (the match ended, the bench is in the lobby and will start the next one) is not an error while it lives:
+        the wait goes on up to config.match_gap_timeout seconds of Idle (the ticks of the next match then come with another match_id, which
+        step() and reset() take as a new match; the control of Python, owner, mode, N, d and sparse, is kept by Artemis between matches, and
+        reset() asks for the AgentMask of the new handles). Past the gap it raises RuntimeError with the time waited; a dead bridge raises
+        RuntimeError("Artemis closed the bridge"); other silences are bounded by tick_timeout / reset_timeout."""
         measured = measured and self.config.timing
         if self.published is not None:
             started = time.perf_counter_ns()
@@ -191,7 +204,7 @@ class CtfEnv:
                 self.slack_ms.append((answered - getattr(self.published, "publish_qpc", answered)) * 1000.0 / frequency)
                 self.decisions[(self.published.match_id, self.published.action_tick)] = {**tick_marks(self.published), "answered": answered}
         published = None
-        waited = 0.0
+        waited = idle = 0.0
         started = time.perf_counter_ns()
         while published is None:
             published = self.bridge.wait_tick(self.config.tick_timeout, copy=False)
@@ -199,9 +212,12 @@ class CtfEnv:
                 break
             if not self.bridge.is_alive:
                 raise RuntimeError("Artemis closed the bridge")
-            waited += self.config.tick_timeout
             if getattr(self.bridge, "phase", None) == BridgePhase.Idle:
-                raise RuntimeError(self._ended("the match ended: Artemis has no running match"))
+                idle += self.config.tick_timeout
+                if idle >= self.config.match_gap_timeout:
+                    raise RuntimeError(self._ended(f"the match ended: Artemis has no running match after {idle:.0f} s"))
+                continue
+            waited += self.config.tick_timeout
             if waited >= self.config.reset_timeout:
                 raise RuntimeError(self._ended(f"no tick for {waited:.0f} s"))
         self.published = published
@@ -349,6 +365,7 @@ class CtfEnv:
         observations = {}
         for handle, (observations[handle], phi) in self._observe_all().items():
             self.states[handle].phi = phi
+        self._observations = observations
         return observations, {handle: {key: dict(value) for key, value in info.items()} for handle in self.agents}
 
     def _clock(self):
@@ -386,7 +403,12 @@ class CtfEnv:
             if player is None:
                 continue
             bridge_actions[state.index] = MakeAction(handle, branches, c.profile, per_decision)
+        reference = self._reference
         self._next_tick(bridge_actions, measured=True)
+        # A RoundEnd / GameOver in that tick is the end of the old match (it terminates, below); without one the tick is the new match's.
+        if (reference is not None and self.published.match_id != reference[0]
+                and not any(int(event["Kind"]) in (Event.RoundEnd, Event.GameOver) for event in self.events)):
+            return self._cut_by_new_match()
 
         rewards = {handle: 0.0 for handle in self.agents}
         infos = {handle: {"events": []} for handle in self.agents}
@@ -412,7 +434,7 @@ class CtfEnv:
             self.is_waiting_round = True
         # D372 (P.3): a match that ended under the episode without RoundEnd / GameOver (another match_id, or the clock went back) cuts it
         # truncated; reset() then waits for the round of the new match as after any end.
-        reference, self._reference = self._reference, self._clock()
+        self._reference = self._clock()
         is_new_match = (not is_round_over and reference is not None
                         and (self._reference[0] != reference[0] or self._reference[1] < reference[1]))
         if is_new_match:
@@ -438,7 +460,20 @@ class CtfEnv:
             self.timings["observe"].append(time.perf_counter_ns() - started)
         terminated = {handle: is_round_over for handle in self.agents}
         truncated = {handle: is_timeout or is_new_match for handle in self.agents}
+        self._observations = observations
         return observations, rewards, terminated, truncated, infos
+
+    def _cut_by_new_match(self):
+        """The first tick of another match (another match_id: the one that ended gave way to the next of the scenario, P.3 E) cuts the
+        episode truncated for every agent. Nothing of the new match enters the old step: no rewards, and its events wait in _late_events for
+        reset(), which starts the episode in the new match with its own handles. The observations are the last ones of each agent (the
+        state the episode was cut in, for the bootstrap of the value): the tick of the new match has no View for the old handles."""
+        self._late_events = self.events
+        self.events = []
+        self.is_waiting_round = True
+        infos = {handle: {"events": [], "new_match": True} for handle in self.agents}
+        return (dict(self._observations), {handle: 0.0 for handle in self.agents}, {handle: False for handle in self.agents},
+                {handle: True for handle in self.agents}, infos)
 
     # --- Observation ------------------------------------------------------------------------------------------------------------
 

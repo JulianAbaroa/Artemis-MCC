@@ -2,12 +2,15 @@
 train_stage0.py
 Trains the stage 0 agent (D115, D146, D147): PPO on CtfEnv over the running MCC, in Lockstep at a high time scale, with the ticks
 paused during each update. Writes Agent/runs/<run>/log.txt and policy.pt (the last policy).
-python Tools/game.py py Agent/scripts/train_stage0.py [--updates 20] [--steps 1024] [--scale 10] [--max-seconds 60] [--list Data/Training/ctf_curriculo_inicial.json [--seed 0]] --no-wait
+python Tools/game.py py Agent/scripts/train_stage0.py [--updates 20] [--steps 1024] [--scale 10] [--max-seconds 60] [--list Data/Training/ctf_curriculo_inicial.json [--seed 0]]
+    [--init Agent/runs/<run>/policy.pt] --no-wait
 """
 import argparse
 import os
 import sys
 import time
+
+import torch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -31,6 +34,7 @@ def Main():
     parser.add_argument("--list", help="training list (Data/Training/<name>.json): the setup of every episode comes from it")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
     parser.add_argument("--name", default=time.strftime("stage0_%Y%m%d_%H%M%S"))
+    parser.add_argument("--init", help="policy.pt of an earlier run to start from (same profile and obs; the optimizer starts fresh)")
     args = parser.parse_args()
     regions = discover()
     if not regions:
@@ -51,6 +55,17 @@ def Main():
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit,
                                           sparse=not args.no_sparse, profile=args.profile), setups)
+        reset = env.reset
+
+        def LoggedReset(*arguments, **keywords):
+            # P.3 E: a scenario of several matches goes on across the change; one line says it happened.
+            old = env.match_id
+            result = reset(*arguments, **keywords)
+            if old is not None and env.match_id != old:
+                Log(f"match changed: {old} -> {env.match_id}")
+            return result
+
+        env.reset = LoggedReset
         try:
             is_taken = env.take_control()
         except RuntimeError as error:
@@ -61,6 +76,9 @@ def Main():
             return 1
         try:
             ppo = Ppo(env, bridge, env.obs_size, env.nvec, PpoConfig(steps=args.steps), log=Log)
+            if args.init:
+                ppo.policy.load_state_dict(torch.load(args.init))
+                Log(f"init: {args.init}")
             ppo.train(args.updates, checkpoint=os.path.join(folder, "policy.pt"))
         finally:
             env.release()
