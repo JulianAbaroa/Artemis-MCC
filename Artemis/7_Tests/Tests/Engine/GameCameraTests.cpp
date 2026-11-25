@@ -16,6 +16,8 @@ namespace
     using Common::Math::Type::Vec3;
     using Engine::Base::Memory::State::CameraOverrideStore;
     using Engine::Base::Memory::Type::ObserverCamera::CameraOverride;
+    using Engine::Base::Memory::Type::Store::ReaderStallClock;
+    using Engine::Base::Memory::Type::Store::k_ReaderStallNanoseconds;
 
     using Floats = std::array<float, k_ProjectionFloatCount>;
 
@@ -194,6 +196,51 @@ TEST(GameCameraTests, AStalePoseIsTakenAsNone)
     // A new pose is fresh again.
     store.Publish(MakePose());
     EXPECT_TRUE(store.Read(std::chrono::milliseconds{ 5 }).has_value());
+}
+
+TEST(GameCameraTests, AStallOfTheReaderDoesNotAgeThePose)
+{
+    // The game thread stood still (D379): the Viewer could not publish, so the last pose is still the current one.
+    CameraOverrideStore store{};
+    store.Publish(MakePose());
+    EXPECT_TRUE(store.Read(std::chrono::milliseconds{ 100 }).has_value());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 250 });
+
+    EXPECT_TRUE(store.Read(std::chrono::milliseconds{ 100 }).has_value());
+}
+
+TEST(GameCameraTests, APoseAgesOutWhileTheReaderKeepsRunning)
+{
+    // The writer stopped and the game thread keeps reading every frame: the pose is none after the max age.
+    CameraOverrideStore store{};
+    store.Publish(MakePose());
+
+    bool isFresh{ true };
+    for (int frame{ 0 }; frame < 15 && isFresh; ++frame)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds{ 20 });
+        isFresh = store.Read(std::chrono::milliseconds{ 100 }).has_value();
+    }
+
+    EXPECT_FALSE(isFresh);
+}
+
+TEST(GameCameraTests, TheReaderStallClockCountsOnlyGapsLongerThanAFrame)
+{
+    constexpr std::int64_t start{ 1'000'000'000 };
+    constexpr std::int64_t frame{ 16'000'000 };
+    constexpr std::int64_t stall{ k_ReaderStallNanoseconds + 1 };
+
+    ReaderStallClock clock{};
+    EXPECT_EQ(clock.Read(start), 0);
+    EXPECT_EQ(clock.Read(start + frame), 0);
+    EXPECT_EQ(clock.Read(start + frame + stall), stall);
+    EXPECT_EQ(clock.Read(start + 2 * frame + stall), stall);
+
+    // A new value forgets the stalls.
+    clock.Reset();
+    EXPECT_EQ(clock.Read(start + 3 * frame + stall), 0);
 }
 
 TEST(GameCameraTests, TheOverrideStoreCountsFaults)

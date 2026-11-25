@@ -83,6 +83,7 @@
     <Compile Include="Agent\scripts\bridge_check.py" />
     <Compile Include="Agent\scripts\env_check.py" />
     <Compile Include="Agent\scripts\hello.py" />
+    <Compile Include="Agent\scripts\hw_monitor.py" />
     <Compile Include="Agent\scripts\obs_bench.py" />
     <Compile Include="Agent\scripts\probe_ctf.py" />
     <Compile Include="Agent\scripts\setup_env.py" />

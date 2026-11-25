@@ -14,6 +14,7 @@ export namespace Engine::Base::Memory::State
     private:
         using CameraOverride = Engine::Base::Memory::Type::ObserverCamera::CameraOverride;
         using CameraOverrideSlot = Engine::Base::Memory::Type::ObserverCamera::CameraOverrideSlot;
+        using ReaderStallClock = Engine::Base::Memory::Type::Store::ReaderStallClock;
 
     public:
         CameraOverrideStore() = default;
@@ -29,7 +30,7 @@ export namespace Engine::Base::Memory::State
         // Marks the pose inactive.
         auto Clear() -> void;
 
-        // param maxAge: A pose published longer ago than this is taken as none.
+        // param maxAge: A pose published longer ago than this is taken as none. The stalls of the readers do not count (D379).
         // return: The pose, or nothing when it is inactive or older than maxAge.
         // note: Wait free and without allocations, for the game thread.
         auto Read(std::chrono::nanoseconds maxAge) const -> std::optional<CameraOverride>;
@@ -47,6 +48,7 @@ export namespace Engine::Base::Memory::State
         std::array<CameraOverrideSlot, 2> m_Slots{};
         std::atomic<std::uint32_t> m_Current{ 0 };
         std::atomic<std::uint32_t> m_FaultCount{ 0 };
+        mutable ReaderStallClock m_ReaderStall{};
 
         auto Write(bool isActive, const CameraOverride& pose) -> void;
 

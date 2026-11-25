@@ -1,5 +1,6 @@
 export module Engine.Base.Pov.State:Request;
 
+import Engine.Base.Memory.Type;
 import Engine.Base.Pov.Type;
 import std;
 
@@ -14,6 +15,7 @@ export namespace Engine::Base::Pov::State
     private:
         using PovRequest = Engine::Base::Pov::Type::PovRequest;
         using PovRequestSlot = Engine::Base::Pov::Type::PovRequestSlot;
+        using ReaderStallClock = Engine::Base::Memory::Type::Store::ReaderStallClock;
 
     public:
         PovRequestStore() = default;
@@ -29,7 +31,7 @@ export namespace Engine::Base::Pov::State
         // Marks the request inactive.
         auto Clear() -> void;
 
-        // param maxAge: A request published longer ago than this is taken as none.
+        // param maxAge: A request published longer ago than this is taken as none. The stalls of the readers do not count (D379).
         // return: The request, or nothing when it is inactive or older than maxAge.
         // note: Wait free and without allocations, for the game thread.
         auto Read(std::chrono::nanoseconds maxAge) const -> std::optional<PovRequest>;
@@ -37,6 +39,7 @@ export namespace Engine::Base::Pov::State
     private:
         std::array<PovRequestSlot, 2> m_Slots{};
         std::atomic<std::uint32_t> m_Current{ 0 };
+        mutable ReaderStallClock m_ReaderStall{};
 
         auto Write(bool isActive, std::uint32_t playerHandle) -> void;
 

@@ -165,6 +165,18 @@ TEST(PovTests, AnOldRequestIsTakenAsNone)
     EXPECT_TRUE(store.Read(std::chrono::milliseconds{ 5 }).has_value());
 }
 
+TEST(PovTests, AStallOfTheReaderDoesNotAgeTheRequest)
+{
+    // The game thread stood still (D379): the request is still the current one, so the view does not go back to the local player.
+    PovRequestStore store{};
+    store.Publish(k_Bot);
+    EXPECT_TRUE(store.Read(k_PovRequestMaxAge).has_value());
+
+    std::this_thread::sleep_for(std::chrono::milliseconds{ 250 });
+
+    EXPECT_TRUE(store.Read(k_PovRequestMaxAge).has_value());
+}
+
 TEST(PovTests, TheMaxAgeOfARequestIsOneHundredMilliseconds)
 {
     EXPECT_EQ(k_PovRequestMaxAge, std::chrono::milliseconds{ 100 });

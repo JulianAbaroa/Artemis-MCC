@@ -49,6 +49,7 @@ namespace Engine::Base::Memory::State
         slot.Sequence.store(sequence + 2, std::memory_order_release);
 
         m_Current.store(next, std::memory_order_release);
+        m_ReaderStall.Reset();
     }
 
     auto CameraOverrideStore::Publish(const CameraOverride& pose) -> void
@@ -63,6 +64,9 @@ namespace Engine::Base::Memory::State
 
     auto CameraOverrideStore::Read(std::chrono::nanoseconds maxAge) const -> std::optional<CameraOverride>
     {
+        const std::int64_t now{ NowNanoseconds() };
+        const std::int64_t stalled{ m_ReaderStall.Read(now) };
+
         for (int attempt{ 0 }; attempt < k_SlotReadAttempts; ++attempt)
         {
             const CameraOverrideSlot& slot{ m_Slots[m_Current.load(std::memory_order_acquire) & 1u] };
@@ -79,7 +83,7 @@ namespace Engine::Base::Memory::State
             if (slot.Sequence.load(std::memory_order_relaxed) != before) continue;
 
             if (!isActive) return std::nullopt;
-            if (NowNanoseconds() - stamp > maxAge.count()) return std::nullopt;
+            if (now - stamp - stalled > maxAge.count()) return std::nullopt;
 
             CameraOverride pose{};
             pose.Eye = { values[0], values[1], values[2] };

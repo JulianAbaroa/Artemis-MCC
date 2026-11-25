@@ -47,6 +47,7 @@ namespace Engine::Base::Pov::State
         slot.Sequence.store(sequence + 2, std::memory_order_release);
 
         m_Current.store(next, std::memory_order_release);
+        m_ReaderStall.Reset();
     }
 
     auto PovRequestStore::Publish(std::uint32_t playerHandle) -> void
@@ -61,6 +62,9 @@ namespace Engine::Base::Pov::State
 
     auto PovRequestStore::Read(std::chrono::nanoseconds maxAge) const -> std::optional<PovRequest>
     {
+        const std::int64_t now{ NowNanoseconds() };
+        const std::int64_t stalled{ m_ReaderStall.Read(now) };
+
         for (int attempt{ 0 }; attempt < k_SlotReadAttempts; ++attempt)
         {
             const PovRequestSlot& slot{ m_Slots[m_Current.load(std::memory_order_acquire) & 1u] };
@@ -76,7 +80,7 @@ namespace Engine::Base::Pov::State
             if (slot.Sequence.load(std::memory_order_relaxed) != before) continue;
 
             if (!isActive) return std::nullopt;
-            if (NowNanoseconds() - stamp > maxAge.count()) return std::nullopt;
+            if (now - stamp - stalled > maxAge.count()) return std::nullopt;
 
             return PovRequest{ .PlayerHandle = playerHandle };
         }
