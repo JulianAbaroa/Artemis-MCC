@@ -4,6 +4,8 @@ PPO in one file, in the style of CleanRL (D147): an MLP actor-critic with one ca
 clipped objective. Agents of an environment step together and their transitions are pooled (shared parameters). The logic ticks
 are paused while the network trains (Bridge.paused, D143), so the game never waits on an update.
 """
+import json
+import os
 import time
 from dataclasses import dataclass
 
@@ -72,10 +74,21 @@ class Ppo:
         self.finished = []
         self.counts = {}
         self.global_step = 0
+        self.update_index = 0
+        self.episode_events = {}
+        self.episode_started = time.time()
+        self.metrics = None
 
     def _start_episode(self):
         self.observations, _ = self.env.reset()
         self.episode_returns = {h: 0.0 for h in self.observations}
+        self.episode_events = {h: {} for h in self.observations}
+        self.episode_started = time.time()
+
+    def _write_metrics(self, row):
+        if self.metrics:
+            self.metrics.write(json.dumps(row) + "\n")
+            self.metrics.flush()
 
     def collect(self):
         """Plays config.steps decisions. Returns the batch of every agent, flattened."""
@@ -108,9 +121,17 @@ class Ppo:
                 self.episode_returns[h] += rewards[h]
                 for name in infos[h]["events"]:
                     self.counts[name] = self.counts.get(name, 0) + 1
+                    events = self.episode_events.setdefault(h, {})
+                    events[name] = events.get(name, 0) + 1
             self.global_step += 1
             if any(terminated.values()) or any(truncated.values()):
                 self.finished += list(self.episode_returns.values())
+                self._write_metrics({"kind": "episode", "time": time.time(), "update": self.update_index,
+                                     "step": self.global_step, "episode": len(self.finished),
+                                     "seconds": round(time.time() - self.episode_started, 2),
+                                     "terminated": any(terminated.values()),
+                                     "agents": {str(h): {"return": round(r, 4), "events": self.episode_events.get(h, {})}
+                                                for h, r in self.episode_returns.items()}})
                 self._start_episode()
             else:
                 self.observations = next_obs
@@ -162,8 +183,24 @@ class Ppo:
                                   float(((ratio - 1) - (ratio.log())).mean())))
         return np.mean(stats, axis=0)
 
-    def train(self, updates, checkpoint=None):
+    def train(self, updates, checkpoint=None, snapshots=None, snapshot_every=50, metrics=None):
+        """checkpoint: path of the last policy, written after every update. snapshots: folder where policy_uNNNNN.pt is kept
+        before the first update and every snapshot_every updates (the policies replayed later at x1). metrics: path of a JSON
+        lines file with one row per update and one per finished episode."""
+        if snapshots:
+            os.makedirs(snapshots, exist_ok=True)
+            torch.save(self.policy.state_dict(), os.path.join(snapshots, "policy_u00000.pt"))
+        self.metrics = open(metrics, "a", encoding="ascii") if metrics else None
+        try:
+            self._train(updates, checkpoint, snapshots, snapshot_every)
+        finally:
+            if self.metrics:
+                self.metrics.close()
+                self.metrics = None
+
+    def _train(self, updates, checkpoint, snapshots, snapshot_every):
         for update in range(1, updates + 1):
+            self.update_index = update
             started = time.time()
             batch = self.collect()
             collected = time.time()
@@ -171,7 +208,14 @@ class Ppo:
                 policy_loss, value_loss, entropy, kl = self.update(batch)
                 if checkpoint:
                     torch.save(self.policy.state_dict(), checkpoint)
+                if snapshots and update % snapshot_every == 0:
+                    torch.save(self.policy.state_dict(), os.path.join(snapshots, f"policy_u{update:05d}.pt"))
             recent = self.finished[-20:]
+            self._write_metrics({"kind": "update", "time": time.time(), "update": update, "step": self.global_step,
+                                 "episodes": len(self.finished), "return20": float(np.mean(recent)) if recent else None,
+                                 "events": dict(self.counts), "collect": round(collected - started, 2),
+                                 "train": round(time.time() - collected, 2), "policy_loss": float(policy_loss),
+                                 "value_loss": float(value_loss), "entropy": float(entropy), "kl": float(kl)})
             self.log(f"update {update}: step {self.global_step}, episodes {len(self.finished)}, "
                      f"return {np.mean(recent) if recent else float('nan'):+.3f}, events {self.counts}, "
                      f"collect {collected - started:.1f} s, train {time.time() - collected:.1f} s, "

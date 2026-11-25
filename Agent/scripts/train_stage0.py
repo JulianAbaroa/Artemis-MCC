@@ -1,7 +1,8 @@
 """
 train_stage0.py
 Trains the stage 0 agent (D115, D146, D147): PPO on CtfEnv over the running MCC, in Lockstep at a high time scale, with the ticks
-paused during each update. Writes Agent/runs/<run>/log.txt and policy.pt (the last policy).
+paused during each update. Writes Agent/runs/<run>/log.txt, policy.pt (the last policy), snapshots/policy_uNNNNN.pt (before the
+first update and every --snapshot-every updates, to replay them later) and metrics.jsonl (one row per update and per episode).
 python Tools/game.py py Agent/scripts/train_stage0.py [--updates 20] [--steps 1024] [--scale 10] [--max-seconds 60] [--list Data/Training/ctf_curriculo_inicial.json [--seed 0]]
     [--init Agent/runs/<run>/policy.pt] --no-wait
 """
@@ -34,6 +35,7 @@ def Main():
     parser.add_argument("--list", help="training list (Data/Training/<name>.json): the setup of every episode comes from it")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
     parser.add_argument("--name", default=time.strftime("stage0_%Y%m%d_%H%M%S"))
+    parser.add_argument("--snapshot-every", type=int, default=50, help="updates between kept policies (snapshots/)")
     parser.add_argument("--init", help="policy.pt of an earlier run to start from (same profile and obs; the optimizer starts fresh)")
     args = parser.parse_args()
     regions = discover()
@@ -79,7 +81,8 @@ def Main():
             if args.init:
                 ppo.policy.load_state_dict(torch.load(args.init))
                 Log(f"init: {args.init}")
-            ppo.train(args.updates, checkpoint=os.path.join(folder, "policy.pt"))
+            ppo.train(args.updates, checkpoint=os.path.join(folder, "policy.pt"), snapshots=os.path.join(folder, "snapshots"),
+                      snapshot_every=args.snapshot_every, metrics=os.path.join(folder, "metrics.jsonl"))
         finally:
             env.release()
             Log(f"end: lost events {bridge.event_gaps}, counters {bridge.counters()}")
