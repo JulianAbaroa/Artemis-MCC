@@ -44,7 +44,7 @@ python Tools/game.py py Agent/scripts/bridge_check.py <command> [options]
                                            "preset" and "map" are the same request with one field.
     controls [--context foot|nogren|flag|vehicle] [--imitation] [--phase-seconds 6] [--scale 1] [--player N] [--only a,b] [--wait 120]
                                            E1 (D355, D364): one phase per control of the AgentInput, each checked by what the Tick shows
-                                           (PASS / FAIL / SKIP / SEE). Lockstep N = d = 4, ONE agent (the first live bot with a body, or the
+                                           (PASS / FAIL / SKIP / SEE). Lockstep N = d = 5, ONE agent (the first live bot with a body, or the
                                            player of table index N), the others stay with the engine. Follow it with Watch POV: each phase
                                            prints its name (and beeps). flag / vehicle wait for the user to possess the bot, take the flag /
                                            board the Warthog and release it. --imitation sends nothing: the user possesses the bot and does
@@ -1016,9 +1016,9 @@ def Main():
     parser.add_argument("--mode", choices=["lockstep", "free"], default="lockstep")
     parser.add_argument("--seconds", type=float, default=None, help="how long to run (endround 300, preset and map 120, the rest 60)")
     parser.add_argument("--agents", choices=["bots", "all"], default="bots")
-    parser.add_argument("--period", type=int, default=4)
+    parser.add_argument("--period", type=int, default=5)
     parser.add_argument("--sparse", action="store_true", help="run, turn: ask Artemis for its pipeline only on decision ticks (Q101)")
-    parser.add_argument("--latency", type=int, default=4)
+    parser.add_argument("--latency", type=int, default=5)
     parser.add_argument("--crash-after", type=int, default=0)
     parser.add_argument("--pause-every", type=int, default=0, help="run: decisions between two pauses (0 = none)")
     parser.add_argument("--pause-seconds", type=float, default=30.0, help="run: length of each pause")

@@ -297,7 +297,7 @@ def test_a_step_writes_the_agent_input_of_the_profile(ctf):
     action = actions[P0 & 0xFFFF]
     assert tick == 1 and action.handle == P0
     assert (action.forward, action.left) == (1.0, 0.0)
-    assert action.yaw_delta == pytest.approx(4 * 0.1) and action.pitch_delta == 0.0  # N = d = 4 ticks of the turn limit
+    assert action.yaw_delta == pytest.approx(5 * 0.1) and action.pitch_delta == 0.0  # N = d = 5 ticks of the turn limit (D375)
     assert (action.level, action.edge) == (1, 1)
 
 

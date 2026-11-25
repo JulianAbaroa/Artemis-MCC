@@ -109,6 +109,8 @@ def Main():
     parser.add_argument("--profile", choices=sorted(PROFILES), default="stage0", help="input profile of the policy (Diseno/22 5.3)")
     parser.add_argument("--sparse", action="store_true", help="ask Artemis for its pipeline only on decisions (default: every tick)")
     parser.add_argument("--list", help="training list (Data/Training/<name>.json): every episode starts with its next setup")
+    parser.add_argument("--period", type=int, default=5, help="ticks between decisions (N)")
+    parser.add_argument("--latency", type=int, default=5, help="ticks from a decision to its action (d); Artemis clamps it to 2..N (D139)")
     parser.add_argument("--timing", action="store_true", help="measure the phases of each decision and the slack of the Lockstep (F4.9)")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
     args = parser.parse_args()
@@ -118,7 +120,8 @@ def Main():
         print("FAIL no open region (is MCC running with Artemis?)")
         return 2
     config = CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit, sparse=args.sparse,
-                       profile=args.profile, timing=args.timing)
+                       profile=args.profile, timing=args.timing,
+                       period=args.period, latency=args.latency)
     policy = Seek if args.policy == "seek" else Random
     rng = np.random.default_rng(0)
     failures = []

@@ -89,11 +89,11 @@ TEST(LockstepTests, DecideControlClampsPeriodAndLatency)
 {
     const BridgeControlState previous{};
 
-    // D304: d = 4 until the client asks for another one; k_MinLatency stays the floor.
-    EXPECT_EQ(previous.Latency, 4);
-    EXPECT_EQ(k_DefaultLatency, 4);
+    // D304, D375: d = 5 until the client asks for another one; k_MinLatency stays the floor.
+    EXPECT_EQ(previous.Latency, 5);
+    EXPECT_EQ(k_DefaultLatency, 5);
     EXPECT_EQ(k_MinLatency, 2);
-    EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 0, 0, 0), previous).Latency, 4);
+    EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 0, 0, 0), previous).Latency, 5);
     EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 0, 2, 0), previous).Latency, 2);
 
     EXPECT_EQ(DecideControl(MakeClient(BridgeOwner::Python, BridgeMode::Free, 100, 0, 0), previous).DecisionPeriod, 60);

@@ -77,8 +77,8 @@ def MakeAction(handle, branches, profile, per_decision):
 
 @dataclass
 class CtfConfig:
-    period: int = 4
-    latency: int = 4
+    period: int = 5
+    latency: int = 5
     scale: float = 0.0
     turn_limit: float = 0.1
     profile: str = "stage0"
