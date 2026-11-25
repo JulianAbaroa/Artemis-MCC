@@ -317,3 +317,16 @@ TEST(OptionsStoreTests, TheAgentStripAndRosterOptionsHaveTheirOwnKeysAndDefaults
     EXPECT_TRUE(store.IsEnabled(Flag::AgentStrip));
     EXPECT_FALSE(store.IsEnabled(Flag::RosterAgentsOnly));
 }
+
+TEST(OptionsStoreTests, TheOverlayMasterSwitchIsOnByDefaultAndSavedByItsKey)
+{
+    OptionsStore store{};
+    EXPECT_TRUE(store.IsEnabled(Flag::DrawOverlay));
+
+    store.Load("DrawOverlay", "0");
+    EXPECT_FALSE(store.IsEnabled(Flag::DrawOverlay));
+    EXPECT_NE(Snapshot(store).find("Viewer_DrawOverlay=0\n"), std::string::npos);
+
+    store.ResetToDefaults();
+    EXPECT_TRUE(store.IsEnabled(Flag::DrawOverlay));
+}

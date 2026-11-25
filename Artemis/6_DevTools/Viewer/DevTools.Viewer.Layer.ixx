@@ -35,6 +35,7 @@ namespace
 {
     using Common::Engine::Type::k_NoHandle;
 
+    using DevTools::Viewer::Director::System::DecidePovRequest;
     using DevTools::Viewer::Roster::System::DecidePossession;
 }
 
@@ -118,7 +119,7 @@ export namespace DevTools::Viewer
                 // note: The overlay needs the depth copies of the first person mask, and the scene point draws only for an active Viewer. Without
                 // the Viewer neither is done.
                 const bool isActive{ m_SceneService.IsActive() };
-                engine.m_RenderStore.SetFirstPersonMaskRequested(isActive);
+                engine.m_RenderStore.SetFirstPersonMaskRequested(isActive && m_OptionsStore.IsEnabled(Flag::DrawOverlay));
                 engine.m_RenderStore.SetSceneDrawRequested(isActive);
 
                 // The game shows the observed player in the view of user 0 while the Viewer is active and the option is on. Without a request (the
@@ -128,12 +129,12 @@ export namespace DevTools::Viewer
                 {
                     const std::uint32_t observed{ service.m_ObservedPlayerStore.Get() };
 
-                    // The player of a POV shot of the director wins over the option while it plays (VW.14). The options are not changed: when the director
-                    // stops, they rule again.
+                    // While the director plays the request is its own: a POV shot publishes its player and any other shot withdraws it, even with Watch POV
+                    // on (VW.14f). The options are not changed: when the director stops, they rule again.
                     const std::uint32_t directed{ m_DirectorStore.GetPovPlayer() };
 
-                    if (directed != k_NoHandle) engine.m_PovRequestStore.Publish(directed);
-                    else if (m_OptionsStore.IsEnabled(Flag::WatchPov) && observed != k_NoHandle) engine.m_PovRequestStore.Publish(observed);
+                    const std::optional<std::uint32_t> povRequest{ DecidePovRequest(m_DirectorStore.IsPlaying(), directed, m_OptionsStore.IsEnabled(Flag::WatchPov), observed) };
+                    if (povRequest) engine.m_PovRequestStore.Publish(*povRequest);
                     else engine.m_PovRequestStore.Clear();
 
                     // note: The possession follows the selected player, not its body, so it survives the death of the bot (D352). A human, the Free
@@ -167,7 +168,7 @@ export namespace DevTools::Viewer
                 // The card and the strip have the gate of the labels: the same scene update, so never the data of another frame.
                 if (isSceneUpdated)
                 {
-                    m_LabelService.Draw();
+                    if (m_OptionsStore.IsEnabled(Flag::DrawOverlay)) m_LabelService.Draw();
                     m_AgentCardService.Draw();
                     m_AgentStripService.Draw();
                 }

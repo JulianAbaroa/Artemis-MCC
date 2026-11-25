@@ -49,6 +49,12 @@ export namespace DevTools::Viewer::Director::System
     // only when canPov. Nothing when no shot qualifies, so the caller never loops.
     auto NextPlayableShot(const Director::Type::ShotList& shots, std::size_t first, int direction, bool canPov) -> std::optional<std::size_t>;
 
+    // return: The player the POV request must carry this frame, or nothing to withdraw it. While the director plays the request is its own: the player of a
+    // POV shot, and nothing for any other shot, whatever Watch POV and the selection say. Otherwise Watch POV with an observed player.
+    // param directedPlayer: The player of the POV shot that plays, k_NoHandle for another kind of shot or a wait.
+    // param observed: The player observed (the selected one), k_NoHandle when none.
+    auto DecidePovRequest(bool isDirectorPlaying, std::uint32_t directedPlayer, bool isWatchPovOn, std::uint32_t observed) -> std::optional<std::uint32_t>;
+
     // return: The shots of the text. A line is a comment when it starts with '#', empty lines are ignored, and a line that does not parse is skipped and
     // counted. Numbers use '.', yaw and pitch are in degrees.
     //   fixed|<name>|<seconds>|<x> <y> <z>|<yaw> <pitch>

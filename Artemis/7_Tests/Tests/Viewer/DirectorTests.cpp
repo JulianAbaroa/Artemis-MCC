@@ -20,6 +20,7 @@ namespace
     using DevTools::Viewer::Director::State::DirectorStore;
     using DevTools::Viewer::Director::System::Advance;
     using DevTools::Viewer::Director::System::DirectorService;
+    using DevTools::Viewer::Director::System::DecidePovRequest;
     using DevTools::Viewer::Director::System::FormatShots;
     using DevTools::Viewer::Director::System::IsRoundChange;
     using DevTools::Viewer::Director::System::NextPlayableShot;
@@ -775,4 +776,20 @@ TEST(DirectorTests, WithoutTheArtemisFolderTheListLivesInMemoryAndSaysSo)
     EXPECT_EQ(store.GetShotCount(), 1u);
     EXPECT_TRUE(store.GetFileInfo().Path.empty());
     EXPECT_NE(store.GetFileInfo().Message.find("not saved"), std::string::npos);
+}
+
+TEST(DirectorTests, WhilePlayingThePovRequestIsTheDirectorsAlone)
+{
+    // A POV shot publishes its player, whatever the option and the selection say.
+    EXPECT_EQ(DecidePovRequest(true, 7, false, k_NoHandle), std::optional<std::uint32_t>{ 7 });
+    EXPECT_EQ(DecidePovRequest(true, 7, true, 9), std::optional<std::uint32_t>{ 7 });
+
+    // Any other shot, or a wait, withdraws it even with Watch POV on and a player selected.
+    EXPECT_EQ(DecidePovRequest(true, k_NoHandle, true, 9), std::nullopt);
+    EXPECT_EQ(DecidePovRequest(true, k_NoHandle, false, 9), std::nullopt);
+
+    // Not playing: Watch POV with the observed player, as before.
+    EXPECT_EQ(DecidePovRequest(false, k_NoHandle, true, 9), std::optional<std::uint32_t>{ 9 });
+    EXPECT_EQ(DecidePovRequest(false, k_NoHandle, true, k_NoHandle), std::nullopt);
+    EXPECT_EQ(DecidePovRequest(false, k_NoHandle, false, 9), std::nullopt);
 }

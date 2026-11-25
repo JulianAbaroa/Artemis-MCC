@@ -140,6 +140,9 @@ export namespace DevTools::Viewer::Scene::System
 
         auto GetFramePoses() const -> const FramePoses&;
 
+        // return: Whether the 3D overlay is on (the option Draw overlay). The telemetry says so when nothing is drawn.
+        auto IsOverlayOn() const -> bool;
+
         // return: True if the camera mode is Game (the free camera is the other mode).
         auto IsGameMode() const -> bool;
 
@@ -179,6 +182,9 @@ export namespace DevTools::Viewer::Scene::System
         std::vector<RosterEntry> m_Roster{};
         std::vector<Bot> m_Bots{};
 
+        // The player the selection follows because a POV shot of the director put it there, k_NoHandle when the director did not.
+        std::uint32_t m_DirectedPlayer{ 0xFFFFFFFF };
+
         // return: The roster of the players of the tick, sorted.
         auto BuildRoster(const Tick& tick) -> std::vector<RosterEntry>;
 
@@ -199,6 +205,9 @@ export namespace DevTools::Viewer::Scene::System
 
         // Makes the selection follow the player of a POV shot, so the card and the strip show who is seen.
         auto FollowDirectedPlayer(std::uint32_t playerHandle) -> void;
+
+        // Clears the selection when the director set it and its POV shot is over. A selection the user made is not touched.
+        auto ReleaseDirectedSelection() -> void;
 
         // Answers the requests to add a fixed or an orbit shot from the free camera.
         auto AddDirectorShots() -> void;

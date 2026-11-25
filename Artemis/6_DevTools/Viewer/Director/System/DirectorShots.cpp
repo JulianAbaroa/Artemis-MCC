@@ -1,6 +1,7 @@
 module DevTools.Viewer.Director.System;
 import :Shots;
 
+import Common.Engine.Type;
 import Common.Math.Type;
 import Common.Math.System;
 import DevTools.Viewer.Roster.Type;
@@ -22,6 +23,7 @@ namespace
     using DevTools::Viewer::Director::Type::ShotYawPitch;
     using DevTools::Viewer::Roster::Type::RosterEntry;
 
+    using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Director::Type::k_DefaultShotSeconds;
     using DevTools::Viewer::Director::Type::k_MaxCenterDistance;
     using DevTools::Viewer::Director::Type::k_NoDoubleCutSeconds;
@@ -322,6 +324,14 @@ namespace DevTools::Viewer::Director::System
 
             index = (index + step + count) % count;
         }
+
+        return std::nullopt;
+    }
+
+    auto DecidePovRequest(bool isDirectorPlaying, std::uint32_t directedPlayer, bool isWatchPovOn, std::uint32_t observed) -> std::optional<std::uint32_t>
+    {
+        if (isDirectorPlaying) return directedPlayer != k_NoHandle ? std::optional<std::uint32_t>{ directedPlayer } : std::nullopt;
+        if (isWatchPovOn && observed != k_NoHandle) return observed;
 
         return std::nullopt;
     }

@@ -113,6 +113,7 @@ export namespace DevTools::Viewer::Options::Type
         DirectorCutOnRound,
         AgentStrip,
         RosterAgentsOnly,
+        DrawOverlay,
 
         Count
     };
@@ -407,6 +408,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::RosterAgentsOnly, Group::Camera, Layer::Count, Level::Full, "RosterAgentsOnly", "Roster: agents only",
             "The roster that the strip, the up and down arrows and the director's POV pick walk keeps only the Artemis bots. A selected human is then not in the roster.", false },
+
+        { Flag::DrawOverlay, Group::Camera, Layer::Count, Level::Full, "DrawOverlay", "Draw overlay",
+            "Master switch of the 3D overlay: off, no 3D pass is drawn (map, objects, aim spheres, View, fixtures, limits) and no 3D labels. The camera, the director and the selection keep working. The card, the strip and the F3 HUD have their own switches.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars

@@ -200,6 +200,7 @@ namespace DevTools::Viewer::Scene::System
         m_PovRequestStore.Clear();
         m_PossessRequestStore.Clear();
         m_DirectorService.Stop();
+        this->ReleaseDirectedSelection();
         m_CameraService.Deactivate();
     }
 
@@ -222,8 +223,15 @@ namespace DevTools::Viewer::Scene::System
 
         // The steps go before the follow, so the same frame already watches the new player. The player of a POV shot wins over the arrows.
         const int steps{ m_SelectionService.ConsumeStep() };
-        if (directed.PovPlayer != k_NoHandle) this->FollowDirectedPlayer(directed.PovPlayer);
-        else this->StepSelection(steps, tick);
+        if (directed.PovPlayer != k_NoHandle)
+        {
+            this->FollowDirectedPlayer(directed.PovPlayer);
+        }
+        else
+        {
+            this->ReleaseDirectedSelection();
+            this->StepSelection(steps, tick);
+        }
 
         // note: The watched player is the one the selection follows, else the local player.
         m_ObservedStore.Set(this->FollowSelectedPlayer(tick));
@@ -266,7 +274,23 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::FollowDirectedPlayer(std::uint32_t playerHandle) -> void
     {
         const std::optional<std::size_t> index{ IndexOfPlayer(m_Roster, playerHandle) };
-        if (index) m_SelectionService.Follow(m_Roster[*index].Handle, m_Roster[*index].BipedHandle);
+        if (!index) return;
+
+        m_SelectionService.Follow(m_Roster[*index].Handle, m_Roster[*index].BipedHandle);
+        m_DirectedPlayer = playerHandle;
+    }
+
+    auto SceneService::ReleaseDirectedSelection() -> void
+    {
+        if (m_DirectedPlayer == k_NoHandle) return;
+
+        if (m_SelectionService.GetSelectedPlayer() == m_DirectedPlayer) m_SelectionService.Clear();
+        m_DirectedPlayer = k_NoHandle;
+    }
+
+    auto SceneService::IsOverlayOn() const -> bool
+    {
+        return m_OptionsStore.IsEnabled(Flag::DrawOverlay);
     }
 
     auto SceneService::AddDirectorShots() -> void

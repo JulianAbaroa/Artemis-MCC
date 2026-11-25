@@ -255,7 +255,8 @@ namespace DevTools::Viewer::Hud::System
             return;
         }
 
-        if (m_RenderStore.GetDrawPlace() == DrawPlace::Scene) ImGui::TextColored(k_Green, "scene");
+        if (!m_SceneService.IsOverlayOn()) ImGui::TextColored(k_Orange, "none (overlay off)");
+        else if (m_RenderStore.GetDrawPlace() == DrawPlace::Scene) ImGui::TextColored(k_Green, "scene");
         else ImGui::TextColored(k_Orange, "none (%s)", SceneReason(m_RenderStore.GetSceneStatus()));
 
         const std::uint32_t failures{ m_RenderStore.GetSceneFailures() };

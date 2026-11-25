@@ -136,6 +136,10 @@ namespace DevTools::Viewer::Map::System
             // note: Without a pose to draw (Game mode with no valid camera of the game) nothing is drawn, and the labels of the frame are not drawn either.
             if (!m_SceneService.HasFrameUpdate()) return false;
 
+            // note: The master switch (VW.14f) skips every upload and the whole draw, so the GPU state is not touched at all: no depth clear, no mask update.
+            // The scene update above ran, so the camera, the director, the override and the selection go on.
+            if (!m_OptionsStore.IsEnabled(Flag::DrawOverlay)) return false;
+
             const auto& palette = m_SceneService.GetPalette();
             const std::uint32_t selected = m_SceneService.GetSelected();
             const auto& hidden = m_SceneService.GetHiddenHandles();
