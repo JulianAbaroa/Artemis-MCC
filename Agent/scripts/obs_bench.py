@@ -5,8 +5,9 @@ and builds them as a BridgeTick buffer with the dtype of bridge_layout, then tim
   copy_full    the copy of a whole BridgeTick (what Bridge.read_tick does)
   copy_b       the copy of only Header + Players + Match + Objectives + Stands + Events + Views (what would be left with D317 B)
   copy_views   the copy of only Header + Views + Match
-  observe      Observe of the agents whose View is computed in the tick (the golden has as many as it has; observe16 is the cost of one
-               View times 16, the number of the design)
+  observeN     ObserveBatch of the agents whose View is computed in the tick (the golden has as many as it has)
+  observe16    ObserveBatch (P.3, one numpy pass, no loop per agent) over 16 real rows: the computed Views of the golden repeated up to 16 (by indexing)
+  observe1     Observe of one row (the wrapper over ObserveBatch): the floor of numpy per call
   new_events   Bridge.new_events over a tick with 64 events
 The last line says how much of the Python work per decision the full copy is. Nothing here is an assertion: it is a measurement.
 python Agent/scripts/obs_bench.py [--film ctf_c | --golden PATH] [--reps 300]
@@ -27,7 +28,7 @@ import tickdump  # noqa: E402
 from artemis import bridge_layout as L  # noqa: E402
 from artemis.bridge import Bridge, PublishedTick  # noqa: E402
 from artemis.env import ActionNvec  # noqa: E402
-from artemis.env.ctf import Observe  # noqa: E402
+from artemis.env.ctf import Observe, ObserveBatch  # noqa: E402
 
 AGENTS = 16
 EVENTS = 64
@@ -105,18 +106,17 @@ def Main():
     for name, fields in GROUPS.items():
         results[name] = Measure(lambda fields=fields: [buffer[0][f].copy() for f in fields], args.reps)
 
-    # Observe over the Views the tick has; the cost of 16 is 16 times the one of a View (the same function on the same rows).
+    # ObserveBatch over the Views the tick has, over 16 rows (the computed ones repeated: np.resize), and Observe of one row.
     nvec = ActionNvec("stage0")
-    last = np.zeros(len(nvec), dtype=np.int64)
     published = PublishedTick(buffer[0].copy(), 0)
-
-    def ObserveAll():
-        for row in rows:
-            Observe(published.views[row], published.match, last, nvec, 120.0)
-    observe = Measure(ObserveAll, args.reps)
-    results[f"observe{len(rows)}"] = observe
-    per_view = [t / len(rows) for t in observe]
-    results["observe16"] = [t * AGENTS for t in per_view]
+    views = published.views[rows]
+    views16 = views[np.arange(AGENTS) % len(views)]  # not np.resize: it drops the padding of the dtype
+    last = np.zeros((len(views), len(nvec)), dtype=np.int64)
+    last16 = np.zeros((AGENTS, len(nvec)), dtype=np.int64)
+    first = published.views[rows[0]]
+    results[f"observe{len(rows)}"] = Measure(lambda: ObserveBatch(views, published.match, last, nvec, 120.0), args.reps)
+    results["observe16"] = Measure(lambda: ObserveBatch(views16, published.match, last16, nvec, 120.0), args.reps)
+    results["observe1"] = Measure(lambda: Observe(first, published.match, last[0], nvec, 120.0), args.reps)
 
     # new_events over a tick with 64 events: fresh state each time (the cursor starts over with the match).
     events = buffer.copy()
@@ -132,7 +132,7 @@ def Main():
 
     print(f"{'what':12s} {'p50 us':>10s} {'p95 us':>10s}")
     for name, times in results.items():
-        note = f"  ({len(rows)} Views x {AGENTS / len(rows):g})" if name == "observe16" else ""
+        note = f"  ({len(rows)} computed Views repeated up to {AGENTS})" if name == "observe16" else ""
         print(f"{name:12s} {Percentile(times, 50):10.1f} {Percentile(times, 95):10.1f}{note}")
     full, ev, obs = (Percentile(results[k], 50) for k in ("copy_full", "new_events", "observe16"))
     print(f"copy_full = {100 * full / (full + ev + obs):.1f}% de (copy_full + new_events + observe16)  "

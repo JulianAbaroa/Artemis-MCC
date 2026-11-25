@@ -16,7 +16,7 @@ import pytest
 
 import tickdump
 from tdump_writer import Repo
-from test_ctf import ctf  # noqa: F401  (the fixture: artemis.env.ctf with a stand-in for the bridge)
+from test_ctf import BatchDifferences, ctf  # noqa: F401  (the fixture: artemis.env.ctf with a stand-in for the bridge)
 
 sys.path.insert(0, os.path.join(Repo(), "Agent"))
 
@@ -146,8 +146,15 @@ def Compare(ctf, film):
     nvec = ctf.ActionNvec("stage0")
     last = np.array([2, 1, 4, 2, 0, 0, 0])
     worst = np.zeros(ctf.STATE_SIZE)
-    count, classes, cases = 0, {"carried": 0}, []
+    count, classes, cases = 0, {"carried": 0, "batch": 0}, []
     for r, table in tickdump.Dump(GoldenPath(film)).states():
+        # P.3: ObserveBatch over every computed View of the tick is the observation row by row (the oracle of test_ctf).
+        computed = r.views[r.views["Head"]["IsComputed"] != 0]
+        if len(computed):
+            differences = BatchDifferences(ctf, computed, r.match, np.tile(last, (len(computed), 1)), nvec)
+            classes["batch"] += len(computed)
+            if differences:
+                cases.append((r.game_tick, -2, differences[:3]))
         for row, view in enumerate(r.views):
             head = view["Head"]
             if not int(head["IsComputed"]) or not int(head["HasBody"]):
@@ -188,8 +195,8 @@ def test_the_observation_from_the_view_is_the_one_of_the_omniscient_tick(ctf, fi
     count, worst, cases, classes = Compare(ctf, film)
     with capsys.disabled():
         Report(film, count, worst, cases, classes)
-    assert count > 0 and classes["carried"] > 0
-    assert not cases, f"{len(cases)} differences; first: {cases[:3]} (tick, row, [(entry, view, reference)])"
+    assert count > 0 and classes["carried"] > 0 and classes["batch"] > 0
+    assert not cases, f"{len(cases)} differences; first: {cases[:3]} (tick, row, [(entry, view, reference)]); row -2 is ObserveBatch against the row by row Observe, [(row, entry)]"
 
 
 @slow

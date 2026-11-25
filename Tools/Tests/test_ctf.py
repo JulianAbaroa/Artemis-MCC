@@ -231,7 +231,7 @@ def test_carried_flag_makes_the_agent_a_carrier_that_heads_for_its_stand(ctf):
     frame = Frame(ctf, flags=(HOME, CARRIED), flag_at=(5.0, 0.0, 0.5), carrying=True)
     env = ctf.CtfEnv(FakeBridge([frame]))
     env.reset()
-    obs, phi = env._observe(P0)
+    obs, phi = env._observe_all()[P0]
     assert obs[6] == 1.0 and obs[13] == 1.0
     assert obs[11] == 0.0 and obs[12] == 0.0
     assert phi == pytest.approx(-5.0 / ctf.METERS)
@@ -241,7 +241,7 @@ def test_dropped_flag_is_flagged_as_dropped_and_shaped_through_it(ctf):
     frame = Frame(ctf, flags=(HOME, DROPPED), flag_at=(50.0, 0.0, 0.0))
     env = ctf.CtfEnv(FakeBridge([frame]))
     env.reset()
-    obs, phi = env._observe(P0)
+    obs, phi = env._observe_all()[P0]
     assert obs[11] == 0.0 and obs[12] == 1.0 and obs[6] == 0.0
     assert phi == pytest.approx(-(45.0 + 50.0) / ctf.METERS)
 
@@ -704,7 +704,7 @@ def test_observation_reads_only_the_view_and_the_match(ctf):
 
 
 def test_the_environment_no_longer_reads_entities_objectives_or_stands_for_the_observation(ctf):
-    for function in (ctf.Observe, ctf.CtfEnv._observe, ctf.TimeLeft, ctf.ScoreLeft, ctf.HasStand):
+    for function in (ctf.Observe, ctf.ObserveBatch, ctf.CtfEnv._observe_all, ctf.TimeLeft, ctf.ScoreLeft):
         source = inspect.getsource(function).lower()
         for word in ("entities", "objectives", "stands", "bipedhandle", "players"):
             assert word not in source, (function.__name__, word)
@@ -742,7 +742,8 @@ def test_an_agent_without_a_computed_view_observes_no_body(ctf):
     env.reset()
     env.published.players["Handle"] = 0xEC7000FF
     env._rows = None
-    assert env._observe(P0)[1] is None and not env._observe(P0)[0][:19].any()
+    observed = env._observe_all()[P0]
+    assert observed[1] is None and not observed[0][:19].any()
     view = ViewRow(ctf.layout, has_body=False)
     obs, phi = ctf.Observe(view, Frame(ctf).match, last, ctf.ActionNvec("stage0"), 120.0)
     assert phi is None and not obs[:19].any()
@@ -954,3 +955,213 @@ def test_seek_is_unchanged_without_interaction(ctf):
     behind = SeekWith(ctf, carrying=True, flags=(HOME, CARRIED), flag_at=(5.0, 0.0, 0.5))
     assert behind[0] == 2 and behind[2] in (0, len(ctf.YAW_STEPS) - 1) and behind[6] == 0
 
+
+# --- ObserveBatch (P.3): the vectorized observation against the one of a row at a time -------------------------------------------------
+
+def ReferenceScoreLeft(match, team):
+    """Per-team ScoreLeft as it was before P.3 (the oracle of ObserveBatch): (own, enemy) of one team."""
+    to_win = int(match["ScoreToWin"])
+    if to_win <= 0:
+        return 0.0, 0.0
+    scores = [int(score) for score in match["TeamRoundScores"]]
+
+    def Left(score):
+        return max(0, to_win - score) / to_win
+    others = [score for t, score in enumerate(scores) if t != team]
+    return Left(scores[team]) if 0 <= team < len(scores) else 0.0, Left(max(others)) if others else 0.0
+
+
+def ReferenceHasStand(flag):
+    return any(float(flag["StandPosition"][axis]) != 0.0 for axis in "XYZ")
+
+
+def ReferenceObservePerRow(ctf, view, match, last_action, nvec, max_seconds):
+    """The Observe of one View as it was before P.3 (a Python call per agent, field by field): the oracle of ObserveBatch. Not used by
+    the package (rules 1.2: one implementation there)."""
+    obs = np.zeros(ctf.ACTION_AT + sum(nvec), dtype=np.float32)
+    offset = ctf.ACTION_AT
+    for branch, n in zip(last_action, nvec):
+        obs[offset + int(branch)] = 1.0
+        offset += n
+    obs[19] = ctf.TimeLeft(match, max_seconds)
+    if view is None or not int(view["Head"]["IsComputed"]):
+        return obs, None
+    head, me = view["Head"], view["Self"]
+    obs[20:22] = ReferenceScoreLeft(match, int(head["Team"]))
+    if not int(head["HasBody"]):
+        return obs, None
+    kind = int(view["Interaction"]["Kind"])
+    if kind in ctf.INTERACTION_KINDS:
+        obs[ctf.INTERACTION_AT + ctf.INTERACTION_KINDS.index(kind)] = 1.0
+    position = ctf.Vec(me["Feet"])
+    yaw, pitch = float(me["FrameYaw"]), float(me["AimPitch"])
+    cos, sin = math.cos(-yaw), math.sin(-yaw)
+
+    def Local(v):
+        return np.array([cos * v[0] - sin * v[1], sin * v[0] + cos * v[1], v[2]], dtype=np.float32)
+
+    is_carrying = int(me["CarriesFlag"]) != 0
+    obs[0:3] = Local(ctf.Vec(me["LinearVelocity"])) / 10.0
+    obs[3] = pitch
+    vitality, shield = float(me["Vitality"]), float(me["Shield"])
+    obs[4] = 0.0 if math.isnan(vitality) else vitality
+    obs[5] = 0.0 if math.isnan(shield) else shield
+    obs[6] = float(is_carrying)
+    flags = view["Flags"]
+    if int(head["Side"]) == ctf.NEUTRAL_TEAM:
+        return obs, None
+    own, enemy = flags[0], flags[1]
+    has_stand = ReferenceHasStand(own)
+    stand_position = ctf.Vec(own["StandPosition"])
+    phi = None
+    if int(enemy["HasFlag"]):
+        flag_position = ctf.Vec(enemy["Position"])
+        to_flag = flag_position - position
+        obs[7:10] = Local(to_flag) / ctf.METERS
+        obs[10] = np.linalg.norm(to_flag) / ctf.METERS
+        flag_state = int(enemy["State"])
+        obs[11] = float(flag_state == ctf.FlagState.Home)
+        obs[12] = float(flag_state == ctf.FlagState.Dropped)
+        obs[13] = float(is_carrying)
+        if has_stand:
+            if is_carrying:
+                phi = -np.linalg.norm(stand_position - position) / ctf.METERS
+            else:
+                phi = -(np.linalg.norm(to_flag) + np.linalg.norm(stand_position - flag_position)) / ctf.METERS
+    if has_stand:
+        to_stand = stand_position - position
+        obs[14:17] = Local(to_stand) / ctf.METERS
+        obs[17] = np.linalg.norm(to_stand) / ctf.METERS
+        obs[18] = float(int(own["HasFlag"]) != 0 and int(own["State"]) == ctf.FlagState.Home)
+    return obs, (float(phi) if phi is not None else None)
+
+
+def BatchDifferences(ctf, views, match, last_actions, nvec, max_seconds=120.0):
+    """The rows where ObserveBatch differs from the oracle row by row (obs 1e-6, potential equal within 1e-6 or both none), as a list of
+    (row, entry or -1 for the potential)."""
+    obs, phi = ctf.ObserveBatch(views, match, last_actions, nvec, max_seconds)
+    assert obs.dtype == np.float32 and phi.dtype == np.float64
+    assert obs.shape == (len(views), ctf.ACTION_AT + sum(nvec)) and phi.shape == (len(views),)
+    bad = []
+    for i, view in enumerate(views):
+        expected, expected_phi = ReferenceObservePerRow(ctf, view, match, last_actions[i], nvec, max_seconds)
+        bad += [(i, int(entry)) for entry in np.flatnonzero(np.abs(obs[i].astype(np.float64) - expected) > 1e-6)]
+        if np.isnan(phi[i]) != (expected_phi is None) or (expected_phi is not None and abs(phi[i] - expected_phi) > 1e-6):
+            bad.append((i, -1))
+    return bad
+
+
+def CoveringViews(ctf):
+    """Views for every branch of Observe: no View, not computed, no body, neutral side, enemy flag without HasFlag, no own stand, own flag
+    being recreated, carrying with and without the enemy flag Carried, Dropped, Home, NaN vitality and shield, every Kind of the enum and
+    some outside it, varied yaws and positions and teams 0, 1 and others. Returns (views, match, last_actions)."""
+    L = ctf.layout
+    stand_a, stand_b = (1.0, 2.0, 0.0), (101.0, 2.0, 0.0)
+    own = (HOME, stand_a, stand_a)
+    enemy = (HOME, stand_b, stand_b)
+    cases = [
+        {"zero": True},
+        {"computed": False},
+        {"has_body": False, "team": 1},
+        {"side": ctf.NEUTRAL_TEAM, "team": 5},
+        {"enemy": (None, None, stand_b)},
+        {"own": (HOME, stand_a, None)},
+        {"own": (None, None, stand_a)},
+        {"carries": True, "enemy": (CARRIED, (3.0, 4.0, 1.0), stand_b)},
+        {"enemy": (CARRIED, (30.0, -4.0, 1.0), stand_b)},
+        {"enemy": (DROPPED, (50.0, 20.0, 2.0), stand_b), "carries": True},
+        {"enemy": (DROPPED, (-50.0, 20.0, 2.0), stand_b)},
+        {"vitality": float("nan"), "shield": float("nan")},
+        {"own": (DROPPED, (9.0, 9.0, 0.0), stand_a), "team": 9},
+        {"enemy": (HOME, stand_b, None), "carries": True},
+    ]
+    cases += [{"interaction": (int(kind), 0x11)} for kind in ctf.BridgeInteractionKind]
+    cases += [{"interaction": (kind, 0)} for kind in (3, 255)]
+    rows = []
+    for i, case in enumerate(cases):
+        if case.get("zero"):
+            rows.append(np.zeros(1, L.BridgeView)[0])
+            continue
+        kw = {"side": case.get("side", [RED, BLUE][i % 2]), "team": case.get("team", i % 2),
+              "feet": (5.0 + 3.1 * i, -7.0 + 1.3 * i, 0.5 * (i % 3)), "yaw": -3.0 + 0.7 * i, "pitch": 0.05 * i - 0.4,
+              "velocity": (2.0 - 0.3 * i, 0.4 * i, 0.1 * i), "vitality": 0.5 + 0.02 * i, "shield": 1.0 - 0.03 * i,
+              "own": own, "enemy": enemy}
+        kw.update({k: v for k, v in case.items() if k not in ("zero",)})
+        rows.append(ViewRow(L, **kw))
+    views = np.zeros(len(rows), L.BridgeView)
+    for i, row in enumerate(rows):
+        views[i] = row
+    match = Frame(ctf, match={"RoundClockTicks": 1800, "RoundTicksRemaining": 5000, "RoundTimeLimitTicks": 7200, "ScoreToWin": 4,
+                              "TeamRoundScores": [1, 3, 0, 2, 0, 0, 0, 0]}).match
+    nvec = ctf.ActionNvec("stage0")
+    rng = np.random.default_rng(7)
+    last = np.stack([rng.integers(0, n, size=len(views)) for n in nvec], axis=1).astype(np.int64)
+    return views, match, last
+
+
+def test_observe_batch_equals_the_per_row_observe(ctf):
+    views, match, last = CoveringViews(ctf)
+    assert len(views) >= 16
+    nvec = ctf.ActionNvec("stage0")
+    assert BatchDifferences(ctf, views, match, last, nvec) == []
+    # Other clocks and scores: no score to win, a cap shorter than the round.
+    other = Frame(ctf, match={"RoundClockTicks": 300, "RoundTicksRemaining": -1, "ScoreToWin": 0}).match
+    assert BatchDifferences(ctf, views, other, last, nvec, 60.0) == []
+    # The covered branches are really different from each other (the test would pass on all zeros too).
+    obs, phi = ctf.ObserveBatch(views, match, last, nvec, 120.0)
+    assert np.isnan(phi).sum() > 5 and (~np.isnan(phi)).sum() > 5
+    assert obs[:, ctf.INTERACTION_AT:ctf.ACTION_AT].sum() >= 7 and obs[:, 20].any() and obs[:, 18].any() and obs[:, 12].any() and obs[:, 6].any()
+    assert (obs[:, ctf.ACTION_AT:].sum(axis=1) == len(nvec)).all()
+
+
+def test_observe_batch_with_no_agents(ctf):
+    nvec = ctf.ActionNvec("stage0")
+    obs, phi = ctf.ObserveBatch(np.zeros(0, ctf.layout.BridgeView), Frame(ctf).match, np.zeros((0, len(nvec)), dtype=np.int64), nvec, 120.0)
+    assert obs.shape == (0, ctf.ACTION_AT + sum(nvec)) and obs.dtype == np.float32 and phi.shape == (0,)
+
+
+def test_observe_batch_of_one_is_observe(ctf):
+    views, match, last = CoveringViews(ctf)
+    nvec = ctf.ActionNvec("stage0")
+    for i in range(len(views)):
+        obs, phi = ctf.ObserveBatch(views[i:i + 1], match, last[i:i + 1], nvec, 120.0)
+        one, one_phi = ctf.Observe(views[i], match, last[i], nvec, 120.0)
+        assert np.array_equal(obs[0], one) and (one_phi is None) == bool(np.isnan(phi[0])) and (one_phi is None or one_phi == phi[0])
+    obs, phi = ctf.Observe(None, match, last[0], nvec, 120.0)
+    assert phi is None and obs[19] == pytest.approx(ctf.TimeLeft(match, 120.0)) and not obs[:19].any() and not obs[20:ctf.ACTION_AT].any()
+
+
+def test_the_environment_observes_all_agents_in_one_batch(ctf):
+    L = ctf.layout
+    handles = (P0, P0 + 1, P0 + 2)
+    flag = {"own": (HOME, (0.0, 0.0, 0.0), (0.0, 0.0, 0.0)), "enemy": (HOME, (100.0, 0.0, 0.0), (100.0, 0.0, 0.0))}
+
+    def Tick(count, action_tick, **match):
+        players = [{"Handle": h, "BipedHandle": B0 + i, "Team": RED, "LocalIndex": 0xFF, "IsAlive": 1, "HasBody": 1}
+                   for i, h in enumerate(handles[:count])]
+        views = [ViewRow(L, handle=h, feet=(5.0 + 10.0 * i, 3.0 * i, 0.0), yaw=0.4 * i, side=RED, **flag) for i, h in enumerate(handles[:count])]
+        return FakeTick(L, players, [], [], [], action_tick=action_tick, views=views, match=match or None)
+
+    env = ctf.CtfEnv(FakeBridge([Tick(3, 1), Tick(2, 2, RoundClockTicks=1800)]))
+    nvec = env.nvec
+    with mock.patch.object(ctf, "ObserveBatch", wraps=ctf.ObserveBatch) as batch:
+        observations, _ = env.reset()
+        after_reset = batch.call_count
+        assert set(observations) == set(handles)
+        for i, h in enumerate(handles):
+            expected, _ = ctf.Observe(env.published.views[i], env.published.match, np.zeros(len(nvec), dtype=np.int64), nvec, env.config.max_seconds)
+            assert np.array_equal(observations[h], expected)
+        # P0 + 2 leaves the Players: no row, no View, an observation of no body.
+        actions = {h: np.array([2, 1, 4 + i, 2, i % 4, 0, 1], dtype=np.int64) for i, h in enumerate(handles)}
+        before_step = batch.call_count
+        observations, rewards, _, _, _ = env.step(actions)
+        after_step = batch.call_count
+    assert (after_reset, after_step - before_step) == (1, 1)
+    assert set(observations) == set(handles) and set(rewards) == set(handles)
+    for i, h in enumerate(handles):
+        view = env.published.views[i] if i < 2 else None
+        expected, phi = ctf.Observe(view, env.published.match, actions[h], nvec, env.config.max_seconds)
+        assert np.array_equal(observations[h], expected)
+        assert (env.states[h].phi is None) == (phi is None)
+    assert not observations[handles[2]][:19].any() and observations[handles[0]][19] == pytest.approx(0.75)
+    assert env.states[handles[0]].side == RED and env.states[handles[2]].side == RED

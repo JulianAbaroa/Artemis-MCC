@@ -3,8 +3,8 @@ ctf.py
 Environment of stage 0 of the curriculum (D115, D146, Diseno/14): every agent alone against the enemy flag, take it and bring it to
 its own flag stand. Parallel multi-agent API in the style of PettingZoo without the package: dicts keyed by agent (the full player
 handle, D40). One step = one decision of the bridge (N ticks, Lockstep). The policy sees only its View and the Match (F4.9, D317):
-Observe is a pure function of the View of the agent (published.views[row of the agent], in world coordinates), the Match and the last
-action; the critic (Q68), when it is separated, reads Players, Objectives and Entities.
+ObserveBatch is a pure function of the Views of all the agents (the rows of published.views, in world coordinates), the Match and the last
+actions, one numpy pass for the N agents of a tick (P.3); Observe is its one-row wrapper; the critic (Q68), when it is separated, reads Players, Objectives and Entities.
 
 The View has Head.Side, the BaseTeam of the stand the team of the agent owns in this round (so the swap of sides between rounds needs
 no deduction here), Flags[0], the flag of the own team (State and the origin of its stand), and Flags[1], a rival flag (State and
@@ -12,7 +12,7 @@ Position, the carrier's when carried). A flag row that is all zero is a side wit
 whether the round started, the end of the match, the events and the rewards) is read from the omniscient tick: it is the management of
 the environment, not information of the agent. The rewards read the FlagTaken and FlagCaptured events Artemis generates, whose cause is
 the carrier. The clock and the score of the round come from the Match of the tick (P.6, D255): the environment measures no time of its own.
-The observation is [22 of state | 7 of View.Interaction.Kind (one-hot, D372) | one-hot of the last action]. An episode that crosses to
+The observation is [22 of state | 7 of View.Interaction.Kind (one-hot, D372) | one-hot of the last action] (the entries are listed in ObserveBatch). An episode that crosses to
 another match (a new match_id or a lower GameTick with no RoundEnd / GameOver) ends truncated (D372, P.3).
 """
 import logging
@@ -23,7 +23,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from ..bridge import CONTROL_STATES, CONTROLS, Action, Bridge, BridgeMode, BridgeOwner, PackControls, qpc
-from ..bridge_layout import NOT_LOCAL, BridgeInteractionKind, BridgePhase, BridgeSetupResult
+from ..bridge_layout import NOT_LOCAL, BridgeInteractionKind, BridgePhase, BridgeSetupResult, BridgeView
 from ..match_setup import MatchSetup, is_relative_roster, resolve_roster
 from ..semantic import Event, FlagState
 
@@ -314,8 +314,7 @@ class CtfEnv:
         self._wait_views()
         self._reference = self._clock()
         observations = {}
-        for handle in self.agents:
-            observations[handle], phi = self._observe(handle)
+        for handle, (observations[handle], phi) in self._observe_all().items():
             self.states[handle].phi = phi
         return observations, {handle: {key: dict(value) for key, value in info.items()} for handle in self.agents}
 
@@ -395,8 +394,7 @@ class CtfEnv:
 
         observations = {}
         started = time.perf_counter_ns() if c.timing else 0
-        for handle in self.agents:
-            observations[handle], phi = self._observe(handle)
+        for handle, (observations[handle], phi) in self._observe_all().items():
             state = self.states[handle]
             # note: phi' - phi without the discount telescopes exactly over the episode. With gamma it would add (1 - gamma) |phi|
             # per step, a reward for staying alive as large as the capture on a long map.
@@ -411,18 +409,40 @@ class CtfEnv:
 
     # --- Observation ------------------------------------------------------------------------------------------------------------
 
-    def _observe(self, handle):
-        """Observation vector of one agent and the shaping potential of its state (None while it has no body): Observe over its View."""
-        view = self._view_of(handle)
-        state = self.states[handle]
-        if self._is_computed(view):
-            state.side = int(view["Head"]["Side"])
-        return Observe(view, self.published.match, state.last_action, self.nvec, self.config.max_seconds)
+    def _agent_views(self):
+        """The Views of the agents of the episode as one array of len(self.agents) rows, in the order of self.agents: one indexing of
+        published.views by the row of each agent. An agent with no row or no View (a row past ViewCount) gets a row of zeros (not computed)."""
+        views = self.published.views
+        rows = np.array([-1 if row is None else row for row in map(self._row_of, self.agents)], dtype=np.int64)
+        is_there = (rows >= 0) & (rows < len(views))
+        out = np.zeros(len(rows), dtype=views.dtype)
+        out[is_there] = views[rows[is_there]]
+        return out
+
+    def _observe_all(self):
+        """{handle: (observation, potential)} of every agent of the episode in ONE ObserveBatch over their Views (potential None while it has
+        no body, side or both flags). Also records Head.Side in state.side of the agents whose View is computed. The observations are rows
+        of a single float32 array [N, obs_size] (views, not copies): the consumers read them and never write on them (ppo.py stacks them
+        into a new array, env_check copies what it keeps); whoever must modify one copies it."""
+        views = self._agent_views()
+        count = len(self.agents)
+        last = np.array([self.states[handle].last_action for handle in self.agents], dtype=np.int64).reshape(count, len(self.nvec))
+        obs, phi = ObserveBatch(views, self.published.match, last, self.nvec, self.config.max_seconds)
+        computed = (views["Head"]["IsComputed"] != 0).tolist()
+        sides = views["Head"]["Side"].tolist()
+        potentials = phi.tolist()
+        result = {}
+        for i, handle in enumerate(self.agents):
+            if computed[i]:
+                self.states[handle].side = sides[i]
+            result[handle] = (obs[i], None if math.isnan(potentials[i]) else potentials[i])
+        return result
 
 
 def TimeLeft(match, max_seconds):
     """Fraction of the episode left, from the Match: the ticks left of the round (RoundTicksRemaining, -1 without a time limit)
-    or of the cap of the environment (max_seconds over RoundClockTicks), whichever ends first, over the horizon of the same one."""
+    or of the cap of the environment (max_seconds over RoundClockTicks), whichever ends first, over the horizon of the same one.
+    It depends only on the Match: the same for every agent of a tick."""
     cap = max_seconds * 60
     left, horizon = cap - int(match["RoundClockTicks"]), cap
     remaining, limit = int(match["RoundTicksRemaining"]), int(match["RoundTimeLimitTicks"])
@@ -433,91 +453,151 @@ def TimeLeft(match, max_seconds):
     return min(1.0, max(0.0, left / horizon)) if horizon > 0 else 0.0
 
 
-def ScoreLeft(match, team):
-    """Fraction of ScoreToWin that the team and its enemy still need to win the round (TeamRoundScores of the Match); 0 when the
-    variant has no score to win. The enemy is the other team with the most score (the one that needs the least), which in a CTF of two
-    teams is the other one."""
+def ScoreLeft(match, teams):
+    """(own, enemy): float64 arrays, one entry per team of teams (an array of Head.Team), with the fraction of ScoreToWin that the team and
+    its enemy still need to win the round (TeamRoundScores of the Match); 0 when the variant has no score to win. The enemy is the other
+    team with the most score (the one that needs the least), which in a CTF of two teams is the other one. A team outside the scores has
+    0 of its own and the best of all as its enemy. One table per team of the Match (at most 8), then one indexing."""
     to_win = int(match["ScoreToWin"])
     if to_win <= 0:
-        return 0.0, 0.0
+        return np.zeros(len(teams)), np.zeros(len(teams))
     scores = [int(score) for score in match["TeamRoundScores"]]
+    top = sorted(scores, reverse=True) + [-1, -1]
+    # Best score of the others of each team (-1: none), and a last entry for a team outside the scores (the best of all).
+    others = [top[1] if score == top[0] else top[0] for score in scores] + [top[0]]
+    own_table = np.array([max(0, to_win - score) / to_win for score in scores] + [0.0])
+    enemy_table = np.array([max(0, to_win - best) / to_win if best >= 0 else 0.0 for best in others])
+    index = np.minimum(teams, len(scores))
+    return own_table[index], enemy_table[index]
 
-    def Left(score):
-        return max(0, to_win - score) / to_win
-    others = [score for t, score in enumerate(scores) if t != team]
-    return Left(scores[team]) if 0 <= team < len(scores) else 0.0, Left(max(others)) if others else 0.0
+
+def ByteAt(*path, element=0):
+    """Byte offset, in the row of a BridgeView, of the field at the path of names; element: which of the entries of the array (Flags) the
+    first name is."""
+    dtype, offset = BridgeView, 0
+    for i, name in enumerate(path):
+        sub, at = dtype.fields[name][:2]
+        offset += at
+        if sub.subdtype is not None:
+            sub = sub.subdtype[0]
+        if i == 0:
+            offset += element * sub.itemsize
+        dtype = sub
+    return offset
 
 
-def HasStand(flag):
-    """Whether a row of View.Flags has the stand of its side: the View fills StandPosition whenever the side has a stand, flag or not (D370)."""
-    return any(float(flag["StandPosition"][axis]) != 0.0 for axis in "XYZ")
+def FloatAt(*path, element=0):
+    """Index, in the row of a BridgeView read as float32, of the float field at the path (the layout aligns them to 4 bytes: checked)."""
+    offset = ByteAt(*path, element=element)
+    assert offset % 4 == 0 and BridgeView.itemsize % 4 == 0, path
+    return offset // 4
+
+
+# What ObserveBatch reads of a View, by its place in the row as bytes (BYTE) or as float32 (the others): one slice of a 2-D array each, not
+# a field access (and a stack for the vectors of X, Y, Z) per entry, which costs more than the arithmetic over 16 agents.
+FEET_AT, VELOCITY_AT = FloatAt("Self", "Feet"), FloatAt("Self", "LinearVelocity")
+YAW_AT, PITCH_AT = FloatAt("Self", "FrameYaw"), FloatAt("Self", "AimPitch")
+VITALITY_AT, SHIELD_AT = FloatAt("Self", "Vitality"), FloatAt("Self", "Shield")
+OWN_STAND_FLOATS, ENEMY_FLAG_FLOATS = FloatAt("Flags", "StandPosition", element=0), FloatAt("Flags", "Position", element=1)
+IS_COMPUTED_BYTE, HAS_BODY_BYTE = ByteAt("Head", "IsComputed"), ByteAt("Head", "HasBody")
+TEAM_BYTE, SIDE_BYTE, KIND_BYTE = ByteAt("Head", "Team"), ByteAt("Head", "Side"), ByteAt("Interaction", "Kind")
+CARRIES_BYTE = ByteAt("Self", "CarriesFlag")
+OWN_HAS_FLAG_BYTE, OWN_STATE_BYTE = ByteAt("Flags", "HasFlag", element=0), ByteAt("Flags", "State", element=0)
+ENEMY_HAS_FLAG_BYTE, ENEMY_STATE_BYTE = ByteAt("Flags", "HasFlag", element=1), ByteAt("Flags", "State", element=1)
+
+
+def Rotate(vectors, cos, sin):
+    """The world vectors [N, 3] in the frame of each agent (the yaw is cos / sin, one per row): x forward, y to the left."""
+    out = np.empty_like(vectors)
+    out[:, 0] = cos * vectors[:, 0] - sin * vectors[:, 1]
+    out[:, 1] = sin * vectors[:, 0] + cos * vectors[:, 1]
+    out[:, 2] = vectors[:, 2]
+    return out
+
+
+# Interaction.Kind (u1) -> column of the one-hot of the interaction, -1 for a Kind outside the enum.
+INTERACTION_COLUMN = np.full(256, -1, dtype=np.int64)
+INTERACTION_COLUMN[list(INTERACTION_KINDS)] = np.arange(INTERACTION_SIZE)
+
+
+def ObserveBatch(views, match, last_actions, nvec, max_seconds):
+    """(observations, potentials) of N agents from their Views (world frame, rotated to the frame of each agent here) and the Match, in one
+    numpy pass with no loop over the agents. Pure: it reads nothing else. views: a structured array with the dtype BridgeView (exactly: not one rebuilt by np.resize or concatenate), one row per agent; a
+    row that is all zero is an agent with no View (not computed). last_actions: int64 [N, len(nvec)]. Returns obs float32
+    [N, ACTION_AT + sum(nvec)] and phi float64 [N], NaN where the agent has no shaping potential (without body, side or both flags).
+    The potential exists only with the enemy flag and the own stand.
+    Entries (the list lives here): 0-2 velocity, 3 pitch, 4 vitality, 5 shield, 6 carries the flag, 7-9 and 10 vector and distance to the
+    enemy flag, 11 / 12 it is home / dropped, 13 carries, 14-16 and 17 vector and distance to the own stand, 18 the own flag is home,
+    19 time left, 20 and 21 score left of the own and the enemy team, 22-28 the one-hot of View.Interaction.Kind (D372; order of
+    BridgeInteractionKind: None, GrabWeapon, GrabArmorAbility, TakeHealthStation, EnterVehicle, Hijack, GrabObjective; all zero without
+    View or body, none for a Kind outside the enum; Detail is not read), then the one-hot of the last action of each branch of nvec.
+    Not computed View: only 19 and the last action. Computed without body: also 20-21. No side (Head.Side is NEUTRAL_TEAM): no flags
+    (7-18 stay zero). Enemy flag without HasFlag: 7-13 zero. Own side without stand: 14-18 zero. A NaN vitality or shield is 0."""
+    count = len(views)
+    nvec = np.asarray(nvec, dtype=np.int64)
+    obs = np.zeros((count, ACTION_AT + int(nvec.sum())), dtype=np.float32)
+    phi = np.full(count, np.nan)
+    if count == 0:
+        return obs, phi
+    # One-hot of the last action: the column of each branch is its offset (cumulative sum of nvec) plus the chosen state.
+    offsets = ACTION_AT + np.cumsum(nvec) - nvec
+    last = np.asarray(last_actions, dtype=np.int64).reshape(count, len(nvec))
+    obs[np.arange(count)[:, None], offsets[None, :] + last] = 1.0
+    obs[:, 19] = TimeLeft(match, max_seconds)
+    # The rows as bytes: every field is a column (the 1-byte ones here, the floats below through a float32 view of the same memory).
+    raw = np.ascontiguousarray(views).view(np.uint8).reshape(count, -1)
+    is_computed = raw[:, IS_COMPUTED_BYTE] != 0
+    computed = np.flatnonzero(is_computed)
+    obs[computed, 20:22] = np.stack(ScoreLeft(match, raw[computed, TEAM_BYTE]), axis=1)
+    rows = np.flatnonzero(is_computed & (raw[:, HAS_BODY_BYTE] != 0))
+    if len(rows) == 0:
+        return obs, phi
+    # From here on the rows with a body, computed for all of them and masked where an entry does not apply (no per-row branches).
+    body = raw[rows]
+    floats = body.view(np.float32)
+    block = np.zeros((len(rows), ACTION_AT), dtype=np.float32)
+    block[:, 19:22] = obs[rows, 19:22]
+    # An interaction Kind outside the enum sets no entry (no exception, no log: it would be one per tick).
+    column = INTERACTION_COLUMN[body[:, KIND_BYTE]]
+    block[np.arange(len(rows)), INTERACTION_AT + np.maximum(column, 0)] = column >= 0
+    position = floats[:, FEET_AT:FEET_AT + 3]
+    yaw = floats[:, YAW_AT].astype(np.float64)
+    cos, sin = np.cos(-yaw).astype(np.float32), np.sin(-yaw).astype(np.float32)
+    is_carrying = body[:, CARRIES_BYTE] != 0
+    block[:, 0:3] = Rotate(floats[:, VELOCITY_AT:VELOCITY_AT + 3], cos, sin) / 10.0
+    block[:, 3] = floats[:, PITCH_AT]
+    vitality, shield = floats[:, VITALITY_AT], floats[:, SHIELD_AT]
+    block[:, 4] = np.where(np.isnan(vitality), 0.0, vitality)
+    block[:, 5] = np.where(np.isnan(shield), 0.0, shield)
+    block[:, 6] = is_carrying
+    # A team with no side (it owns no stand) sees no flags: 7-18 stay zero. HasFlag says whether the flag exists in this tick (State 0 is
+    # Home, a row without flag looks Home): the flag entries stay zero without it. The stand is there whenever the side has one, even
+    # while the engine recreates the flag (D370). Without both the enemy flag and the own stand there is no potential.
+    is_sided = body[:, SIDE_BYTE] != NEUTRAL_TEAM
+    stand, flag = floats[:, OWN_STAND_FLOATS:OWN_STAND_FLOATS + 3], floats[:, ENEMY_FLAG_FLOATS:ENEMY_FLAG_FLOATS + 3]
+    to_flag, to_stand = flag - position, stand - position
+    flag_distance, stand_distance = np.linalg.norm(to_flag, axis=1), np.linalg.norm(to_stand, axis=1)
+    has_flag = is_sided & (body[:, ENEMY_HAS_FLAG_BYTE] != 0)
+    has_stand = is_sided & (stand != 0.0).any(axis=1)
+    state = body[:, ENEMY_STATE_BYTE]
+    columns = (flag_distance / METERS, state == int(FlagState.Home), state == int(FlagState.Dropped), is_carrying)
+    block[:, 7:10] = np.where(has_flag[:, None], Rotate(to_flag, cos, sin) / METERS, 0.0)
+    for at, values in enumerate(columns, start=10):
+        block[:, at] = np.where(has_flag, values, 0.0)
+    block[:, 14:17] = np.where(has_stand[:, None], Rotate(to_stand, cos, sin) / METERS, 0.0)
+    block[:, 17] = np.where(has_stand, stand_distance / METERS, 0.0)
+    block[:, 18] = has_stand & (body[:, OWN_HAS_FLAG_BYTE] != 0) & (body[:, OWN_STATE_BYTE] == int(FlagState.Home))
+    obs[rows, :ACTION_AT] = block
+    # Potential: with the enemy flag and the own stand; to the stand when carrying, else to the flag and from it to the stand.
+    through_flag = flag_distance + np.linalg.norm(stand - flag, axis=1)
+    phi[rows] = np.where(has_flag & has_stand, -np.where(is_carrying, stand_distance, through_flag) / METERS, np.nan)
+    return obs, phi
 
 
 def Observe(view, match, last_action, nvec, max_seconds):
-    """(observation, potential) of one agent from its View (world frame, rotated to the frame of the agent here) and the Match. Pure: it
-    reads nothing else. view is None, or a row not computed, for an agent with no View. The potential is None without body, without side
-    or without both flags (no shaping). Entries: 0-2 velocity, 3 pitch, 4 vitality, 5 shield, 6 carries the flag, 7-9 and 10 vector and
-    distance to the enemy flag, 11 / 12 it is home / dropped, 13 carries, 14-16 and 17 vector and distance to the own stand, 18 the own
-    flag is home, 19 time left, 20 and 21 score left of the own and the enemy team, 22-28 the one-hot of View.Interaction.Kind (D372; order of
-    BridgeInteractionKind: None, GrabWeapon, GrabArmorAbility, TakeHealthStation, EnterVehicle, Hijack, GrabObjective; all zero without
-    View or body, none for a Kind outside the enum; Detail is not read), then the one-hot of the last action."""
-    obs = np.zeros(ACTION_AT + sum(nvec), dtype=np.float32)
-    offset = ACTION_AT
-    for branch, n in zip(last_action, nvec):
-        obs[offset + int(branch)] = 1.0
-        offset += n
-    obs[19] = TimeLeft(match, max_seconds)
-    if view is None or not int(view["Head"]["IsComputed"]):
-        return obs, None
-    head, me = view["Head"], view["Self"]
-    obs[20:22] = ScoreLeft(match, int(head["Team"]))
-    if not int(head["HasBody"]):
-        return obs, None
-    # An interaction Kind outside the enum sets no entry (no exception, no log: it would be one per tick).
-    kind = int(view["Interaction"]["Kind"])
-    if kind in INTERACTION_KINDS:
-        obs[INTERACTION_AT + INTERACTION_KINDS.index(kind)] = 1.0
-    position = Vec(me["Feet"])
-    yaw, pitch = float(me["FrameYaw"]), float(me["AimPitch"])
-    cos, sin = math.cos(-yaw), math.sin(-yaw)
-
-    def Local(v):
-        return np.array([cos * v[0] - sin * v[1], sin * v[0] + cos * v[1], v[2]], dtype=np.float32)
-
-    is_carrying = int(me["CarriesFlag"]) != 0
-    obs[0:3] = Local(Vec(me["LinearVelocity"])) / 10.0
-    obs[3] = pitch
-    vitality, shield = float(me["Vitality"]), float(me["Shield"])
-    obs[4] = 0.0 if math.isnan(vitality) else vitality
-    obs[5] = 0.0 if math.isnan(shield) else shield
-    obs[6] = float(is_carrying)
-    flags = view["Flags"]
-    # A team with no side (it owns no stand) sees no flags: obs[7:19] stay zero. HasFlag says whether the flag exists in this tick (State 0
-    # is Home, a row without flag looks Home): the flag entries stay zero without it. The stand is there whenever the side has one, even
-    # while the engine recreates the flag (D370). Without both the enemy flag and the own stand there is no potential.
-    if int(head["Side"]) == NEUTRAL_TEAM:
-        return obs, None
-    own, enemy = flags[0], flags[1]
-    has_stand = HasStand(own)
-    stand_position = Vec(own["StandPosition"])
-    phi = None
-    if int(enemy["HasFlag"]):
-        flag_position = Vec(enemy["Position"])
-        to_flag = flag_position - position
-        obs[7:10] = Local(to_flag) / METERS
-        obs[10] = np.linalg.norm(to_flag) / METERS
-        flag_state = int(enemy["State"])
-        obs[11] = float(flag_state == FlagState.Home)
-        obs[12] = float(flag_state == FlagState.Dropped)
-        obs[13] = float(is_carrying)
-        if has_stand:
-            if is_carrying:
-                phi = -np.linalg.norm(stand_position - position) / METERS
-            else:
-                phi = -(np.linalg.norm(to_flag) + np.linalg.norm(stand_position - flag_position)) / METERS
-    if has_stand:
-        to_stand = stand_position - position
-        obs[14:17] = Local(to_stand) / METERS
-        obs[17] = np.linalg.norm(to_stand) / METERS
-        obs[18] = float(int(own["HasFlag"]) != 0 and int(own["State"]) == FlagState.Home)
-    return obs, (float(phi) if phi is not None else None)
+    """(observation, potential) of ONE agent: ObserveBatch over a single row (its entries are listed there). view is a row of BridgeView, or
+    None for an agent with no View (a row of zeros). The potential is None where ObserveBatch gives NaN. For the tests, the checks and the
+    benchmark; the environment calls ObserveBatch once for all its agents."""
+    views = np.zeros(1, dtype=BridgeView) if view is None else np.asarray(view).reshape(1)
+    obs, phi = ObserveBatch(views, match, np.asarray(last_action, dtype=np.int64).reshape(1, -1), nvec, max_seconds)
+    return obs[0], (None if np.isnan(phi[0]) else float(phi[0]))
