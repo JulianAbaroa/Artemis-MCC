@@ -10,7 +10,10 @@ import Engine.Base.Pov.Type;
 import Engine.Control.Input.Type;
 import Engine.Render.Type;
 import Perception.Players.Type;
+import DevTools.Viewer.Director.Type;
+import DevTools.Viewer.Director.System;
 import DevTools.Viewer.Latency.Type;
+import DevTools.Viewer.Roster.Type;
 import std;
 
 namespace
@@ -29,7 +32,12 @@ namespace
     using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_NoHandle;
 
+    using DevTools::Viewer::Director::System::ShotKindName;
+    using DevTools::Viewer::Director::Type::DirectorFileInfo;
+    using DevTools::Viewer::Director::Type::DirectorStatus;
+    using DevTools::Viewer::Director::Type::Shot;
     using DevTools::Viewer::Latency::Type::LatencyReport;
+    using DevTools::Viewer::Roster::Type::RosterEntry;
     using DevTools::Viewer::Latency::Type::LatencySample;
 
     constexpr float k_DegreesPerRadian{ 180.0f / std::numbers::pi_v<float> };
@@ -98,9 +106,45 @@ namespace DevTools::Viewer::Hud::System
     {
         this->DrawFramerate();
         this->DrawTelemetry();
+        this->DrawDirector();
 
         const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
         this->DrawGameCamera(scene ? scene->Tick : nullptr);
+    }
+
+    auto HudService::DrawDirector() -> void
+    {
+        const DirectorStatus status{ m_DirectorStore.GetStatus() };
+
+        ImGui::Separator();
+        ImGui::Text("Director:");
+        ImGui::SameLine();
+
+        if (!status.IsPlaying)
+        {
+            ImGui::TextDisabled("off");
+            return;
+        }
+
+        const DirectorFileInfo file{ m_DirectorStore.GetFileInfo() };
+        const std::optional<Shot> shot{ m_DirectorStore.GetShot(status.Index) };
+
+        if (status.IsHolding || !shot)
+        {
+            ImGui::TextColored(k_Orange, "waiting for a shot it can play (%zu in the list), map %s", status.Count, file.MapKey.c_str());
+            return;
+        }
+
+        std::string pov{};
+        if (status.PovPlayer != k_NoHandle)
+        {
+            const auto& roster{ m_SceneService.GetRoster() };
+            const auto player{ std::ranges::find(roster, status.PovPlayer, &RosterEntry::Handle) };
+            pov = std::format(", POV {}", player != roster.end() ? player->Name : std::string{ "?" });
+        }
+
+        ImGui::TextColored(k_Info, "%zu/%zu %s %s %.0f/%.0f s%s, map %s", status.Index + 1, status.Count, std::string{ ShotKindName(shot->Kind) }.c_str(),
+            shot->Name.c_str(), status.ElapsedSeconds, shot->Seconds, pov.c_str(), file.MapKey.c_str());
     }
 
     auto HudService::DrawFramerate() -> void

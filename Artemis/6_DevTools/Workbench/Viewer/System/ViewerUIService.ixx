@@ -6,6 +6,7 @@ import Bridge.Codec.Tick.State;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Camera.State;
+import DevTools.Viewer.Director.State;
 import DevTools.Viewer.Inspector.System;
 import std;
 
@@ -30,12 +31,13 @@ export namespace DevTools::Workbench::Viewer::System
         using ScalarInfo = DevTools::Viewer::Options::Type::ScalarInfo;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
+        using DirectorStore = DevTools::Viewer::Director::State::DirectorStore;
         using InspectorService = DevTools::Viewer::Inspector::System::InspectorService;
 
     public:
         // Builds the tooltip of each layer from the flag table.
         ViewerUIService(OptionsStore& optionsStore, CameraStore& cameraStore, const ObservedPlayerStore& observedStore, TickStore& tickStore,
-            InspectorService& inspectorService);
+            InspectorService& inspectorService, DirectorStore& directorStore);
         ~ViewerUIService() = default;
 
         ViewerUIService(const ViewerUIService&) = delete;
@@ -50,6 +52,7 @@ export namespace DevTools::Workbench::Viewer::System
         const ObservedPlayerStore& m_ObservedStore;
         TickStore& m_TickStore;
         InspectorService& m_InspectorService;
+        DirectorStore& m_DirectorStore;
 
         // What each level of each layer shows, in the order of Layer.
         std::array<std::string, k_LayerCount> m_LayerTooltips{};
@@ -63,6 +66,10 @@ export namespace DevTools::Workbench::Viewer::System
         // Draws the Viewer switches (active, mode, zoom), the game HUD and first person switches and the camera scalars.
         // note: Active, mode and zoom are runtime states and are not saved with the preferences.
         auto DrawCamera() -> void;
+
+        // Draws the director (VW.14): play and stop, the file of the map, the buttons that add shots, the options and the list of shots with their name,
+        // seconds, order and delete buttons. The shot that plays is marked.
+        auto DrawDirector() -> void;
 
         // Draws the labels switch and their scalars, then one row per layer.
         auto DrawLayers() -> void;

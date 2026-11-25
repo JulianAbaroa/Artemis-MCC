@@ -11,6 +11,8 @@ import Perception.Players.Type;
 import Views.View.System;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Collidable.Type;
+import DevTools.Viewer.Director.Type;
+import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Roster.Type;
 import DevTools.Viewer.Roster.System;
 import DevTools.Viewer.Selection.State;
@@ -19,6 +21,10 @@ import std;
 namespace
 {
     using DevTools::Viewer::Camera::Type::Mode;
+    using DevTools::Viewer::Director::Type::DirectorInput;
+    using DevTools::Viewer::Director::Type::ShotKind;
+    using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Scalar;
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
     using Engine::Base::Pov::System::IsPovOnOtherPlayer;
     using Perception::ObjectGraph::Type::ObjectNode;
@@ -30,6 +36,9 @@ namespace
     using Views::View::System::ViewPositionOf;
 
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Director::System::DefaultShotName;
+    using DevTools::Viewer::Director::System::MakeFixedShot;
+    using DevTools::Viewer::Director::System::OrbitFromPose;
     using DevTools::Viewer::Roster::System::IndexOfPlayer;
     using DevTools::Viewer::Roster::System::SortRoster;
     using DevTools::Viewer::Roster::System::StepFrom;
@@ -189,6 +198,7 @@ namespace DevTools::Viewer::Scene::System
         m_ObservedStore.Set(k_NoHandle);
         m_PovRequestStore.Clear();
         m_PossessRequestStore.Clear();
+        m_DirectorService.Stop();
         m_CameraService.Deactivate();
     }
 
@@ -203,11 +213,16 @@ namespace DevTools::Viewer::Scene::System
         const std::shared_ptr<const Tick> tick{ scene ? scene->Tick : nullptr };
 
         const bool acceptInput = !m_SettingsStore.IsMenuVisible();
+
+        // The roster goes first: the director picks the agent of a POV shot from it, and the camera takes the pose the director gives.
+        m_Roster = tick ? this->BuildRoster(*tick) : std::vector<RosterEntry>{};
+        const DirectorFrame directed{ this->RunDirector(tick) };
         m_CameraService.Update(tick, viewport, acceptInput);
 
-        // The steps go before the follow, so the same frame already watches the new player.
-        m_Roster = tick ? this->BuildRoster(*tick) : std::vector<RosterEntry>{};
-        this->StepSelection(m_SelectionService.ConsumeStep(), tick);
+        // The steps go before the follow, so the same frame already watches the new player. The player of a POV shot wins over the arrows.
+        const int steps{ m_SelectionService.ConsumeStep() };
+        if (directed.PovPlayer != k_NoHandle) this->FollowDirectedPlayer(directed.PovPlayer);
+        else this->StepSelection(steps, tick);
 
         // note: The watched player is the one the selection follows, else the local player.
         m_ObservedStore.Set(this->FollowSelectedPlayer(tick));
@@ -218,7 +233,68 @@ namespace DevTools::Viewer::Scene::System
 
         m_SelectionService.Update(m_CameraService.GetCenterRay(), ShareObjects(scene));
 
+        this->AddDirectorShots();
+
         m_IsFrameUpdated = m_CameraService.HasRenderPose();
+    }
+
+    auto SceneService::RunDirector(const std::shared_ptr<const Tick>& tick) -> DirectorFrame
+    {
+        const DirectorInput input{ .Now = std::chrono::steady_clock::now(), .HasRoster = tick != nullptr, .Roster = m_Roster,
+            .Round = tick && tick->Match ? std::optional<std::int16_t>{ tick->Match->RoundIndex } : std::nullopt,
+            .IsCutOnRound = m_OptionsStore.IsEnabled(Flag::DirectorCutOnRound) };
+
+        const DirectorFrame frame{ m_DirectorService.Update(input) };
+        if (!frame.IsPlaying || !frame.HasShot) return frame;
+
+        // note: A POV shot watches from the game camera, the others fly the free camera. The saved options (Watch POV, layers) are not touched: the director
+        // wins while it plays and the options rule again when it stops.
+        if (frame.Kind == ShotKind::Pov)
+        {
+            m_CameraStore.SetMode(Mode::Game);
+        }
+        else
+        {
+            m_CameraStore.SetMode(Mode::Free);
+            m_CameraService.SetScriptedPose(frame.Eye, frame.Yaw, frame.Pitch);
+        }
+
+        return frame;
+    }
+
+    auto SceneService::FollowDirectedPlayer(std::uint32_t playerHandle) -> void
+    {
+        const std::optional<std::size_t> index{ IndexOfPlayer(m_Roster, playerHandle) };
+        if (index) m_SelectionService.Follow(m_Roster[*index].Handle, m_Roster[*index].BipedHandle);
+    }
+
+    auto SceneService::AddDirectorShots() -> void
+    {
+        const bool isAddFixed{ m_DirectorStore.ConsumeAddFixed() };
+        const bool isAddOrbit{ m_DirectorStore.ConsumeAddOrbit() };
+
+        // note: Only the free camera has a pose of its own to save.
+        if ((!isAddFixed && !isAddOrbit) || m_CameraStore.GetMode() != Mode::Free) return;
+
+        if (isAddFixed)
+        {
+            m_DirectorStore.AddShot(MakeFixedShot(DefaultShotName(m_DirectorStore.CopyShots(), ShotKind::Fixed), m_CameraService.GetEye(),
+                m_CameraService.GetYaw(), m_CameraService.GetPitch()));
+        }
+
+        if (isAddOrbit)
+        {
+            const auto ray{ m_CameraService.GetCenterRay() };
+            const std::optional<float> distance{ m_SelectionService.Cast(ray) };
+            const std::optional<Vec3> hit{ distance ? std::optional<Vec3>{ Common::Math::System::Add(ray.Origin, Common::Math::System::Scale(ray.Direction, *distance)) }
+                : std::nullopt };
+
+            auto shot{ OrbitFromPose(ray.Origin, ray.Direction, hit) };
+            shot.Name = DefaultShotName(m_DirectorStore.CopyShots(), ShotKind::Orbit);
+            shot.DegreesPerSecond = m_OptionsStore.GetScalar(Scalar::DirectorDegreesPerSecond);
+
+            m_DirectorStore.AddShot(std::move(shot));
+        }
     }
 
     auto SceneService::BuildRoster(const Tick& tick) -> std::vector<RosterEntry>

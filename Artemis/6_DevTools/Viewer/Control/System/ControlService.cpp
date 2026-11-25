@@ -154,6 +154,34 @@ namespace DevTools::Viewer::Control::System
             return true;
         }
 
+        case VK_F7:
+        {
+            // The director plays or stops. Not a viewer key while the viewer is off or the menu is open.
+            if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible()) return false;
+
+            if (!IsKeyRepeat(message)) m_DirectorStore.RequestTogglePlay();
+            return true;
+        }
+
+        case VK_INSERT:
+        {
+            // Saves the pose of the free camera as a fixed shot. In Game mode there is no pose of the viewer, so the key is the game's.
+            if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible() || m_CameraStore.GetMode() != Mode::Free) return false;
+
+            if (!IsKeyRepeat(message)) m_DirectorStore.RequestAddFixed();
+            return true;
+        }
+
+        case VK_RIGHT:
+        case VK_LEFT:
+        {
+            // Next and previous shot, only while the director plays: otherwise the keys are not the viewer's.
+            if (!m_CameraStore.IsActive() || m_SettingsStore.IsMenuVisible() || !m_DirectorStore.IsPlaying()) return false;
+
+            if (!IsKeyRepeat(message)) m_DirectorStore.RequestStep(message.WParam == VK_RIGHT ? 1 : -1);
+            return true;
+        }
+
         case VK_F6:
         {
             if (!IsKeyRepeat(message))

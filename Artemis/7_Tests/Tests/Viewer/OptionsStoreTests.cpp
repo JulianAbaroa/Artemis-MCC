@@ -271,3 +271,27 @@ TEST(OptionsStoreTests, ResetToDefaultsPutsTheLevelsBack)
     for (const auto& info : k_Layers) EXPECT_EQ(store.GetLevel(info.Id), Level::Minimal);
     EXPECT_FALSE(store.IsEnabled(Flag::HideGameHud));
 }
+
+TEST(OptionsStoreTests, TheDirectorOptionsHaveTheirOwnKeysAndDefaults)
+{
+    OptionsStore store{};
+
+    // Cutting on a new round is on by default, an orbit turns once a minute.
+    EXPECT_TRUE(store.IsEnabled(Flag::DirectorCutOnRound));
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::DirectorDegreesPerSecond), 6.0f);
+
+    store.Load("DirectorCutOnRound", "0");
+    store.Load("DirectorDegreesPerSecond", "-12.5");
+    EXPECT_FALSE(store.IsEnabled(Flag::DirectorCutOnRound));
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::DirectorDegreesPerSecond), -12.5f);
+
+    const std::string saved{ Snapshot(store) };
+    EXPECT_NE(saved.find("Viewer_DirectorCutOnRound=0\n"), std::string::npos);
+    EXPECT_NE(saved.find("Viewer_DirectorDegreesPerSecond=-12.500\n"), std::string::npos);
+
+    store.SetScalar(Scalar::DirectorDegreesPerSecond, 500.0f);
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::DirectorDegreesPerSecond), 60.0f);
+
+    store.ResetToDefaults();
+    EXPECT_TRUE(store.IsEnabled(Flag::DirectorCutOnRound));
+}

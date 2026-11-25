@@ -17,7 +17,11 @@ import DevTools.Viewer.Camera.State;
 import DevTools.Viewer.Camera.System;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Director.Type;
+import DevTools.Viewer.Director.State;
+import DevTools.Viewer.Director.System;
 import DevTools.Viewer.Interpolation.Type;
+import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Palette.System;
 import DevTools.Viewer.Roster.Type;
 import DevTools.Viewer.Selection.System;
@@ -45,7 +49,11 @@ export namespace DevTools::Viewer::Scene::System
         using GameCamera = Engine::Base::Memory::Type::GameCamera::GameCamera;
         using CollidableScene = DevTools::Viewer::Collidable::Type::CollidableScene;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
+        using DirectorFrame = DevTools::Viewer::Director::Type::DirectorFrame;
+        using DirectorStore = DevTools::Viewer::Director::State::DirectorStore;
+        using DirectorService = DevTools::Viewer::Director::System::DirectorService;
         using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
+        using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using Bot = Engine::Control::Simulation::Type::Bot;
         using BotStore = Engine::Control::Simulation::State::BotStore;
         using RosterEntry = DevTools::Viewer::Roster::Type::RosterEntry;
@@ -55,10 +63,12 @@ export namespace DevTools::Viewer::Scene::System
     public:
         SceneService(SettingsStore& settingsStore, ObservedPlayerStore& observedStore, CameraStore& cameraStore,
             CameraService& cameraService, SelectionService& selectionService, const RenderStore& renderStore, PovRequestStore& povRequestStore,
-            PossessRequestStore& possessRequestStore, const BotStore& botStore) :
+            PossessRequestStore& possessRequestStore, const BotStore& botStore, const OptionsStore& optionsStore, DirectorStore& directorStore,
+            DirectorService& directorService) :
             m_SettingsStore(settingsStore), m_ObservedStore(observedStore), m_CameraStore(cameraStore),
             m_CameraService(cameraService), m_SelectionService(selectionService), m_RenderStore(renderStore), m_PovRequestStore(povRequestStore),
-            m_PossessRequestStore(possessRequestStore), m_BotStore(botStore) {}
+            m_PossessRequestStore(possessRequestStore), m_BotStore(botStore), m_OptionsStore(optionsStore), m_DirectorStore(directorStore),
+            m_DirectorService(directorService) {}
         ~SceneService() = default;
 
         SceneService(const SceneService&) = delete;
@@ -68,11 +78,12 @@ export namespace DevTools::Viewer::Scene::System
         auto IsActive() const -> bool;
 
         // Makes the camera place itself on the local player the next time it is activated, and withdraws the POV request so the game view goes
-        // back to the local player (VW.9a).
+        // back to the local player (VW.9a). It also stops the director (VW.14).
         auto Deactivate() -> void;
 
         // Updates the camera, rebuilds the palette and resolves the selection for this frame.
-        // note: Builds the roster of the frame, applies the arrow steps asked since the last frame (VW.9b) and then follows the selected player.
+        // note: Builds the roster of the frame, runs the director (VW.14: the pose it gives goes to the camera before the camera updates, and the player of
+        // a POV shot becomes the selection), applies the arrow steps asked since the last frame (VW.9b) and then follows the selected player.
         // note: The observed player of the Services (the one the AI thread gives a View) is the player of the selected biped, else the local player.
         // param scene: The scene acquired once for the frame (D294). It is kept as the scene of the last update.
         auto Update(const std::shared_ptr<const CollidableScene>& scene, const Viewport& viewport) -> void;
@@ -181,6 +192,17 @@ export namespace DevTools::Viewer::Scene::System
         // Builds the hidden set of GetHiddenHandles.
         auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;
 
+        // Runs the director for this frame and applies what it asks to the camera: the free camera with the pose of a fixed or orbit shot, the game camera for
+        // a POV shot.
+        // return: The frame of the director.
+        auto RunDirector(const std::shared_ptr<const Tick>& tick) -> DirectorFrame;
+
+        // Makes the selection follow the player of a POV shot, so the card and the strip show who is seen.
+        auto FollowDirectedPlayer(std::uint32_t playerHandle) -> void;
+
+        // Answers the requests to add a fixed or an orbit shot from the free camera.
+        auto AddDirectorShots() -> void;
+
         SettingsStore& m_SettingsStore;
         ObservedPlayerStore& m_ObservedStore;
         CameraStore& m_CameraStore;
@@ -190,6 +212,9 @@ export namespace DevTools::Viewer::Scene::System
         PovRequestStore& m_PovRequestStore;
         PossessRequestStore& m_PossessRequestStore;
         const BotStore& m_BotStore;
+        const OptionsStore& m_OptionsStore;
+        DirectorStore& m_DirectorStore;
+        DirectorService& m_DirectorService;
 
         PaletteService m_PaletteService{};
     };

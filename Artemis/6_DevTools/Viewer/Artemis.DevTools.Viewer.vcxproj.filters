@@ -34,6 +34,18 @@
     <Filter Include="Control\System">
       <UniqueIdentifier>{5e0a4fce-0568-5033-9349-621767353b4b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Director">
+      <UniqueIdentifier>{3699c291-88c4-5794-ac4b-1073816ab914}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Director\State">
+      <UniqueIdentifier>{b064d6b9-51e5-5598-bfdf-4cda479ff444}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Director\System">
+      <UniqueIdentifier>{c002df47-b835-5dd6-9cc6-fdb25d7eb81d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Director\Type">
+      <UniqueIdentifier>{33e7bed9-0040-57a6-92ae-a4185d588b45}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Format">
       <UniqueIdentifier>{83699432-227f-557f-93d3-01f8e166c85a}</UniqueIdentifier>
     </Filter>
@@ -219,6 +231,27 @@
     </ClCompile>
     <ClCompile Include="Control\System\ControlService.ixx">
       <Filter>Control\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\State\DirectorStore.cpp">
+      <Filter>Director\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\State\DirectorStore.ixx">
+      <Filter>Director\State</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\System\DirectorService.cpp">
+      <Filter>Director\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\System\DirectorService.ixx">
+      <Filter>Director\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\System\DirectorShots.cpp">
+      <Filter>Director\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\System\DirectorShots.ixx">
+      <Filter>Director\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\Type\DevTools.Viewer.Director.Type.ixx">
+      <Filter>Director\Type</Filter>
     </ClCompile>
     <ClCompile Include="Geometry\System\ZoneGeometry.cpp">
       <Filter>Geometry\System</Filter>

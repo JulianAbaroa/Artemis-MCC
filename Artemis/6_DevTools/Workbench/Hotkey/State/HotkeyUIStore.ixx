@@ -36,7 +36,7 @@ export namespace DevTools::Workbench::Hotkey::State
         static constexpr std::uint32_t k_VkF4{ 0x73 };
         static constexpr std::uint32_t k_VkF6{ 0x75 };
 
-        const std::array<Binding, 14> m_Bindings
+        const std::array<Binding, 18> m_Bindings
         { {
             { Action::ToggleLauncher, Scope::UI, k_VkF2, false,
                 "Toggle Launcher", "F2", "Show or hide the launcher." },
@@ -58,6 +58,18 @@ export namespace DevTools::Workbench::Hotkey::State
 
             { Action::None, Scope::Viewer, k_VkF6, false,
                 "Toggle Labels", "F6", "Show or hide the 3D labels over the map." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Director Play / Stop", "F7", "Plays the saved shots of the map in real time, or stops. Needs the Viewer active." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Director Add Fixed Shot", "INSERT", "Free camera. Saves the pose of the camera as a fixed shot of the director." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Director Next Shot", "RIGHT ARROW", "While the director plays, goes to the next shot." },
+
+            { Action::None, Scope::Viewer, 0, false,
+                "Director Previous Shot", "LEFT ARROW", "While the director plays, goes to the previous shot." },
 
             { Action::ToggleMenu, Scope::UI, '1', true,
                 "Toggle Menu", "SHIFT + 1", "Show or hide the Artemis Control Panel." },

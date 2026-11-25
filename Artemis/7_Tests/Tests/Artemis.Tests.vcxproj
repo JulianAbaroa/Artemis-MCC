@@ -110,6 +110,14 @@
     <ClCompile Include="Engine\TickProducerTests.cpp" />
     <ClCompile Include="Viewer\OptionsStoreTests.cpp" />
     <ClCompile Include="Viewer\RosterOrderTests.cpp" />
+    <ClCompile Include="Viewer\DirectorTests.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\Type\DevTools.Viewer.Director.Type.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorService.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorService.cpp" />
     <ClCompile Include="Viewer\PossessDecisionTests.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\Type\DevTools.Viewer.Roster.Type.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.ixx" />

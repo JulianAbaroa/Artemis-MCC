@@ -32,6 +32,9 @@ export namespace DevTools::Viewer::Selection::System
         // param collidables: Those of the scene the frame draws (VW.5d), so the pick hits what is on screen and not a newer tick.
         auto Update(const Ray& ray, const std::shared_ptr<const Collidables>& collidables) -> void;
 
+        // return: The distance along the ray to the nearest box of the scene of the last Update, or nothing when the ray hits none. It selects nothing.
+        auto Cast(const Ray& ray) const -> std::optional<float>;
+
         auto GetSelected() const -> std::uint32_t;
         auto GetSelectedPlayer() const -> std::uint32_t;
 
@@ -57,6 +60,9 @@ export namespace DevTools::Viewer::Selection::System
 
         auto Rebuild(const std::shared_ptr<const Collidables>& collidables) -> void;
         auto Pick(const Ray& ray) -> void;
+
+        // return: The handle of the nearest box the ray hits and its distance, or k_NoHandle and the largest float when it hits none.
+        auto Nearest(const Ray& ray) const -> std::pair<std::uint32_t, float>;
 
         // return: Distance along the ray to the box, or -1 if the ray misses it.
         static auto Intersect(const Ray& ray, const ObjectBounds& bounds) -> float;

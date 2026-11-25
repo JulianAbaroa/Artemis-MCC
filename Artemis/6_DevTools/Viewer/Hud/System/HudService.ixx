@@ -18,6 +18,7 @@ import Engine.Render.Type;
 import Engine.Render.State;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Collidable.State;
+import DevTools.Viewer.Director.State;
 import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Overlay.State;
 import DevTools.Viewer.Scene.System;
@@ -38,6 +39,7 @@ export namespace DevTools::Viewer::Hud::System
         using PossessionStore = Engine::Control::Input::State::PossessionStore;
         using RenderStore = Engine::Render::State::RenderStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
+        using DirectorStore = DevTools::Viewer::Director::State::DirectorStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
@@ -45,10 +47,10 @@ export namespace DevTools::Viewer::Hud::System
     public:
         HudService(TelemetryStore& telemetryStore, RenderStore& renderStore, const PovStatusStore& povStatusStore, const PossessionStore& possessionStore,
             const AgentClientStore& agentClientStore, CollidableStore& collidableStore,
-            OverlayStore& overlayStore, SceneService& sceneService, LatencyService& latencyService) :
+            OverlayStore& overlayStore, const DirectorStore& directorStore, SceneService& sceneService, LatencyService& latencyService) :
             m_TelemetryStore(telemetryStore), m_RenderStore(renderStore), m_PovStatusStore(povStatusStore), m_PossessionStore(possessionStore), m_AgentClientStore(agentClientStore),
             m_CollidableStore(collidableStore),
-            m_OverlayStore(overlayStore), m_SceneService(sceneService), m_LatencyService(latencyService) {}
+            m_OverlayStore(overlayStore), m_DirectorStore(directorStore), m_SceneService(sceneService), m_LatencyService(latencyService) {}
         ~HudService() = default;
 
         HudService(const HudService&) = delete;
@@ -66,12 +68,16 @@ export namespace DevTools::Viewer::Hud::System
         const AgentClientStore& m_AgentClientStore;
         CollidableStore& m_CollidableStore;
         OverlayStore& m_OverlayStore;
+        const DirectorStore& m_DirectorStore;
         SceneService& m_SceneService;
         LatencyService& m_LatencyService;
 
         auto DrawDefault() -> void;
 
         auto DrawFramerate() -> void;
+
+        // Draws one line with the director: off, or the shot that plays with its time, the player of a POV shot and the map key (VW.14).
+        auto DrawDirector() -> void;
         auto DrawTelemetry() -> void;
 
         // Draws the camera of the game: validity, position, fields of view, aspect against the back buffer and the distance to the View of the

@@ -14,6 +14,8 @@ import DevTools.Viewer.Camera.State;
 import DevTools.Viewer.Camera.System;
 import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Collidable.System;
+import DevTools.Viewer.Director.State;
+import DevTools.Viewer.Director.System;
 import DevTools.Viewer.Selection.State;
 import DevTools.Viewer.Selection.System;
 import DevTools.Viewer.Latency.State;
@@ -52,6 +54,7 @@ export namespace DevTools::Viewer
         using CameraStore = DevTools::Viewer::Camera::State::CameraStore;
         using CollidableStore = DevTools::Viewer::Collidable::State::CollidableStore;
         using SelectionStore = DevTools::Viewer::Selection::State::SelectionStore;
+        using DirectorStore = DevTools::Viewer::Director::State::DirectorStore;
         using LatencyStore = DevTools::Viewer::Latency::State::LatencyStore;
         using OverlayStore = DevTools::Viewer::Overlay::State::OverlayStore;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
@@ -59,6 +62,7 @@ export namespace DevTools::Viewer
         using Scalar = DevTools::Viewer::Options::Type::Scalar;
 
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
+        using DirectorService = DevTools::Viewer::Director::System::DirectorService;
         using CollidableSceneService = DevTools::Viewer::Collidable::System::CollidableSceneService;
         using SelectionService = DevTools::Viewer::Selection::System::SelectionService;
         using ControlService = DevTools::Viewer::Control::System::ControlService;
@@ -77,16 +81,17 @@ export namespace DevTools::Viewer
         Layer(Services::Layer& service, DevTools::Viewer::Access::Type::EngineAccess& engine, Perception::Layer& environment,
             DevTools::Gui::Layer& gui,
             PreferencesService& preferences) :
+            m_DirectorService(m_DirectorStore),
             m_CameraService(m_CameraStore, m_OptionsStore, engine.m_GameCameraService),
             m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
             m_SelectionService(m_SelectionStore),
-            m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OptionsStore),
+            m_ControlService(service.m_SettingsStore, m_CameraStore, m_SelectionStore, m_OptionsStore, m_DirectorStore),
             m_SceneService(service.m_SettingsStore, service.m_ObservedPlayerStore, m_CameraStore, m_CameraService, m_SelectionService,
-                engine.m_RenderStore, engine.m_PovRequestStore, engine.m_PossessRequestStore, engine.m_BotStore),
+                engine.m_RenderStore, engine.m_PovRequestStore, engine.m_PossessRequestStore, engine.m_BotStore, m_OptionsStore, m_DirectorStore, m_DirectorService),
             m_LatencyService(m_LatencyStore, engine.m_FrameClockReader, engine.m_CaptureStore),
             m_MapService(service.m_Log, m_CollidableStore, m_SceneService, m_OptionsStore, m_LatencyService,
                 engine.m_LifecycleStore),
-            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, engine.m_PossessionStore, engine.m_AgentClientStore, m_CollidableStore, m_OverlayStore, m_SceneService,
+            m_HudService(service.m_TelemetryStore, engine.m_RenderStore, engine.m_PovStatusStore, engine.m_PossessionStore, engine.m_AgentClientStore, m_CollidableStore, m_OverlayStore, m_DirectorStore, m_SceneService,
                 m_LatencyService),
             m_LabelService(m_CollidableStore, m_CameraService, m_SceneService, m_OptionsStore, m_SelectionStore),
             m_AgentCardService(m_CollidableStore, m_SceneService, m_OptionsStore, m_SelectionStore, engine.m_BotStore),
@@ -100,6 +105,12 @@ export namespace DevTools::Viewer
                 [this](std::string_view key, std::string_view value) { m_OptionsStore.Load(key, value); });
 
             engine.m_RenderService.OnFrame([this, &gui, &engine, &service](const FrameContext&) {
+                // The director plays for the map that is loaded. Its file is loaded when the map changes and saved after every edit, here, so the panel
+                // works with the Viewer inactive too (VW.14).
+                m_DirectorStore.SetMapName(engine.m_MapVariantService.GetActiveName());
+                m_DirectorStore.SetMatchId(engine.m_MatchCycleStore.GetEngineStarts());
+                m_DirectorService.Persist(service.m_SettingsStore.GetAppDataDirectory());
+
                 // note: The HUD of a dead watched player is not hidden (D346): hiding it showed the first frames of the death text animation.
                 engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
                 engine.m_RenderStore.SetFirstPersonHidden(m_OptionsStore.IsEnabled(Flag::HideFirstPerson));
@@ -117,7 +128,12 @@ export namespace DevTools::Viewer
                 {
                     const std::uint32_t observed{ service.m_ObservedPlayerStore.Get() };
 
-                    if (m_OptionsStore.IsEnabled(Flag::WatchPov) && observed != k_NoHandle) engine.m_PovRequestStore.Publish(observed);
+                    // The player of a POV shot of the director wins over the option while it plays (VW.14). The options are not changed: when the director
+                    // stops, they rule again.
+                    const std::uint32_t directed{ m_DirectorStore.GetPovPlayer() };
+
+                    if (directed != k_NoHandle) engine.m_PovRequestStore.Publish(directed);
+                    else if (m_OptionsStore.IsEnabled(Flag::WatchPov) && observed != k_NoHandle) engine.m_PovRequestStore.Publish(observed);
                     else engine.m_PovRequestStore.Clear();
 
                     // note: The possession follows the selected player, not its body, so it survives the death of the bot (D352). A human, the Free
@@ -200,9 +216,11 @@ export namespace DevTools::Viewer
         OverlayStore m_OverlayStore{};
         OptionsStore m_OptionsStore{};
         LatencyStore m_LatencyStore{};
+        DirectorStore m_DirectorStore{};
         bool m_IsActiveLast{ false };
 
         // --- System ---
+        DirectorService m_DirectorService;
         CameraService m_CameraService;
         CollidableSceneService m_CollidableSceneService;
         SelectionService m_SelectionService;

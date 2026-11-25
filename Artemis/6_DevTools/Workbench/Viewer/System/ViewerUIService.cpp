@@ -10,6 +10,8 @@ import DevTools.Gui.Style.Type;
 import DevTools.Gui.Format.System;
 import DevTools.Gui.Widget.System;
 import DevTools.Viewer.Camera.Type;
+import DevTools.Viewer.Director.Type;
+import DevTools.Viewer.Director.System;
 import std;
 
 namespace
@@ -17,6 +19,13 @@ namespace
     using Perception::Players::Type::Player;
     using Perception::Players::Type::Players;
     using DevTools::Viewer::Camera::Type::Mode;
+    using DevTools::Viewer::Director::System::DefaultShotName;
+    using DevTools::Viewer::Director::System::ShotKindName;
+    using DevTools::Viewer::Director::Type::DirectorFileInfo;
+    using DevTools::Viewer::Director::Type::DirectorStatus;
+    using DevTools::Viewer::Director::Type::Shot;
+    using DevTools::Viewer::Director::Type::ShotKind;
+    using DevTools::Viewer::Director::Type::ShotList;
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::FlagInfo;
     using DevTools::Viewer::Options::Type::Group;
@@ -39,6 +48,10 @@ namespace
 
     constexpr std::array<const char*, 2> k_ModeLabels{ "Free camera", "Game camera" };
     constexpr std::array<const char*, 3> k_LevelLabels{ "Off", "Minimal", "Full" };
+
+    constexpr std::size_t k_NameBufferSize{ 64 };
+    constexpr float k_MaxShotSeconds{ 600.0f };
+    constexpr float k_MaxDegreesPerSecond{ 60.0f };
 
     // Narrowest a row may get (in font sizes) before the three level buttons become a combo.
     constexpr float k_MinimumSelectorEms{ 14.0f };
@@ -103,9 +116,9 @@ namespace
 namespace DevTools::Workbench::Viewer::System
 {
     ViewerUIService::ViewerUIService(OptionsStore& optionsStore, CameraStore& cameraStore, const ObservedPlayerStore& observedStore, TickStore& tickStore,
-        InspectorService& inspectorService) :
+        InspectorService& inspectorService, DirectorStore& directorStore) :
         m_OptionsStore(optionsStore), m_CameraStore(cameraStore), m_ObservedStore(observedStore), m_TickStore(tickStore),
-        m_InspectorService(inspectorService)
+        m_InspectorService(inspectorService), m_DirectorStore(directorStore)
     {
         for (const LayerInfo& info : k_Layers)
         {
@@ -214,6 +227,119 @@ namespace DevTools::Workbench::Viewer::System
         this->DrawFlag(Flag::WatchPov);
         this->DrawFlag(Flag::PossessBot);
         this->DrawScalars(Group::Camera, Layer::Count);
+
+        this->DrawDirector();
+    }
+
+    auto ViewerUIService::DrawDirector() -> void
+    {
+        ImGui::SeparatorText("Director");
+
+        const bool isActive{ m_CameraStore.IsActive() };
+        const bool isFree{ m_CameraStore.GetMode() == Mode::Free };
+        const DirectorStatus status{ m_DirectorStore.GetStatus() };
+        const DirectorFileInfo file{ m_DirectorStore.GetFileInfo() };
+
+        // Playing needs the Viewer: a stop is always possible.
+        ImGui::BeginDisabled(!isActive && !status.IsPlaying);
+        if (ImGui::Button(status.IsPlaying ? "Stop (F7)" : "Play (F7)")) m_DirectorStore.RequestTogglePlay();
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+
+        if (!status.IsPlaying) ImGui::TextDisabled(isActive ? "stopped" : "activate the Viewer to play");
+        else if (status.IsHolding) ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.0f, 1.0f), "waiting for a shot it can play");
+        else ImGui::Text("shot %zu/%zu, %.0f s", status.Index + 1, status.Count, status.ElapsedSeconds);
+
+        StatusGuiService::ShowTooltip("Plays the shots of the map one after the other, in real time. Each shot is a pose of the free camera, an orbit or the "
+            "first person view of the next Artemis bot. Stopping leaves the free camera where it was, or the game camera after a POV shot. Left and right "
+            "arrows go to the previous and next shot while it plays. Deactivating the Viewer (F4) stops it.");
+
+        ImGui::Text("Map: %s", file.MapKey.empty() ? "?" : file.MapKey.c_str());
+        ImGui::TextDisabled("%s", file.Path.empty() ? "(no file)" : file.Path.c_str());
+        ImGui::TextDisabled("%s", file.Message.c_str());
+
+        this->DrawFlag(Flag::DirectorCutOnRound);
+        this->DrawScalars(Group::Director, Layer::Count);
+
+        ImGui::BeginDisabled(!isFree);
+        if (ImGui::Button("Add fixed (free camera)")) m_DirectorStore.RequestAddFixed();
+        StatusGuiService::ShowTooltip("Saves the pose of the free camera as a shot. Same as the Insert key. Only in Free mode.");
+
+        ImGui::SameLine();
+        if (ImGui::Button("Add orbit (around center)")) m_DirectorStore.RequestAddOrbit();
+        StatusGuiService::ShowTooltip("Saves an orbit that starts where the free camera is and turns around the point it looks at, at the speed above. Only in Free mode.");
+        ImGui::EndDisabled();
+
+        ImGui::SameLine();
+        if (ImGui::Button("Add POV"))
+        {
+            m_DirectorStore.AddShot(Shot{ .Kind = ShotKind::Pov, .Name = DefaultShotName(m_DirectorStore.CopyShots(), ShotKind::Pov) });
+        }
+
+        StatusGuiService::ShowTooltip("Adds a shot that shows the next Artemis bot in first person. It is skipped while there is no live bot.");
+
+        const ShotList shots{ m_DirectorStore.CopyShots() };
+
+        // The buttons only note what to do: the list does not change under the loop.
+        std::optional<std::size_t> remove{};
+        std::optional<std::size_t> moveUp{};
+        std::optional<std::size_t> moveDown{};
+
+        for (std::size_t i{ 0 }; i < shots.size(); ++i)
+        {
+            const Shot& shot{ shots[i] };
+            ImGui::PushID(static_cast<int>(i));
+
+            const bool isCurrent{ status.IsPlaying && !status.IsHolding && status.Index == i };
+            ImGui::TextColored(isCurrent ? ImVec4(0.0f, 1.0f, 0.0f, 1.0f) : ImVec4(0.5f, 0.5f, 0.5f, 1.0f), isCurrent ? ">" : "-");
+            ImGui::SameLine();
+            ImGui::Text("%-5s", std::string{ ShotKindName(shot.Kind) }.c_str());
+
+            std::array<char, k_NameBufferSize> name{};
+            std::copy_n(shot.Name.begin(), (std::min)(shot.Name.size(), name.size() - 1), name.begin());
+
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 9.0f);
+            if (ImGui::InputText("##name", name.data(), name.size())) m_DirectorStore.SetShotName(i, name.data());
+
+            float seconds{ shot.Seconds };
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(ImGui::GetFontSize() * 4.5f);
+            if (ImGui::DragFloat("##seconds", &seconds, 0.5f, 1.0f, k_MaxShotSeconds, "%.0f s", ImGuiSliderFlags_AlwaysClamp)) m_DirectorStore.SetShotSeconds(i, seconds);
+
+            if (shot.Kind == ShotKind::Orbit)
+            {
+                float degreesPerSecond{ shot.DegreesPerSecond };
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(ImGui::GetFontSize() * 5.5f);
+                if (ImGui::DragFloat("##turn", &degreesPerSecond, 0.1f, -k_MaxDegreesPerSecond, k_MaxDegreesPerSecond, "%.1f deg/s", ImGuiSliderFlags_AlwaysClamp))
+                {
+                    m_DirectorStore.SetShotDegreesPerSecond(i, degreesPerSecond);
+                }
+            }
+
+            ImGui::SameLine();
+            ImGui::BeginDisabled(i == 0);
+            if (ImGui::SmallButton("Up")) moveUp = i;
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+            ImGui::BeginDisabled(i + 1 >= shots.size());
+            if (ImGui::SmallButton("Down")) moveDown = i;
+            ImGui::EndDisabled();
+
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Del")) remove = i;
+
+            ImGui::PopID();
+        }
+
+        if (shots.empty()) ImGui::TextDisabled("No shots for this map.");
+
+        if (moveUp) m_DirectorStore.MoveShot(*moveUp, -1);
+        else if (moveDown) m_DirectorStore.MoveShot(*moveDown, 1);
+        else if (remove) m_DirectorStore.RemoveShot(*remove);
     }
 
     auto ViewerUIService::DrawLayers() -> void

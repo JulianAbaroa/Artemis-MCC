@@ -10,6 +10,7 @@ export namespace DevTools::Viewer::Options::Type
         Camera,
         Layers,
         Development,
+        Director,
 
         Count
     };
@@ -109,6 +110,7 @@ export namespace DevTools::Viewer::Options::Type
         HideFirstPerson,
         WatchPov,
         PossessBot,
+        DirectorCutOnRound,
 
         Count
     };
@@ -135,6 +137,7 @@ export namespace DevTools::Viewer::Options::Type
         FovZoom,
 
         SceneColorScale,
+        DirectorDegreesPerSecond,
 
         Count
     };
@@ -393,6 +396,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Flag::PossessBot, Group::Camera, Layer::Count, Level::Full, "PossessBot", "Auto-possess bot",
             "With the Game camera, the Artemis bot you select plays with your mouse and keyboard (your settings). Your own player stands still. TAB to the Free camera, selecting a human or turning this off gives the bot back. Pair it with Watch POV to see through the bot.", false },
+
+        { Flag::DirectorCutOnRound, Group::Director, Layer::Count, Level::Full, "DirectorCutOnRound", "Cut on new round",
+            "While the director plays, a new round (or a new match) also ends the shot, unless it started less than 3 seconds ago.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
@@ -435,6 +441,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Scalar::SceneColorScale, Group::Development, Layer::Count, "SceneColorScale", "Scene color scale",
             "Multiplies the overlay colors, from 2^-12 to 2^4 (logarithmic). The default 2^-5 matches the HDR target of the game (D335). Double click to go back to the default.", 0.03125f, 0.000244140625f, 16.0f, "%.4g", true },
+
+        { Scalar::DirectorDegreesPerSecond, Group::Director, Layer::Count, "DirectorDegreesPerSecond", "Orbit speed (deg/s)",
+            "Turn speed of the orbit shots added from now on. 6 is one turn per minute, negative turns the other way.", 6.0f, -60.0f, 60.0f, "%.1f" },
     } };
 
     // return: Whether the flag is on when its layer is at the given level. A flag without a layer is not derived from a level: false.

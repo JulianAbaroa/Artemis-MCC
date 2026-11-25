@@ -78,10 +78,21 @@ namespace DevTools::Viewer::Camera::System
             m_IsFlying = false;
 
             if (m_GameCameraService.IsOverrideActive()) m_GameCameraService.ClearOverride();
+
+            m_IsScripted = false;
         }
         else
         {
-            this->Fly(deltaTime, mouseX, mouseY, acceptInput);
+            if (m_IsScripted)
+            {
+                // note: The director flies the camera. The keys were released when the mode changed and the mouse movement was consumed above.
+                this->SetPose(m_ScriptedEye, m_ScriptedYaw, m_ScriptedPitch);
+                m_IsScripted = false;
+            }
+            else
+            {
+                this->Fly(deltaTime, mouseX, mouseY, acceptInput);
+            }
 
             m_IsFlying = true;
 
@@ -97,10 +108,21 @@ namespace DevTools::Viewer::Camera::System
         if (m_IsFlying) m_GameCameraService.SetOverride(m_Eye, m_RequestedForward, m_RequestedUp);
     }
 
+    auto CameraService::SetScriptedPose(const Vec3& eye, float yaw, float pitch) -> void
+    {
+        if (!VecMath::IsFinite(eye) || !std::isfinite(yaw) || !std::isfinite(pitch)) return;
+
+        m_IsScripted = true;
+        m_ScriptedEye = eye;
+        m_ScriptedYaw = yaw;
+        m_ScriptedPitch = pitch;
+    }
+
     auto CameraService::Deactivate() -> void
     {
         if (m_GameCameraService.IsOverrideActive()) m_GameCameraService.ClearOverride();
         m_IsFlying = false;
+        m_IsScripted = false;
 
         m_IsActive = false;
         m_IsLastUpdateSet = false;

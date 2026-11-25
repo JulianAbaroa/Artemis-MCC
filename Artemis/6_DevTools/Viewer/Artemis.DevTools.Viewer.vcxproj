@@ -113,6 +113,13 @@
     <ClCompile Include="Collidable\System\CollidableSceneService.ixx" />
     <ClCompile Include="Control\System\ControlService.cpp" />
     <ClCompile Include="Control\System\ControlService.ixx" />
+    <ClCompile Include="Director\State\DirectorStore.cpp" />
+    <ClCompile Include="Director\State\DirectorStore.ixx" />
+    <ClCompile Include="Director\System\DirectorService.cpp" />
+    <ClCompile Include="Director\System\DirectorService.ixx" />
+    <ClCompile Include="Director\System\DirectorShots.cpp" />
+    <ClCompile Include="Director\System\DirectorShots.ixx" />
+    <ClCompile Include="Director\Type\DevTools.Viewer.Director.Type.ixx" />
     <ClCompile Include="Geometry\System\ZoneGeometry.cpp" />
     <ClCompile Include="Geometry\System\ZoneGeometry.ixx" />
     <ClCompile Include="Hud\System\Card\AgentCardService.cpp" />

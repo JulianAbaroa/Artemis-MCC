@@ -147,6 +147,19 @@ namespace DevTools::Viewer::Selection::System
     {
         if (!m_SelectionStore.ConsumePick()) return;
 
+        m_SelectionStore.SetSelected(this->Nearest(ray).first);
+    }
+
+    auto SelectionService::Cast(const Ray& ray) const -> std::optional<float>
+    {
+        const auto [handle, distance] = this->Nearest(ray);
+        if (handle == k_NoHandle) return std::nullopt;
+
+        return distance;
+    }
+
+    auto SelectionService::Nearest(const Ray& ray) const -> std::pair<std::uint32_t, float>
+    {
         std::uint32_t best = k_NoHandle;
         float bestDistance = (std::numeric_limits<float>::max)();
 
@@ -161,7 +174,7 @@ namespace DevTools::Viewer::Selection::System
             }
         }
 
-        m_SelectionStore.SetSelected(best);
+        return { best, bestDistance };
     }
 
     auto SelectionService::Intersect(const Ray& ray, const ObjectBounds& bounds) -> float

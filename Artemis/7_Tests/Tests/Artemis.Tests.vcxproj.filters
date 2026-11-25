@@ -222,6 +222,30 @@
     <ClCompile Include="Viewer\RosterOrderTests.cpp">
       <Filter>Viewer</Filter>
     </ClCompile>
+    <ClCompile Include="Viewer\DirectorTests.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\Type\DevTools.Viewer.Director.Type.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorService.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorService.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
     <ClCompile Include="Viewer\PossessDecisionTests.cpp">
       <Filter>Viewer</Filter>
     </ClCompile>

@@ -48,6 +48,10 @@ export namespace DevTools::Viewer::Camera::System
         // Makes the next Update place the camera on the local player again and gives the game camera back to the game.
         auto Deactivate() -> void;
 
+        // Asks for the pose of the director (VW.14): the next Update in Free mode takes it instead of flying, ignoring the keys and the mouse, and then asks
+        // the game for it as every free pose. It is used once. A pose that is not finite is ignored. Yaw and pitch are in radians.
+        auto SetScriptedPose(const Vec3& eye, float yaw, float pitch) -> void;
+
         // The render pose: the one the overlay is drawn with. It is the camera of the game read this frame, or the free pose when the free camera
         // has no valid game camera. With the free camera it is NOT the free pose: the game draws one frame behind the request, so the overlay
         // must use what the game drew (D323). Everything that draws or measures against the frame
@@ -99,6 +103,12 @@ export namespace DevTools::Viewer::Camera::System
 
         // True while the free camera flies and moves the camera of the game (Free mode).
         bool m_IsFlying{ false };
+
+        // The pose the director asked for and Update has not taken yet.
+        bool m_IsScripted{ false };
+        Vec3 m_ScriptedEye{};
+        float m_ScriptedYaw{ 0.0f };
+        float m_ScriptedPitch{ 0.0f };
 
         // Projection terms of the last Build: the focal values and the off-center terms of x and y.
         float m_FocalX{ 1.0f };
