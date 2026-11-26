@@ -1,7 +1,13 @@
+module;
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 module Engine.Base.MapVariant.System;
 import :Decode;
 
 import Common.Text.System;
+import Engine.Base.Host.Type;
 import Engine.Base.Memory.Type;
 import Engine.Base.MapVariant.Type;
 import Blam.Layout.Object.Type;
@@ -14,6 +20,7 @@ namespace
     namespace LayoutMapVariant = Blam::Layout::Object::Type::MapVariant;
     namespace FileParse = Blam::Layout::MapVariantFile::Type::Parse;
 
+    using Engine::Base::Host::Type::k_GameModuleName;
     using Engine::Base::MapVariant::Type::DecodedMapVariant;
     using Engine::Base::MapVariant::Type::k_DecodeBufferSize;
     using Engine::Base::MapVariant::Type::k_DecodeStatusOffset;
@@ -92,6 +99,15 @@ namespace Engine::Base::MapVariant::System
 
     auto MapVariantDecodeService::Resolve() -> bool
     {
+        // note: The game module can be loaded again at another base for the next match, so both functions are found again then.
+        const auto module{ reinterpret_cast<std::uintptr_t>(GetModuleHandleW(k_GameModuleName)) };
+        if (module != m_Module)
+        {
+            m_Module = module;
+            m_Init = nullptr;
+            m_Decode = nullptr;
+        }
+
         if (m_Init != nullptr && m_Decode != nullptr) return true;
 
         const std::uintptr_t init{ m_AOBService.FindPattern(Signature::k_MapVariantInit) };

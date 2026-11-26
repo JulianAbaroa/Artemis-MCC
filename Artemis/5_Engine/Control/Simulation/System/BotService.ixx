@@ -148,6 +148,9 @@ export namespace Engine::Control::Simulation::System
         // Ticks seen. Game thread only.
         std::uint64_t m_Sequence{ 0 };
 
+        // Base of the game module the engine functions below were found in (0 before the first resolve).
+        std::uintptr_t m_Module{ 0 };
+
         // Engine functions. The SetMachines call goes through its hook, which keeps the fake machines.
         SetMachinesFunction m_SetMachines{ nullptr };
         ApplyPlayerAddedFunction m_ApplyPlayerAdded{ nullptr };

@@ -41,6 +41,8 @@ export namespace Engine::Base::MapVariant::System
         Log& m_Log;
         AOBService& m_AOBService;
 
+        // Base of the game module the two functions were found in (0 before the first resolve).
+        std::uintptr_t m_Module{ 0 };
         MapVariantInitFunction m_Init{ nullptr };
         MapVariantDecodeFunction m_Decode{ nullptr };
 

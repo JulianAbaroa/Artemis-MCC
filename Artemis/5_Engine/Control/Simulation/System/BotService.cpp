@@ -1,9 +1,15 @@
+module;
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+
 module Engine.Control.Simulation.System;
 
 import Common.Engine.Type;
 import Common.Math.Type;
 import Control.Action.Type;
 import Control.Client.Type;
+import Engine.Base.Host.Type;
 import Engine.Base.Memory.Type;
 import Blam.Layout.Action.Type;
 import Blam.Layout.Object.Type;
@@ -12,6 +18,8 @@ import std;
 namespace
 {
     namespace Signature = Engine::Base::Memory::Type::Signature;
+
+    using Engine::Base::Host::Type::k_GameModuleName;
 
     using Blam::Layout::Action::Type::Size::k_MaxActionPlayers;
 
@@ -996,6 +1004,20 @@ namespace Engine::Control::Simulation::System
 
     auto BotService::ResolveFunctions() -> bool
     {
+        // note: The game module can be loaded again at another base for the next match (2026-11-25: the second match of a scenario
+        // called SetMachines at the old base and MCC crashed), so every engine function is found again when the base changes.
+        const auto module{ reinterpret_cast<std::uintptr_t>(GetModuleHandleW(k_GameModuleName)) };
+        if (module != m_Module)
+        {
+            if (m_Module != 0) m_Log.Message("[BotService] INFO: The game module moved to {:X}: the engine functions are found again.", module);
+
+            m_Module = module;
+            m_IsResolved = false;
+            m_IsInteractionResolved = false;
+            m_IsClientResolved = false;
+            m_IsUnitFactsResolved = false;
+        }
+
         if (!m_IsResolved)
         {
             m_SetMachines = reinterpret_cast<SetMachinesFunction>(m_AOBService.FindPattern(Signature::k_SetMachines));
