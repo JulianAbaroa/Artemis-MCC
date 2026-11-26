@@ -16,6 +16,7 @@ import Engine.Match.State;
 import Engine.Match.System;
 import Bridge.Transport.System;
 import Bridge.Codec.Tick.State;
+import DevTools.Viewer.Director.State;
 import DevTools.Workbench.TickDump.State;
 import DevTools.Workbench.Bench.Type;
 import DevTools.Workbench.Bench.State;
@@ -58,6 +59,8 @@ export namespace DevTools::Workbench::Bench::System
 
         using TickStore = Bridge::Codec::Tick::State::TickStore;
 
+        using DirectorStore = DevTools::Viewer::Director::State::DirectorStore;
+
         using TickDumpUIStore = DevTools::Workbench::TickDump::State::TickDumpUIStore;
 
         using BenchProbe = DevTools::Workbench::Bench::Type::BenchProbe;
@@ -75,7 +78,7 @@ export namespace DevTools::Workbench::Bench::System
             LifecycleStore& lifecycleStore, MatchConfigStore& matchConfigStore, MatchCycleStore& matchCycleStore,
             MatchConfigService& matchConfigService, MapVariantDecodeStore& mapVariantDecodeStore, MatchSetupService& matchSetupService,
             PresetService& presetService, MapVariantService& mapVariantService, TickStore& tickStore, TickDumpUIStore& tickDumpUIStore,
-            TelemetryStore& telemetryStore, BridgeService& bridgeService, BenchUIStore& benchUIStore) :
+            TelemetryStore& telemetryStore, BridgeService& bridgeService, BenchUIStore& benchUIStore, DirectorStore& directorStore) :
             m_LogsStore(logsStore), m_Log(log), m_SettingsStore(settingsStore), m_TelemetryStore(telemetryStore),
             m_BridgeService(bridgeService),
             m_MemoryReaderService(memoryReaderService), m_LocalUserStore(localUserStore), m_PlayerActionStore(playerActionStore),
@@ -84,7 +87,7 @@ export namespace DevTools::Workbench::Bench::System
             m_MatchConfigService(matchConfigService), m_MapVariantDecodeStore(mapVariantDecodeStore), m_MatchSetupService(matchSetupService),
             m_PresetService(presetService),
             m_MapVariantService(mapVariantService), m_TickStore(tickStore), m_TickDumpUIStore(tickDumpUIStore),
-            m_BenchUIStore(benchUIStore) {}
+            m_BenchUIStore(benchUIStore), m_DirectorStore(directorStore) {}
         ~BenchUIService() = default;
 
         BenchUIService(const BenchUIService&) = delete;
@@ -122,6 +125,7 @@ export namespace DevTools::Workbench::Bench::System
         TickStore& m_TickStore;
         TickDumpUIStore& m_TickDumpUIStore;
         BenchUIStore& m_BenchUIStore;
+        DirectorStore& m_DirectorStore;
         // Held from the start of a match to the end of its tools, so the pipeline runs every tick during the match (Q101).
         EveryTickDemandToken m_EveryTickDemand{};
 

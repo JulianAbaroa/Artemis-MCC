@@ -310,7 +310,7 @@ def PrintReport(report, asserter=AssertTickDump):
 
 
 MATCH_KEYS = {"name", "config", "preset", "map", "locals", "bots", "roster", "rosters", "setups", "scale", "max_ticks", "max_seconds", "checks", "repeat", "actions", "requests",
-              "probes", "tickdump", "events", "every_tick", "decodes", "inputs"}
+              "probes", "tickdump", "events", "every_tick", "decodes", "inputs", "director"}
 
 
 MAX_TEAMS = 8
@@ -413,6 +413,9 @@ def Compile(scenario, configs):
             raise ValueError(f"match {index + 1}: every_tick must be true or false, not {match['every_tick']!r}")
         if match.get("every_tick") is False and (match.get("tickdump") or match.get("events")):
             raise ValueError(f"match {index + 1}: every_tick false (sparse allowed, Q101) cannot go with tickdump or events")
+        director = match.get("director")
+        if director is not None and (not isinstance(director, str) or not director.strip() or any(c in director for c in "|\r\n")):
+            raise ValueError(f"match {index + 1}: director must be the name of a sequence of the map (a non-empty string without | or line breaks), not {director!r}")
         if not match.get("config"):
             raise ValueError(f"match {index + 1}: no config")
         created = {d.get("name") for d in match.get("decodes", []) if isinstance(d, dict) and d.get("template")}
@@ -502,6 +505,9 @@ def Compile(scenario, configs):
                 lines.append("events")
             if match.get("every_tick") is False:
                 lines.append("every_tick off")
+            # VW.16: the director of the Viewer plays this sequence of the map's shot library from the load of the match.
+            if director is not None:
+                lines.append(f"director {director.strip()}")
     if not count:
         raise ValueError("the scenario has no matches")
     return "\n".join(lines) + "\n", count

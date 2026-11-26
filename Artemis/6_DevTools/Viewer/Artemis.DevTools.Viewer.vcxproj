@@ -115,6 +115,8 @@
     <ClCompile Include="Control\System\ControlService.ixx" />
     <ClCompile Include="Director\State\DirectorStore.cpp" />
     <ClCompile Include="Director\State\DirectorStore.ixx" />
+    <ClCompile Include="Director\System\DirectorLibrary.cpp" />
+    <ClCompile Include="Director\System\DirectorLibrary.ixx" />
     <ClCompile Include="Director\System\DirectorService.cpp" />
     <ClCompile Include="Director\System\DirectorService.ixx" />
     <ClCompile Include="Director\System\DirectorShots.cpp" />

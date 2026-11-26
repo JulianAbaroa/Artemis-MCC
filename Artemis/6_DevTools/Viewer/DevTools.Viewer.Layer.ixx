@@ -82,7 +82,7 @@ export namespace DevTools::Viewer
         Layer(Services::Layer& service, DevTools::Viewer::Access::Type::EngineAccess& engine, Perception::Layer& environment,
             DevTools::Gui::Layer& gui,
             PreferencesService& preferences) :
-            m_DirectorService(m_DirectorStore),
+            m_DirectorService(m_DirectorStore, service.m_Log),
             m_CameraService(m_CameraStore, m_OptionsStore, engine.m_GameCameraService),
             m_CollidableSceneService(environment.m_CollidableService, m_CollidableStore),
             m_SelectionService(m_SelectionStore),
@@ -108,9 +108,16 @@ export namespace DevTools::Viewer
             engine.m_RenderService.OnFrame([this, &gui, &engine, &service](const FrameContext&) {
                 // The director plays for the map that is loaded. Its file is loaded when the map changes and saved after every edit, here, so the panel
                 // works with the Viewer inactive too (VW.14).
+                // note: The engine start count is read BEFORE the map name. The start hook adopts the map variant of the setup (ApplyToStart) before it counts
+                // the start, so a count that is new guarantees the name is the one of the new match, and the sequence of the bench is looked up in its file.
+                const std::uint64_t engineStarts{ engine.m_MatchCycleStore.GetEngineStarts() };
                 m_DirectorStore.SetMapName(engine.m_MapVariantService.GetActiveName());
-                m_DirectorStore.SetMatchId(engine.m_MatchCycleStore.GetEngineStarts());
+                m_DirectorStore.SetMatchId(engineStarts);
                 m_DirectorService.Persist(service.m_SettingsStore.GetAppDataDirectory());
+
+                // A match that starts and must play from the load (Auto-play, or the sequence of the bench) makes the Viewer active here, at the first Present
+                // that sees the new engine start, so the scene point of the next frame already has the director on the camera (VW.16).
+                if (m_DirectorService.Observe(engineStarts, m_OptionsStore.IsEnabled(Flag::DirectorAutoPlay))) m_CameraStore.SetActive(true);
 
                 // note: The HUD of a dead watched player is not hidden (D346): hiding it showed the first frames of the death text animation.
                 engine.m_RenderStore.SetGameHudHidden(m_OptionsStore.IsEnabled(Flag::HideGameHud));
@@ -148,9 +155,21 @@ export namespace DevTools::Viewer
                 // here. It is idempotent and on the same thread as the scene point.
                 if (!isActive) m_SceneService.Deactivate();
 
-                if (isActive && !m_IsActiveLast && !engine.m_RenderStore.IsOpaquePassHooked())
+                // note: Checked a while after the activation, not at it: the director activates the Viewer at the first Present of a match that just
+                // loaded (VW.16), before the game module installs its hooks, and that was not an error.
+                if (isActive && !m_IsActiveLast)
                 {
-                    service.m_Log.Message("[Viewer] ERROR: The hook of the opaque color pass (0x26E500) is not installed, so no 3D pass is drawn.");
+                    m_ActivatedAt = std::chrono::steady_clock::now();
+                    m_IsHookChecked = false;
+                }
+
+                if (isActive && !m_IsHookChecked && std::chrono::steady_clock::now() - m_ActivatedAt >= k_HookCheckDelay)
+                {
+                    m_IsHookChecked = true;
+                    if (!engine.m_RenderStore.IsOpaquePassHooked())
+                    {
+                        service.m_Log.Message("[Viewer] ERROR: The hook of the opaque color pass (0x26E500) is not installed, so no 3D pass is drawn.");
+                    }
                 }
 
                 m_IsActiveLast = isActive;
@@ -219,6 +238,11 @@ export namespace DevTools::Viewer
         LatencyStore m_LatencyStore{};
         DirectorStore m_DirectorStore{};
         bool m_IsActiveLast{ false };
+
+        // The hook check waits this long after the Viewer becomes active (see OnFrame).
+        static constexpr std::chrono::seconds k_HookCheckDelay{ 2 };
+        std::chrono::steady_clock::time_point m_ActivatedAt{};
+        bool m_IsHookChecked{ true };
 
         // --- System ---
         DirectorService m_DirectorService;

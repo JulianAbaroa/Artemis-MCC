@@ -276,24 +276,27 @@ TEST(OptionsStoreTests, TheDirectorOptionsHaveTheirOwnKeysAndDefaults)
 {
     OptionsStore store{};
 
-    // Cutting on a new round is on by default, an orbit turns once a minute.
-    EXPECT_TRUE(store.IsEnabled(Flag::DirectorCutOnRound));
+    // Auto-play is off by default, an orbit turns once a minute.
+    EXPECT_FALSE(store.IsEnabled(Flag::DirectorAutoPlay));
     EXPECT_FLOAT_EQ(store.GetScalar(Scalar::DirectorDegreesPerSecond), 6.0f);
 
+    // The saved value of the option that VW.16 removed (cut on new round) is ignored.
     store.Load("DirectorCutOnRound", "0");
+    store.Load("DirectorAutoPlay", "1");
     store.Load("DirectorDegreesPerSecond", "-12.5");
-    EXPECT_FALSE(store.IsEnabled(Flag::DirectorCutOnRound));
+    EXPECT_TRUE(store.IsEnabled(Flag::DirectorAutoPlay));
     EXPECT_FLOAT_EQ(store.GetScalar(Scalar::DirectorDegreesPerSecond), -12.5f);
 
     const std::string saved{ Snapshot(store) };
-    EXPECT_NE(saved.find("Viewer_DirectorCutOnRound=0\n"), std::string::npos);
+    EXPECT_NE(saved.find("Viewer_DirectorAutoPlay=1\n"), std::string::npos);
+    EXPECT_EQ(saved.find("DirectorCutOnRound"), std::string::npos);
     EXPECT_NE(saved.find("Viewer_DirectorDegreesPerSecond=-12.500\n"), std::string::npos);
 
     store.SetScalar(Scalar::DirectorDegreesPerSecond, 500.0f);
     EXPECT_FLOAT_EQ(store.GetScalar(Scalar::DirectorDegreesPerSecond), 60.0f);
 
     store.ResetToDefaults();
-    EXPECT_TRUE(store.IsEnabled(Flag::DirectorCutOnRound));
+    EXPECT_FALSE(store.IsEnabled(Flag::DirectorAutoPlay));
 }
 
 TEST(OptionsStoreTests, TheAgentStripAndRosterOptionsHaveTheirOwnKeysAndDefaults)

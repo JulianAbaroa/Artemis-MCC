@@ -1,95 +1,41 @@
 module DevTools.Viewer.Director.State;
 
-namespace
-{
-    using DevTools::Viewer::Director::Type::ShotKind;
-}
-
 namespace DevTools::Viewer::Director::State
 {
-    auto DirectorStore::CopyShots() const -> ShotList
+    auto DirectorStore::CopyFile() const -> DirectorFile
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        return m_Shots;
+        return m_File;
     }
 
-    auto DirectorStore::GetShotCount() const -> std::size_t
+    auto DirectorStore::SetFile(DirectorFile file) -> void
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        return m_Shots.size();
-    }
-
-    auto DirectorStore::GetShot(std::size_t index) const -> std::optional<Shot>
-    {
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        if (index >= m_Shots.size()) return std::nullopt;
-
-        return m_Shots[index];
-    }
-
-    auto DirectorStore::SetShots(ShotList shots) -> void
-    {
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        m_Shots = std::move(shots);
+        m_File = std::move(file);
+        this->RaiseNextShotId();
         m_LoadSerial.fetch_add(1);
     }
 
-    auto DirectorStore::AddShot(Shot shot) -> void
+    auto DirectorStore::Edit(const std::function<bool(DirectorFile&)>& edit) -> bool
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        m_Shots.push_back(std::move(shot));
+        if (!edit(m_File)) return false;
+
+        this->RaiseNextShotId();
         m_Revision.fetch_add(1);
+        return true;
     }
 
-    auto DirectorStore::RemoveShot(std::size_t index) -> void
+    auto DirectorStore::AllocateShotId() -> std::uint32_t
     {
         std::lock_guard<std::mutex> lock{ m_Mutex };
-        if (index >= m_Shots.size()) return;
-
-        m_Shots.erase(m_Shots.begin() + static_cast<std::ptrdiff_t>(index));
-        m_Revision.fetch_add(1);
+        this->RaiseNextShotId();
+        return m_NextShotId++;
     }
 
-    auto DirectorStore::MoveShot(std::size_t index, int delta) -> void
+    auto DirectorStore::RaiseNextShotId() -> void
     {
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-
-        const std::ptrdiff_t target{ static_cast<std::ptrdiff_t>(index) + delta };
-        if (index >= m_Shots.size() || target < 0 || target >= static_cast<std::ptrdiff_t>(m_Shots.size())) return;
-
-        std::swap(m_Shots[index], m_Shots[static_cast<std::size_t>(target)]);
-        m_Revision.fetch_add(1);
-    }
-
-    auto DirectorStore::SetShotName(std::size_t index, std::string name) -> void
-    {
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        if (index >= m_Shots.size()) return;
-
-        m_Shots[index].Name = std::move(name);
-        m_Revision.fetch_add(1);
-    }
-
-    auto DirectorStore::SetShotSeconds(std::size_t index, float seconds) -> void
-    {
-        if (!(seconds > 0.0f) || !std::isfinite(seconds)) return;
-
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        if (index >= m_Shots.size()) return;
-
-        m_Shots[index].Seconds = seconds;
-        m_Revision.fetch_add(1);
-    }
-
-    auto DirectorStore::SetShotDegreesPerSecond(std::size_t index, float degreesPerSecond) -> void
-    {
-        if (!std::isfinite(degreesPerSecond)) return;
-
-        std::lock_guard<std::mutex> lock{ m_Mutex };
-        if (index >= m_Shots.size() || m_Shots[index].Kind != ShotKind::Orbit) return;
-
-        m_Shots[index].DegreesPerSecond = degreesPerSecond;
-        m_Revision.fetch_add(1);
+        for (const auto& shot : m_File.Shots) m_NextShotId = (std::max)(m_NextShotId, shot.Id + 1);
     }
 
     auto DirectorStore::GetRevision() const -> std::uint64_t
@@ -152,12 +98,52 @@ namespace DevTools::Viewer::Director::State
         return m_IsAddOrbitPending.exchange(false);
     }
 
+    auto DirectorStore::RequestPlayFromStart(std::string sequence) -> void
+    {
+        {
+            std::lock_guard<std::mutex> lock{ m_Mutex };
+            m_PlayFromStart = std::move(sequence);
+        }
+
+        m_IsPlaying.store(true);
+    }
+
+    auto DirectorStore::ConsumePlayFromStart() -> std::optional<std::string>
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        return std::exchange(m_PlayFromStart, std::nullopt);
+    }
+
+    auto DirectorStore::SetLoadRequest(std::string sequence, std::uint64_t afterStarts) -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_LoadRequest = std::move(sequence);
+        m_LoadRequestAfterStarts = afterStarts;
+    }
+
+    auto DirectorStore::TakeLoadRequest(std::uint64_t observedStarts) -> std::optional<std::string>
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        if (!m_LoadRequest || observedStarts <= m_LoadRequestAfterStarts) return std::nullopt;
+
+        return std::exchange(m_LoadRequest, std::nullopt);
+    }
+
+    auto DirectorStore::ClearLoadRequest() -> void
+    {
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_LoadRequest.reset();
+    }
+
     auto DirectorStore::ClearRequests() -> void
     {
         m_IsTogglePending.store(false);
         m_IsAddFixedPending.store(false);
         m_IsAddOrbitPending.store(false);
         m_PendingSteps.store(0);
+
+        std::lock_guard<std::mutex> lock{ m_Mutex };
+        m_PlayFromStart.reset();
     }
 
     auto DirectorStore::SetMapName(std::string name) -> void

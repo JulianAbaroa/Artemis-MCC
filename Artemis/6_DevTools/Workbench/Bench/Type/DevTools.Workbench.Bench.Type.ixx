@@ -149,6 +149,8 @@ export namespace DevTools::Workbench::Bench::Type
         // Raises the every-tick demand for the whole match (Q101). Off lets a client run the sparse mode during it: the bench then
         // sees only the ticks of the decisions, which its 5 Hz checks and probes do not notice. Off cannot go with tickdump or events.
         bool IsEveryTick{ true };
+        // Sequence of the shot library of the map that the director of the Viewer plays from the load of the match (VW.16). Empty asks for nothing.
+        std::string Director{};
     };
 
     // List of matches the bench plays in order (H3). The same list is a rotation or a list of tests (D130).

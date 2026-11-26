@@ -244,6 +244,12 @@
     <ClCompile Include="Director\System\DirectorService.ixx">
       <Filter>Director\System</Filter>
     </ClCompile>
+    <ClCompile Include="Director\System\DirectorLibrary.cpp">
+      <Filter>Director\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Director\System\DirectorLibrary.ixx">
+      <Filter>Director\System</Filter>
+    </ClCompile>
     <ClCompile Include="Director\System\DirectorShots.cpp">
       <Filter>Director\System</Filter>
     </ClCompile>

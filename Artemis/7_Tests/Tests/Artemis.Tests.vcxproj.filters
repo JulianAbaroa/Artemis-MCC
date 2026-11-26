@@ -234,6 +234,12 @@
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.cpp">
       <Filter>Viewer</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorLibrary.ixx">
+      <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorLibrary.cpp">
+      <Filter>Viewer</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.ixx">
       <Filter>Viewer</Filter>
     </ClCompile>

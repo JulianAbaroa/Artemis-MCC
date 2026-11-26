@@ -110,7 +110,7 @@ export namespace DevTools::Viewer::Options::Type
         HideFirstPerson,
         WatchPov,
         PossessBot,
-        DirectorCutOnRound,
+        DirectorAutoPlay,
         AgentStrip,
         RosterAgentsOnly,
         DrawOverlay,
@@ -400,8 +400,8 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::PossessBot, Group::Camera, Layer::Count, Level::Full, "PossessBot", "Auto-possess bot",
             "With the Game camera, the Artemis bot you select plays with your mouse and keyboard (your settings). Your own player stands still. TAB to the Free camera, selecting a human or turning this off gives the bot back. Pair it with Watch POV to see through the bot.", false },
 
-        { Flag::DirectorCutOnRound, Group::Director, Layer::Count, Level::Full, "DirectorCutOnRound", "Cut on new round",
-            "While the director plays, a new round (or a new match) also ends the shot, unless it started less than 3 seconds ago.", true },
+        { Flag::DirectorAutoPlay, Group::Director, Layer::Count, Level::Full, "DirectorAutoPlay", "Auto-play on match start",
+            "When a match starts the Viewer becomes active and the director plays the active sequence from the first frame it can, before the game shows the camera of the local player.", false },
 
         { Flag::AgentStrip, Group::Camera, Layer::Count, Level::Full, "AgentStrip", "Agent strip",
             "Draws the strip with the previous, current and next player at the top of the frame. Off: nothing is drawn, for clean frames.", true },

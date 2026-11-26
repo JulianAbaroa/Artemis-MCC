@@ -5,15 +5,15 @@ import std;
 
 export namespace DevTools::Viewer::Director::State
 {
-    // Holds the shots of the map, whether the director plays, the requests of the panel and the keys, the map it plays for and where playback is (VW.14).
-    // note: Thread-safe. The window thread asks and the render thread answers. The list and the strings are behind one short mutex, the rest is atomic.
+    // Holds the file of the map (the shot library, the sequences and the active one), whether the director plays, the requests of the panel, the keys and the
+    // bench, the map it plays for and where playback is (VW.14, VW.16).
+    // note: Thread-safe. The window thread asks and the render thread answers. The file and the strings are behind one short mutex, the rest is atomic.
     class DirectorStore
     {
     private:
+        using DirectorFile = DevTools::Viewer::Director::Type::DirectorFile;
         using DirectorFileInfo = DevTools::Viewer::Director::Type::DirectorFileInfo;
         using DirectorStatus = DevTools::Viewer::Director::Type::DirectorStatus;
-        using Shot = DevTools::Viewer::Director::Type::Shot;
-        using ShotList = DevTools::Viewer::Director::Type::ShotList;
 
     public:
         DirectorStore() = default;
@@ -22,31 +22,21 @@ export namespace DevTools::Viewer::Director::State
         DirectorStore(const DirectorStore&) = delete;
         auto operator=(const DirectorStore&) -> DirectorStore& = delete;
 
-        // return: A copy of the list.
-        auto CopyShots() const -> ShotList;
-        auto GetShotCount() const -> std::size_t;
+        // return: A copy of the file.
+        auto CopyFile() const -> DirectorFile;
 
-        // return: A copy of the shot, or nothing when the index is out of range.
-        auto GetShot(std::size_t index) const -> std::optional<Shot>;
+        // Replaces the file with one that was loaded. It changes the load serial and not the revision, so it is not saved back.
+        auto SetFile(DirectorFile file) -> void;
 
-        // Replaces the list with one that was loaded. It changes the load serial and not the revision, so it is not saved back.
-        auto SetShots(ShotList shots) -> void;
+        // Runs the edit on the file under the lock. The pure functions of Director.System (MoveShot, AddShot, RemoveShot...) are the edits.
+        // param edit: Changes the file and returns whether it did.
+        // return: What the edit returned. A true makes the revision change, which makes the file be saved.
+        auto Edit(const std::function<bool(DirectorFile&)>& edit) -> bool;
 
-        // Each edit changes the revision, which makes the file be saved.
-        auto AddShot(Shot shot) -> void;
-        auto RemoveShot(std::size_t index) -> void;
+        // return: A shot id that is above every one of the file and was never given in this session, so an id is not reused after its shot is deleted.
+        auto AllocateShotId() -> std::uint32_t;
 
-        // Swaps the shot with its neighbour delta places away. Does nothing when that is out of range.
-        auto MoveShot(std::size_t index, int delta) -> void;
-        auto SetShotName(std::size_t index, std::string name) -> void;
-
-        // Does nothing for a value that is not above zero or not finite.
-        auto SetShotSeconds(std::size_t index, float seconds) -> void;
-
-        // Only an orbit has a turn speed.
-        auto SetShotDegreesPerSecond(std::size_t index, float degreesPerSecond) -> void;
-
-        // return: How many edits the list had, and how many times it was replaced by a load.
+        // return: How many edits the file had, and how many times it was replaced by a load.
         auto GetRevision() const -> std::uint64_t;
         auto GetLoadSerial() const -> std::uint64_t;
 
@@ -65,7 +55,18 @@ export namespace DevTools::Viewer::Director::State
         auto RequestAddOrbit() -> void;
         auto ConsumeAddOrbit() -> bool;
 
-        // Drops every pending request.
+        // Starts playing from the first shot of the playlist, for a match that just loaded. An empty sequence plays the active one of the file.
+        auto RequestPlayFromStart(std::string sequence) -> void;
+        auto ConsumePlayFromStart() -> std::optional<std::string>;
+
+        // The sequence the bench asks for the match that follows the engine start count it gives. The request belongs to the first start above that
+        // count: TakeLoadRequest gives it only to a start that is newer, so a start that was already there (or the one of another match) never takes it.
+        // Nothing but a take, ClearLoadRequest or a new request removes it.
+        auto SetLoadRequest(std::string sequence, std::uint64_t afterStarts) -> void;
+        auto TakeLoadRequest(std::uint64_t observedStarts) -> std::optional<std::string>;
+        auto ClearLoadRequest() -> void;
+
+        // Drops every pending request of the panel and the keys (not the one of the bench).
         auto ClearRequests() -> void;
 
         // The map variant that is loaded (empty for none) and the engine starts, as the render thread last saw them. The file of the map follows the name.
@@ -85,10 +86,14 @@ export namespace DevTools::Viewer::Director::State
 
     private:
         mutable std::mutex m_Mutex{};
-        ShotList m_Shots{};
+        DirectorFile m_File{};
         std::string m_MapName{};
         DirectorFileInfo m_FileInfo{};
         DirectorStatus m_Status{};
+        std::optional<std::string> m_PlayFromStart{};
+        std::optional<std::string> m_LoadRequest{};
+        std::uint64_t m_LoadRequestAfterStarts{ 0 };
+        std::uint32_t m_NextShotId{ 1 };
 
         std::atomic<std::uint64_t> m_Revision{ 0 };
         std::atomic<std::uint64_t> m_LoadSerial{ 0 };
@@ -98,5 +103,8 @@ export namespace DevTools::Viewer::Director::State
         std::atomic<bool> m_IsAddFixedPending{ false };
         std::atomic<bool> m_IsAddOrbitPending{ false };
         std::atomic<int> m_PendingSteps{ 0 };
+
+        // Keeps the next id above the ids of the file. The lock is held by the caller.
+        auto RaiseNextShotId() -> void;
     };
 }

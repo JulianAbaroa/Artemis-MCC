@@ -60,8 +60,18 @@ namespace DevTools::Viewer::Camera::System
 
         if (!m_IsActive)
         {
-            m_IsActive = true;
-            this->SeatOnPlayer(tick);
+            // note: Never seated from nothing: a null tick would put the eye at the origin for good. The camera is seated on the first frame with a view
+            // of the local player, or it takes the pose the director scripted. Until then the free camera neither flies nor asks the game for a pose.
+            const bool hasView{ tick && tick->Views && FindObservedView(*tick->Views, k_NoHandle) != nullptr };
+            if (hasView || m_IsScripted)
+            {
+                m_IsActive = true;
+                if (!m_IsScripted) this->SeatOnPlayer(tick);
+            }
+            else if (m_CameraStore.GetMode() != Mode::Game)
+            {
+                return;
+            }
         }
 
         float mouseX = 0.0f, mouseY = 0.0f;

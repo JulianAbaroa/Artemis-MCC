@@ -5,6 +5,7 @@ module;
 module DevTools.Viewer.Hud.System;
 
 import Common.Engine.Type;
+import Common.Math.Type;
 import Engine.Base.Memory.Type;
 import Engine.Base.Pov.Type;
 import Engine.Control.Input.Type;
@@ -31,16 +32,16 @@ namespace
 
     using Common::Engine::Type::k_HandleIndexMask;
     using Common::Engine::Type::k_NoHandle;
+    using Common::Math::Type::k_DegreesPerRadian;
 
+    using DevTools::Viewer::Director::System::DescribeShotProgress;
     using DevTools::Viewer::Director::System::ShotKindName;
     using DevTools::Viewer::Director::Type::DirectorFileInfo;
     using DevTools::Viewer::Director::Type::DirectorStatus;
-    using DevTools::Viewer::Director::Type::Shot;
     using DevTools::Viewer::Latency::Type::LatencyReport;
     using DevTools::Viewer::Roster::Type::RosterEntry;
     using DevTools::Viewer::Latency::Type::LatencySample;
 
-    constexpr float k_DegreesPerRadian{ 180.0f / std::numbers::pi_v<float> };
 
 
     const ImVec4 k_Green{ 0.0f, 1.0f, 0.0f, 1.0f };
@@ -127,9 +128,8 @@ namespace DevTools::Viewer::Hud::System
         }
 
         const DirectorFileInfo file{ m_DirectorStore.GetFileInfo() };
-        const std::optional<Shot> shot{ m_DirectorStore.GetShot(status.Index) };
 
-        if (status.IsHolding || !shot)
+        if (status.IsHolding)
         {
             ImGui::TextColored(k_Orange, "waiting for a shot it can play (%zu in the list), map %s", status.Count, file.MapKey.c_str());
             return;
@@ -143,8 +143,11 @@ namespace DevTools::Viewer::Hud::System
             pov = std::format(", POV {}", player != roster.end() ? player->Name : std::string{ "?" });
         }
 
-        ImGui::TextColored(k_Info, "%zu/%zu %s %s %.0f/%.0f s%s, map %s", status.Index + 1, status.Count, std::string{ ShotKindName(shot->Kind) }.c_str(),
-            shot->Name.c_str(), status.ElapsedSeconds, shot->Seconds, pov.c_str(), file.MapKey.c_str());
+        const std::string sequence{ status.SequenceName.empty() ? std::string{ "all shots" } : status.SequenceName };
+        const std::string progress{ DescribeShotProgress(status.End, static_cast<double>(status.ElapsedSeconds), status.RoundChanges) };
+
+        ImGui::TextColored(k_Info, "%s %zu/%zu %s %s %s%s, map %s", sequence.c_str(), status.Index + 1, status.Count,
+            std::string{ ShotKindName(status.Kind) }.c_str(), status.ShotName.c_str(), progress.c_str(), pov.c_str(), file.MapKey.c_str());
     }
 
     auto HudService::DrawFramerate() -> void

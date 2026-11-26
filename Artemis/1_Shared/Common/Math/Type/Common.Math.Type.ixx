@@ -70,6 +70,10 @@ export namespace Common::Math::Type
     inline constexpr float k_TwoPi{ 6.28318530718f };
     inline constexpr float k_HalfPi{ 1.57079632679f };
 
+    // Factors between degrees and radians.
+    inline constexpr float k_RadiansPerDegree{ std::numbers::pi_v<float> / 180.0f };
+    inline constexpr float k_DegreesPerRadian{ 180.0f / std::numbers::pi_v<float> };
+
     // Largest float, the start value of a running minimum.
     inline constexpr float k_FloatMax{ (std::numeric_limits<float>::max)() };
 

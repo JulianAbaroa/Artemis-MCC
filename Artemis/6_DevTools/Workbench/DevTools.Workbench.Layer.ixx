@@ -89,7 +89,7 @@ export namespace DevTools::Workbench
             m_BenchUIService(service.m_LogsStore, service.m_Log, service.m_SettingsStore, engine.m_MemoryReaderService,
                 engine.m_LocalUserStore, engine.m_PlayerActionStore, engine.m_VirtualInputStore, engine.m_LifecycleStore,
                 engine.m_MatchConfigStore, engine.m_MatchCycleStore, engine.m_MatchConfigService, engine.m_MapVariantDecodeStore, engine.m_MatchSetupService,
-                engine.m_PresetService, engine.m_MapVariantService, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore),
+                engine.m_PresetService, engine.m_MapVariantService, exportLayer.m_TickStore, m_TickDumpUIStore, service.m_TelemetryStore, engine.m_BridgeService, m_BenchUIStore, viewer.m_DirectorStore),
             m_OracleUIService(service.m_Log, service.m_SettingsStore, service.m_ObservedPlayerStore, engine.m_OracleStore, resolved.m_Raycaster, m_OracleUIStore)
         {
             // The raycast oracle saves its rays and period (D272), never whether it runs.

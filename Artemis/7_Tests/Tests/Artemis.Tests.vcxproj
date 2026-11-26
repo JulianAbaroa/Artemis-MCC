@@ -114,6 +114,8 @@
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\Type\DevTools.Viewer.Director.Type.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\State\DirectorStore.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorLibrary.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorLibrary.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorShots.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\System\DirectorService.ixx" />

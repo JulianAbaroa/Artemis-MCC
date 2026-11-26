@@ -27,6 +27,7 @@ import Perception.Events.Type;
 import Bridge.Codec.Tick.Type;
 import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
+import DevTools.Viewer.Director.System;
 import DevTools.Workbench.Simulation.Type;
 import DevTools.Workbench.Simulation.System;
 import std;
@@ -53,6 +54,7 @@ namespace
     using Engine::Control::Input::Type::PlayerActions;
     using DevTools::Gui::Style::Type::StatusKind;
     using DevTools::Gui::Widget::System::StatusGuiService;
+    using DevTools::Viewer::Director::System::ParseSequenceRequest;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using DevTools::Workbench::Simulation::System::BuildActionOverride;
     using Services::Logs::Type::LogEntry;
@@ -784,6 +786,12 @@ namespace DevTools::Workbench::Bench::System
                 if (value != "off") return fail("every_tick takes off");
                 match.IsEveryTick = false;
             }
+            else if (key == "director")
+            {
+                const std::optional<std::string> sequence{ ParseSequenceRequest(value) };
+                if (!sequence) return fail("director takes the name of a sequence of the map");
+                match.Director = *sequence;
+            }
             else if (key == "check")
             {
                 std::vector<std::string> words{ SplitWords(value) };
@@ -1082,6 +1090,13 @@ namespace DevTools::Workbench::Bench::System
         const auto tick{ m_TickStore.Acquire() };
         run.GenerationBefore = tick != nullptr ? tick->Generation : 0;
         run.EngineStarts = m_MatchCycleStore.GetEngineStarts();
+
+        // The director plays the sequence from the load of this match (VW.16). The request belongs to the first engine start above the count read here, so
+        // no other start takes it, and EndMatch drops it if the match never got one (a failed launch or load, a timeout). A match without the key clears
+        // whatever was left.
+        if (match.Director.empty()) m_DirectorStore.ClearLoadRequest();
+        else m_DirectorStore.SetLoadRequest(match.Director, run.EngineStarts);
+
         run.EngineDestroys = m_MatchCycleStore.GetEngineDestroys();
         run.Phase = BenchPhase::Launching;
         run.LaunchRequest = steady_clock::now();
@@ -1563,6 +1578,7 @@ namespace DevTools::Workbench::Bench::System
         BenchMatchReport& report{ run.Reports[run.MatchIndex] };
 
         m_MatchConfigService.CancelLaunch();
+        m_DirectorStore.ClearLoadRequest();
 
         // Back to the engine speed between matches, so the lobby and the next load run at normal speed.
         if (match.TimeScale.has_value()) m_LifecycleStore.SetRequestedTimeScale(0.0f);

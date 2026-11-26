@@ -92,6 +92,10 @@ export namespace DevTools::Viewer::Scene::System
         // update runs at the scene point, so a frame without one (a menu, a pause without a draw) has no labels.
         auto HasFrameUpdate() const -> bool;
 
+        // Lets the director take the camera in a frame that has no scene yet, as long as it plays: the match just loaded and the first Tick is not
+        // published. A Fixed or Orbit shot gives its pose to the override at once, so the game does not show the local player first. Nothing is drawn.
+        auto PreRoll(const Viewport& viewport) -> void;
+
         // Closes the frame: the next one has no update until the scene point runs. Called at Present after the labels.
         auto EndFrame() -> void;
 

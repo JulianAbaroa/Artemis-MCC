@@ -104,7 +104,18 @@ namespace DevTools::Viewer::Map::System
         const FrameClock clock{ m_LatencyService.ReadClock() };
         const FrameScenePick pick{ this->AcquireFrameScene(clock) };
         const auto& scene = pick.Scene;
-        if (!scene || !scene->Tick) return false;
+
+        Viewport viewport{};
+        viewport.Size.X = static_cast<float>(frame.Width);
+        viewport.Size.Y = static_cast<float>(frame.Height);
+
+        // note: The director may already play with no Tick (a match that just loaded): it takes the camera before the game shows the local player.
+        if (!scene || !scene->Tick)
+        {
+            m_SceneService.PreRoll(viewport);
+            return false;
+        }
+
         const auto& tick = scene->Tick;
 
         if (!m_GpuPipeline.Initialize(frame.Device)) return false;
@@ -120,10 +131,6 @@ namespace DevTools::Viewer::Map::System
 
         {
             CpuTimer frameTimer{ m_Profiler, Cpu::Frame };
-
-            Viewport viewport{};
-            viewport.Size.X = static_cast<float>(frame.Width);
-            viewport.Size.Y = static_cast<float>(frame.Height);
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Scene };

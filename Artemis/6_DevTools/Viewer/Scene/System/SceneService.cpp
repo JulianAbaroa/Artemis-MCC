@@ -21,7 +21,9 @@ import std;
 namespace
 {
     using DevTools::Viewer::Camera::Type::Mode;
+    using DevTools::Viewer::Director::Type::DirectorFile;
     using DevTools::Viewer::Director::Type::DirectorInput;
+    using DevTools::Viewer::Director::Type::Shot;
     using DevTools::Viewer::Director::Type::ShotKind;
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Scalar;
@@ -36,6 +38,7 @@ namespace
     using Views::View::System::ViewPositionOf;
 
     using DevTools::Viewer::Collidable::Type::ShareObjects;
+    using DevTools::Viewer::Director::System::AddShot;
     using DevTools::Viewer::Director::System::DefaultShotName;
     using DevTools::Viewer::Director::System::MakeFixedShot;
     using DevTools::Viewer::Director::System::OrbitFromPose;
@@ -250,8 +253,7 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::RunDirector(const std::shared_ptr<const Tick>& tick) -> DirectorFrame
     {
         const DirectorInput input{ .Now = std::chrono::steady_clock::now(), .HasRoster = tick != nullptr, .Roster = m_Roster,
-            .Round = tick && tick->Match ? std::optional<std::int16_t>{ tick->Match->RoundIndex } : std::nullopt,
-            .IsCutOnRound = m_OptionsStore.IsEnabled(Flag::DirectorCutOnRound) };
+            .Round = tick && tick->Match ? std::optional<std::int16_t>{ tick->Match->RoundIndex } : std::nullopt };
 
         const DirectorFrame frame{ m_DirectorService.Update(input) };
         if (!frame.IsPlaying || !frame.HasShot) return frame;
@@ -269,6 +271,23 @@ namespace DevTools::Viewer::Scene::System
         }
 
         return frame;
+    }
+
+    auto SceneService::PreRoll(const Viewport& viewport) -> void
+    {
+        if (!m_DirectorStore.IsPlaying()) return;
+
+        // note: No scene yet, so no Tick: the roster is empty and a Fixed or Orbit shot already gives the camera its pose. The frame is not drawn.
+        m_Scene.reset();
+        m_Roster.clear();
+        const DirectorFrame directed{ this->RunDirector(nullptr) };
+
+        // note: Only a shot with a pose of its own (Fixed or Orbit) takes the camera. A shot that is not there yet (a POV first, an empty or holding
+        // playlist) leaves the camera alone: it would fly from a place that was never seated.
+        if (directed.IsPlaying && directed.HasShot && directed.Kind != ShotKind::Pov)
+        {
+            m_CameraService.Update(nullptr, viewport, !m_SettingsStore.IsMenuVisible());
+        }
     }
 
     auto SceneService::FollowDirectedPlayer(std::uint32_t playerHandle) -> void
@@ -303,8 +322,14 @@ namespace DevTools::Viewer::Scene::System
 
         if (isAddFixed)
         {
-            m_DirectorStore.AddShot(MakeFixedShot(DefaultShotName(m_DirectorStore.CopyShots(), ShotKind::Fixed), m_CameraService.GetEye(),
-                m_CameraService.GetYaw(), m_CameraService.GetPitch()));
+            Shot shot{ MakeFixedShot(DefaultShotName(m_DirectorStore.CopyFile().Shots, ShotKind::Fixed), m_CameraService.GetEye(), m_CameraService.GetYaw(),
+                m_CameraService.GetPitch()) };
+            shot.Id = m_DirectorStore.AllocateShotId();
+
+            m_DirectorStore.Edit([&shot](DirectorFile& file) {
+                AddShot(file, std::move(shot));
+                return true;
+            });
         }
 
         if (isAddOrbit)
@@ -314,11 +339,15 @@ namespace DevTools::Viewer::Scene::System
             const std::optional<Vec3> hit{ distance ? std::optional<Vec3>{ Common::Math::System::Add(ray.Origin, Common::Math::System::Scale(ray.Direction, *distance)) }
                 : std::nullopt };
 
-            auto shot{ OrbitFromPose(ray.Origin, ray.Direction, hit) };
-            shot.Name = DefaultShotName(m_DirectorStore.CopyShots(), ShotKind::Orbit);
+            Shot shot{ OrbitFromPose(ray.Origin, ray.Direction, hit) };
+            shot.Id = m_DirectorStore.AllocateShotId();
+            shot.Name = DefaultShotName(m_DirectorStore.CopyFile().Shots, ShotKind::Orbit);
             shot.DegreesPerSecond = m_OptionsStore.GetScalar(Scalar::DirectorDegreesPerSecond);
 
-            m_DirectorStore.AddShot(std::move(shot));
+            m_DirectorStore.Edit([&shot](DirectorFile& file) {
+                AddShot(file, std::move(shot));
+                return true;
+            });
         }
     }
 

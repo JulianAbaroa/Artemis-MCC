@@ -14,154 +14,28 @@ namespace
 
     using Common::Math::Type::Vec3;
     using DevTools::Viewer::Director::Type::AdvanceInput;
-    using DevTools::Viewer::Director::Type::ParsedShots;
     using DevTools::Viewer::Director::Type::RoundKey;
     using DevTools::Viewer::Director::Type::Shot;
     using DevTools::Viewer::Director::Type::ShotKind;
     using DevTools::Viewer::Director::Type::ShotList;
+    using DevTools::Viewer::Director::Type::ShotEnd;
+    using DevTools::Viewer::Director::Type::ShotEndKind;
+    using DevTools::Viewer::Director::Type::ShotIndexList;
     using DevTools::Viewer::Director::Type::ShotPose;
     using DevTools::Viewer::Director::Type::ShotYawPitch;
     using DevTools::Viewer::Roster::Type::RosterEntry;
 
     using Common::Engine::Type::k_NoHandle;
+    using Common::Math::Type::k_DegreesPerRadian;
+    using Common::Math::Type::k_RadiansPerDegree;
+    using DevTools::Viewer::Director::Type::k_DefaultShotRounds;
     using DevTools::Viewer::Director::Type::k_DefaultShotSeconds;
     using DevTools::Viewer::Director::Type::k_MaxCenterDistance;
     using DevTools::Viewer::Director::Type::k_NoDoubleCutSeconds;
     using DevTools::Viewer::Director::Type::k_NoHitDistance;
     using DevTools::Viewer::Director::Type::k_NoHitDrop;
 
-    constexpr float k_Pi{ std::numbers::pi_v<float> };
-    constexpr float k_RadiansPerDegree{ k_Pi / 180.0f };
-    constexpr float k_DegreesPerRadian{ 180.0f / k_Pi };
     constexpr std::size_t k_MaxKeyLength{ 64 };
-
-    constexpr std::string_view k_FileHeader{
-        "# Artemis director shots of this map. One shot per line, fields separated by '|', numbers with '.', yaw and pitch in degrees.\n"
-        "#   fixed|<name>|<seconds>|<x> <y> <z>|<yaw> <pitch>\n"
-        "#   orbit|<name>|<seconds>|<cx> <cy> <cz>|<radius> <height> <start degrees> <degrees per second>\n"
-        "#   pov|<name>|<seconds>\n" };
-
-    // return: Whether the character separates the numbers of a field.
-    auto IsBlank(char c) -> bool
-    {
-        return c == ' ' || c == '\t' || c == '\r' || c == '\n';
-    }
-
-    auto Trim(std::string_view text) -> std::string_view
-    {
-        while (!text.empty() && IsBlank(text.front())) text.remove_prefix(1);
-        while (!text.empty() && IsBlank(text.back())) text.remove_suffix(1);
-        return text;
-    }
-
-    auto SplitOn(std::string_view text, char separator) -> std::vector<std::string_view>
-    {
-        std::vector<std::string_view> parts{};
-
-        std::size_t start{ 0 };
-        while (true)
-        {
-            const std::size_t end{ text.find(separator, start) };
-            if (end == std::string_view::npos)
-            {
-                parts.push_back(text.substr(start));
-                return parts;
-            }
-
-            parts.push_back(text.substr(start, end - start));
-            start = end + 1;
-        }
-    }
-
-    // return: Whether the text holds exactly out.size() finite numbers separated by blanks. They are written to out.
-    auto ParseNumbers(std::string_view text, std::span<float> out) -> bool
-    {
-        std::size_t count{ 0 };
-        std::size_t position{ 0 };
-
-        while (true)
-        {
-            while (position < text.size() && IsBlank(text[position])) ++position;
-            if (position >= text.size()) break;
-
-            std::size_t end{ position };
-            while (end < text.size() && !IsBlank(text[end])) ++end;
-            if (count >= out.size()) return false;
-
-            float value{ 0.0f };
-            const char* first{ text.data() + position };
-            const char* last{ text.data() + end };
-            const std::from_chars_result result{ std::from_chars(first, last, value) };
-            if (result.ec != std::errc{} || result.ptr != last || !std::isfinite(value)) return false;
-
-            out[count++] = value;
-            position = end;
-        }
-
-        return count == out.size();
-    }
-
-    // return: The shot of one line, or nothing when the line does not parse or the shot cannot be played.
-    auto ParseLine(std::string_view line) -> std::optional<Shot>
-    {
-        const std::vector<std::string_view> fields{ SplitOn(line, '|') };
-        if (fields.size() < 3) return std::nullopt;
-
-        std::string kind{ Trim(fields[0]) };
-        std::ranges::transform(kind, kind.begin(), [](char c) { return static_cast<char>(std::tolower(static_cast<unsigned char>(c))); });
-
-        Shot shot{};
-        shot.Name = std::string{ Trim(fields[1]) };
-
-        std::array<float, 1> seconds{};
-        if (!ParseNumbers(fields[2], seconds)) return std::nullopt;
-        shot.Seconds = seconds[0];
-
-        if (kind == "pov")
-        {
-            if (fields.size() != 3) return std::nullopt;
-            shot.Kind = ShotKind::Pov;
-        }
-        else if (kind == "fixed")
-        {
-            std::array<float, 3> eye{};
-            std::array<float, 2> angles{};
-            if (fields.size() != 5 || !ParseNumbers(fields[3], eye) || !ParseNumbers(fields[4], angles)) return std::nullopt;
-
-            shot.Kind = ShotKind::Fixed;
-            shot.Eye = Vec3{ eye[0], eye[1], eye[2] };
-            shot.Yaw = angles[0] * k_RadiansPerDegree;
-            shot.Pitch = angles[1] * k_RadiansPerDegree;
-        }
-        else if (kind == "orbit")
-        {
-            std::array<float, 3> center{};
-            std::array<float, 4> turn{};
-            if (fields.size() != 5 || !ParseNumbers(fields[3], center) || !ParseNumbers(fields[4], turn)) return std::nullopt;
-
-            shot.Kind = ShotKind::Orbit;
-            shot.Center = Vec3{ center[0], center[1], center[2] };
-            shot.Radius = turn[0];
-            shot.Height = turn[1];
-            shot.StartDegrees = turn[2];
-            shot.DegreesPerSecond = turn[3];
-        }
-        else
-        {
-            return std::nullopt;
-        }
-
-        if (!DevTools::Viewer::Director::System::IsShotValid(shot)) return std::nullopt;
-        return shot;
-    }
-
-    // return: The name without the characters that would break the line.
-    auto CleanName(std::string_view name) -> std::string
-    {
-        std::string clean{ name };
-        std::ranges::replace_if(clean, [](char c) { return c == '|' || c == '\r' || c == '\n'; }, ' ');
-        return std::string{ Trim(clean) };
-    }
 }
 
 namespace DevTools::Viewer::Director::System
@@ -185,9 +59,26 @@ namespace DevTools::Viewer::Director::System
         return std::format("{} {}", label, sameKind + 1);
     }
 
+    auto IsShotEndValid(const ShotEnd& end) -> bool
+    {
+        switch (end.Kind)
+        {
+        case ShotEndKind::Seconds:
+            return end.Value > 0.0f && std::isfinite(end.Value);
+
+        case ShotEndKind::Rounds:
+            return end.Value >= 1.0f && std::isfinite(end.Value) && end.Value == std::floor(end.Value);
+
+        case ShotEndKind::Hold:
+            return true;
+        }
+
+        return false;
+    }
+
     auto IsShotValid(const Shot& shot) -> bool
     {
-        if (!(shot.Seconds > 0.0f) || !std::isfinite(shot.Seconds)) return false;
+        if (!IsShotEndValid(shot.End)) return false;
 
         switch (shot.Kind)
         {
@@ -272,18 +163,49 @@ namespace DevTools::Viewer::Director::System
         return last.has_value() && *last != now;
     }
 
+    auto AddRoundChange(std::uint32_t counted, bool isRoundChanged, double elapsedSeconds) -> std::uint32_t
+    {
+        return isRoundChanged && elapsedSeconds >= k_NoDoubleCutSeconds ? counted + 1 : counted;
+    }
+
     auto Advance(const AdvanceInput& input) -> std::optional<std::size_t>
     {
         if (input.Count == 0) return std::nullopt;
         if (input.Index >= input.Count) return std::size_t{ 0 };
 
         const std::size_t next{ (input.Index + 1) % input.Count };
-        const double duration{ input.Seconds > 0.0f && std::isfinite(input.Seconds) ? static_cast<double>(input.Seconds) : static_cast<double>(k_DefaultShotSeconds) };
 
-        if (input.ElapsedSeconds >= duration) return next;
-        if (input.IsRoundChanged && input.IsCutOnRound && input.ElapsedSeconds >= k_NoDoubleCutSeconds) return next;
+        switch (input.End.Kind)
+        {
+        case ShotEndKind::Seconds:
+        {
+            const double seconds{ IsShotEndValid(input.End) ? static_cast<double>(input.End.Value) : static_cast<double>(k_DefaultShotSeconds) };
+            return input.ElapsedSeconds >= seconds ? std::optional<std::size_t>{ next } : std::nullopt;
+        }
+
+        case ShotEndKind::Rounds:
+        {
+            const double rounds{ IsShotEndValid(input.End) ? static_cast<double>(input.End.Value) : static_cast<double>(k_DefaultShotRounds) };
+            return static_cast<double>(input.RoundChanges) >= rounds ? std::optional<std::size_t>{ next } : std::nullopt;
+        }
+
+        case ShotEndKind::Hold:
+            return std::nullopt;
+        }
 
         return std::nullopt;
+    }
+
+    auto DescribeShotProgress(const ShotEnd& end, double elapsedSeconds, std::uint32_t roundChanges) -> std::string
+    {
+        switch (end.Kind)
+        {
+        case ShotEndKind::Seconds: return std::format("{:.1f}/{:g} s", elapsedSeconds, end.Value);
+        case ShotEndKind::Rounds: return std::format("{:.1f} s, round {}/{:g}", elapsedSeconds, roundChanges, end.Value);
+        case ShotEndKind::Hold: return std::format("{:.1f} s, hold", elapsedSeconds);
+        }
+
+        return {};
     }
 
     auto PickPovAgent(std::span<const RosterEntry> roster, std::uint32_t lastHandle) -> std::optional<std::uint32_t>
@@ -309,20 +231,25 @@ namespace DevTools::Viewer::Director::System
         return std::nullopt;
     }
 
-    auto NextPlayableShot(const ShotList& shots, std::size_t first, int direction, bool canPov) -> std::optional<std::size_t>
+    auto NextPlayableShot(const ShotList& shots, const ShotIndexList& playlist, std::size_t first, int direction, bool canPov) -> std::optional<std::size_t>
     {
-        if (shots.empty()) return std::nullopt;
+        if (playlist.empty()) return std::nullopt;
 
-        const std::ptrdiff_t count{ static_cast<std::ptrdiff_t>(shots.size()) };
+        const std::ptrdiff_t count{ static_cast<std::ptrdiff_t>(playlist.size()) };
         const std::ptrdiff_t step{ direction < 0 ? -1 : 1 };
-        std::ptrdiff_t index{ first >= shots.size() ? 0 : static_cast<std::ptrdiff_t>(first) };
+        std::ptrdiff_t position{ first >= playlist.size() ? 0 : static_cast<std::ptrdiff_t>(first) };
 
         for (std::ptrdiff_t visited{ 0 }; visited < count; ++visited)
         {
-            const Shot& shot{ shots[static_cast<std::size_t>(index)] };
-            if (IsShotValid(shot) && (shot.Kind != ShotKind::Pov || canPov)) return static_cast<std::size_t>(index);
+            const std::size_t libraryIndex{ playlist[static_cast<std::size_t>(position)] };
 
-            index = (index + step + count) % count;
+            if (libraryIndex < shots.size())
+            {
+                const Shot& shot{ shots[libraryIndex] };
+                if (IsShotValid(shot) && (shot.Kind != ShotKind::Pov || canPov)) return static_cast<std::size_t>(position);
+            }
+
+            position = (position + step + count) % count;
         }
 
         return std::nullopt;
@@ -334,52 +261,6 @@ namespace DevTools::Viewer::Director::System
         if (isWatchPovOn && observed != k_NoHandle) return observed;
 
         return std::nullopt;
-    }
-
-    auto ParseShots(std::string_view text) -> ParsedShots
-    {
-        ParsedShots parsed{};
-
-        for (const std::string_view rawLine : SplitOn(text, '\n'))
-        {
-            const std::string_view line{ Trim(rawLine) };
-            if (line.empty() || line.front() == '#') continue;
-
-            std::optional<Shot> shot{ ParseLine(line) };
-            if (shot) parsed.Shots.push_back(std::move(*shot));
-            else ++parsed.Skipped;
-        }
-
-        return parsed;
-    }
-
-    auto FormatShots(const ShotList& shots) -> std::string
-    {
-        std::string text{ k_FileHeader };
-
-        for (const Shot& shot : shots)
-        {
-            const std::string name{ CleanName(shot.Name) };
-
-            switch (shot.Kind)
-            {
-            case ShotKind::Fixed:
-                text += std::format("fixed|{}|{}|{:.3f} {:.3f} {:.3f}|{:.3f} {:.3f}\n", name, shot.Seconds, shot.Eye.X, shot.Eye.Y, shot.Eye.Z,
-                    shot.Yaw * k_DegreesPerRadian, shot.Pitch * k_DegreesPerRadian);
-                break;
-
-            case ShotKind::Orbit:
-                text += std::format("orbit|{}|{}|{:.3f} {:.3f} {:.3f}|{:.3f} {:.3f} {:.3f} {}\n", name, shot.Seconds, shot.Center.X, shot.Center.Y,
-                    shot.Center.Z, shot.Radius, shot.Height, shot.StartDegrees, shot.DegreesPerSecond);
-                break;
-
-            case ShotKind::Pov:
-                text += std::format("pov|{}|{}\n", name, shot.Seconds);
-                break;
-            }
-        }
-
-        return text;
     }
 
     auto SanitizeMapKey(std::string_view name) -> std::string

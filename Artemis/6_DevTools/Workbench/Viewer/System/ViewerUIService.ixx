@@ -6,6 +6,7 @@ import Bridge.Codec.Tick.State;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Camera.State;
+import DevTools.Viewer.Director.Type;
 import DevTools.Viewer.Director.State;
 import DevTools.Viewer.Inspector.System;
 import std;
@@ -13,6 +14,8 @@ import std;
 namespace
 {
     using DevTools::Viewer::Options::Type::k_LayerCount;
+
+    constexpr std::size_t k_SequenceNameSize{ 64 };
 }
 
 export namespace DevTools::Workbench::Viewer::System
@@ -23,6 +26,10 @@ export namespace DevTools::Workbench::Viewer::System
     private:
         using ObservedPlayerStore = Services::Observed::State::ObservedPlayerStore;
         using TickStore = Bridge::Codec::Tick::State::TickStore;
+
+        using DirectorFile = DevTools::Viewer::Director::Type::DirectorFile;
+        using DirectorStatus = DevTools::Viewer::Director::Type::DirectorStatus;
+        using Shot = DevTools::Viewer::Director::Type::Shot;
 
         using Flag = DevTools::Viewer::Options::Type::Flag;
         using Group = DevTools::Viewer::Options::Type::Group;
@@ -54,6 +61,9 @@ export namespace DevTools::Workbench::Viewer::System
         InspectorService& m_InspectorService;
         DirectorStore& m_DirectorStore;
 
+        // The name typed for the next New or Rename of a sequence.
+        std::array<char, k_SequenceNameSize> m_SequenceName{};
+
         // What each level of each layer shows, in the order of Layer.
         std::array<std::string, k_LayerCount> m_LayerTooltips{};
 
@@ -67,9 +77,22 @@ export namespace DevTools::Workbench::Viewer::System
         // note: Active, mode and zoom are runtime states and are not saved with the preferences.
         auto DrawCamera() -> void;
 
-        // Draws the director (VW.14): play and stop, the file of the map, the buttons that add shots, the options and the list of shots with their name,
-        // seconds, order and delete buttons. The shot that plays is marked.
+        // Draws the director (VW.14, VW.16): play and stop, the file of the map, the options, the buttons that add shots, the sequences and the library. The
+        // shot that plays is marked.
         auto DrawDirector() -> void;
+
+        // Draws the combo of the active sequence with New, Rename and Delete, and its list of shots, which is reordered by dragging. A shot dragged from the
+        // library is inserted where it is dropped.
+        auto DrawDirectorSequences(const DirectorFile& file, const DirectorStatus& status) -> void;
+
+        // Makes the item just drawn a drop target of the list of the sequence: a slot of the list moves there and a shot of the library is inserted there.
+        auto AcceptIntoSequence(const std::string& sequenceName, std::size_t slot) -> void;
+
+        // Draws the library as a table: drag handle (reorders), on, name, type, end, add to the active sequence and delete.
+        auto DrawDirectorLibrary(const DirectorFile& file, const DirectorStatus& status) -> void;
+
+        // Draws the end of a shot (kind and value) and, for an orbit, its turn speed.
+        auto DrawShotEnd(const Shot& shot) -> void;
 
         // Draws the labels switch and their scalars, then one row per layer.
         auto DrawLayers() -> void;
