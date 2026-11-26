@@ -334,7 +334,7 @@ class FakeProc:
         return self.returncode
 
 
-def RunExecute(tmp_path, monkeypatch, skip_results, codes=(0, 0), takes_ids=("R1", "R2")):
+def RunExecute(tmp_path, monkeypatch, skip_results, codes=(0, 0), takes_ids=("R1", "R2"), sleeps=None):
     raw = Raw()
     raw["output"] = str(tmp_path / "out")
     raw["takes"][1]["enabled"] = True
@@ -362,6 +362,7 @@ def RunExecute(tmp_path, monkeypatch, skip_results, codes=(0, 0), takes_ids=("R1
         return "ok", dict(states)
 
     monkeypatch.setattr(record, "WaitRunning", Wait)
+    monkeypatch.setattr(record, "Sleep", (sleeps if sleeps is not None else []).append)  # the tail of REC.3 never sleeps for real here
     monkeypatch.setattr(record.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout="queued sc1 (x, 2 matches)", stderr="", returncode=0))
     procs = iter(codes)
     monkeypatch.setattr(record.subprocess, "Popen", lambda *a, **k: FakeProc(next(procs)))
@@ -404,3 +405,132 @@ def test_match_cap_of_a_take_with_scale_divides_by_the_scale():
     assert take.match_seconds == 3 * 90 / 9 + 60
     raw["takes"][1].update(scale=0.5)
     assert record.ParsePlan(raw).takes[1].match_seconds == 3 * 90 + 60  # a scale under 1 never lengthens it
+
+
+# ---- REC.3: event markers and the tail of the take ----
+
+def Ev(kind, wall, team=None, **kw):
+    return dict({"wall": wall, "kind": kind, "team": team, "episode": 1, "score": [0, 0]}, **kw)
+
+
+def test_convert_events_maps_wall_to_video_and_drops_those_outside_the_take():
+    lines = [Ev("capture", 1010.0, "BLUE", score=[0, 1]), Ev("grab", 1004.0, "RED"), Ev("grab", 999.0, "RED"), Ev("grab", 1100.0, "BLUE"),
+             Ev("round_end", 1020.0, episode=1, score=[0, 1], game_seconds=24.0, truncated=True, winner="BLUE")]
+    events, dropped = record.ConvertEvents("R1", lines, 1000.0, 50.0, 80.0, lambda v: {"file": "a.mkv", "file_offset_s": v - 40})
+    assert dropped == 2
+    assert [(e["kind"], e["video_s"], e["file_offset_s"]) for e in events] == [("grab", 54.0, 14.0), ("capture", 60.0, 20.0), ("round_end", 70.0, 30.0)]
+    assert [e["text"] for e in events] == ["R1 grab RED", "R1 capture BLUE 0-1", "R1 round 1 end 0-1, 24 s timeout"]
+    assert events[2]["winner"] == "BLUE" and events[2]["truncated"] is True
+    assert record.RoundLines(events) == ["round 1: BLUE 0-1 in 24 s (timeout)"]
+
+
+def test_read_events_skips_a_cut_line_and_a_missing_file(tmp_path):
+    path = tmp_path / "e.jsonl"
+    path.write_text('{"wall": 1, "kind": "grab"}\n{"wall": 2, "ki', encoding="utf-8")
+    assert record.ReadEvents(str(path)) == [{"wall": 1, "kind": "grab"}]
+    assert record.ReadEvents(str(tmp_path / "none.jsonl")) == []
+
+
+def test_edl_golden_with_a_take_a_grab_a_capture_and_a_round_end(tmp_path):
+    plan, marks = MakeMarks(tmp_path, ("R1",))
+    marks.Begin("R1", Pos(10.0), 0.0)
+    marks.Finish("R1", Pos(40.0), "ok")
+    events = [{"kind": "round_end", "video_s": 38.0, "text": "R1 round 1 end 1-0, 24 s"},
+              {"kind": "grab", "video_s": 12.0, "text": "R1 grab RED"}, {"kind": "capture", "video_s": 30.0, "text": "R1 capture RED 1-0"}]
+    marks.SetEvents("R1", events, 0)
+    assert [m[0] for m in marks.Markers()] == ["R1 n1", "R1 grab RED", "R1 capture RED 1-0", "R1 round 1 end 1-0, 24 s"]
+    text = record.Edl("E01", marks.Markers())
+    assert text == ("TITLE: E01\nFCM: NON-DROP FRAME\n\n"
+                    "001  001      V     C        01:00:10:00 01:00:10:01 01:00:10:00 01:00:10:01\n"
+                    " |C:ResolveColorBlue |M:R1 n1 |D:1800\n\n"
+                    "002  001      V     C        01:00:12:00 01:00:12:01 01:00:12:00 01:00:12:01\n"
+                    " |C:ResolveColorYellow |M:R1 grab RED |D:1\n\n"
+                    "003  001      V     C        01:00:30:00 01:00:30:01 01:00:30:00 01:00:30:01\n"
+                    " |C:ResolveColorGreen |M:R1 capture RED 1-0 |D:1\n\n"
+                    "004  001      V     C        01:00:38:00 01:00:38:01 01:00:38:00 01:00:38:01\n"
+                    " |C:ResolveColorRed |M:R1 round 1 end 1-0, 24 s |D:1\n")
+    marks.Write()
+    data = json.load(open(marks.base + "_marcas.json"))
+    assert [e["kind"] for e in data["takes"][0]["events"]] == ["round_end", "grab", "capture"] and data["takes"][0]["wall_start"] == 0.0
+
+
+def test_plan_tail_seconds_default_plan_and_take_and_errors():
+    raw = Raw()
+    assert [t.tail_seconds for t in record.ParsePlan(raw).takes] == [3.0, 3.0, 3.0]
+    raw = Raw(tail_seconds=5)
+    raw["takes"][0]["tail_seconds"] = 0
+    assert [t.tail_seconds for t in record.ParsePlan(raw).takes] == [0.0, 5.0, 5.0]
+    raw["takes"][0]["tail_seconds"] = -1
+    with pytest.raises(ValueError, match="tail_seconds"):
+        record.ParsePlan(raw)
+    command = record.EnvCheckCommand("py", record.ParsePlan(Raw()).takes[0], record.ParsePlan(Raw()), "s.json", events_path="e.jsonl")
+    assert command[-2:] == ["--events-jsonl", "e.jsonl"]
+
+
+def test_execute_records_the_tail_after_env_check_and_puts_the_events_in_the_marks(tmp_path, monkeypatch):
+    clock = {"t": 0.0}
+    log = []
+
+    class ClockObs(FakeObs):
+        def Position(self):
+            return {"video_s": clock["t"], "file": "a.mkv", "file_offset_s": clock["t"]}
+
+        def Locate(self, video):
+            return {"file": "a.mkv", "file_offset_s": video}
+
+    def Sleep(seconds):
+        log.append(("tail", seconds))
+        clock["t"] += seconds
+    monkeypatch.setattr(record, "Sleep", Sleep)
+    original_popen = None
+
+    def Popen(command, **kw):
+        if "--events-jsonl" in command:
+            now = record.time.time()
+            lines = [Ev("grab", now + 1.0, "RED"), Ev("capture", now + 2.0, "RED", score=[1, 0]), Ev("grab", now + 500.0, "BLUE"),
+                     Ev("round_end", now + 2.5, episode=1, score=[1, 0], game_seconds=24.0, truncated=False, winner="RED")]
+            with open(command[command.index("--events-jsonl") + 1], "w", encoding="utf-8") as handle:
+                handle.write("".join(json.dumps(x) + "\n" for x in lines))
+        return FakeProc(0)
+    raw = Raw()
+    raw["output"] = str(tmp_path / "out")
+    raw["takes"][1]["enabled"] = True
+    raw["takes"][1]["tail_seconds"] = 1.5
+    plan = record.ParsePlan(raw)
+    takes = record.Select(plan, ["R1", "R2"])
+    events = []
+    obs = ClockObs(events)
+    fake_game = types.SimpleNamespace(Bench=lambda: {"_alive": True}, Skip=lambda *a, **k: 0)
+    states = iter([1, 2])
+    monkeypatch.setattr(record, "WaitRunning", lambda *a, **k: ("ok", {"message": "", "matchIndex": next(states)}))
+    monkeypatch.setattr(record.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout="queued sc1 (x)", stderr="", returncode=0))
+    monkeypatch.setattr(record.subprocess, "Popen", Popen)
+    monkeypatch.setattr(record, "AbsPath", lambda path, root=None: path if os.path.isabs(path) else os.path.join(str(tmp_path), path))
+    args = types.SimpleNamespace(start_timeout=300.0, key_attempt="F9", key_end="F10")
+    assert record.Execute(args, plan, takes, {"matches": []}, fake_game, obs, "plan.json") == 0
+    assert log == [("tail", 3.0), ("tail", 1.5)]
+    marks_file = [f for f in os.listdir(tmp_path / "out") if f.endswith("_marcas.json")][0]
+    data = json.load(open(tmp_path / "out" / marks_file))
+    r1, r2 = data["takes"][0], data["takes"][1]
+    assert (r1["start_s"], r1["end_s"]) == (0.0, 3.0)  # env_check ended at once: end_s is its end + the tail
+    assert r2["end_s"] == 3.0 + 1.5
+    assert [e["kind"] for e in r1["events"]] == ["grab", "capture", "round_end"] and r1["events_dropped"] == 1
+    assert 0.9 < r1["events"][0]["video_s"] < 1.5 and r1["events"][0]["file"] == "a.mkv"
+    edl = open([os.path.join(tmp_path / "out", f) for f in os.listdir(tmp_path / "out") if f.endswith(".edl")][0]).read()
+    assert "ResolveColorGreen |M:R1 capture RED 1-0" in edl and "ResolveColorRed |M:R1 round 1 end 1-0, 24 s" in edl
+
+
+def test_execute_has_no_tail_after_an_error_and_one_per_take_when_the_rounds_end(tmp_path, monkeypatch):
+    slept = []
+    RunExecute(tmp_path, monkeypatch, [], codes=(3, 3), sleeps=slept)  # env_check failed: no tail
+    assert slept == []
+    slept = []
+    RunExecute(tmp_path, monkeypatch, [], codes=(0, 0), sleeps=slept)  # rounds ended: the plan tail (3 s) after each take
+    assert slept == [3.0, 3.0]
+
+
+def test_edl_same_frame_moves_to_next():
+    """Resolve keeps one marker per frame: the round end on the frame of the last capture goes one frame later."""
+    text = record.Edl("E", [("cap", 1.0, 0, "ResolveColorGreen"), ("end", 1.0, 0, "ResolveColorRed")])
+    events = [line for line in text.split("\n") if line.startswith("00")]
+    assert "01:00:01:00" in events[0] and "01:00:01:01" in events[1].split()[4]

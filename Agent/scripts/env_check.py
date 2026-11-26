@@ -6,7 +6,13 @@ at its start and its end, and how many decisions had the engine's interaction on
 Policies: random, or seek (steer toward the enemy flag, or the own stand while carrying it, with the vectors of the observation; walk
 forward; F5.1 B: while the interaction is GrabObjective and it carries no flag, stop and hold Use: press and hold the first decision,
 still held after; otherwise Use on nothing and Jump taps now and then).
-python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random|PATH.pt] [--policy2 ...] [--greedy] [--hidden 256] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing] [--summary-json PATH]
+python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random|PATH.pt] [--policy2 ...] [--greedy] [--hidden 256] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing] [--summary-json PATH] [--events-jsonl PATH]
+--events-jsonl PATH (REC.3): one JSON line per important moment, written and flushed as it happens (a cut keeps what is done), for Tools/record.py to put
+markers in the EDL. Keys: "wall" (time.time() when the step received it), "kind" (grab = FlagTaken, capture = FlagCaptured, round_end), "team" (RED or BLUE:
+the team of the player that caused it; RED is the lowest Team id of the agents, the same rule as --policy), "episode" (1-based), "score" [red, blue] of the
+round at that moment (the captures counted per team since the round started; a capture line already has the new score) and, on round_end, "game_seconds"
+(RoundClockTicks / 60), "truncated" and "winner" (RED, BLUE or null; from the last observation, RoundWinner). The events are those of the whole match
+(env.events, any player), each one once: repeated (kind, cause, Sequence) are dropped. Without the option nothing changes.
 --summary-json PATH (REC.1): at the end (also after Ctrl+C or CTRL_BREAK) writes the dict of Summarize plus the basic arguments, result and failures as JSON (Tools/record.py reads it).
 --timing (F4.9): at the end, per phase of a decision (wait for the tick, copy of read_tick, new_events, observe, answer, and the policy, measured here),
 p50 / p95 / max in ms and its share of the Python side (copy + events + observe + answer + policy; the wait is not Python's); the slack of the
@@ -139,6 +145,50 @@ def RoundWinner(finals, teams):
     return None
 
 
+def TeamName(team, low):
+    """RED for the lowest team id of the agents, BLUE for any other (None stays None): the --policy rule."""
+    if team is None:
+        return None
+    return "RED" if team == low else "BLUE"
+
+
+EVENT_KINDS = {14: "grab", 18: "capture"}  # Event.FlagTaken, Event.FlagCaptured (artemis.semantic)
+
+
+def EventLines(events, teams, low, scores, episode, wall, seen):
+    """Lines (dicts) of --events-jsonl for the events of one step. events: records with Kind, CausePlayer and Sequence (env.events);
+    teams: {handle: team} of every player; low: the RED team; scores: [red, blue] of the round, updated here for each capture; seen: set of
+    (kind, cause, sequence) already written, so an event that shows up twice goes out once. Events of a player with no known team are skipped."""
+    lines = []
+    for event in events:
+        kind = EVENT_KINDS.get(int(event["Kind"]))
+        cause = int(event["CausePlayer"])
+        if kind is None or cause not in teams:
+            continue
+        key = (kind, cause, int(event["Sequence"]))
+        if key in seen:
+            continue
+        seen.add(key)
+        team = TeamName(teams[cause], low)
+        if kind == "capture":
+            scores[0 if team == "RED" else 1] += 1
+        lines.append({"wall": wall, "kind": kind, "team": team, "episode": episode, "score": list(scores)})
+    return lines
+
+
+def RoundEndLine(episode, wall, scores, game_seconds, ending, winner_team, low):
+    """The round_end line of --events-jsonl: score counted in the round, seconds of play, truncated (the cap cut it) and the winner."""
+    return {"wall": wall, "kind": "round_end", "team": None, "episode": episode, "score": list(scores), "game_seconds": game_seconds,
+            "truncated": ending == "truncated", "winner": TeamName(winner_team, low)}
+
+
+def WriteLines(handle, lines):
+    """One JSON line each, flushed."""
+    for line in lines:
+        handle.write(json.dumps(line) + "\n")
+    handle.flush()
+
+
 def Summarize(rows):
     """Numbers of the final summary from the rows of the rounds. A row: ending, game_seconds, wall_seconds, captures {handle: n},
     winner (a team or None), teams {handle: team}, policies {handle: name}."""
@@ -242,6 +292,7 @@ def Main():
     parser.add_argument("--latency", type=int, default=5, help="ticks from a decision to its action (d); Artemis clamps it to 2..N (D139)")
     parser.add_argument("--timing", action="store_true", help="measure the phases of each decision and the slack of the Lockstep (F4.9)")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
+    parser.add_argument("--events-jsonl", help="write one JSON line per grab / capture / round end here as it happens (REC.3)")
     parser.add_argument("--summary-json", help="write the summary and the basic arguments as JSON here at the end (also after Ctrl+C)")
     args = parser.parse_args()
     if hasattr(signal, "SIGBREAK"):
@@ -272,6 +323,7 @@ def Main():
     failures = []
     policy_ns = []
     rows = []
+    events_file = open(args.events_jsonl, "w", encoding="utf-8") if args.events_jsonl else None
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, config)
         try:
@@ -289,6 +341,9 @@ def Main():
                 observations, _ = env.reset(setup=setups.next_setup() if setups else None)
                 teams = {int(p["Handle"]): int(p["Team"]) for p in env.published.players if int(p["Handle"]) in env.agents}
                 names = AssignPolicies(teams, args.policy, args.policy2)
+                low = min(teams.values()) if teams else None
+                everyone = {int(p["Handle"]): int(p["Team"]) for p in env.published.players}
+                scores, seen = [0, 0], set()
                 clock_start = clock_last = int(env.published.match["RoundClockTicks"])
                 captures = {h: 0 for h in env.agents}
                 returns = {h: 0.0 for h in env.agents}
@@ -305,6 +360,8 @@ def Main():
                         policy_ns.append(time.perf_counter_ns() - decided)
                     observations, rewards, terminated, truncated, infos = env.step(actions)
                     steps += 1
+                    if events_file:
+                        WriteLines(events_file, EventLines(env.events, everyone, low, scores, episode + 1, time.time(), seen))
                     for h in env.agents:
                         grabbing[h] += int(observations[h][GRAB_OBJECTIVE_AT] > 0.5)
                         returns[h] += rewards[h]
@@ -319,6 +376,9 @@ def Main():
                         ending = "terminated"
                     elif any(truncated.values()):
                         ending = "truncated"
+                if events_file:
+                    winner = RoundWinner(observations, teams)
+                    WriteLines(events_file, [RoundEndLine(episode + 1, time.time(), scores, (clock_last - clock_start) / 60.0, ending, winner, low)])
                 for h in env.agents:
                     print(f"episode {episode} agent {h:#010x}: {steps} steps, return {returns[h]:+.3f}, {ending}, "
                           f"events {events[h]}, flag at {first[h]:.0f} m, closest {closest[h]:.0f} m, GrabObjective in {grabbing[h]} decisions, "
@@ -339,6 +399,8 @@ def Main():
             failures.append(str(error))
         finally:
             env.release()
+            if events_file:
+                events_file.close()
         after = bridge.counters()
     print(f"lost events {bridge.event_gaps}")
     if rows:

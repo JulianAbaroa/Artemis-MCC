@@ -1460,3 +1460,36 @@ def test_env_check_defaults_match_train_stage0(ctf):
     assert (config.period, config.latency, config.turn_limit, config.profile) == (5, 5, 0.1, "stage0")
     source = open(os.path.join(AGENT, "scripts", "env_check.py"), encoding="utf-8").read()
     assert 'default=5, help="ticks between decisions (N)"' in source and 'default=5, help="ticks from a decision' in source
+
+
+def test_env_check_event_lines_dedup_team_score_and_round_end(ctf):
+    check = EnvCheck(ctf)
+    teams = {10: 5, 20: 7, 30: 7}  # the lowest team (5) is RED, whoever plays
+    seen, scores = set(), [0, 0]
+
+    def Ev(kind, cause, sequence):
+        return {"Kind": kind, "CausePlayer": cause, "Sequence": sequence}
+    step = [Ev(14, 10, 1), Ev(18, 20, 2), Ev(14, 10, 1), Ev(18, 20, 2), Ev(3, 10, 3), Ev(18, 99, 4)]
+    lines = check.EventLines(step, teams, 5, scores, 2, 100.5, seen)
+    assert lines == [{"wall": 100.5, "kind": "grab", "team": "RED", "episode": 2, "score": [0, 0]},
+                     {"wall": 100.5, "kind": "capture", "team": "BLUE", "episode": 2, "score": [0, 1]}]
+    # the same event again in a later step (shown by the infos of two agents) goes out once; a new capture adds up
+    later = check.EventLines([Ev(18, 20, 2), Ev(18, 10, 5), Ev(18, 30, 6)], teams, 5, scores, 2, 101.0, seen)
+    assert [(x["team"], x["score"]) for x in later] == [("RED", [1, 1]), ("BLUE", [1, 2])]
+    end = check.RoundEndLine(2, 120.0, scores, 24.0, "terminated", 7, 5)
+    assert end == {"wall": 120.0, "kind": "round_end", "team": None, "episode": 2, "score": [1, 2], "game_seconds": 24.0,
+                   "truncated": False, "winner": "BLUE"}
+    cut = check.RoundEndLine(3, 1.0, [0, 0], 90.0, "truncated", None, 5)
+    assert cut["truncated"] is True and cut["winner"] is None
+
+
+def test_env_check_write_lines_one_json_line_each_and_flushes(ctf, tmp_path):
+    import io
+    import json as js
+    check = EnvCheck(ctf)
+    out = io.StringIO()
+    flushed = []
+    out.flush = lambda: flushed.append(1)
+    check.WriteLines(out, [{"a": 1}, {"b": [1, 2]}])
+    assert [js.loads(t) for t in out.getvalue().splitlines()] == [{"a": 1}, {"b": [1, 2]}] and flushed == [1]
+    assert check.TeamName(None, 0) is None and check.TeamName(0, 0) == "RED" and check.TeamName(3, 0) == "BLUE"

@@ -14,8 +14,8 @@ never printed and never lives in the repo.
 
 Plan (JSON, paths relative to the repo):
   { "name": "E01", "config": "Map M.1", "snapshots": "Agent/runs/hitoa_noche/snapshots", "output": "Ignore/Content/Episode 1/Grabaciones",
-    "max_seconds": 150, "takes": [ { "id", "red", "blue", "scale", "rounds", "sequence", "note", optional "config", "max_seconds",
-    "enabled", "manual" } ] }
+    "max_seconds": 150, "tail_seconds": 3, "takes": [ { "id", "red", "blue", "scale", "rounds", "sequence", "note", optional "config",
+    "max_seconds", "tail_seconds", "enabled", "manual" } ] }
   red is --policy (the lowest Team, Red) and blue is --policy2: "u02300" is <snapshots>/policy_u02300.pt, seek / random are themselves,
   anything else is a path. "enabled": false skips the take unless --only names it. "max_seconds" is the cap of one round for env_check
   (the take's, else the plan's); the match of the bench gets rounds * that / max(scale, 1) + 60 s (wall seconds counted from Running: a safety
@@ -29,6 +29,18 @@ Plan (JSON, paths relative to the repo):
       F10 = end the take: env_check stops cleanly (its summary is written) and the plan goes on with the next take
   --key-attempt / --key-end change them (F1..F24, A..Z, 0..9). If a key cannot be registered (another app owns it, an OBS hotkey) it
   says so and falls back to the console of record.py: Enter or "a" + Enter = attempt, "e" + Enter = end.
+
+tail_seconds (plan and per take, >= 0, default 3): when env_check ends a take by rounds, the recording goes on for that many wall seconds
+(the video would end right on the last capture) before OBS is paused and the skip is asked. The end of the take includes the tail. Manual
+takes (F10), errors and Ctrl+C have no tail.
+
+Event markers (REC.3): record.py runs env_check with --events-jsonl <output>/<name>_<id>_events.jsonl (grab, capture, round_end with their wall
+clock). When the take closes the events are placed in the video: video_s = start_s + (wall - wall at the start of the take) (no pauses inside a
+take); those outside [start_s, end_s] are dropped and counted. They go in the "events" list of the take in the marks JSON (kind, team, video_s,
+file, file_offset_s, text) and in the EDL as 1 frame markers: green "<id> capture <RED|BLUE> <red>-<blue>", yellow "<id> grab <RED|BLUE>", red
+"<id> round <n> end <red>-<blue>, <s> s" (+ " timeout" when the cap cut it), next to the blue marker of the take (manual attempts as before).
+RED is the lowest Team id (the --policy side), the score is the captures counted per team in the round. Every take prints one line per round
+at its end ("round 2: BLUE 3-1 in 24 s").
 
 When a take ends (env_check finished, rounds done, F10, error or Ctrl+C) record.py asks the bench to end that match ("game.py skip", REC.2:
 the match ends as "skipped", a clean end) instead of waiting for its cap, so the next take starts right after loading and the last match does
@@ -55,8 +67,10 @@ DEFAULT_ROUND_SECONDS = 90.0
 EDL_START = "01:00:00:00"
 KEY_ATTEMPT = "F9"
 KEY_END = "F10"
-TAKE_KEYS = {"id", "red", "blue", "scale", "rounds", "sequence", "note", "config", "max_seconds", "enabled", "manual"}
-PLAN_KEYS = {"name", "config", "snapshots", "output", "max_seconds", "takes"}
+TAKE_KEYS = {"id", "red", "blue", "scale", "rounds", "sequence", "note", "config", "max_seconds", "tail_seconds", "enabled", "manual"}
+PLAN_KEYS = {"name", "config", "snapshots", "output", "max_seconds", "tail_seconds", "takes"}
+DEFAULT_TAIL_SECONDS = 3.0
+EVENT_COLORS = {"capture": "ResolveColorGreen", "grab": "ResolveColorYellow", "round_end": "ResolveColorRed"}
 SNAPSHOT = re.compile(r"^u\d+$")
 
 
@@ -82,6 +96,7 @@ class Take:
     is_enabled: bool = True
     is_manual: bool = False
     match_seconds: float = 0.0
+    tail_seconds: float = DEFAULT_TAIL_SECONDS
 
 
 @dataclass
@@ -116,6 +131,7 @@ def ParsePlan(raw):
         raise ValueError(f"plan: name {raw['name']!r} cannot be part of a file name")
     plan_seconds = float(Number(raw.get("max_seconds", DEFAULT_ROUND_SECONDS), "plan max_seconds", 1))
     plan = Plan(raw["name"], raw["config"], raw.get("snapshots") or "", raw["output"], plan_seconds)
+    plan_tail = float(Number(raw.get("tail_seconds", DEFAULT_TAIL_SECONDS), "plan tail_seconds", 0))
     if not isinstance(raw.get("takes"), list) or not raw["takes"]:
         raise ValueError("plan: takes must be a non-empty list")
     seen = set()
@@ -147,13 +163,14 @@ def ParsePlan(raw):
             raise ValueError(f"{where}: config must be a non-empty string")
         given = float(Number(item["max_seconds"], f"{where}: max_seconds", 1)) if "max_seconds" in item else 0.0
         is_manual = bool(item.get("manual", False))
+        tail = float(Number(item["tail_seconds"], f"{where}: tail_seconds", 0)) if "tail_seconds" in item else plan_tail
         round_seconds = given or plan_seconds
         # Wall seconds from Running: the rounds at their cap, at the speed of the scale (env_check --scale), plus a margin. Only a safety net,
         # every take is skipped when it ends.
         match_seconds = (given or MANUAL_CAP_SECONDS) if is_manual else rounds * round_seconds / max(scale, 1.0) + LOAD_MARGIN_SECONDS
         plan.takes.append(Take(item["id"], item["red"].strip(), item["blue"].strip(), scale, rounds, item["sequence"].strip(),
                                str(item.get("note", "")), config.strip(), round_seconds, item.get("enabled", True), is_manual,
-                               match_seconds))
+                               match_seconds, tail))
     return plan
 
 
@@ -274,15 +291,22 @@ def Edl(title, markers, start=EDL_START, fps=FPS):
     https://forum.blackmagicdesign.com/viewtopic.php?p=727227 and https://editingtools.io/guides/convert-livenotes-to-resolve-marker
     which imports into Resolve with this layout): a header 'TITLE:' / 'FCM: NON-DROP FRAME', then per marker an event line (source in
     = record in, out one frame later, on V) and a comment line ' |C:<color> |M:<name> |D:<duration in frames>'. The timecodes start at
-    the timeline start (Resolve's default is 01:00:00:00): the markers must fall inside the timeline."""
+    the timeline start (Resolve's default is 01:00:00:00): the markers must fall inside the timeline.
+    A marker may carry a fourth item, its Resolve color (default ResolveColorBlue): the event markers of REC.3.
+    Resolve keeps one marker per frame (the last capture and the round end fall on the same one): a marker whose frame is taken moves to
+    the next free frame."""
     base = ParseTimecode(start, fps)
     lines = [f"TITLE: {MarkerName(title)}", "FCM: NON-DROP FRAME", ""]
-    for number, (name, start_s, seconds) in enumerate(markers, 1):
+    taken = set()
+    for number, (name, start_s, seconds, *color) in enumerate(markers, 1):
         first = base + int(round(start_s * fps))
+        while first in taken:
+            first += 1
+        taken.add(first)
         frames = max(1, int(round(seconds * fps)))
         tin, tout = Timecode(first, fps), Timecode(first + 1, fps)
         lines.append(f"{number:03d}  001      V     C        {tin} {tout} {tin} {tout}")
-        lines.append(f" |C:ResolveColorBlue |M:{MarkerName(name)} |D:{frames}")
+        lines.append(f" |C:{color[0] if color else 'ResolveColorBlue'} |M:{MarkerName(name)} |D:{frames}")
         lines.append("")
     return "\n".join(lines)
 
@@ -447,6 +471,69 @@ def ConnectObs(host, port, password):
     return obs
 
 
+def ReadEvents(path):
+    """Lines of the --events-jsonl file of a take (dicts); a missing file is no events and a broken line (a cut) is skipped."""
+    lines = []
+    try:
+        with open(path, encoding="utf-8") as handle:
+            for text in handle:
+                try:
+                    line = json.loads(text)
+                except ValueError:
+                    continue
+                if isinstance(line, dict) and "wall" in line and "kind" in line:
+                    lines.append(line)
+    except OSError:
+        pass
+    return lines
+
+
+def EventText(take_id, line):
+    """Marker text of an event line (see the module docstring)."""
+    score = line.get("score") or [0, 0]
+    if line["kind"] == "capture":
+        return f"{take_id} capture {line.get('team')} {score[0]}-{score[1]}"
+    if line["kind"] == "grab":
+        return f"{take_id} grab {line.get('team')}"
+    text = f"{take_id} round {line.get('episode')} end {score[0]}-{score[1]}, {float(line.get('game_seconds') or 0):.0f} s"
+    return text + (" timeout" if line.get("truncated") else "")
+
+
+def ConvertEvents(take_id, lines, wall_start, start_s, end_s, locate=None):
+    """(events, dropped) of a take from the lines of env_check: video_s = start_s + (wall - wall_start), because the recording does not
+    pause inside a take. Those outside [start_s, end_s] are dropped (counted). locate(video_s) gives {"file", "file_offset_s"} (Obs.Locate).
+    An event: kind, team, episode, score, video_s, file, file_offset_s, text (round_end also game_seconds, truncated, winner)."""
+    events, dropped = [], 0
+    for line in sorted(lines, key=lambda x: x["wall"]):
+        video = start_s + (float(line["wall"]) - wall_start)
+        if video < start_s or video > end_s:
+            dropped += 1
+            continue
+        where = locate(video) if locate else {"file": None, "file_offset_s": None}
+        event = {"kind": line["kind"], "team": line.get("team"), "episode": line.get("episode"), "score": line.get("score"),
+                 "video_s": round(video, 3), "file": where["file"], "file_offset_s": where["file_offset_s"], "text": EventText(take_id, line)}
+        if line["kind"] == "round_end":
+            event.update(game_seconds=line.get("game_seconds"), truncated=line.get("truncated"), winner=line.get("winner"))
+        events.append(event)
+    return events, dropped
+
+
+def RoundLines(events):
+    """One console line per round of the take, from its round_end events: "round 2: BLUE 3-1 in 24 s" (draw when nobody won)."""
+    lines = []
+    for e in events:
+        if e["kind"] == "round_end":
+            score = e.get("score") or [0, 0]
+            lines.append(f"round {e.get('episode')}: {e.get('winner') or 'draw'} {score[0]}-{score[1]} in {float(e.get('game_seconds') or 0):.0f} s"
+                         + (" (timeout)" if e.get("truncated") else ""))
+    return lines
+
+
+def Sleep(seconds):
+    """time.sleep, apart so the tests can fake the tail of a take."""
+    time.sleep(seconds)
+
+
 class Marks:
     """The marks of a run: written after every take (JSON and EDL) so a power cut keeps what is done."""
 
@@ -460,13 +547,15 @@ class Marks:
             self.data["takes"].append({"id": t.id, "note": t.note, "sequence": t.sequence, "policies": {"red": t.red, "blue": t.blue},
                                        "scale": t.scale, "rounds": t.rounds, "manual": t.is_manual,
                                        "status": "pending" if t.id in self.selected else "skipped", "error": None, "start_s": None,
-                                       "end_s": None, "file": None, "file_offset_s": None, "attempts": [], "summary": None})
+                                       "end_s": None, "file": None, "file_offset_s": None, "attempts": [], "summary": None,
+                                       "tail_seconds": t.tail_seconds, "wall_start": None, "events": [], "events_dropped": 0})
 
     def Take(self, take_id):
         return next(t for t in self.data["takes"] if t["id"] == take_id)
 
-    def Begin(self, take_id, position):
+    def Begin(self, take_id, position, wall=None):
         record = self.Take(take_id)
+        record["wall_start"] = wall
         record["start_s"], record["file"], record["file_offset_s"] = position["video_s"], position["file"], position["file_offset_s"]
         record["status"] = "running"
         if record["manual"]:
@@ -489,8 +578,13 @@ class Marks:
         if summary is not None:
             record["summary"] = summary
 
+    def SetEvents(self, take_id, events, dropped):
+        record = self.Take(take_id)
+        record["events"], record["events_dropped"] = events, dropped
+
     def Markers(self):
-        """EDL markers (name, start_s, seconds): one per take, one per attempt of a manual take (until the next attempt or the take end)."""
+        """EDL markers (name, start_s, seconds[, color]): one blue per take, one per attempt of a manual take (until the next attempt or the
+        take end), and one of 1 frame per event of the take (green capture, yellow grab, red round end), all sorted by time."""
         markers = []
         for t in self.data["takes"]:
             if t["start_s"] is None or t["end_s"] is None:
@@ -502,7 +596,8 @@ class Marks:
                     markers.append((f"{t['id']} attempt {a['n']}{tag if index + 1 == len(t['attempts']) else ''}", a["start_s"], end - a["start_s"]))
             else:
                 markers.append((f"{t['id']} {t['note']}".strip() + tag, t["start_s"], t["end_s"] - t["start_s"]))
-        return markers
+            markers += [(e["text"], e["video_s"], 0.0, EVENT_COLORS[e["kind"]]) for e in t.get("events", []) if e["kind"] in EVENT_COLORS]
+        return sorted(markers, key=lambda m: m[1])
 
     def Write(self, obs=None):
         if obs is not None:
@@ -694,10 +789,11 @@ def SkipTake(game, scenario_id, number):
         return False
 
 
-def EnvCheckCommand(python, take, plan, summary_path, root=ROOT):
-    return [python, os.path.join(root, "Agent", "scripts", "env_check.py"), "--policy", ResolvePolicy(take.red, plan, root),
-            "--policy2", ResolvePolicy(take.blue, plan, root), "--episodes", "0" if take.is_manual else str(take.rounds),
-            "--scale", f"{take.scale:g}", "--max-seconds", f"{take.max_seconds:g}", "--summary-json", summary_path]
+def EnvCheckCommand(python, take, plan, summary_path, root=ROOT, events_path=None):
+    command = [python, os.path.join(root, "Agent", "scripts", "env_check.py"), "--policy", ResolvePolicy(take.red, plan, root),
+               "--policy2", ResolvePolicy(take.blue, plan, root), "--episodes", "0" if take.is_manual else str(take.rounds),
+               "--scale", f"{take.scale:g}", "--max-seconds", f"{take.max_seconds:g}", "--summary-json", summary_path]
+    return command + ["--events-jsonl", events_path] if events_path else command
 
 
 def Validate(plan, takes, root=ROOT, director=None):
@@ -792,6 +888,7 @@ def Execute(args, plan, takes, scenario, game, obs, plan_path, keys_factory=None
         for number, take in enumerate(takes, 1):
             summary_path = os.path.join(folder, f"{plan.name}_{take.id}.json")
             log_path = os.path.join(folder, f"{plan.name}_{take.id}.txt")
+            events_path = os.path.join(folder, f"{plan.name}_{take.id}_events.jsonl")
             print(f"\n== take {take.id} ({number}/{len(takes)}) {take.red} vs {take.blue}, {take.sequence}")
             result, state = WaitRunning(game, scenario_id, number, args.start_timeout + previous_cap)
             if result != "ok":
@@ -813,10 +910,11 @@ def Execute(args, plan, takes, scenario, game, obs, plan_path, keys_factory=None
             else:
                 obs.Resume()
             position = obs.Position()
-            marks.Begin(take.id, position)
+            wall_start = time.time()
+            marks.Begin(take.id, position, wall_start)
             obs.Chapter(f"{take.id} {take.note}".strip())
             print(f"[{position['video_s']:8.1f} s] recording take {take.id}: {state.get('message', '')}")
-            command = EnvCheckCommand(sys.executable, take, plan, summary_path)
+            command = EnvCheckCommand(sys.executable, take, plan, summary_path, events_path=events_path)
             flags = getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0) if os.name == "nt" else 0
             keys, interrupted, status, error = None, False, "ok", None
             with open(log_path, "w", encoding="utf-8") as log:
@@ -837,6 +935,9 @@ def Execute(args, plan, takes, scenario, game, obs, plan_path, keys_factory=None
                             StopProcess(proc)
                             break
                         time.sleep(0.25)
+                    if not take.is_manual and not is_ended and error is None and proc.returncode == 0 and take.tail_seconds > 0:
+                        print(f"env_check finished: recording {take.tail_seconds:g} s more (tail)")
+                        Sleep(take.tail_seconds)
                 except KeyboardInterrupt:
                     interrupted = True
                     print("\ninterrupted: stopping env_check (its summary is printed)")
@@ -857,6 +958,13 @@ def Execute(args, plan, takes, scenario, game, obs, plan_path, keys_factory=None
             to_skip = number
             end = obs.Position()
             marks.Finish(take.id, end, status, error, summary)
+            events, dropped = ConvertEvents(take.id, ReadEvents(events_path), wall_start, position["video_s"], end["video_s"],
+                                            getattr(obs, "Locate", None))
+            marks.SetEvents(take.id, events, dropped)
+            for text in RoundLines(events):
+                print("  " + text)
+            if dropped:
+                print(f"  {dropped} events outside the take were dropped")
             if status == "error":
                 code = 1
             print(f"[{end['video_s']:8.1f} s] take {take.id}: {status}{' - ' + error if error else ''}")
