@@ -49,6 +49,7 @@ namespace Engine::Capture::Hook
 
         if (isCounting) frameDetour.BeginSimulation();
 
+        // note: On a frame the tick gate held, callNs includes the wait of the hold (up to k_LockstepHoldBudget).
         auto start{ steady_clock::now() };
         s_OriginalFunction(requestedTicks, remainingTime);
         auto end{ steady_clock::now() };
@@ -145,6 +146,11 @@ namespace Engine::Capture::Hook
         }
 
         m_IsHookInstalled.store(true);
+    }
+
+    auto SimulationTicksDetour::GetFunctionAddress() const -> void*
+    {
+        return m_IsHookInstalled.load() ? m_FunctionAddress.load() : nullptr;
     }
 
     auto SimulationTicksDetour::Uninstall() -> void

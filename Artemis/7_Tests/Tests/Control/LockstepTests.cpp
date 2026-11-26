@@ -16,11 +16,13 @@ namespace
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
+    using Control::Lockstep::Type::HoldAction;
     using Control::Lockstep::Type::k_DefaultLatency;
     using Control::Lockstep::Type::k_MinLatency;
     using Control::Lockstep::Type::WaitResult;
     using Control::Lockstep::System::ApplyConnection;
     using Control::Lockstep::System::DecideControl;
+    using Control::Lockstep::System::DecideHold;
     using Control::Lockstep::System::GetApplyTiming;
     using Control::Lockstep::System::GetDueDecision;
     using Control::Lockstep::System::GetNeedDecision;
@@ -340,6 +342,37 @@ TEST(LockstepTests, GetApplyTiming)
 
     // A decision already applied is not applied again.
     EXPECT_EQ(GetApplyTiming(4, 4, 2, 6), ApplyTiming::None);
+}
+
+// TG.1 (D380): the order of the checks of the tick gate, over every combination of its six inputs.
+TEST(LockstepTests, DecideHold)
+{
+    for (int bits{ 0 }; bits < 64; ++bits)
+    {
+        const bool isAnswered{ (bits & 1) != 0 };
+        const bool isClientGone{ (bits & 2) != 0 };
+        const bool isStopped{ (bits & 4) != 0 };
+        const bool isPaused{ (bits & 8) != 0 };
+        const bool isCapPassed{ (bits & 16) != 0 };
+        const bool isBudgetPassed{ (bits & 32) != 0 };
+
+        HoldAction expected{ HoldAction::Wait };
+        if (isAnswered || isStopped || isClientGone) expected = HoldAction::Run;
+        else if (isPaused) expected = HoldAction::Hold;
+        else if (isCapPassed) expected = HoldAction::Run;
+        else if (isBudgetPassed) expected = HoldAction::Hold;
+
+        EXPECT_EQ(DecideHold(isAnswered, isClientGone, isStopped, isPaused, isCapPassed, isBudgetPassed), expected) << "bits " << bits;
+    }
+
+    // The cases that fix the order.
+    EXPECT_EQ(DecideHold(true, false, false, true, true, true), HoldAction::Run);
+    EXPECT_EQ(DecideHold(false, true, false, true, false, false), HoldAction::Run);
+    EXPECT_EQ(DecideHold(false, false, true, true, false, false), HoldAction::Run);
+    EXPECT_EQ(DecideHold(false, false, false, true, true, true), HoldAction::Hold);
+    EXPECT_EQ(DecideHold(false, false, false, false, true, true), HoldAction::Run);
+    EXPECT_EQ(DecideHold(false, false, false, false, false, true), HoldAction::Hold);
+    EXPECT_EQ(DecideHold(false, false, false, false, false, false), HoldAction::Wait);
 }
 
 TEST(LockstepTests, ReadClock)

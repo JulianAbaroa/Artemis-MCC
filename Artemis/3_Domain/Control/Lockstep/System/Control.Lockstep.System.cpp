@@ -14,6 +14,7 @@ namespace
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
+    using Control::Lockstep::Type::HoldAction;
     using Control::Lockstep::Type::WaitResult;
 
     using Contract::Bridge::Type::BridgeAgentInput;
@@ -123,6 +124,15 @@ namespace Control::Lockstep::System
         if (decision == 0 || decision > pushedDecision || actionTick != decision + control.Latency) return 0;
 
         return decision == hook.NeedDecision ? 0 : decision;
+    }
+
+    auto DecideHold(bool isAnswered, bool isClientGone, bool isStopped, bool isPaused, bool isCapPassed, bool isBudgetPassed) -> HoldAction
+    {
+        if (isAnswered || isStopped || isClientGone) return HoldAction::Run;
+        if (isPaused) return HoldAction::Hold;
+        if (isCapPassed) return HoldAction::Run;
+
+        return isBudgetPassed ? HoldAction::Hold : HoldAction::Wait;
     }
 
     auto RecordWait(BridgeHookState& hook, WaitResult result) -> bool

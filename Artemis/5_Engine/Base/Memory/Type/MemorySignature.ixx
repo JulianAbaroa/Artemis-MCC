@@ -83,6 +83,24 @@ export namespace Engine::Base::Memory::Type::Signature
         "48 8B C4 48 89 58 08 48 89 70 10 48 89 78 18 4C 89 70 20 41 57 48 83 EC 20 8B 05 ? ? ? ? 4C 8B F2 65 48 8B 04 25 58 00 00 00 8B F9 44 8B 05 ? ? ? ? 41 BF 48 00 00 00"
     };
 
+    // Offset of the call to the pause predicate of the engine inside SimulationTicks (haloreach.dll MD5 012f4079af9a8bb0f624c178af8e0753,
+    // 2026-11-25): at the start of every tick of its loop, bytes E8 rel32, so the return address is the offset + 5 (0x6B) (TG.1, D380).
+    // note: Five other places call the same predicate, so the hook tells this call by the return address.
+    inline constexpr std::uintptr_t k_SimulationTicksPauseCallOffset{ 0x66 };
+
+    // First byte of a near call with a 32 bit displacement.
+    inline constexpr std::uint8_t k_CallOpcode{ 0xE8 };
+
+    // Size of the call instruction at k_SimulationTicksPauseCallOffset: E8 and the rel32.
+    inline constexpr std::uintptr_t k_SimulationTicksPauseCallSize{ 5 };
+
+    // First 18 bytes of the pause predicate of the engine (FUN_1800356ac, rva 0x356ac, 279 bytes, same haloreach.dll). Exact, without
+    // wildcards, and without RIP-relative operands: TickGateDetour installs only if the call target starts with them (TG.1, D380).
+    inline constexpr std::array<std::uint8_t, 18> k_PauseCheckPrologue
+    {
+        0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x74, 0x24, 0x10, 0x57, 0x48, 0x83, 0xEC, 0x20, 0x40, 0x32, 0xFF
+    };
+
     // Ends the round of the game engine (0x7b3ec), the call of the end_round action of Megalo (opcode 21, D144).
     inline constexpr Signature k_EndRound
     {

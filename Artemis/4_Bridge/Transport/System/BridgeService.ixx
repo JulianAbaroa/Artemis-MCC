@@ -25,6 +25,7 @@ export namespace Bridge::Transport::System
         using SettingsStore = Services::Settings::State::SettingsStore;
 
         using BridgeControlState = Control::Lockstep::Type::BridgeControlState;
+        using BridgeHold = Control::Lockstep::Type::BridgeHold;
         using BridgeHookState = Control::Lockstep::Type::BridgeHookState;
 
         using BridgeRegion = Contract::Bridge::Type::BridgeRegion;
@@ -95,6 +96,15 @@ export namespace Bridge::Transport::System
         // param actionTick: Number of the action tick about to be applied (1 + the ticks applied before).
         auto Apply(std::uint64_t actionTick) -> void;
 
+        // Waits between ticks, before the tick that needs a decision nobody answered yet, so the engine can draw while it waits (TG.1, D380).
+        // Game thread, from the tick gate before each tick of SimulationTicks.
+        // return: True when the frame has to end here (a pause is requested, or the budget k_LockstepHoldBudget passed without the answer):
+        // the engine draws and the next frame asks again. False when the tick can run: it needs nothing, the answer is there, the cap
+        // k_LockstepTimeout passed, or the client or the bridge is gone.
+        // note: Apply continues the wait of the hold and counts it once (waits, timeouts and the Need marks): this only waits and decides.
+        // A pause requested ends the frame at once, with or without a decision pending, and the cap counts again when the pause ends.
+        auto HoldTick() -> bool;
+
         auto CopyStatus(BridgeStatus& out) const -> void;
 
         // Longest Lockstep wait since the previous call, in nanoseconds, then restarts it (the bench takes one per match).
@@ -111,8 +121,11 @@ export namespace Bridge::Transport::System
         auto WriteArtemisControl(BridgeRegion& region, const BridgeControlState& control) -> void;
         auto ApplyPause(bool isRequested) -> void;
 
+        // param begin: When the wait started, its time cap and whether a pause was seen: the ones of the hold of the tick gate if it began
+        // this wait, or the present moment with the full cap.
         // param needFlags: BridgeNeedFlag bits of how the wait ended (TimedOut, PauseSeen, Cut) are added to it.
-        auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook, std::uint32_t& needFlags) -> std::uint64_t;
+        auto WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook, const BridgeHold& begin,
+            std::uint32_t& needFlags) -> std::uint64_t;
         auto ApplyDecision(const BridgeRegion& region, std::uint64_t decision, std::uint32_t agentMask, std::uint8_t windowTicks, BridgeHookState& hook) -> void;
         auto ReleasePlayers(BridgeHookState& hook, std::uint32_t keepMask) -> void;
         auto ReleasePlayer(BridgeHookState& hook, std::size_t player, const BridgeSlot& slot) -> void;

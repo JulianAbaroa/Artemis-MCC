@@ -8,6 +8,9 @@ export namespace Engine::Capture::Type
     // note: remainingTime is the frame time left after the ticks. The engine lowers it if it stops before ticksToAdvance.
     using SimulationTicksFunction = auto(__fastcall*)(int ticksToAdvance, float* remainingTime) -> void;
 
+    // Pause predicate of the engine (FUN_1800356ac): true when the logic ticks must stop. SimulationTicks asks it before every tick (TG.1, D380).
+    using PauseCheckFunction = auto(__fastcall*)() -> bool;
+
     // Engine function that runs one logic tick (FUN_1800575AC). SimulationTicks calls it once per tick.
     using ExecuteGameFrameFunction = auto(__fastcall*)() -> void;
 
@@ -36,6 +39,18 @@ export namespace Engine::Capture::Type
         std::size_t QueueDepth{ 0 };
         // The queue stayed full for k_ReadTimeout: the tick was not queued and is lost.
         bool IsLost{ false };
+    };
+
+    // Asked before every tick of SimulationTicks whether the frame has to end there (TG.1, D380). Implemented by the owner (Mod): it waits in
+    // the Lockstep for the decision the tick needs, but not for long, so the engine can draw while Python thinks.
+    class TickGate
+    {
+    public:
+        virtual ~TickGate() = default;
+
+        // return: True when the frame ends before this tick and the engine draws, as it does for its own pauses. False when the tick runs.
+        // note: Game thread only, before each tick. May wait, at most k_LockstepHoldBudget.
+        virtual auto IsTickHeld() -> bool = 0;
     };
 
     // The tick hooks hand every completed tick to it (D305). Implemented by the owner (Mod): it reads the bridge clock, copies the game with

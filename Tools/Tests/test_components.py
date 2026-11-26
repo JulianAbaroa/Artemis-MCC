@@ -1011,7 +1011,7 @@ def test_mod_wires_the_engine_before_the_tools():
     members = MOD_MEMBER.findall(Read(f"{MOD}/Mod.Layer.ixx"))
     assert members == [
         "m_Module", "m_IsMinHookReady", "m_Service", "m_Base", "m_Capture", "m_Control", "m_Match", "m_Render", "m_BridgeEngineAdapter",
-        "m_Transport", "m_BridgeActionSource", "m_TickQueue", "m_TickProducer", "m_IsEngineWired", "m_Preferences", "m_EngineAccess", "m_Map",
+        "m_Transport", "m_BridgeActionSource", "m_TickQueue", "m_TickProducer", "m_TickGate", "m_IsEngineWired", "m_Preferences", "m_EngineAccess", "m_Map",
         "m_Resolved", "m_Tables", "m_Environment", "m_Egocentric", "m_Export", "m_Gui", "m_Viewer", "m_UI", "m_Main", "m_AI", "m_Bench", "m_Bridge", "m_Dump",
         "m_AIThread", "m_BenchThread", "m_BridgeThread", "m_DumpThread"], members
     assert members.index("m_IsEngineWired") > members.index("m_BridgeActionSource")

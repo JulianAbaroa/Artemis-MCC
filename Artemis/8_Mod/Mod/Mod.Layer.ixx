@@ -47,6 +47,7 @@ export namespace Mod
 
         using BridgeEngineAdapter = Mod::Port::System::BridgeEngineAdapter;
         using BridgeActionSource = Mod::Port::System::BridgeActionSource;
+        using TickGateAdapter = Mod::Port::System::TickGateAdapter;
         using TickProducerAdapter = Mod::Port::System::TickProducerAdapter;
 
         using ObservedTick = Bridge::Codec::Pipeline::Type::ObservedTick;
@@ -104,6 +105,7 @@ export namespace Mod
         // The ticks the game thread copies for the AI thread (D305), and the producer that fills the queue from the tick hooks.
         TickQueue m_TickQueue{ k_TickQueueDepth };
         TickProducerAdapter m_TickProducer{ m_Base.m_LifecycleStore, m_Capture.m_CaptureService, m_Transport.m_BridgeService, m_TickQueue };
+        TickGateAdapter m_TickGate{ m_Transport.m_BridgeService };
 
         // Registers the lifecycle callbacks of the engine. A member and not the body of the constructor so they are registered before the
         // tools build theirs: LifecycleService calls them in registration order (M8 C, sec. 2.5).

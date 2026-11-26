@@ -50,6 +50,10 @@ export namespace Engine::Capture::Hook
         // Removes the hook. Does nothing if not installed.
         auto Uninstall() -> void;
 
+        // return: The address of SimulationTicks that Install found, or null when the hook is not installed.
+        // note: The start of the function is overwritten by the hook, so whoever needs it later asks here and does not scan again.
+        auto GetFunctionAddress() const -> void*;
+
     private:
         Log& m_Log;
         TelemetryStore& m_TelemetryStore;

@@ -17,12 +17,15 @@ namespace
     using Control::Client::Type::AgentInput;
     using Control::Lockstep::Type::ApplyTiming;
     using Control::Lockstep::Type::BridgeControlState;
+    using Control::Lockstep::Type::BridgeHold;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
+    using Control::Lockstep::Type::HoldAction;
     using Control::Lockstep::Type::WaitResult;
     using Control::Lockstep::System::ApplyConnection;
     using Control::Lockstep::System::DecideControl;
     using Control::Lockstep::System::GetApplyTiming;
+    using Control::Lockstep::System::DecideHold;
     using Control::Lockstep::System::GetDueDecision;
     using Control::Lockstep::System::GetNeedDecision;
     using Control::Lockstep::System::IsDecisionTick;
@@ -58,6 +61,7 @@ namespace
     using Contract::Bridge::Type::k_BridgeActionEventSuffix;
     using Contract::Bridge::Type::k_BridgeDiscoveryFolder;
     using Bridge::Transport::Type::k_ClientTimeout;
+    using Bridge::Transport::Type::k_LockstepHoldBudget;
     using Bridge::Transport::Type::k_LockstepTimeout;
     using Bridge::Transport::Type::k_LockstepWaitSlice;
     using Contract::Bridge::Type::k_BridgeNotLocal;
@@ -85,6 +89,18 @@ namespace
     {
         // note: atomic_ref of a const object only exists from C++26. The load does not write.
         return std::atomic_ref<std::uint64_t>(const_cast<std::uint64_t&>(value)).load(std::memory_order_acquire);
+    }
+
+    // return: The instant as nanoseconds of the steady clock, how BridgeHold keeps it.
+    auto ToNs(steady_clock::time_point instant) -> std::int64_t
+    {
+        return std::chrono::duration_cast<nanoseconds>(instant.time_since_epoch()).count();
+    }
+
+    // return: The instant of BridgeHold, back as a time point of the steady clock.
+    auto ToInstant(std::int64_t ns) -> steady_clock::time_point
+    {
+        return steady_clock::time_point{ std::chrono::duration_cast<steady_clock::duration>(nanoseconds{ ns }) };
     }
 
     auto LoadShared(const std::uint32_t& value) -> std::uint32_t
@@ -444,24 +460,46 @@ namespace Bridge::Transport::System
             // In Lockstep the tick of a decision plus the latency waits for the actions of that decision (D105), if it was published.
             // The arrival at the tick t + d of a decision is marked for the timeline of the tick (P.3 C): QPC on arrival, and at the end of
             // the wait, or the same instant when the answer was there. Only the marks are measured here, the rule is GetNeedDecision.
+            // When the tick gate started the wait for this decision between ticks (TG.1, D380), the arrival and the cost are counted from there.
             const std::uint64_t need{ GetNeedDecision(actionTick, control, hook, m_BridgeStore.GetPushedDecision()) };
+            const std::uint64_t due{ GetDueDecision(actionTick, control, hook, m_BridgeStore.GetPushedDecision(), sequence) };
+            // Only the tick the gate predicted continues its wait: a hold of another prediction is left as it is.
+            const BridgeHold held{ hook.Hold.Decision != 0 && hook.Hold.ActionTick == actionTick ? hook.Hold : BridgeHold{} };
             if (need != 0)
             {
                 hook.NeedDecision = need;
-                hook.NeedQpc = this->ReadQpc();
+                hook.NeedQpc = held.Decision == need ? held.StartQpc : this->ReadQpc();
                 hook.NeedEndQpc = hook.NeedQpc;
                 hook.NeedFlags = 0;
             }
 
-            const std::uint64_t due{ GetDueDecision(actionTick, control, hook, m_BridgeStore.GetPushedDecision(), sequence) };
             if (due != 0)
             {
                 std::uint32_t needFlags{ static_cast<std::uint32_t>(BridgeNeedFlag::Waited) };
-                sequence = this->WaitForDecision(*region, due, hook, needFlags);
+                const auto now{ steady_clock::now() };
+                const BridgeHold begin{ held.Decision == due ? held : BridgeHold{ .StartNs = ToNs(now), .DeadlineNs = ToNs(now + k_LockstepTimeout) } };
+                sequence = this->WaitForDecision(*region, due, hook, begin, needFlags);
                 if (need != 0)
                 {
                     hook.NeedEndQpc = this->ReadQpc();
                     hook.NeedFlags = needFlags;
+                }
+            }
+            else if (held.Decision != 0 && sequence >= held.Decision)
+            {
+                // The answer arrived while the gate held the frame: one wait, as if the tick had waited for it. A pause is not a cost.
+                if (!held.IsPauseSeen)
+                {
+                    const auto waitNs{ ToNs(steady_clock::now()) - held.StartNs };
+                    m_BridgeStore.AddLockstepWait(static_cast<std::uint64_t>(waitNs));
+                }
+
+                RecordWait(hook, WaitResult::Answered);
+                if (need != 0 && need == held.Decision)
+                {
+                    hook.NeedEndQpc = this->ReadQpc();
+                    hook.NeedFlags = static_cast<std::uint32_t>(BridgeNeedFlag::Waited) |
+                        (held.IsPauseSeen ? static_cast<std::uint32_t>(BridgeNeedFlag::PauseSeen) : 0u);
                 }
             }
 
@@ -477,7 +515,93 @@ namespace Bridge::Transport::System
 
         if (IsImitationWindowEnd(actionTick, control.DecisionPeriod, control.Latency)) m_Engine.CloseImitationWindow();
 
+        // The wait of the gate ends with the tick it was for (or a later one). A tick before the predicted one leaves it.
+        if (actionTick >= hook.Hold.ActionTick) hook.Hold = BridgeHold{};
+
         m_BridgeStore.SetActionTick(actionTick);
+    }
+
+    auto BridgeService::HoldTick() -> bool
+    {
+        BridgeHookState& hook{ m_BridgeStore.GetHookState() };
+        BridgeRegion* region{ m_BridgeStore.GetRegion() };
+
+        // A pause ends the frame at the edge of the next tick, with or without a decision pending (SimulationTicksDetour already runs the
+        // frames after it with no ticks). The cap of a wait that is held counts again when the pause ends.
+        if (m_Engine.IsPauseRequested())
+        {
+            if (hook.Hold.Decision != 0)
+            {
+                hook.Hold.IsPauseSeen = true;
+                hook.Hold.DeadlineNs = ToNs(steady_clock::now() + k_LockstepTimeout);
+            }
+            return true;
+        }
+
+        const BridgeControlState control{ m_BridgeStore.GetControl() };
+        if (region == nullptr || control.Owner != BridgeOwner::Python || control.AgentMask == 0)
+        {
+            hook.Hold = BridgeHold{};
+            return false;
+        }
+
+        // The tick that follows. If the engine repeats the action tick the prediction is off by one and the wait happens in the tick, as
+        // before the gate.
+        std::uint64_t sequence{ LoadShared(region->Control.Client.ActionSequence) };
+        const std::uint64_t nextTick{ m_BridgeStore.GetActionTick() + 1 };
+        const std::uint64_t due{ GetDueDecision(nextTick, control, hook, m_BridgeStore.GetPushedDecision(), sequence) };
+        if (due == 0) return false;
+
+        auto now{ steady_clock::now() };
+        if (hook.Hold.Decision != due)
+        {
+            hook.Hold = BridgeHold{ .Decision = due, .ActionTick = nextTick, .StartNs = ToNs(now), .DeadlineNs = ToNs(now + k_LockstepTimeout), .StartQpc = this->ReadQpc(),
+                .PausedFrames = m_Engine.GetPausedFrames(), .IsPauseSeen = false };
+        }
+
+        // The same decision held for another next tick: the prediction moves, the wait goes on.
+        hook.Hold.ActionTick = nextTick;
+
+        // Frames went by in a pause since the last check: the cap counts again from here.
+        const std::uint64_t pausedFrames{ m_Engine.GetPausedFrames() };
+        if (pausedFrames != hook.Hold.PausedFrames)
+        {
+            hook.Hold.PausedFrames = pausedFrames;
+            hook.Hold.IsPauseSeen = true;
+            hook.Hold.DeadlineNs = ToNs(now + k_LockstepTimeout);
+        }
+
+        const auto event{ static_cast<HANDLE>(m_BridgeStore.GetActionEvent()) };
+        const auto budgetEnd{ now + k_LockstepHoldBudget };
+        while (true)
+        {
+            now = steady_clock::now();
+            sequence = LoadShared(region->Control.Client.ActionSequence);
+
+            const BridgeControlState current{ m_BridgeStore.GetControl() };
+            const bool isClientGone{ current.Owner != BridgeOwner::Python || !current.IsClientConnected };
+            const bool isPaused{ m_Engine.IsPauseRequested() };
+            if (isPaused)
+            {
+                hook.Hold.IsPauseSeen = true;
+                hook.Hold.DeadlineNs = ToNs(now + k_LockstepTimeout);
+            }
+
+            switch (DecideHold(sequence >= due, isClientGone, m_BridgeStore.IsStopped(), isPaused, ToNs(now) >= hook.Hold.DeadlineNs, now >= budgetEnd))
+            {
+            case HoldAction::Run:
+                return false;
+            case HoldAction::Hold:
+                return true;
+            case HoldAction::Wait:
+                break;
+            }
+
+            // At least 1 ms, so the loop never spins on a budget that is about to end.
+            const auto left{ std::chrono::duration_cast<milliseconds>(budgetEnd - now) };
+            const auto slice{ (std::max)(milliseconds{ 1 }, (std::min)(k_LockstepWaitSlice, left)) };
+            WaitForSingleObject(event, static_cast<DWORD>(slice.count()));
+        }
     }
 
     auto BridgeService::CopyStatus(BridgeStatus& out) const -> void
@@ -610,14 +734,14 @@ namespace Bridge::Transport::System
             m_BridgeStore.GetActionTick());
     }
 
-    auto BridgeService::WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook, std::uint32_t& needFlags)
-        -> std::uint64_t
+    auto BridgeService::WaitForDecision(BridgeRegion& region, std::uint64_t decision, BridgeHookState& hook, const BridgeHold& begin,
+        std::uint32_t& needFlags) -> std::uint64_t
     {
-        const auto start{ steady_clock::now() };
-        auto deadline{ start + k_LockstepTimeout };
+        const auto start{ ToInstant(begin.StartNs) };
+        auto deadline{ ToInstant(begin.DeadlineNs) };
         const auto event{ static_cast<HANDLE>(m_BridgeStore.GetActionEvent()) };
         const auto slice{ static_cast<DWORD>(k_LockstepWaitSlice.count()) };
-        bool isPauseSeen{ false };
+        bool isPauseSeen{ begin.IsPauseSeen };
         bool isClientGone{ false };
 
         std::uint64_t sequence{ LoadShared(region.Control.Client.ActionSequence) };

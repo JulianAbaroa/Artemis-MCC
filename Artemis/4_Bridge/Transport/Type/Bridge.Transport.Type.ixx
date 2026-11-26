@@ -26,6 +26,11 @@ export namespace Bridge::Transport::Type
     // note: Below the read timeout of the tick, so a stalled client never looks like a stalled AI thread.
     inline constexpr std::chrono::milliseconds k_LockstepTimeout{ 1000 };
 
+    // Longest the game thread holds the start of a tick waiting for a decision before it ends the frame so the engine draws (TG.1, D380).
+    // note: The normal waits average about 5 ms (stage 0 at x10, 2026-11-25: 4 ms cut nearly every decision and halved the speed), so
+    // more than 20 ms is an update, a reset or a stall of Python, and drawing is better than waiting.
+    inline constexpr std::chrono::milliseconds k_LockstepHoldBudget{ 20 };
+
     // Slice of a Lockstep wait: how often the wait checks that the bridge was not stopped (the hook drain is 500 ms).
     inline constexpr std::chrono::milliseconds k_LockstepWaitSlice{ 10 };
 

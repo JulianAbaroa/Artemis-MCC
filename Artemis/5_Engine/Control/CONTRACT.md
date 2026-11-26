@@ -140,7 +140,8 @@ The overrides and action history of every controlled player, the virtual input o
 
 ## Threads
 Game thread for the hooks and the engine functions. `ActionSource::Prepare` may block there in Lockstep: at most
-`k_LockstepTimeout` per wait, no limit during a pause of a live client, at once when the client leaves. The stores are thread-safe
+`k_LockstepTimeout` per wait, no limit during a pause of a live client, at once when the client leaves. Since TG.1 (D380) the wait starts before the tick,
+at the edge between ticks (`TickGate`, `Engine.Capture`), and the wait in `Prepare` only continues it or serves as the fallback when the tick gate is not installed. The stores are thread-safe
 for the UI and the bench.
 
 ## Errors

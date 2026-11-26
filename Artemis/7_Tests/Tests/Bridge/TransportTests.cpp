@@ -84,6 +84,12 @@ namespace
         std::atomic_ref<std::uint64_t>(region.Control.Client.ActionSequence).store(decision, std::memory_order_release);
     }
 
+    // return: The steady clock as the nanoseconds BridgeHold keeps, offset by this many milliseconds.
+    auto HoldNs(std::int64_t offsetMs) -> std::int64_t
+    {
+        return std::chrono::duration_cast<std::chrono::nanoseconds>((steady_clock::now() + milliseconds{ offsetMs }).time_since_epoch()).count();
+    }
+
     // return: Seconds the call took.
     template <typename Call>
     auto Timed(Call&& call) -> double
@@ -573,6 +579,269 @@ TEST_F(TransportTests, ApplyMarksTheNeedOfACutWait)
     EXPECT_EQ(clock.NeedDecision, 4u);
     EXPECT_GE(clock.NeedEndQpc, clock.NeedQpc);
     EXPECT_EQ(clock.NeedFlags, static_cast<std::uint32_t>(BridgeNeedFlag::Waited) | static_cast<std::uint32_t>(BridgeNeedFlag::Cut));
+}
+
+// TG.1 (D380): the Lockstep wait between ticks. Period 4, latency 2: decision 4 is needed at the action tick 6, and the tick gate asks
+// before it with the action tick 5 applied.
+TEST_F(TransportTests, HoldTickRunsWithoutAPendingDecision)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.Apply(5);
+
+    // Nothing queued for the AI thread yet.
+    bool isHeld{ true };
+    EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+    EXPECT_FALSE(isHeld);
+
+    // Queued and answered.
+    m_Service.MarkPushed(4);
+    WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+    Answer(*m_Region, 4);
+    isHeld = true;
+    EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+    EXPECT_FALSE(isHeld);
+    EXPECT_EQ(this->GetStatus().Counters.LockstepWaits, 0u);
+}
+
+TEST_F(TransportTests, HoldTickHoldsAnUnansweredDecision)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+
+    bool isHeld{ false };
+    const double seconds{ Timed([&] { isHeld = m_Service.HoldTick(); }) };
+    EXPECT_TRUE(isHeld);
+    EXPECT_GE(seconds, 0.015);
+    EXPECT_LT(seconds, 0.1);
+
+    // The hold does not count anything: that is up to Apply.
+    const BridgeStatus status{ this->GetStatus() };
+    EXPECT_EQ(status.Counters.LockstepWaits, 0u);
+    EXPECT_EQ(status.Counters.LockstepTimeouts, 0u);
+    EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 4u);
+}
+
+TEST_F(TransportTests, HoldTickRunsOnceAnswered)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+
+    const std::string eventName{ m_Name + std::string(k_BridgeActionEventSuffix) };
+    HANDLE actionEvent{ OpenEventW(EVENT_MODIFY_STATE, FALSE, std::wstring(eventName.begin(), eventName.end()).c_str()) };
+    ASSERT_NE(actionEvent, nullptr);
+
+    std::thread client([this, actionEvent] {
+        std::this_thread::sleep_for(milliseconds{ 30 });
+        WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+        Answer(*m_Region, 4);
+        SetEvent(actionEvent);
+    });
+
+    // The frames that end at the edge of the tick, until the answer is there.
+    int frames{ 0 };
+    while (m_Service.HoldTick() && frames < 1000) ++frames;
+    client.join();
+    CloseHandle(actionEvent);
+
+    EXPECT_GT(frames, 0);
+    EXPECT_LT(frames, 1000);
+    const std::uint64_t startQpc{ m_Store.GetHookState().Hold.StartQpc };
+    EXPECT_GT(startQpc, 0u);
+    const std::uint64_t waitsBefore{ this->GetStatus().Counters.LockstepWaits };
+
+    EXPECT_LT(Timed([this] { m_Service.Apply(6); }), 0.2);
+
+    const BridgeStatus status{ this->GetStatus() };
+    EXPECT_EQ(status.Counters.LockstepWaits, waitsBefore + 1);
+    EXPECT_EQ(status.Counters.LockstepTimeouts, 0u);
+    EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 0u);
+    ASSERT_EQ(m_Engine.CountInputs(0), 1u);
+
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedDecision, 4u);
+    EXPECT_EQ(clock.NeedQpc, startQpc);
+    EXPECT_GT(clock.NeedEndQpc, clock.NeedQpc);
+    EXPECT_EQ(clock.NeedFlags, static_cast<std::uint32_t>(BridgeNeedFlag::Waited));
+}
+
+// The hold is open and the cap has not passed: Apply waits the rest and counts the wait from the start of the hold.
+TEST_F(TransportTests, HoldTickThenApplyWaitsTheRestOfTheCap)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+    ASSERT_TRUE(m_Service.HoldTick());
+    const std::uint64_t startQpc{ m_Store.GetHookState().Hold.StartQpc };
+
+    const std::string eventName{ m_Name + std::string(k_BridgeActionEventSuffix) };
+    HANDLE actionEvent{ OpenEventW(EVENT_MODIFY_STATE, FALSE, std::wstring(eventName.begin(), eventName.end()).c_str()) };
+    ASSERT_NE(actionEvent, nullptr);
+
+    std::thread client([this, actionEvent] {
+        std::this_thread::sleep_for(milliseconds{ 50 });
+        WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+        Answer(*m_Region, 4);
+        SetEvent(actionEvent);
+    });
+    const double seconds{ Timed([this] { m_Service.Apply(6); }) };
+    client.join();
+    CloseHandle(actionEvent);
+
+    EXPECT_GE(seconds, 0.02);
+    EXPECT_LT(seconds, 0.5);
+    const BridgeStatus status{ this->GetStatus() };
+    EXPECT_EQ(status.Counters.LockstepWaits, 1u);
+    EXPECT_EQ(status.Counters.LockstepTimeouts, 0u);
+    EXPECT_GE(status.Counters.LockstepWaitNs, 40'000'000u);
+
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedQpc, startQpc);
+    EXPECT_GT(clock.NeedEndQpc, clock.NeedQpc);
+    EXPECT_EQ(clock.NeedFlags, static_cast<std::uint32_t>(BridgeNeedFlag::Waited));
+    EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 0u);
+}
+
+// A hold belongs to the tick the gate predicted: another tick neither continues it nor counts anything for it.
+TEST_F(TransportTests, HoldTickOfAnotherTickIsNotConsumed)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+    ASSERT_TRUE(m_Service.HoldTick());
+    EXPECT_EQ(m_Store.GetHookState().Hold.ActionTick, 6u);
+
+    WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+    Answer(*m_Region, 4);
+
+    // An earlier tick leaves the hold and counts nothing for it.
+    m_Service.Apply(4);
+    EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 4u);
+    EXPECT_EQ(this->GetStatus().Counters.LockstepWaits, 0u);
+
+    // A later tick is not the predicted one: it counts nothing for the hold either, and the hold ends.
+    m_Service.Apply(7);
+    EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 0u);
+    EXPECT_EQ(this->GetStatus().Counters.LockstepWaits, 0u);
+}
+
+TEST_F(TransportTests, HoldTickRunsWhenStopped)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+    m_Service.Stop();
+
+    bool isHeld{ true };
+    EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+    EXPECT_FALSE(isHeld);
+}
+
+TEST_F(TransportTests, HoldTickHoldsAtOnceWhilePaused)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.Apply(5);
+    m_Engine.m_IsPauseRequested = true;
+
+    // No decision pending.
+    bool isHeld{ false };
+    EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+    EXPECT_TRUE(isHeld);
+
+    // With a decision pending: the hold marks the pause and the cap starts again.
+    m_Engine.m_IsPauseRequested = false;
+    m_Service.MarkPushed(4);
+    EXPECT_TRUE(m_Service.HoldTick());
+    m_Engine.m_IsPauseRequested = true;
+    isHeld = false;
+    EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+    EXPECT_TRUE(isHeld);
+    EXPECT_TRUE(m_Store.GetHookState().Hold.IsPauseSeen);
+    EXPECT_GT(m_Store.GetHookState().Hold.DeadlineNs, HoldNs(500));
+}
+
+TEST_F(TransportTests, HoldTickCapThenApplyTimesOut)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+
+    // Two ticks against the same decision, as before the gate (the second one waits for it again): the cap passed in the hold, so neither
+    // waits another cap, each counts one timeout, and the second one suspends Lockstep.
+    for (std::uint64_t tick{ 6 }; tick <= 7; ++tick)
+    {
+        EXPECT_TRUE(m_Service.HoldTick());
+        m_Store.GetHookState().Hold.DeadlineNs = HoldNs(-1);
+
+        bool isHeld{ true };
+        EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+        EXPECT_FALSE(isHeld);
+
+        EXPECT_LT(Timed([&] { m_Service.Apply(tick); }), 0.2);
+        EXPECT_EQ(this->GetStatus().Counters.LockstepTimeouts, tick - 5);
+        EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 0u);
+    }
+
+    EXPECT_TRUE(this->HasLog("Lockstep suspended"));
+    EXPECT_FALSE(m_Service.HoldTick());
+}
+
+TEST_F(TransportTests, HoldTickPauseFramesRestartTheCap)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+
+    EXPECT_TRUE(m_Service.HoldTick());
+    m_Store.GetHookState().Hold.DeadlineNs = HoldNs(-1);
+
+    // Frames went by in a pause: the cap is new, the hold goes on.
+    m_Engine.m_PausedFrames = 3;
+    EXPECT_TRUE(m_Service.HoldTick());
+    EXPECT_TRUE(m_Store.GetHookState().Hold.IsPauseSeen);
+    EXPECT_GT(m_Store.GetHookState().Hold.DeadlineNs, HoldNs(500));
+
+    // The answer arrives: the wait was a pause, so Apply does not count it as a cost.
+    WriteAction(*m_Region, 0, k_Handle, 4, MakeInput(1.0f, 5));
+    Answer(*m_Region, 4);
+    EXPECT_FALSE(m_Service.HoldTick());
+    m_Service.Apply(6);
+
+    const BridgeStatus status{ this->GetStatus() };
+    EXPECT_EQ(status.Counters.LockstepWaits, 0u);
+    EXPECT_EQ(status.Counters.LockstepTimeouts, 0u);
+
+    BridgeClock clock{};
+    m_Service.CaptureClock(true, clock);
+    EXPECT_EQ(clock.NeedFlags, static_cast<std::uint32_t>(BridgeNeedFlag::Waited) | static_cast<std::uint32_t>(BridgeNeedFlag::PauseSeen));
+}
+
+TEST_F(TransportTests, HoldTickRunsWhenTheClientLeaves)
+{
+    this->PublishPlayer(k_Handle, k_BridgeNotLocal);
+    this->Connect(BridgeOwner::Python, BridgeMode::Lockstep, 0x1);
+    m_Service.MarkPushed(4);
+    m_Service.Apply(5);
+    EXPECT_TRUE(m_Service.HoldTick());
+
+    // The UI owns the instance again: the tick runs at once and the hold is forgotten.
+    this->Connect(BridgeOwner::UI, BridgeMode::Lockstep, 0x1);
+    bool isHeld{ true };
+    EXPECT_LT(Timed([&] { isHeld = m_Service.HoldTick(); }), 0.003);
+    EXPECT_FALSE(isHeld);
+    EXPECT_EQ(m_Store.GetHookState().Hold.Decision, 0u);
 }
 
 TEST_F(TransportTests, CaptureClockSetsCaptureQpcAndEndTickCopiesTheMarks)

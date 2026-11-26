@@ -42,9 +42,36 @@ export namespace Control::Lockstep::Type
         std::uint32_t AgentMask{ 0 };
     };
 
-    // Work of the game thread between ticks (only the PlayerAction hook touches it).
+    // The wait of the game thread for a decision that starts between ticks, before the tick that needs it (TG.1, D380). Game thread only.
+    struct BridgeHold
+    {
+        // Decision the game waits for, 0 = no wait started.
+        std::uint64_t Decision{ 0 };
+
+        // Action tick the tick gate predicted for the tick this wait is for. Only that tick continues the wait.
+        std::uint64_t ActionTick{ 0 };
+
+        // When the wait started, and when the time cap of the wait passes, as nanoseconds of the steady clock of the game thread (this project
+        // keeps no clock: Bridge.Transport reads it and converts).
+        std::int64_t StartNs{ 0 };
+        std::int64_t DeadlineNs{ 0 };
+
+        // QueryPerformanceCounter when the wait started: the real arrival at the decision.
+        std::uint64_t StartQpc{ 0 };
+
+        // Frames paused by the engine seen at the last check, to know when a pause went by.
+        std::uint64_t PausedFrames{ 0 };
+
+        // Whether a pause went by during the wait: pause time is not a cost.
+        bool IsPauseSeen{ false };
+    };
+
+    // Work of the game thread between ticks (only the PlayerAction hook and the tick gate touch it).
     struct BridgeHookState
     {
+        // The wait for the decision of the next tick that started between ticks (TG.1), continued by the PlayerAction hook.
+        BridgeHold Hold{};
+
         // Decision whose actions were given to the players, 0 = none.
         std::uint64_t AppliedSequence{ 0 };
 
@@ -72,6 +99,17 @@ export namespace Control::Lockstep::Type
         Cut,
         // The time cap passed without the actions.
         TimedOut,
+    };
+
+    // What the tick gate does before a tick (TG.1, D380).
+    enum class HoldAction : std::uint8_t
+    {
+        // The tick runs: the decision is there, or the tick has to go on and the PlayerAction hook settles it.
+        Run,
+        // The gate keeps waiting for the decision.
+        Wait,
+        // The frame ends here and the engine draws, the wait goes on in the next frame.
+        Hold,
     };
 
     // Whether a decision is applied in this tick.

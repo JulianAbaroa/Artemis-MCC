@@ -58,6 +58,12 @@
     <ClCompile Include="Hook\SimulationTicksDetour.ixx">
       <Filter>Hook</Filter>
     </ClCompile>
+    <ClCompile Include="Hook\TickGateDetour.cpp">
+      <Filter>Hook</Filter>
+    </ClCompile>
+    <ClCompile Include="Hook\TickGateDetour.ixx">
+      <Filter>Hook</Filter>
+    </ClCompile>
     <ClCompile Include="Engine.Capture.Hook.ixx" />
     <ClCompile Include="State\CaptureStore.cpp">
       <Filter>State</Filter>

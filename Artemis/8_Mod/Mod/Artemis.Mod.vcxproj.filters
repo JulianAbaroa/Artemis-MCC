@@ -87,6 +87,12 @@
     <ClCompile Include="Port\System\BridgeEngineAdapter.ixx">
       <Filter>Port\System</Filter>
     </ClCompile>
+    <ClCompile Include="Port\System\TickGateAdapter.cpp">
+      <Filter>Port\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Port\System\TickGateAdapter.ixx">
+      <Filter>Port\System</Filter>
+    </ClCompile>
     <ClCompile Include="Port\System\TickProducerAdapter.cpp">
       <Filter>Port\System</Filter>
     </ClCompile>

@@ -67,6 +67,8 @@
     <ClCompile Include="Hook\PlayerTableLocator.ixx" />
     <ClCompile Include="Hook\SimulationTicksDetour.cpp" />
     <ClCompile Include="Hook\SimulationTicksDetour.ixx" />
+    <ClCompile Include="Hook\TickGateDetour.cpp" />
+    <ClCompile Include="Hook\TickGateDetour.ixx" />
     <ClCompile Include="Engine.Capture.Hook.ixx" />
     <ClCompile Include="State\CaptureStore.cpp" />
     <ClCompile Include="State\CaptureStore.ixx" />

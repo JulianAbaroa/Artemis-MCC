@@ -5,3 +5,4 @@ export import :PlayerTable;
 export import :InteractionTable;
 export import :ExecuteGameFrame;
 export import :SimulationTicks;
+export import :TickGate;

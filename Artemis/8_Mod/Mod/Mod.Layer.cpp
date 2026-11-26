@@ -117,6 +117,7 @@ namespace Mod
 
         // The tick producer is connected before the tick hooks go in too.
         m_Capture.m_ExecuteGameFrameDetour.SetTickProducer(m_TickProducer);
+        m_Capture.m_TickGateDetour.SetTickGate(m_TickGate);
 
         // The capture copies the applied actions of the tick from the store of Engine.Control (D371): neither project sees the other.
         m_Capture.m_CaptureService.SetAppliedActionsPort(&m_Control.m_PlayerActionStore);
@@ -141,6 +142,7 @@ namespace Mod
             // ExecuteGameFrame goes first, so the first SimulationTicks call already counts every tick.
             m_Capture.m_ExecuteGameFrameDetour.Install();
             m_Capture.m_SimulationTicksDetour.Install();
+            m_Capture.m_TickGateDetour.Install(m_Capture.m_SimulationTicksDetour.GetFunctionAddress(), m_Capture.m_ExecuteGameFrameDetour.IsInstalled());
 
             // The HUD passes are code of the game module like the hooks above: the engine is created again, so they go in with it.
             m_Render.m_ChudDetour.Install();
@@ -169,6 +171,7 @@ namespace Mod
             m_Control.m_ClientOracleDetour.Uninstall();
             m_Control.m_PlayerActionDetour.Uninstall();
             m_Base.m_OpenMapDetour.Uninstall();
+            m_Capture.m_TickGateDetour.Uninstall();
             m_Capture.m_SimulationTicksDetour.Uninstall();
             m_Capture.m_ExecuteGameFrameDetour.Uninstall();
         });

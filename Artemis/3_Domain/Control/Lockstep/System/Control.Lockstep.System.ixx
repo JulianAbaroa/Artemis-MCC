@@ -12,6 +12,7 @@ namespace
     using Control::Lockstep::Type::BridgeControlState;
     using Control::Lockstep::Type::BridgeHookState;
     using Control::Lockstep::Type::ClockReading;
+    using Control::Lockstep::Type::HoldAction;
     using Control::Lockstep::Type::WaitResult;
 
     using Contract::Bridge::Type::BridgeAgentInput;
@@ -67,6 +68,13 @@ export namespace Control::Lockstep::System
     // when d is below N, give 0. A decision already recorded in the hook (NeedDecision) gives 0.
     auto GetNeedDecision(std::uint64_t actionTick, const BridgeControlState& control, const BridgeHookState& hook,
         std::uint64_t pushedDecision) -> std::uint64_t;
+
+    // return: What the tick gate does before a tick that would wait for a decision (TG.1, D380). The order of the checks is the rule:
+    // answered runs, a stopped bridge or a client that is gone runs (the PlayerAction hook cuts its wait at once), a pause holds, a cap that
+    // passed runs (the PlayerAction hook counts the timeout without waiting again), a budget that passed holds, otherwise it waits.
+    // param isCapPassed: The time cap of the wait (k_LockstepTimeout) passed.
+    // param isBudgetPassed: The time the gate may hold the game thread in one frame passed.
+    auto DecideHold(bool isAnswered, bool isClientGone, bool isStopped, bool isPaused, bool isCapPassed, bool isBudgetPassed) -> HoldAction;
 
     // Records how a wait ended in the state of the hook.
     // return: True only when this wait suspended Lockstep, so the caller logs it.

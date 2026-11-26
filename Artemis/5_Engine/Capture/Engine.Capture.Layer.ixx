@@ -10,7 +10,7 @@ import Engine.Capture.Hook;
 
 export namespace Engine::Capture
 {
-    // The capture of the engine: the locators of the object, player and interaction tables, and the frame and simulation tick hooks.
+    // The capture of the engine: the locators of the object, player and interaction tables, and the frame and simulation tick hooks and the tick gate.
     // note: Owner only: it has no callbacks and installs nothing. The one that composes it connects the lifecycle and installs the hooks.
     class Layer
     {
@@ -24,6 +24,7 @@ export namespace Engine::Capture
         using InteractionTableLocator = Engine::Capture::Hook::InteractionTableLocator;
         using ExecuteGameFrameDetour = Engine::Capture::Hook::ExecuteGameFrameDetour;
         using SimulationTicksDetour = Engine::Capture::Hook::SimulationTicksDetour;
+        using TickGateDetour = Engine::Capture::Hook::TickGateDetour;
 
     public:
         Layer(Services::Layer& service, Engine::Base::Layer& base) :
@@ -34,7 +35,8 @@ export namespace Engine::Capture
             m_InteractionTableLocator(service.m_Log, base.m_AOBService, m_CaptureStore),
             m_ExecuteGameFrameDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, m_OracleService),
             m_SimulationTicksDetour(service.m_Log, service.m_TelemetryStore, base.m_AOBService, base.m_LifecycleStore, m_CaptureStore,
-                base.m_MatchSetupService, base.m_PovService, m_ExecuteGameFrameDetour) {}
+                base.m_MatchSetupService, base.m_PovService, m_ExecuteGameFrameDetour),
+            m_TickGateDetour(service.m_Log) {}
         ~Layer() = default;
 
         // Not copyable. Members hold references to each other.
@@ -55,5 +57,6 @@ export namespace Engine::Capture
         InteractionTableLocator m_InteractionTableLocator;
         ExecuteGameFrameDetour m_ExecuteGameFrameDetour;
         SimulationTicksDetour m_SimulationTicksDetour;
+        TickGateDetour m_TickGateDetour;
     };
 }

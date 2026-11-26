@@ -129,6 +129,8 @@
     <ClCompile Include="Port\System\BridgeActionSource.ixx" />
     <ClCompile Include="Port\System\BridgeEngineAdapter.cpp" />
     <ClCompile Include="Port\System\BridgeEngineAdapter.ixx" />
+    <ClCompile Include="Port\System\TickGateAdapter.cpp" />
+    <ClCompile Include="Port\System\TickGateAdapter.ixx" />
     <ClCompile Include="Port\System\TickProducerAdapter.cpp" />
     <ClCompile Include="Port\System\TickProducerAdapter.ixx" />
     <None Include="CONTRACT.md" />

@@ -35,6 +35,8 @@ Owns every component: built in member order, destroyed in reverse; the threads a
 Creates and stops every thread. The AI thread imports no development tool: the tools are tick observers registered from outside. Each thread that hands a tick on stamps its QPC mark on the `BridgeClock` that travels with it (P.3 C, D373): the AI thread `AiStartQpc` after taking the tick out of the queue and `AiEndQpc` before queueing it for the bridge thread, the bridge thread `FlattenStartQpc` after taking it out of its queue (all with `BridgeService::ReadQpc`).
 Observers must not block.
 
+Tick gate (TG.1, D380): `TickGateAdapter` (a port, the `TickGate` of `Engine.Capture`) runs `BridgeService::HoldTick` on the game thread before each tick. `Mod.Layer` connects it before the hooks and installs `TickGateDetour` after `SimulationTicksDetour` (it gets that hook's address and whether `ExecuteGameFrameDetour` is installed), and removes it before.
+
 Ticks (D305): `TickProducerAdapter` (a port, the `TickProducer` of `Engine.Capture`) runs on the game thread from the tick hooks. It reads the bridge
 clock (`CaptureClock`: the action tick of the state about to be copied), decides a light or a full capture and copies with `CaptureService`, then
 pushes a `CapturedTick` (Snapshot, clock, generation, epoch, light, ticks lost before, first after load) into the `TickQueue` (one producer,

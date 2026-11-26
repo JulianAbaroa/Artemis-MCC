@@ -44,6 +44,14 @@ The session with the client (heartbeats, owner, counters, suspension after timeo
   ends at once if the client leaves or the bridge stops. It waits only for decisions up to the last one marked with `MarkPushed`, which means
   queued for the AI thread, not delivered to the client (RV.1): a decision the producer lost is never marked, and if the AI thread hangs with a
   Lockstep client connected the game waits `k_LockstepTimeout` per decision until two timeouts suspend it.
+- The wait between ticks (TG.1, D380): before each tick of `SimulationTicks` the tick gate calls `BridgeService::HoldTick` on the game thread. A pause
+  requested ends the frame at once (true), with or without a decision pending. Otherwise, if the next tick (`ActionTick + 1`) has to wait for a decision
+  nobody answered, it opens the hold (`BridgeHookState::Hold`) and waits at most `k_LockstepHoldBudget` (4 ms) by the rule `DecideHold`: true ends the
+  frame so the engine draws and the next frame asks again, false lets the tick run (answered, cap `k_LockstepTimeout` passed, client or bridge gone). The
+  tick gate predicts the action tick, and if the engine repeats it the wait happens in the tick as before, so the wait in `Apply` stays as the fallback.
+  `BridgeHold::ActionTick` is the tick the gate predicted: `Apply` continues the hold only when its action tick is that one, and clears it only from that tick on. `HoldTick` counts nothing: `Apply` continues the hold of its decision (the wait starts at `Hold.Start` with `Hold.Deadline` and `Hold.IsPauseSeen`, `NeedQpc` is
+  `Hold.StartQpc`) and counts one wait, or one timeout, per decision exactly as without the gate (a wait that saw a pause is not a cost), then clears the hold.
+  `BeginMatch` clears it with the rest of the hook state.
 
 ## Errors
 A region that cannot be created leaves the bridge off; the game is not affected. A client that leaves or crashes: its players go
