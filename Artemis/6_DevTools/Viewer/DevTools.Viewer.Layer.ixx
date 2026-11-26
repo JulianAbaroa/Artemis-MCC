@@ -126,7 +126,9 @@ export namespace DevTools::Viewer
                 // note: The overlay needs the depth copies of the first person mask, and the scene point draws only for an active Viewer. Without
                 // the Viewer neither is done.
                 const bool isActive{ m_SceneService.IsActive() };
-                engine.m_RenderStore.SetFirstPersonMaskRequested(isActive && m_OptionsStore.IsEnabled(Flag::DrawOverlay));
+                // note: A Presentation 3D layer (the observation arrows) draws without the debug overlay and needs the same copies.
+                const auto scenePasses{ m_SceneService.GetScenePasses() };
+                engine.m_RenderStore.SetFirstPersonMaskRequested(isActive && scenePasses.NeedMask);
                 engine.m_RenderStore.SetSceneDrawRequested(isActive);
 
                 // The game shows the observed player in the view of user 0 while the Viewer is active and the option is on. Without a request (the
@@ -187,7 +189,7 @@ export namespace DevTools::Viewer
                 // The card and the strip have the gate of the labels: the same scene update, so never the data of another frame.
                 if (isSceneUpdated)
                 {
-                    if (m_OptionsStore.IsEnabled(Flag::DrawOverlay)) m_LabelService.Draw();
+                    m_LabelService.Draw(scenePasses);
                     m_AgentCardService.Draw();
                     m_AgentStripService.Draw();
                 }

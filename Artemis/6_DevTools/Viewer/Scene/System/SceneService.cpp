@@ -25,7 +25,9 @@ namespace
     using DevTools::Viewer::Director::Type::DirectorInput;
     using DevTools::Viewer::Director::Type::Shot;
     using DevTools::Viewer::Director::Type::ShotKind;
+    using DevTools::Viewer::Options::Type::DecideScenePasses;
     using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Layer;
     using DevTools::Viewer::Options::Type::Scalar;
     using Blam::MapModel::Definitions::Type::Object::ObjectKind;
     using Engine::Base::Pov::System::IsPovOnOtherPlayer;
@@ -307,9 +309,9 @@ namespace DevTools::Viewer::Scene::System
         m_DirectedPlayer = k_NoHandle;
     }
 
-    auto SceneService::IsOverlayOn() const -> bool
+    auto SceneService::GetScenePasses() const -> ScenePasses
     {
-        return m_OptionsStore.IsEnabled(Flag::DrawOverlay);
+        return DecideScenePasses(m_OptionsStore.IsEnabled(Flag::DrawOverlay), m_OptionsStore.GetLevel(Layer::Obs));
     }
 
     auto SceneService::AddDirectorShots() -> void

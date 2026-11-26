@@ -109,6 +109,7 @@
     <ClCompile Include="Blam\RaycasterTests.cpp" />
     <ClCompile Include="Engine\TickProducerTests.cpp" />
     <ClCompile Include="Viewer\OptionsStoreTests.cpp" />
+    <ClCompile Include="Viewer\ObsTargetsTests.cpp" />
     <ClCompile Include="Viewer\RosterOrderTests.cpp" />
     <ClCompile Include="Viewer\DirectorTests.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Director\Type\DevTools.Viewer.Director.Type.ixx" />

@@ -21,6 +21,7 @@ import DevTools.Viewer.Director.Type;
 import DevTools.Viewer.Director.State;
 import DevTools.Viewer.Director.System;
 import DevTools.Viewer.Interpolation.Type;
+import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Palette.System;
 import DevTools.Viewer.Roster.Type;
@@ -53,6 +54,7 @@ export namespace DevTools::Viewer::Scene::System
         using DirectorStore = DevTools::Viewer::Director::State::DirectorStore;
         using DirectorService = DevTools::Viewer::Director::System::DirectorService;
         using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
+        using ScenePasses = DevTools::Viewer::Options::Type::ScenePasses;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
         using Bot = Engine::Control::Simulation::Type::Bot;
         using BotStore = Engine::Control::Simulation::State::BotStore;
@@ -144,8 +146,9 @@ export namespace DevTools::Viewer::Scene::System
 
         auto GetFramePoses() const -> const FramePoses&;
 
-        // return: Whether the 3D overlay is on (the option Draw overlay). The telemetry says so when nothing is drawn.
-        auto IsOverlayOn() const -> bool;
+        // return: The 3D passes the scene point runs in a frame, from the master switch of the debug overlay and the level of the observation layer.
+        // The telemetry says which one runs, or that none does.
+        auto GetScenePasses() const -> ScenePasses;
 
         // return: True if the camera mode is Game (the free camera is the other mode).
         auto IsGameMode() const -> bool;

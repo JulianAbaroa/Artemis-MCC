@@ -5,26 +5,34 @@ module;
 module DevTools.Viewer.Hud.System;
 import :Labels;
 
+import Perception.Players.Type;
 import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Collidable.Type;
 import DevTools.Viewer.Options.Type;
+import DevTools.Viewer.Roster.System;
 import DevTools.Viewer.Hud.Type;
 import std;
 
 namespace
 {
     using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Layer;
+    using DevTools::Viewer::Options::Type::Level;
+    using DevTools::Viewer::Roster::System::AgentRowsOf;
     using Views::View::System::RaycastsOf;
     using Views::View::System::ViewPositionOf;
 }
 
 namespace DevTools::Viewer::Hud::System
 {
-    auto LabelService::Draw() -> void
+    auto LabelService::Draw(const ScenePasses& passes) -> void
     {
         if (!m_SceneService.IsActive()) return;
         if (!m_OptionsStore.IsEnabled(Flag::Labels)) return;
+
+        const bool isObsOn{ m_OptionsStore.GetLevel(Layer::Obs) == Level::Full };
+        if (!passes.DrawDebug && !isObsOn) return;
 
         const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
         if (!scene || !scene->Tick) return;
@@ -58,12 +66,22 @@ namespace DevTools::Viewer::Hud::System
 
         m_Canvas.Reset();
 
-        PlayerLabels::Collect(m_Canvas, context);
-        ObjectLabels::Collect(m_Canvas, context);
-        VehicleLabels::Collect(m_Canvas, context);
-        HealthLabels::Collect(m_Canvas, context);
-        InteractionLabels::Collect(m_Canvas, context);
-        FixtureLabels::Collect(m_Canvas, context);
+        if (passes.DrawDebug)
+        {
+            PlayerLabels::Collect(m_Canvas, context);
+            ObjectLabels::Collect(m_Canvas, context);
+            VehicleLabels::Collect(m_Canvas, context);
+            HealthLabels::Collect(m_Canvas, context);
+            InteractionLabels::Collect(m_Canvas, context);
+            FixtureLabels::Collect(m_Canvas, context);
+        }
+
+        // note: The distances of the observation arrows (VW.17) are only drawn at the Full level, under the master switch of the labels but not the one of the
+        // debug overlay (a Presentation layer).
+        if (isObsOn && tick->Players)
+        {
+            ObsLabels::Collect(m_Canvas, context, AgentRowsOf(m_SceneService.GetRoster(), *tick->Players));
+        }
 
         m_Canvas.Flush(*ImGui::GetBackgroundDrawList());
     }

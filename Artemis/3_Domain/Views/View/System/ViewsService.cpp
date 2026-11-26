@@ -60,6 +60,7 @@ namespace
     using Views::Raycast::Type::Constant::k_FallbackAimRange;
     using Views::Raycast::Type::Constant::k_MaxRayRange;
     using Views::Raycast::Type::Raycasts;
+    using Views::View::Type::ObsTargets;
     using Views::View::Type::ViewAimHit;
     using Views::View::Type::ViewChannel;
     using Views::View::Type::ViewFlag;
@@ -660,6 +661,32 @@ namespace Views::View::System
     {
         const float aimCos{ std::cos(view.Self.AimPitch) };
         return Vec3{ aimCos * std::cos(view.Self.FrameYaw), aimCos * std::sin(view.Self.FrameYaw), std::sin(view.Self.AimPitch) };
+    }
+
+    auto ObsTargetsOf(const ::View& view) -> ObsTargets
+    {
+        ObsTargets targets{};
+        if (!view.Head.IsComputed || !view.Head.HasBody) return targets;
+
+        targets.From = view.Self.Feet;
+        if (view.Head.Side == Team::Neutral) return targets;
+
+        const ViewFlag& enemy{ view.Flags[1] };
+        const Vec3& stand{ view.Flags[0].StandPosition };
+
+        targets.HasFlag = enemy.HasFlag;
+        if (targets.HasFlag) targets.Flag = enemy.Position;
+
+        targets.HasStand = stand.X != 0.0f || stand.Y != 0.0f || stand.Z != 0.0f;
+        if (targets.HasStand) targets.Stand = stand;
+
+        return targets;
+    }
+
+    auto RivalTeamOf(const ObjectiveDetails& objectives, Team team) -> Team
+    {
+        const StandDetail* stand{ StandOfSide(objectives, team, false) };
+        return stand ? stand->OwnerTeam : Team::Neutral;
     }
 
     auto ViewPositionOf(const ::View& view) -> Vec3

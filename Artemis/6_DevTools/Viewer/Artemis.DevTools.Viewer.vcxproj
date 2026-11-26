@@ -143,6 +143,8 @@
     <ClCompile Include="Map\System\MapPass.ixx" />
     <ClCompile Include="Map\System\MapService.cpp" />
     <ClCompile Include="Map\System\MapService.ixx" />
+    <ClCompile Include="Map\System\ObsPass.cpp" />
+    <ClCompile Include="Map\System\ObsPass.ixx" />
     <ClCompile Include="Map\System\RaycastPass.cpp" />
     <ClCompile Include="Map\System\RaycastPass.ixx" />
     <ClCompile Include="Map\System\ViewPass.cpp" />
@@ -207,6 +209,8 @@
     <ClCompile Include="Hud\System\Label\LabelService.cpp" />
     <ClCompile Include="Hud\System\Label\LabelService.ixx" />
     <ClCompile Include="Hud\System\Label\ObjectLabels.cpp" />
+    <ClCompile Include="Hud\System\Label\ObsLabels.cpp" />
+    <ClCompile Include="Hud\System\Label\ObsLabels.ixx" />
     <ClCompile Include="Hud\System\Label\ObjectLabels.ixx" />
     <ClCompile Include="Hud\System\Label\PlayerLabels.cpp" />
     <ClCompile Include="Hud\System\Label\PlayerLabels.ixx" />

@@ -50,6 +50,7 @@ namespace
     using Views::Raycast::Type::Sight::k_SightHalfAngle;
     using Views::Raycast::Type::Sight::k_SightRange;
     using DevTools::Viewer::Map::Type::k_InitialCapacity;
+    using DevTools::Viewer::Map::Type::k_MarkerLift;
     using DevTools::Viewer::Style::Type::k_Selected;
     using DevTools::Viewer::Style::Type::k_ViewAlly;
     using DevTools::Viewer::Style::Type::k_ViewAllyDim;
@@ -62,9 +63,8 @@ namespace
 
     constexpr int k_ConeLines{ 6 };
 
-    // World units. A biped is about 0.7 tall, so the marker is a small cross at its middle and a ring at its feet.
+    // World units. The marker is a small cross at the middle of a biped (k_MarkerLift) and a ring at its feet.
     constexpr float k_MarkerHalfSize{ 0.25f };
-    constexpr float k_MarkerLift{ 0.35f };
     constexpr float k_RingRadius{ 0.35f };
     constexpr int k_RingSegments{ 16 };
     constexpr float k_FlagHalfSize{ 0.5f };

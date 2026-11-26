@@ -232,6 +232,34 @@ def test_the_own_stand_is_seen_while_the_own_flag_is_recreated(ctf):
     assert phi_whole is not None and phi_recreated == pytest.approx(phi_whole)
 
 
+def test_the_flag_and_stand_entries_are_the_world_vectors_in_the_frame_of_the_agent(ctf):
+    """Fixes the contract that the Viewer layer of the observation (ObsTargetsOf, C++ Views.View.System) copies: obs[7:10] and obs[14:17] times
+    METERS are the vector from the feet to Flags[1].Position and to Flags[0].StandPosition, rotated by the yaw of the agent. Change both together."""
+    feet, flag, stand, yaw = (12.0, -7.0, 1.5), (40.0, 25.0, 3.0), (-30.0, 10.0, 0.5), 0.9
+    nvec = ctf.ActionNvec("stage0")
+    last = np.zeros(len(nvec), dtype=int)
+    match = Frame(ctf).match
+
+    def Local(point):
+        d = np.subtract(point, feet)
+        c, s = math.cos(-yaw), math.sin(-yaw)
+        return [c * d[0] - s * d[1], s * d[0] + c * d[1], d[2]]
+
+    view = ViewRow(ctf.layout, feet=feet, yaw=yaw, own=(HOME, stand, stand), enemy=(HOME, flag, (100.0, 0.0, 0.0)))
+    obs, _ = ctf.Observe(view, match, last, nvec, 120.0)
+    assert obs[7:10] * ctf.METERS == pytest.approx(Local(flag), abs=1e-3)
+    assert obs[14:17] * ctf.METERS == pytest.approx(Local(stand), abs=1e-3)
+    # The same yaw turns both vectors, so the world positions are not what the policy sees.
+    assert not np.allclose(obs[7:10] * ctf.METERS, np.subtract(flag, feet), atol=1e-2)
+    # No side: no arrows. The enemy flag without HasFlag: only the stand.
+    obs, _ = ctf.Observe(ViewRow(ctf.layout, side=ctf.NEUTRAL_TEAM, feet=feet, yaw=yaw, own=(HOME, stand, stand), enemy=(HOME, flag, flag)),
+                         match, last, nvec, 120.0)
+    assert not obs[7:18].any()
+    obs, _ = ctf.Observe(ViewRow(ctf.layout, feet=feet, yaw=yaw, own=(HOME, stand, stand), enemy=(None, None, (100.0, 0.0, 0.0))),
+                         match, last, nvec, 120.0)
+    assert not obs[7:14].any() and obs[14:17] * ctf.METERS == pytest.approx(Local(stand), abs=1e-3)
+
+
 def test_obs_4_follows_the_vitality_of_the_biped_and_nan_is_zero(ctf):
     _, obs = Reset(ctf, Frame(ctf, vitality=0.25))
     assert obs[4] == pytest.approx(0.25)

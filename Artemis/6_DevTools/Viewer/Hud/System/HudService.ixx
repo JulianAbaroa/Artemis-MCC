@@ -7,6 +7,7 @@ export import :VehicleLabels;
 export import :HealthLabels;
 export import :InteractionLabels;
 export import :FixtureLabels;
+export import :ObsLabels;
 export import :Labels;
 export import :AgentCard;
 export import :AgentStrip;

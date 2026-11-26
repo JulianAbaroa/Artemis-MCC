@@ -322,6 +322,12 @@
     <ClCompile Include="Map\System\MapService.ixx">
       <Filter>Map\System</Filter>
     </ClCompile>
+    <ClCompile Include="Map\System\ObsPass.cpp">
+      <Filter>Map\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\System\ObsPass.ixx">
+      <Filter>Map\System</Filter>
+    </ClCompile>
     <ClCompile Include="Map\System\RaycastPass.cpp">
       <Filter>Map\System</Filter>
     </ClCompile>
@@ -515,6 +521,12 @@
       <Filter>Hud\System\Label</Filter>
     </ClCompile>
     <ClCompile Include="Hud\System\Label\ObjectLabels.ixx">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\ObsLabels.cpp">
+      <Filter>Hud\System\Label</Filter>
+    </ClCompile>
+    <ClCompile Include="Hud\System\Label\ObsLabels.ixx">
       <Filter>Hud\System\Label</Filter>
     </ClCompile>
     <ClCompile Include="Hud\System\Label\PlayerLabels.cpp">

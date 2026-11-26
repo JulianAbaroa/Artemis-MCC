@@ -25,6 +25,7 @@ export namespace DevTools::Viewer::Options::Type
         World,
         Health,
         Card,
+        Obs,
 
         Count
     };
@@ -145,6 +146,14 @@ export namespace DevTools::Viewer::Options::Type
         Count
     };
 
+    // What a layer is for. A Debug layer is part of the debug overlay and follows its master switch (Flag::DrawOverlay). A Presentation layer is made to be
+    // shown (in a video, to the audience) and ignores that switch: it only follows its own level.
+    enum class LayerKind : std::uint8_t
+    {
+        Debug,
+        Presentation
+    };
+
     // Key is the name saved in the preferences file (with the Viewer_ prefix), so it must not change.
     struct LayerInfo
     {
@@ -153,6 +162,7 @@ export namespace DevTools::Viewer::Options::Type
         const char* Label{};
         const char* Tooltip{};
         Level Default{ Level::Minimal };
+        LayerKind Kind{ LayerKind::Debug };
     };
 
     // Key is the name saved in the preferences file, so it must not change.
@@ -209,7 +219,9 @@ export namespace DevTools::Viewer::Options::Type
         { Layer::Health, "LayerHealth", "Health",
             "Health bars over the damage sections." },
         { Layer::Card, "LayerCard", "Agent card",
-            "Card of the selected player at the bottom left of the frame, with no flags of its own.\nMinimal: name, health and shield bars, weapon in the hands.\nFull adds: other weapon, grenades, armor ability and energy, powerup, flag, zoom." },
+            "Card of the selected player at the bottom left of the frame, with no flags of its own.\nMinimal: name, health and shield bars, weapon in the hands.\nFull adds: other weapon, grenades, armor ability and energy, powerup, flag, zoom.", Level::Minimal, LayerKind::Presentation },
+        { Layer::Obs, "LayerObs", "Agent observation",
+            "The two arrows that the policy of each Artemis agent receives in its observation, over the game, with no flags of its own.\nMinimal: from its feet to the enemy flag (in the color of the rival team) and to its own stand (in the color of its team).\nFull adds: the distance of each arrow in world units, near its tip.", Level::Off, LayerKind::Presentation },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags
@@ -409,8 +421,8 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::RosterAgentsOnly, Group::Camera, Layer::Count, Level::Full, "RosterAgentsOnly", "Roster: agents only",
             "The roster that the strip, the up and down arrows and the director's POV pick walk keeps only the Artemis bots. A selected human is then not in the roster.", false },
 
-        { Flag::DrawOverlay, Group::Camera, Layer::Count, Level::Full, "DrawOverlay", "Draw overlay",
-            "Master switch of the 3D overlay: off, no 3D pass is drawn (map, objects, aim spheres, View, fixtures, limits) and no 3D labels. The camera, the director and the selection keep working. The card, the strip and the F3 HUD have their own switches.", true },
+        { Flag::DrawOverlay, Group::Camera, Layer::Count, Level::Full, "DrawOverlay", "Draw debug overlay",
+            "Master switch of the debug overlay: off, no debug 3D pass is drawn (map, objects, aim spheres, View, fixtures, limits) and no debug 3D labels. The Presentation layers (Agent observation) are not affected: they follow their own level. The camera, the director and the selection keep working. The card, the strip and the F3 HUD have their own switches.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
@@ -487,7 +499,38 @@ export namespace DevTools::Viewer::Options::Type
         return true;
     }
 
-    // return: True if, with every layer at its default level (Minimal), each flag of a layer gives the value it had before the layers.
+    // return: Whether the layer is a Presentation one, which the master switch of the debug overlay does not turn off.
+    constexpr auto IsPresentationLayer(Layer layer) -> bool
+    {
+        return k_Layers[static_cast<std::size_t>(layer)].Kind == LayerKind::Presentation;
+    }
+
+    // Which 3D passes of the scene point run in a frame, and what they need.
+    struct ScenePasses
+    {
+        // The debug overlay: every pass but the observation one, and its labels.
+        bool DrawDebug{};
+
+        // The arrows of the observation layer (a Presentation 3D layer).
+        bool DrawObs{};
+
+        // The map collision is drawn in depth only (invisible) so the walls hide the arrows. The debug overlay draws the map itself.
+        bool NeedMapDepth{};
+
+        // The game must keep the depth copies of the first person mask, so the arms and the weapon stay over what is drawn.
+        bool NeedMask{};
+    };
+
+    // return: The passes of a frame from the master switch of the debug overlay and the level of the observation layer. With the master off and the
+    // observation layer off nothing runs (no pass, no GPU state touched, no mask).
+    constexpr auto DecideScenePasses(bool isMasterOn, Level obsLevel) -> ScenePasses
+    {
+        const bool isObsOn{ obsLevel != Level::Off };
+
+        return ScenePasses{ .DrawDebug = isMasterOn, .DrawObs = isObsOn, .NeedMapDepth = isObsOn && !isMasterOn, .NeedMask = isMasterOn || isObsOn };
+    }
+
+    // return: True if, with every layer at its default level (Minimal, Off for Obs), each flag of a layer gives the value it had before the layers.
     consteval auto DoLayersKeepTheOldDefaults() -> bool
     {
         for (const FlagInfo& info : k_Flags)
@@ -497,9 +540,10 @@ export namespace DevTools::Viewer::Options::Type
             if (IsFlagOn(info, k_Layers[static_cast<std::size_t>(info.Owner)].Default) != info.Default) return false;
         }
 
+        // note: Only a Presentation layer may start off (VW.17, the observation layer): it changes the look of the frame for whoever has not asked for it.
         for (const LayerInfo& info : k_Layers)
         {
-            if (info.Default != Level::Minimal) return false;
+            if (info.Default != Level::Minimal && !(IsPresentationLayer(info.Id) && info.Default == Level::Off)) return false;
         }
 
         return true;

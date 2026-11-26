@@ -268,7 +268,7 @@ TEST(OptionsStoreTests, ResetToDefaultsPutsTheLevelsBack)
 
     store.ResetToDefaults();
 
-    for (const auto& info : k_Layers) EXPECT_EQ(store.GetLevel(info.Id), Level::Minimal);
+    for (const auto& info : k_Layers) EXPECT_EQ(store.GetLevel(info.Id), info.Id == Layer::Obs ? Level::Off : Level::Minimal);
     EXPECT_FALSE(store.IsEnabled(Flag::HideGameHud));
 }
 

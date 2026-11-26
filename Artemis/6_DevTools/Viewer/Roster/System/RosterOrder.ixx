@@ -1,6 +1,7 @@
 export module DevTools.Viewer.Roster.System;
 
 import Common.Engine.Type;
+import Perception.Players.Type;
 import DevTools.Viewer.Roster.Type;
 import std;
 
@@ -25,6 +26,10 @@ export namespace DevTools::Viewer::Roster::System
 
     // Drops the rows that are not Artemis bots (no bot number), keeping the order of the rest.
     auto KeepAgents(std::vector<Roster::Type::RosterEntry>& roster) -> void;
+
+    // return: The rows of Players that are Artemis bots of the roster (they have a bot number), in the order of Players. Every row is the row of its View in
+    // the ViewTable of the tick. The human has no observation, so it is never in the list even when its View is computed (VW.17).
+    auto AgentRowsOf(const std::vector<Roster::Type::RosterEntry>& roster, const Perception::Players::Type::Players& players) -> std::vector<std::size_t>;
 
     // return: The previous, current and next positions of the strip. One player has no neighbours. With two, the other one is shown only as the next.
     auto StripOf(std::size_t count, std::size_t current) -> Roster::Type::RosterStrip;

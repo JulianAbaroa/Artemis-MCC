@@ -616,6 +616,7 @@ def ObserveBatch(views, match, last_actions, nvec, max_seconds):
     row that is all zero is an agent with no View (not computed). last_actions: int64 [N, len(nvec)]. Returns obs float32
     [N, ACTION_AT + sum(nvec)] and phi float64 [N], NaN where the agent has no shaping potential (without body, side or both flags).
     The potential exists only with the enemy flag and the own stand.
+    The Viewer draws entries 7-10 and 14-17 as two arrows per agent (C++ Views.View.System ObsTargetsOf): change both together.
     Entries (the list lives here): 0-2 velocity, 3 pitch, 4 vitality, 5 shield, 6 carries the flag, 7-9 and 10 vector and distance to the
     enemy flag, 11 / 12 it is home / dropped, 13 carries, 14-16 and 17 vector and distance to the own stand, 18 the own flag is home,
     19 time left, 20 and 21 score left of the own and the enemy team, 22-28 the one-hot of View.Interaction.Kind (D372; order of

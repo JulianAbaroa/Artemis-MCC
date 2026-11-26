@@ -7,11 +7,13 @@ import :VehicleLabels;
 import :HealthLabels;
 import :InteractionLabels;
 import :FixtureLabels;
+import :ObsLabels;
 
 import Perception.Classifier.Type;
 import DevTools.Viewer.Camera.System;
 import DevTools.Viewer.Collidable.State;
 import DevTools.Viewer.Scene.System;
+import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import DevTools.Viewer.Selection.State;
 import DevTools.Viewer.Hud.Type;
@@ -24,6 +26,7 @@ export namespace DevTools::Viewer::Hud::System
     {
     private:
         using Classified = Perception::Classifier::Type::Classified;
+        using ScenePasses = DevTools::Viewer::Options::Type::ScenePasses;
         using LabelContext = DevTools::Viewer::Hud::Type::LabelContext;
 
         using CameraService = DevTools::Viewer::Camera::System::CameraService;
@@ -46,8 +49,9 @@ export namespace DevTools::Viewer::Hud::System
         auto operator=(const LabelService&) -> LabelService& = delete;
 
         // Draws the labels of the current tick.
+        // param passes: What the scene draws this frame. The debug labels need the debug overlay, the distances of the observation layer (Full) do not.
         // note: Does nothing if the scene is inactive or the labels are disabled.
-        auto Draw() -> void;
+        auto Draw(const ScenePasses& passes) -> void;
 
     private:
         CollidableStore& m_CollidableStore;

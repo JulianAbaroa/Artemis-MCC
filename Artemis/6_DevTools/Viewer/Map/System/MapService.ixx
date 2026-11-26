@@ -12,6 +12,7 @@ import :FixturePass;
 import :LimitsPass;
 import :AimPass;
 import :ViewPass;
+import :ObsPass;
 
 import Common.Log.System;
 import Engine.Base.Lifecycle.State;
@@ -26,6 +27,7 @@ import DevTools.Viewer.Latency.System;
 import DevTools.Viewer.Map.Type;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Scene.System;
+import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Options.State;
 import std;
 
@@ -48,8 +50,9 @@ export namespace DevTools::Viewer::Map::System
     static_assert(RenderPass<LimitsPass>);
     static_assert(RenderPass<AimPass>);
     static_assert(RenderPass<ViewPass>);
+    static_assert(RenderPass<ObsPass>);
 
-    // Renders the overlay frame: the static map collision, the collidables, the zones, the raycasts, the View of the watched player, the fixture arrows, the aim spheres and the map limits.
+    // Renders the overlay frame: the static map collision, the collidables, the zones, the raycasts, the View of the watched player, the observation arrows of the agents (VW.17), the fixture arrows, the aim spheres and the map limits.
     // It uploads what changed in the tick, draws every pass and times the frame with the profiler.
     // note: Render runs on the game render thread. Suspend, Resume and Release may come from other threads, so they share a mutex.
     class MapService
@@ -73,6 +76,7 @@ export namespace DevTools::Viewer::Map::System
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
+        using ScenePasses = DevTools::Viewer::Options::Type::ScenePasses;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
@@ -87,7 +91,7 @@ export namespace DevTools::Viewer::Map::System
             m_LifecycleStore(lifecycleStore),
             m_GpuPipeline(log), m_MapPass(log),
             m_DynamicPass(log), m_ZonePass(log),
-            m_RaycastPass(log), m_ViewPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
+            m_RaycastPass(log), m_ViewPass(log), m_ObsPass(log), m_FixturePass(log), m_LimitsPass(log), m_AimPass(log) {}
         ~MapService() = default;
 
         MapService(const MapService&) = delete;
@@ -121,6 +125,7 @@ export namespace DevTools::Viewer::Map::System
         ZonePass m_ZonePass;
         RaycastPass m_RaycastPass;
         ViewPass m_ViewPass;
+        ObsPass m_ObsPass;
         FixturePass m_FixturePass;
         LimitsPass m_LimitsPass;
         AimPass m_AimPass;
@@ -156,7 +161,10 @@ export namespace DevTools::Viewer::Map::System
         // Records the frame for the latency measurement, after the scene update. The caller holds the mutex.
         auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
-        auto Draw(const FrameContext& frame) -> void;
+        // Draws the passes of the frame over the game frame, under one GPU state guard that puts back what the game had bound.
+        // param passes: The debug overlay (every pass) or, with it off, the presentation path: the depth of the map (invisible, so the walls hide the arrows)
+        // and the observation arrows. The depth is cleared and the mask updated in both.
+        auto Draw(const FrameContext& frame, const ScenePasses& passes) -> void;
 
         // Releases what depends on the map and resets the scene.
         auto ReleaseMap() -> void;

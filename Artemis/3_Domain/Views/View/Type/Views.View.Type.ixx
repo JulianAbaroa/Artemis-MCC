@@ -329,6 +329,17 @@ export namespace Views::View::Type
         std::array<ViewNotice, k_ViewNotices> Notices{};
     };
 
+    // The two arrows of the observation of an agent (entries 7-10 and 14-17 of ObserveBatch): from its feet to the enemy flag and to its own stand.
+    // note: A target that does not apply is false and zero, like the entries of the observation.
+    struct ObsTargets
+    {
+        bool HasFlag{};
+        Vec3 Flag{};
+        bool HasStand{};
+        Vec3 Stand{};
+        Vec3 From{};
+    };
+
     // One View per row of Players, in the same order. Rows past the players of the tick are zero.
     struct ViewTable : std::array<View, k_MaxPlayers>
     {

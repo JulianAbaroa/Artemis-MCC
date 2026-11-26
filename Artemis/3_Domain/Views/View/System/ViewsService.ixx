@@ -2,11 +2,13 @@ export module Views.View.System;
 
 import Common.Log.System;
 import Common.Math.Type;
+import Common.Team.Type;
 import Blam.MapModel.Definitions.State;
 import Blam.MapModel.World.System;
 import Blam.Runtime.Interaction.State;
 import Blam.Runtime.Object.State;
 import Perception.Collidable.System;
+import Perception.Details.Type;
 import Perception.Details.State;
 import Perception.Entities.State;
 import Perception.ObjectGraph.State;
@@ -33,6 +35,16 @@ export namespace Views::View::System
 
     // return: Where the agent looks from: its eye, or its feet when the biped has no tag (the eye is zero then).
     auto ViewPositionOf(const Views::View::Type::View& view) -> Common::Math::Type::Vec3;
+
+    // return: Where the two arrows of the observation of the agent go: from its feet to the enemy flag (Flags[1], the carrier's position while it is
+    // carried) and to its own stand (Flags[0]). Nothing without a computed View or a body. A team with no side has neither, the enemy flag needs
+    // HasFlag, and the stand a position other than zero.
+    // note: Mirror of ObserveBatch in Agent/artemis/env/ctf.py (entries 7-10 and 14-17): change both together.
+    auto ObsTargetsOf(const Views::View::Type::View& view) -> Views::View::Type::ObsTargets;
+
+    // return: The team that owns the rival stand of the team, the one the agent's enemy flag belongs to (the lowest stand handle if several, as
+    // Flags[1] is chosen). Neutral for a team without a side or a game without a rival stand.
+    auto RivalTeamOf(const Perception::Details::Type::ObjectiveDetails& objectives, Common::Team::Type::Team team) -> Common::Team::Type::Team;
 
     // return: The raycasts of a View in the form the dev tools draw and compare: the aim ray from the eye along the aim, and the rays of the
     // pattern from the ray origin in the frame of the aim. Empty perception hits when the rays were not cast (dead agent, no body).

@@ -258,8 +258,10 @@ namespace DevTools::Viewer::Hud::System
             return;
         }
 
-        if (!m_SceneService.IsOverlayOn()) ImGui::TextColored(k_Orange, "none (overlay off)");
-        else if (m_RenderStore.GetDrawPlace() == DrawPlace::Scene) ImGui::TextColored(k_Green, "scene");
+        const auto passes{ m_SceneService.GetScenePasses() };
+
+        if (!passes.DrawDebug && !passes.DrawObs) ImGui::TextColored(k_Orange, "none (overlay off)");
+        else if (m_RenderStore.GetDrawPlace() == DrawPlace::Scene) ImGui::TextColored(k_Green, passes.DrawDebug ? "scene" : "scene (presentation only)");
         else ImGui::TextColored(k_Orange, "none (%s)", SceneReason(m_RenderStore.GetSceneStatus()));
 
         const std::uint32_t failures{ m_RenderStore.GetSceneFailures() };

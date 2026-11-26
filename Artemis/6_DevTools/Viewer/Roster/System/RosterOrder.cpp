@@ -4,6 +4,7 @@ namespace
 {
     using DevTools::Viewer::Roster::Type::RosterEntry;
     using DevTools::Viewer::Roster::Type::RosterStrip;
+    using Perception::Players::Type::Players;
 
     // return: Whether a goes before b.
     auto Precedes(const RosterEntry& a, const RosterEntry& b) -> bool
@@ -58,6 +59,20 @@ namespace DevTools::Viewer::Roster::System
     auto KeepAgents(std::vector<RosterEntry>& roster) -> void
     {
         std::erase_if(roster, [](const RosterEntry& entry) { return !entry.BotNumber.has_value(); });
+    }
+
+    auto AgentRowsOf(const std::vector<RosterEntry>& roster, const Players& players) -> std::vector<std::size_t>
+    {
+        std::vector<std::size_t> rows{};
+
+        for (std::size_t row{ 0 }; row < players.Rows.size(); ++row)
+        {
+            const std::uint32_t handle{ players.Rows[row].Handle };
+            const bool isAgent{ std::ranges::any_of(roster, [handle](const RosterEntry& entry) { return entry.Handle == handle && entry.BotNumber.has_value(); }) };
+            if (isAgent) rows.push_back(row);
+        }
+
+        return rows;
     }
 
     auto StripOf(std::size_t count, std::size_t current) -> RosterStrip

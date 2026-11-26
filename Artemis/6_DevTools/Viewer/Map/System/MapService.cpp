@@ -10,6 +10,7 @@ import Common.Math.Type;
 import Common.State.Type;
 import Engine.Base.Memory.Type;
 import Engine.Render.Type;
+import Perception.Players.Type;
 import Views.Raycast.Type;
 import Views.View.System;
 import Bridge.Codec.Tick.Type;
@@ -19,6 +20,7 @@ import DevTools.Viewer.Interpolation.System;
 import DevTools.Viewer.Latency.Type;
 import DevTools.Viewer.Options.Type;
 import DevTools.Viewer.Profiler.Type;
+import DevTools.Viewer.Roster.System;
 import DevTools.Viewer.Profiler.System;
 import DevTools.Viewer.Map.Type;
 import std;
@@ -39,7 +41,11 @@ namespace
     using DevTools::Viewer::Interpolation::System::InterpolationService;
     using DevTools::Viewer::Latency::Type::LatencyInput;
     using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::Layer;
+    using DevTools::Viewer::Options::Type::ScenePasses;
+    using DevTools::Viewer::Options::Type::Level;
     using DevTools::Viewer::Options::Type::Scalar;
+    using DevTools::Viewer::Roster::System::AgentRowsOf;
     using DevTools::Viewer::Profiler::Type::Cpu;
     using DevTools::Viewer::Profiler::Type::Gpu;
     using DevTools::Viewer::Profiler::Type::Counter;
@@ -143,90 +149,108 @@ namespace DevTools::Viewer::Map::System
             // note: Without a pose to draw (Game mode with no valid camera of the game) nothing is drawn, and the labels of the frame are not drawn either.
             if (!m_SceneService.HasFrameUpdate()) return false;
 
-            // note: The master switch (VW.14f) skips every upload and the whole draw, so the GPU state is not touched at all: no depth clear, no mask update.
-            // The scene update above ran, so the camera, the director, the override and the selection go on.
-            if (!m_OptionsStore.IsEnabled(Flag::DrawOverlay)) return false;
+            // note: The master switch (VW.14f) skips every debug upload and the debug draw. With it off and no Presentation 3D layer on, nothing is drawn and the GPU
+            // state is not touched at all: no depth clear, no mask update. The scene update above ran, so the camera, the director, the override and the selection go on.
+            // With it off and the observation layer on, only that layer and the depth of the map (which hides its arrows behind walls) are drawn.
+            const ScenePasses passes{ m_SceneService.GetScenePasses() };
+            if (!passes.DrawDebug && !passes.DrawObs) return false;
 
-            const auto& palette = m_SceneService.GetPalette();
-            const std::uint32_t selected = m_SceneService.GetSelected();
-            const auto& hidden = m_SceneService.GetHiddenHandles();
-
+            if (passes.DrawDebug)
             {
-                CpuTimer timer{ m_Profiler, Cpu::Dynamic };
-                std::unordered_set<std::uint32_t> translucentHandles{};
+                const auto& palette = m_SceneService.GetPalette();
+                const std::uint32_t selected = m_SceneService.GetSelected();
+                const auto& hidden = m_SceneService.GetHiddenHandles();
 
-                // note: Every Barrier entity, drop shield bubbles and portable shields included (D91).
-                if (tick->Entities && m_OptionsStore.IsEnabled(Flag::FixtureShieldTranslucent))
                 {
-                    for (const auto& entity : tick->Entities->Rows)
+                    CpuTimer timer{ m_Profiler, Cpu::Dynamic };
+                    std::unordered_set<std::uint32_t> translucentHandles{};
+
+                    // note: Every Barrier entity, drop shield bubbles and portable shields included (D91).
+                    if (tick->Entities && m_OptionsStore.IsEnabled(Flag::FixtureShieldTranslucent))
                     {
-                        if (entity.Function == Function::Barrier) translucentHandles.insert(entity.Handle);
+                        for (const auto& entity : tick->Entities->Rows)
+                        {
+                            if (entity.Function == Function::Barrier) translucentHandles.insert(entity.Handle);
+                        }
                     }
+
+                    // note: The debug collidables are not part of the Tick. They come with it in the scene.
+                    m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
+                        palette, selected, translucentHandles, hidden, m_FramePoses);
                 }
 
-                // note: The debug collidables are not part of the Tick. They come with it in the scene.
-                m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
-                    palette, selected, translucentHandles, hidden, m_FramePoses);
+                {
+                    CpuTimer timer{ m_Profiler, Cpu::Zone };
+                    m_ZonePass.Upload(frame.Device, frame.Context, tick, palette);
+                }
+
+                {
+                    CpuTimer timer{ m_Profiler, Cpu::Raycast };
+                    const auto* view{ m_SceneService.GetObservedView(*tick) };
+                    const Raycasts raycasts{ view ? RaycastsOf(*view) : Raycasts{} };
+
+                    // note: The eye of the watched player moves with its biped, so the View and its rays start from where the overlay draws that biped.
+                    const Vec3 eyeOffset{ view ? m_FramePoses.OffsetOf(view->Head.BipedHandle) : Vec3{} };
+                    m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation, eyeOffset);
+
+                    // note: With the option off the pass gets no View and draws nothing.
+                    const bool showView{ m_OptionsStore.IsEnabled(Flag::PlayerView) };
+                    m_ViewPass.Upload(frame.Device, frame.Context, showView ? view : nullptr, tick.get(), tick->Generation, eyeOffset);
+                }
+
+                {
+                    FixturePassOptions fixtureOptions{};
+                    fixtureOptions.TeleportLinks = m_OptionsStore.IsEnabled(Flag::FixtureTeleportLinks);
+                    fixtureOptions.LiftArrows = m_OptionsStore.IsEnabled(Flag::FixtureLiftArrows);
+                    fixtureOptions.ShieldArrows = m_OptionsStore.IsEnabled(Flag::FixtureShieldArrows);
+                    fixtureOptions.ArrowLength = m_OptionsStore.GetScalar(Scalar::FixtureArrowLength);
+
+                    m_FixturePass.Upload(frame.Device, frame.Context, tick, fixtureOptions);
+                }
+
+                {
+                    LimitsPassOptions limitsOptions{};
+                    limitsOptions.KillVolumes = m_OptionsStore.IsEnabled(Flag::LimitKillVolumes);
+                    limitsOptions.SafeVolumes = m_OptionsStore.IsEnabled(Flag::LimitSafeVolumes);
+                    limitsOptions.SoftCeilings = m_OptionsStore.IsEnabled(Flag::LimitSoftCeilings);
+                    limitsOptions.Opacity = m_OptionsStore.GetScalar(Scalar::LimitOpacity);
+
+                    m_LimitsPass.Upload(frame.Device, frame.Context, tick->Limits, tick->Designs, limitsOptions);
+                }
+
+                {
+                    CpuTimer timer{ m_Profiler, Cpu::Aim };
+                    // note: With the option off the pass gets no aims and draws nothing.
+                    m_AimPass.Upload(frame.Device, frame.Context,
+                        m_OptionsStore.IsEnabled(Flag::AimSpheres) ? tick->Aims : nullptr, tick->VitalityDetails,
+                        m_OptionsStore.IsEnabled(Flag::HealthTintSpheres),
+                        selected, hidden, tick->Generation, m_FramePoses);
+                }
+
+                m_Profiler.SetCounter(Counter::DynamicInstances,
+                    m_DynamicPass.GetInstanceCount());
+                m_Profiler.SetCounter(Counter::DynamicDraws,
+                    m_DynamicPass.GetDrawCount());
+                m_Profiler.SetCounter(Counter::AimInstances,
+                    m_AimPass.GetInstanceCount());
             }
 
+            if (passes.DrawObs)
             {
-                CpuTimer timer{ m_Profiler, Cpu::Zone };
-                m_ZonePass.Upload(frame.Device, frame.Context, tick, palette);
+                // note: The arrows of the observation (VW.17) are those of every agent of the roster, not of the watched player, so the pass gets the rows of the
+                // agents and the poses of the frame. Its level is part of the gate of the upload.
+                const Level obsLevel{ m_OptionsStore.GetLevel(Layer::Obs) };
+                const std::vector<std::size_t> agentRows{ tick->Players ? AgentRowsOf(m_SceneService.GetRoster(), *tick->Players) : std::vector<std::size_t>{} };
+                m_ObsPass.Upload(frame.Device, frame.Context, tick.get(), agentRows, obsLevel, m_FramePoses);
             }
-
+            else
             {
-                CpuTimer timer{ m_Profiler, Cpu::Raycast };
-                const auto* view{ m_SceneService.GetObservedView(*tick) };
-                const Raycasts raycasts{ view ? RaycastsOf(*view) : Raycasts{} };
-
-                // note: The eye of the watched player moves with its biped, so the View and its rays start from where the overlay draws that biped.
-                const Vec3 eyeOffset{ view ? m_FramePoses.OffsetOf(view->Head.BipedHandle) : Vec3{} };
-                m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation, eyeOffset);
-
-                // note: With the option off the pass gets no View and draws nothing.
-                const bool showView{ m_OptionsStore.IsEnabled(Flag::PlayerView) };
-                m_ViewPass.Upload(frame.Device, frame.Context, showView ? view : nullptr, tick.get(), tick->Generation, eyeOffset);
+                m_ObsPass.Upload(frame.Device, frame.Context, nullptr, {}, Level::Off, m_FramePoses);
             }
-
-            {
-                FixturePassOptions fixtureOptions{};
-                fixtureOptions.TeleportLinks = m_OptionsStore.IsEnabled(Flag::FixtureTeleportLinks);
-                fixtureOptions.LiftArrows = m_OptionsStore.IsEnabled(Flag::FixtureLiftArrows);
-                fixtureOptions.ShieldArrows = m_OptionsStore.IsEnabled(Flag::FixtureShieldArrows);
-                fixtureOptions.ArrowLength = m_OptionsStore.GetScalar(Scalar::FixtureArrowLength);
-
-                m_FixturePass.Upload(frame.Device, frame.Context, tick, fixtureOptions);
-            }
-
-            {
-                LimitsPassOptions limitsOptions{};
-                limitsOptions.KillVolumes = m_OptionsStore.IsEnabled(Flag::LimitKillVolumes);
-                limitsOptions.SafeVolumes = m_OptionsStore.IsEnabled(Flag::LimitSafeVolumes);
-                limitsOptions.SoftCeilings = m_OptionsStore.IsEnabled(Flag::LimitSoftCeilings);
-                limitsOptions.Opacity = m_OptionsStore.GetScalar(Scalar::LimitOpacity);
-
-                m_LimitsPass.Upload(frame.Device, frame.Context, tick->Limits, tick->Designs, limitsOptions);
-            }
-
-            {
-                CpuTimer timer{ m_Profiler, Cpu::Aim };
-                // note: With the option off the pass gets no aims and draws nothing.
-                m_AimPass.Upload(frame.Device, frame.Context,
-                    m_OptionsStore.IsEnabled(Flag::AimSpheres) ? tick->Aims : nullptr, tick->VitalityDetails,
-                    m_OptionsStore.IsEnabled(Flag::HealthTintSpheres),
-                    selected, hidden, tick->Generation, m_FramePoses);
-            }
-
-            m_Profiler.SetCounter(Counter::DynamicInstances,
-                m_DynamicPass.GetInstanceCount());
-            m_Profiler.SetCounter(Counter::DynamicDraws,
-                m_DynamicPass.GetDrawCount());
-            m_Profiler.SetCounter(Counter::AimInstances,
-                m_AimPass.GetInstanceCount());
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Draw };
-                this->Draw(frame);
+                this->Draw(frame, passes);
             }
         }
 
@@ -315,7 +339,7 @@ namespace DevTools::Viewer::Map::System
         m_LatencyService.Record(input);
     }
 
-    auto MapService::Draw(const FrameContext& frame) -> void
+    auto MapService::Draw(const FrameContext& frame, const ScenePasses& passes) -> void
     {
         ID3D11DeviceContext* context = frame.Context;
 
@@ -346,6 +370,16 @@ namespace DevTools::Viewer::Map::System
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 
+        // note: Without the debug overlay only the depth of the map is drawn (never the wireframe) and then the arrows of the observation.
+        if (!passes.DrawDebug)
+        {
+            m_MapPass.Draw(context, m_GpuPipeline, false);
+            m_ObsPass.Draw(context, m_GpuPipeline);
+
+            m_GpuPipeline.ClearMask(context);
+            return;
+        }
+
         m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::OverlayWireframe));
         m_Profiler.MarkGpu(context, Gpu::Map);
 
@@ -359,6 +393,8 @@ namespace DevTools::Viewer::Map::System
         m_Profiler.MarkGpu(context, Gpu::Raycast);
 
         m_ViewPass.Draw(context, m_GpuPipeline);
+
+        m_ObsPass.Draw(context, m_GpuPipeline);
 
         m_FixturePass.Draw(context, m_GpuPipeline);
 
@@ -406,6 +442,7 @@ namespace DevTools::Viewer::Map::System
         m_ZonePass.Release();
         m_RaycastPass.Release();
         m_ViewPass.Release();
+        m_ObsPass.Release();
         m_FixturePass.Release();
         m_LimitsPass.Release();
         m_AimPass.Release();

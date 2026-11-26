@@ -27,6 +27,10 @@ export namespace DevTools::Viewer::Map::Type
     // Past the cap the nearest older scene is drawn.
     inline constexpr std::chrono::microseconds k_FrameSceneWaitLimit{ 2000 };
 
+    // World units. How far above the feet the passes of the View and of the observation lift what they draw for a player (a biped is about 0.7 tall, so
+    // this is about its middle).
+    inline constexpr float k_MarkerLift{ 0.35f };
+
     // The scene a frame draws and how it was chosen (VW.5d).
     struct FrameScenePick
     {
