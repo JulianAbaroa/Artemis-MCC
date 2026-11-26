@@ -125,6 +125,10 @@
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.cpp" />
     <ClCompile Include="Viewer\SelectionStoreTests.cpp" />
+    <ClCompile Include="Workbench\SkipRequestTests.cpp" />
+    <ClCompile Include="..\..\6_DevTools\Workbench\Skip\Type\DevTools.Workbench.Skip.Type.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Workbench\Skip\System\SkipRequest.ixx" />
+    <ClCompile Include="..\..\6_DevTools\Workbench\Skip\System\SkipRequest.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.ixx" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Selection\State\SelectionStore.cpp" />
     <ClCompile Include="..\..\6_DevTools\Viewer\Options\Type\DevTools.Viewer.Options.Type.ixx" />

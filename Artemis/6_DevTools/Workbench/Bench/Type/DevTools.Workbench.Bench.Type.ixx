@@ -328,6 +328,8 @@ export namespace DevTools::Workbench::Bench::Type
         std::uint32_t EventCursor{ 0 };
         bool IsTickDumpNoted{ false };
         std::chrono::steady_clock::time_point LastStateWrite{};
+        // Last look at the skip request while the match ran.
+        std::chrono::steady_clock::time_point LastSkipCheck{};
         std::string Message{};
     };
 }

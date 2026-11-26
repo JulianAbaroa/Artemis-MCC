@@ -12,6 +12,10 @@ keep waiting.
     python Tools/game.py wait loaded|lobby|exit  Wait until Artemis is loaded, the Reach custom games lobby is open, or MCC is gone.
     python Tools/game.py run FILE [--no-wait]    Queue a scenario (JSON, Diseno/11 sec. 9) and wait for its report.
     python Tools/game.py report [ID]             Print a report again (default: the last one).
+    python Tools/game.py skip [--match N]        End the running match as if it had reached its limit (end "skipped", a clean end). Without
+                                                 --match it is the Running match of state.json (FAIL if none); with it, match N (1-based) of
+                                                 the current scenario, also while it loads. Writes build/game/skip.txt ("<scenario id> <N>")
+                                                 and waits up to 30 s for the bench to move on.
     python Tools/game.py log [-n N] [--all] [--grep RE]   Last WARNING/ERROR lines of the Artemis log (--all: every line).
     python Tools/game.py crashes                 Crashes saved by the watcher.
     python Tools/game.py export                  Compile Tools/scenarios/*.json for the bench panel of the Simulation tab.
@@ -559,6 +563,43 @@ def Run(path, wait, timeout):
     return WaitReport(id, timeout)
 
 
+def Skip(match=None, timeout=30.0, scenario=None, sleep=time.sleep, now=time.time):
+    """Asks the bench to end match `match` (1-based, matchIndex of state.json; default the Running one) of `scenario` (default the current one)
+    by writing skip.txt, and waits up to `timeout` s until the bench shows another match, another scenario or the match left Running.
+    The bench drops a request that does not name the running match, so a skip during Loading applies when THAT match reaches Running.
+    return: 0 done, 1 FAIL (nothing to skip, or the bench did not move on)."""
+    state = Bench()
+    if not state or not state["_alive"]:
+        print("skip FAIL: the bench does not answer (no fresh state.json)")
+        return 1
+    scenario = scenario or state.get("scenario")
+    number = match if match is not None else int(state.get("matchIndex") or 0)
+    if not scenario or number < 1 or (match is None and state.get("phase") != "Running"):
+        print(f"skip FAIL: no match is Running (phase {state.get('phase')})")
+        return 1
+    phase, current, running = state.get("phase"), int(state.get("matchIndex") or 0), state.get("scenario")
+    if running == scenario and current > number:
+        print(f"skip ok: {scenario} match {number} is already over (the bench is at match {current})")
+        return 0
+    target = os.path.join(GAME, "skip.txt")
+    with open(target + ".tmp", "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(f"{scenario} {number}\n")
+    os.replace(target + ".tmp", target)
+    start = now()
+    while now() - start < timeout:
+        sleep(0.5)
+        state = Bench()
+        if not state or not state["_alive"]:
+            continue
+        index = int(state.get("matchIndex") or 0)
+        left = state.get("phase") != phase and not (phase in ("Launching", "Loading") and state.get("phase") == "Running")
+        if state.get("scenario") != running or index != current or left:
+            print(f"skip ok: {scenario} match {number} -> match {index} phase {state.get('phase')}")
+            return 0
+    print(f"skip FAIL: {scenario} match {number} still {state.get('phase') if state else '?'} after {timeout:g} s (request in build/game/skip.txt)")
+    return 1
+
+
 def WaitReport(id, timeout):
     start = time.time()
     while time.time() - start < timeout:
@@ -629,7 +670,7 @@ def Py(script, rest, wait, timeout, n):
 
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=["status", "info", "deploy", "launch", "kill", "wait", "run", "report", "log", "crashes", "export", "py"])
+    parser.add_argument("command", choices=["status", "info", "deploy", "launch", "kill", "wait", "run", "report", "skip", "log", "crashes", "export", "py"])
     parser.add_argument("arg", nargs="?")
     parser.add_argument("--launch", action="store_true")
     parser.add_argument("--no-wait", action="store_true")
@@ -639,6 +680,7 @@ def Main():
     parser.add_argument("--all", action="store_true")
     parser.add_argument("--grep")
     parser.add_argument("--id", help="py: an earlier run")
+    parser.add_argument("--match", type=int, help="skip: the match number (1-based), default the Running one")
     args, rest = parser.parse_known_args()
     if rest and args.command != "py":
         parser.error("unrecognized arguments: " + " ".join(rest))
@@ -670,6 +712,8 @@ def Main():
             print(f"no report {id}")
             return 1
         return PrintReport(report)
+    if args.command == "skip":
+        return Skip(args.match)
     if args.command == "log":
         return Log(args.n, args.all, args.grep)
     if args.command == "export":

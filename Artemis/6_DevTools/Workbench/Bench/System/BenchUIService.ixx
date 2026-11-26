@@ -185,6 +185,11 @@ export namespace DevTools::Workbench::Bench::System
         // return: The address the probe points to now, empty if a pointer of its chain cannot be read or is null.
         auto ResolveProbe(const BenchProbe& probe) -> std::optional<std::uintptr_t>;
 
+        // Looks for the skip request of Tools/game.py in the exchange folder, at most twice a second, and deletes the file it finds. A request
+        // for another scenario or match, or one that does not read, is dropped with a WARNING.
+        // return: Whether the request names the running match, so it must end as "skipped".
+        auto TakeSkip(BenchRun& run) -> bool;
+
         // Sends Leave and waits for the engine to be destroyed.
         // param end: How the match ended, for the report.
         auto Leave(BenchRun& run, std::string_view end) -> void;

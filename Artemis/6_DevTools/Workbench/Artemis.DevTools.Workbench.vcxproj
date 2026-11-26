@@ -108,6 +108,9 @@
     <ClCompile Include="Bench\System\BenchUIService.cpp" />
     <ClCompile Include="Bench\System\BenchUIService.ixx" />
     <ClCompile Include="Bench\Type\DevTools.Workbench.Bench.Type.ixx" />
+    <ClCompile Include="Skip\System\SkipRequest.cpp" />
+    <ClCompile Include="Skip\System\SkipRequest.ixx" />
+    <ClCompile Include="Skip\Type\DevTools.Workbench.Skip.Type.ixx" />
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.cpp" />
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.ixx" />
     <ClCompile Include="DefinitionsInspector\Type\DevTools.Workbench.DefinitionsInspector.Type.ixx" />

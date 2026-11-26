@@ -6,7 +6,8 @@ at its start and its end, and how many decisions had the engine's interaction on
 Policies: random, or seek (steer toward the enemy flag, or the own stand while carrying it, with the vectors of the observation; walk
 forward; F5.1 B: while the interaction is GrabObjective and it carries no flag, stop and hold Use: press and hold the first decision,
 still held after; otherwise Use on nothing and Jump taps now and then).
-python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random|PATH.pt] [--policy2 ...] [--greedy] [--hidden 256] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing]
+python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random|PATH.pt] [--policy2 ...] [--greedy] [--hidden 256] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing] [--summary-json PATH]
+--summary-json PATH (REC.1): at the end (also after Ctrl+C or CTRL_BREAK) writes the dict of Summarize plus the basic arguments, result and failures as JSON (Tools/record.py reads it).
 --timing (F4.9): at the end, per phase of a decision (wait for the tick, copy of read_tick, new_events, observe, answer, and the policy, measured here),
 p50 / p95 / max in ms and its share of the Python side (copy + events + observe + answer + policy; the wait is not Python's); the slack of the
 Lockstep (publish -> answer against the budget of d ticks at the effective scale, scale 0 taken as 1x) and what the counters of Artemis did
@@ -33,8 +34,10 @@ per agent, rounds won per team and per policy (own vs enemy score left of the la
 """
 import argparse
 import itertools
+import json
 import math
 import os
+import signal
 import sys
 import time
 
@@ -170,6 +173,23 @@ def SummaryLines(summary):
     return lines
 
 
+def SummaryJson(summary, args, result, interrupted, failures):
+    """JSON-safe dict of the --summary-json file: the Summarize dict (int keys as text, NaN as null) and the basic arguments."""
+    def Safe(value):
+        if isinstance(value, dict):
+            return {str(k): Safe(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [Safe(v) for v in value]
+        if isinstance(value, (np.floating, float)):
+            return None if math.isnan(float(value)) else float(value)
+        if isinstance(value, np.integer):
+            return int(value)
+        return value
+    return Safe({"summary": summary, "result": result, "interrupted": interrupted, "failures": failures[:5],
+                 "args": {"policy": args.policy, "policy2": args.policy2, "episodes": args.episodes, "scale": args.scale,
+                          "max_seconds": args.max_seconds, "greedy": args.greedy, "sparse": args.sparse}})
+
+
 def Percentile(values, p):
     return float(np.percentile(values, p)) if len(values) else float("nan")
 
@@ -222,7 +242,11 @@ def Main():
     parser.add_argument("--latency", type=int, default=5, help="ticks from a decision to its action (d); Artemis clamps it to 2..N (D139)")
     parser.add_argument("--timing", action="store_true", help="measure the phases of each decision and the slack of the Lockstep (F4.9)")
     parser.add_argument("--seed", type=int, default=0, help="seed of a weighted list")
+    parser.add_argument("--summary-json", help="write the summary and the basic arguments as JSON here at the end (also after Ctrl+C)")
     args = parser.parse_args()
+    if hasattr(signal, "SIGBREAK"):
+        # Tools/record.py ends a take with CTRL_BREAK (its own process group): same clean end as Ctrl+C, summary included.
+        signal.signal(signal.SIGBREAK, signal.default_int_handler)
     setups = load_list(args.list, seed=args.seed) if args.list else None
     regions = discover()
     if not regions:
@@ -244,6 +268,7 @@ def Main():
         print(f"FAIL {error}")
         return 1
     rng = np.random.default_rng(0)
+    is_interrupted = False
     failures = []
     policy_ns = []
     rows = []
@@ -307,6 +332,7 @@ def Main():
                              "policies": {h: policy_set[names[h]][1] for h in names}})
         except KeyboardInterrupt:
             print("interrupted: summary and release")
+            is_interrupted = True
         except (RuntimeError, TimeoutError) as error:
             # The match ended (a team left empty ends it) or the environment gave up waiting: say so and fail, never wait on.
             print(f"FAIL {error}")
@@ -322,6 +348,10 @@ def Main():
     for line in failures[:5]:
         print("  bad:", line)
     print("PASS" if not failures else "FAIL")
+    if args.summary_json:
+        with open(args.summary_json, "w", encoding="utf-8") as handle:
+            json.dump(SummaryJson(Summarize(rows) if rows else None, args, "PASS" if not failures else "FAIL", is_interrupted, failures),
+                      handle, indent=1)
     return 0 if not failures else 1
 
 

@@ -1440,6 +1440,21 @@ def test_env_check_summary_aggregates_the_rows_of_the_rounds(ctf):
     assert check.RoundWinner({1: np.array([0.0] * 20 + [1.0, 1.0])}, teams) is None
 
 
+def test_env_check_summary_json_is_json_safe_and_has_the_arguments(ctf):
+    import json
+    import types
+    check = EnvCheck(ctf)
+    teams, policies = {1: 0, 2: 1}, {1: "u0.pt", 2: "u2300.pt"}
+    rows = [{"ending": "terminated", "game_seconds": 30.0, "wall_seconds": 31.0, "captures": {1: 0, 2: 1}, "winner": 1, "teams": teams,
+             "policies": policies}]
+    args = types.SimpleNamespace(policy="u0.pt", policy2="u2300.pt", episodes=1, scale=1.0, max_seconds=90.0, greedy=False, sparse=False)
+    data = json.loads(json.dumps(check.SummaryJson(check.Summarize(rows), args, "PASS", False, [])))
+    assert data["summary"]["rounds"] == 1 and data["summary"]["captures"] == {"1": 0, "2": 1} and data["summary"]["wins_by_team"] == {"1": 1}
+    assert data["args"]["policy2"] == "u2300.pt" and data["result"] == "PASS" and data["interrupted"] is False
+    empty = json.loads(json.dumps(check.SummaryJson(check.Summarize([]), args, "FAIL", True, ["x"])))
+    assert empty["summary"]["game_mean"] is None and empty["interrupted"] is True and empty["failures"] == ["x"]
+
+
 def test_env_check_defaults_match_train_stage0(ctf):
     config = importlib.import_module("artemis.env").CtfConfig()
     assert (config.period, config.latency, config.turn_limit, config.profile) == (5, 5, 0.1, "stage0")

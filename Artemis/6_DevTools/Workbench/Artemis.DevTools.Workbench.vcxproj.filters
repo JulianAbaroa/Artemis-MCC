@@ -31,6 +31,15 @@
     <Filter Include="Bench\Type">
       <UniqueIdentifier>{feee653b-4972-5cb7-ba62-adcaca013cc4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Skip">
+      <UniqueIdentifier>{a61e760e-60cd-4e6a-a00b-c56cde5b79a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Skip\System">
+      <UniqueIdentifier>{a117d5a0-5e58-4750-8d56-ad2ba9631ab9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Skip\Type">
+      <UniqueIdentifier>{deac5f1a-d0a8-4240-84e7-b992722f0239}</UniqueIdentifier>
+    </Filter>
     <Filter Include="DefinitionsInspector">
       <UniqueIdentifier>{f317db77-99c9-53ff-985f-148f334ea383}</UniqueIdentifier>
     </Filter>
@@ -148,6 +157,15 @@
     </ClCompile>
     <ClCompile Include="Bench\Type\DevTools.Workbench.Bench.Type.ixx">
       <Filter>Bench\Type</Filter>
+    </ClCompile>
+    <ClCompile Include="Skip\System\SkipRequest.cpp">
+      <Filter>Skip\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Skip\System\SkipRequest.ixx">
+      <Filter>Skip\System</Filter>
+    </ClCompile>
+    <ClCompile Include="Skip\Type\DevTools.Workbench.Skip.Type.ixx">
+      <Filter>Skip\Type</Filter>
     </ClCompile>
     <ClCompile Include="DefinitionsInspector\System\DefinitionsInspectorUIService.cpp">
       <Filter>DefinitionsInspector\System</Filter>

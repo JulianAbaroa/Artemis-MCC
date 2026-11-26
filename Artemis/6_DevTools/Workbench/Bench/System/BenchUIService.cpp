@@ -28,6 +28,8 @@ import Bridge.Codec.Tick.Type;
 import DevTools.Gui.Style.Type;
 import DevTools.Gui.Widget.System;
 import DevTools.Viewer.Director.System;
+import DevTools.Workbench.Skip.Type;
+import DevTools.Workbench.Skip.System;
 import DevTools.Workbench.Simulation.Type;
 import DevTools.Workbench.Simulation.System;
 import std;
@@ -55,6 +57,8 @@ namespace
     using DevTools::Gui::Style::Type::StatusKind;
     using DevTools::Gui::Widget::System::StatusGuiService;
     using DevTools::Viewer::Director::System::ParseSequenceRequest;
+    using DevTools::Workbench::Skip::System::DecideSkip;
+    using DevTools::Workbench::Skip::Type::SkipDecision;
     using DevTools::Workbench::Simulation::Type::LocalPlayerAction;
     using DevTools::Workbench::Simulation::System::BuildActionOverride;
     using Services::Logs::Type::LogEntry;
@@ -125,6 +129,10 @@ namespace
 
     // Time between two writes of state.json. Tools/game.py takes a state older than 10 s as a dead bench.
     constexpr seconds k_StateInterval{ 1 };
+
+    // The skip request of Tools/game.py (in the exchange folder, outside inbox/) and the time between two looks at it while a match runs.
+    constexpr const char* k_SkipFileName{ "skip.txt" };
+    constexpr milliseconds k_SkipInterval{ 500 };
 
     // Tries to replace a file of the exchange that Tools/game.py may hold open, and the wait between them.
     constexpr int k_RenameAttempts{ 5 };
@@ -363,7 +371,7 @@ namespace
     // return: Whether the match ended in a way that does not fail it by itself.
     auto IsCleanEnd(std::string_view end) -> bool
     {
-        return end == "gametype" || end == "limit";
+        return end == "gametype" || end == "limit" || end == "skipped";
     }
 
     // Stages that average less than this per sweep are left out of the perf block, in milliseconds.
@@ -573,6 +581,9 @@ namespace DevTools::Workbench::Bench::System
         run = BenchRun{};
         run.ScenarioStart = steady_clock::now();
         run.Scenario = std::move(scenario);
+
+        // A request left from an earlier scenario never reaches this one.
+        std::filesystem::remove(folder / k_SkipFileName, error);
 
         for (std::size_t i{ 0 }; i < run.Scenario->Matches.size(); ++i)
         {
@@ -1202,6 +1213,12 @@ namespace DevTools::Workbench::Bench::System
                 report.End = "gametype";
                 this->EndMatch(run);
             }
+            else if (this->TakeSkip(run))
+            {
+                report.RunSeconds = elapsed;
+                this->EndPerf(run, report);
+                this->Leave(run, "skipped");
+            }
             else if ((match.MaxTicks > 0 && report.Ticks >= match.MaxTicks) || (match.MaxSeconds > 0.0 && elapsed >= match.MaxSeconds))
             {
                 report.RunSeconds = elapsed;
@@ -1560,6 +1577,39 @@ namespace DevTools::Workbench::Bench::System
         }
 
         return address;
+    }
+
+    auto BenchUIService::TakeSkip(BenchRun& run) -> bool
+    {
+        if (steady_clock::now() - run.LastSkipCheck < k_SkipInterval) return false;
+
+        run.LastSkipCheck = steady_clock::now();
+
+        const path file{ m_BenchUIStore.GetFolder() / k_SkipFileName };
+        std::error_code error{};
+
+        if (!std::filesystem::exists(file, error)) return false;
+
+        std::string text{};
+        {
+            std::ifstream input{ file };
+            text.assign(std::istreambuf_iterator<char>{ input }, std::istreambuf_iterator<char>{});
+        }
+
+        // Deleted whatever it holds: the writer replaces the file whole, so it is never read half written.
+        std::filesystem::remove(file, error);
+
+        const SkipDecision decision{ DecideSkip(text, run.Scenario->Id, run.MatchIndex + 1) };
+
+        if (decision == SkipDecision::Apply)
+        {
+            m_Log.Message("[BenchUIService] INFO: Skip requested for match {}.", run.MatchIndex + 1);
+            return true;
+        }
+
+        m_Log.Message("[BenchUIService] WARNING: Skip request dropped ({}), read \"{}\" while running {} match {}.",
+            decision == SkipDecision::Stale ? "not this match" : "unreadable", Trim(text), run.Scenario->Id, run.MatchIndex + 1);
+        return false;
     }
 
     auto BenchUIService::Leave(BenchRun& run, std::string_view end) -> void

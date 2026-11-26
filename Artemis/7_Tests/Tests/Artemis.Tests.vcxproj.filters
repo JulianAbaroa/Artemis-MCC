@@ -19,6 +19,9 @@
     <Filter Include="Perception">
       <UniqueIdentifier>{f38b39a1-d2a7-56f4-890c-1f27a0f8c69c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Workbench">
+      <UniqueIdentifier>{918322db-0031-4035-8287-6ac7901e5322}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Viewer">
       <UniqueIdentifier>{b4d2fed2-8269-4d7b-8c23-332b45d11a92}</UniqueIdentifier>
     </Filter>
@@ -263,6 +266,18 @@
     </ClCompile>
     <ClCompile Include="..\..\6_DevTools\Viewer\Roster\System\RosterOrder.cpp">
       <Filter>Viewer</Filter>
+    </ClCompile>
+    <ClCompile Include="Workbench\SkipRequestTests.cpp">
+      <Filter>Workbench</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Workbench\Skip\Type\DevTools.Workbench.Skip.Type.ixx">
+      <Filter>Workbench</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Workbench\Skip\System\SkipRequest.ixx">
+      <Filter>Workbench</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\6_DevTools\Workbench\Skip\System\SkipRequest.cpp">
+      <Filter>Workbench</Filter>
     </ClCompile>
     <ClCompile Include="Viewer\SelectionStoreTests.cpp">
       <Filter>Viewer</Filter>
