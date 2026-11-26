@@ -422,9 +422,11 @@ class CtfEnv:
                 state = self.states[handle]
                 if kind == Event.FlagCaptured and cause == handle:
                     rewards[handle] += c.capture_reward
-                elif kind == Event.FlagTaken and cause == handle and not state.is_taken_rewarded:
-                    rewards[handle] += c.take_reward
-                    state.is_taken_rewarded = True
+                elif kind == Event.FlagTaken and cause == handle:
+                    # Every take of the agent is reported in infos (PL.1); only the first of the round is paid.
+                    if not state.is_taken_rewarded:
+                        rewards[handle] += c.take_reward
+                        state.is_taken_rewarded = True
                 elif kind == Event.Death and effect == handle:
                     rewards[handle] += c.death_reward
                 else:

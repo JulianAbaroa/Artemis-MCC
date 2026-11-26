@@ -58,6 +58,11 @@ class Policy(nn.Module):
         entropy = torch.stack([d.entropy() for d in dists], dim=-1).sum(-1)
         return actions, log_prob, entropy, self.critic(hidden).squeeze(-1)
 
+    def greedy(self, obs):
+        """The most likely action of each branch (argmax of its logits), for playing a trained policy without sampling (PL.1)."""
+        logits = torch.split(self.actor(self.body(obs)), self.nvec, dim=-1)
+        return torch.stack([l.argmax(dim=-1) for l in logits], dim=-1)
+
 
 class Ppo:
     """Collects config.steps decisions per agent from the environment, then trains on them with the ticks paused."""

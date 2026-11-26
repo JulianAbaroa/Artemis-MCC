@@ -332,7 +332,8 @@ def test_rewards_come_from_the_flag_events_of_artemis(ctf):
     assert infos[P0]["events"] == ["FlagTaken"]
     assert rewards[P0] >= config.take_reward - 0.1
     _, rewards, _, _, infos = env.step({P0: nothing})
-    assert infos[P0]["events"] == []
+    assert infos[P0]["events"] == ["FlagTaken"]  # reported (PL.1), not paid
+    assert rewards[P0] < config.take_reward - 0.1
     _, rewards, _, _, infos = env.step({P0: nothing})
     assert infos[P0]["events"] == ["FlagCaptured"]
     assert rewards[P0] >= config.capture_reward - 0.5  # the shaping of the phi jump rides on top
@@ -1362,3 +1363,85 @@ def test_ppo_closes_the_rows_of_the_old_handles_at_a_change_of_match_and_gae_doe
     delta = rewards[4] + config.gamma * last - values[4]
     assert batch["advantages"][4] == pytest.approx(delta, abs=1e-5)
 
+
+def test_every_take_of_the_agent_is_in_the_events_but_only_the_first_is_paid(ctf):
+    def Taken(sequence):
+        return {"Sequence": sequence, "Kind": ctf.Event.FlagTaken, "CausePlayer": P0, "EffectPlayer": NONE}
+    start = Frame(ctf, action_tick=1)
+    twice = Frame(ctf, flags=(HOME, CARRIED), flag_at=(5.0, 0.0, 0.5), carrying=True, action_tick=2, events=[Taken(1), Taken(2)])
+    env = ctf.CtfEnv(FakeBridge([start, twice]), ctf.CtfConfig(shaping=0.0))
+    env.reset()
+    nothing = np.zeros(len(ctf.ActionNvec("stage0")), dtype=np.int64)
+    _, rewards, _, _, infos = env.step({P0: nothing})
+    assert infos[P0]["events"] == ["FlagTaken", "FlagTaken"]
+    assert rewards[P0] == pytest.approx(env.config.take_reward)
+
+
+def test_policy_greedy_is_the_argmax_of_each_branch_and_act_is_unchanged(ctf):
+    torch = pytest.importorskip("torch")
+    ppo_module = importlib.import_module("artemis.train.ppo")
+    policy = ppo_module.Policy(4, [3, 2], 8)
+    with torch.no_grad():
+        policy.body = torch.nn.Identity()
+        policy.actor = torch.nn.Identity()
+    logits = torch.tensor([[0.1, 2.0, -1.0, 5.0, 1.0], [9.0, 0.0, 0.0, 0.0, 0.5]])
+    assert policy.greedy(logits).tolist() == [[1, 0], [0, 1]]
+    actions, log_prob, entropy, _ = ppo_module.Policy(4, [3, 2], 8).act(torch.zeros(5, 4))
+    assert actions.shape == (5, 2) and log_prob.shape == (5,) and entropy.shape == (5,)
+
+
+def test_env_check_loads_a_saved_policy_and_a_size_mismatch_says_both_sizes(ctf, tmp_path):
+    torch = pytest.importorskip("torch")
+    ppo_module = importlib.import_module("artemis.train.ppo")
+    check = EnvCheck(ctf)
+    nvec = [3, 2, 4]
+    saved = ppo_module.Policy(12, nvec, 256)
+    path = str(tmp_path / "policy.pt")
+    torch.save(saved.state_dict(), path)
+    loaded = check.LoadPolicy(path, 12, nvec, 256)
+    assert all(torch.equal(a, b) for a, b in zip(saved.state_dict().values(), loaded.state_dict().values()))
+    with pytest.raises(ValueError) as error:
+        check.LoadPolicy(path, 15, nvec, 256)
+    assert "observation 12" in str(error.value) and "observation 15" in str(error.value)
+    with pytest.raises(ValueError) as error:
+        check.LoadPolicy(path, 12, [3, 2, 4, 2], 256)
+    assert "actions 9" in str(error.value) and "actions 11" in str(error.value)
+
+
+def test_env_check_assigns_policy_and_policy2_by_team_not_by_order(ctf):
+    check = EnvCheck(ctf)
+    teams = {30: 1, 10: 0, 20: 1}
+    assert check.AssignPolicies(teams, "a", "b") == {30: "b", 10: "a", 20: "b"}
+    assert check.AssignPolicies(teams, "a", None) == {30: "a", 10: "a", 20: "a"}
+    assert check.AssignPolicies({5: 1}, "a", "b") == {5: "a"}
+
+
+def test_env_check_summary_aggregates_the_rows_of_the_rounds(ctf):
+    check = EnvCheck(ctf)
+    teams, policies = {1: 0, 2: 1}, {1: "u0.pt", 2: "u2300.pt"}
+
+    def Row(ending, game, wall, captures, winner):
+        return {"ending": ending, "game_seconds": game, "wall_seconds": wall, "captures": captures, "winner": winner,
+                "teams": teams, "policies": policies}
+    rows = [Row("terminated", 30.0, 31.0, {1: 0, 2: 1}, 1), Row("terminated", 50.0, 52.0, {1: 0, 2: 1}, 1),
+            Row("truncated", 90.0, 91.0, {1: 0, 2: 0}, None), Row("terminated", 40.0, 41.0, {1: 1, 2: 0}, 0)]
+    summary = check.Summarize(rows)
+    assert (summary["rounds"], summary["terminated"], summary["truncated"], summary["draws"]) == (4, 3, 1, 1)
+    assert summary["game_mean"] == pytest.approx(52.5) and summary["game_p50"] == pytest.approx(45.0)
+    assert summary["wall_p50"] == pytest.approx(46.5)
+    assert summary["captures"] == {1: 1, 2: 2}
+    assert summary["wins_by_team"] == {1: 2, 0: 1}
+    assert summary["wins_by_policy"] == {"u2300.pt": 2, "u0.pt": 1}
+    assert summary["policies"] == policies
+    assert check.Summarize([])["rounds"] == 0
+    assert any("u2300.pt" in line for line in check.SummaryLines(summary))
+    finals = {1: np.array([0.0] * 20 + [0.5, 1.0]), 2: np.array([0.0] * 20 + [1.0, 0.5])}
+    assert check.RoundWinner(finals, teams) == 0
+    assert check.RoundWinner({1: np.array([0.0] * 20 + [1.0, 1.0])}, teams) is None
+
+
+def test_env_check_defaults_match_train_stage0(ctf):
+    config = importlib.import_module("artemis.env").CtfConfig()
+    assert (config.period, config.latency, config.turn_limit, config.profile) == (5, 5, 0.1, "stage0")
+    source = open(os.path.join(AGENT, "scripts", "env_check.py"), encoding="utf-8").read()
+    assert 'default=5, help="ticks between decisions (N)"' in source and 'default=5, help="ticks from a decision' in source

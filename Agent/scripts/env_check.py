@@ -6,7 +6,7 @@ at its start and its end, and how many decisions had the engine's interaction on
 Policies: random, or seek (steer toward the enemy flag, or the own stand while carrying it, with the vectors of the observation; walk
 forward; F5.1 B: while the interaction is GrabObjective and it carries no flag, stop and hold Use: press and hold the first decision,
 still held after; otherwise Use on nothing and Jump taps now and then).
-python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing]
+python Tools/game.py py Agent/scripts/env_check.py [--policy seek|random|PATH.pt] [--policy2 ...] [--greedy] [--hidden 256] [--episodes 3] [--max-seconds 90] [--scale 5] [--list FILE [--seed 0]] [--timing]
 --timing (F4.9): at the end, per phase of a decision (wait for the tick, copy of read_tick, new_events, observe, answer, and the policy, measured here),
 p50 / p95 / max in ms and its share of the Python side (copy + events + observe + answer + policy; the wait is not Python's); the slack of the
 Lockstep (publish -> answer against the budget of d ticks at the effective scale, scale 0 taken as 1x) and what the counters of Artemis did
@@ -19,8 +19,20 @@ validates them with the seqlock; "reread N" counts the ticks read again (0 in Lo
 (a match with "events" or "tickdump", or a bench scenario without "every_tick": false) take_control raises and this script prints FAIL with the
 reason and exits 1, so a measurement never goes on without the sparse pipeline unnoticed.
 Exit code 0 when every episode ended (terminated or truncated) and the observations were finite.
+Play mode (PL.1): --policy (and --policy2 for the second team) also accept the path of a state_dict of Policy (policy.pt or snapshots/policy_uNNNNN.pt of
+train_stage0); nothing is learned. The team with the lowest Team id of the round plays --policy and the other --policy2 (the Team is stable
+when the sides swap between rounds); without --policy2 everybody plays --policy. --greedy takes the argmax of each branch instead of sampling (only for
+.pt). --episodes 0 plays until Ctrl+C, then prints the summary and releases the control (exit 0). --hidden is the width of the network (PpoConfig.hidden).
+A .pt whose observation or action sizes differ from the environment's (other profile or observation) is FAIL, exit 1, with both sizes.
+Defaults match train_stage0 (CtfConfig defaults): period 5, latency 5, turn limit 0.1, profile stage0; they differ in --max-seconds (90 here, 60 there),
+scale (0 here, 10 there) and --sparse (off here, on there unless --no-sparse).
+Example, the video at x1 of the policy of hour 0 against the one of update 2300, greedy, until stopped:
+python Tools/game.py py Agent/scripts/env_check.py --policy Agent/runs/hitoa_noche/snapshots/policy_u00000.pt --policy2 Agent/runs/hitoa_noche/snapshots/policy_u02300.pt --greedy --episodes 0 --scale 1
+The final summary has: rounds played, terminated / cut, mean and p50 of the seconds of play per round (RoundClockTicks of the Match) and of wall seconds, captures
+per agent, rounds won per team and per policy (own vs enemy score left of the last observation; a tie is a draw) and the policy of each agent.
 """
 import argparse
+import itertools
 import math
 import os
 import sys
@@ -64,6 +76,100 @@ def Random(obs, config, rng):
     return np.array([rng.integers(n) for n in ActionNvec(config.profile)])
 
 
+def LoadPolicy(path, obs_size, nvec, hidden):
+    """Policy(obs_size, nvec, hidden) with the state_dict of path (policy.pt format). A file made for other sizes raises ValueError that
+    says both: the sizes of the file (from its tensors) and those of the environment."""
+    import torch
+    from artemis.train.ppo import Policy
+    state = torch.load(path, map_location="cpu")
+    policy = Policy(obs_size, nvec, hidden)
+    try:
+        policy.load_state_dict(state)
+    except RuntimeError as error:
+        have = {k: tuple(v.shape) for k, v in state.items()} if isinstance(state, dict) else {}
+        body, actor = have.get("body.0.weight"), have.get("actor.weight")
+        found = f"observation {body[1]}, hidden {body[0]}, actions {actor[0]}" if body and actor else "unknown"
+        raise ValueError(f"{path}: the policy was saved for {found}, but the environment needs observation {obs_size}, hidden {hidden}, "
+                         f"actions {sum(nvec)} (nvec {list(nvec)}): other profile or observation? ({str(error).splitlines()[0]})") from error
+    policy.eval()
+    return policy
+
+
+def Learned(policy, greedy):
+    """A policy of the (obs, config, rng) form from a Policy: sampled with act() or argmax with greedy()."""
+    import torch
+
+    def Act(obs, config, rng):
+        with torch.no_grad():
+            tensor = torch.as_tensor(obs, dtype=torch.float32)[None]
+            actions = policy.greedy(tensor) if greedy else policy.act(tensor)[0]
+        return actions[0].numpy()
+    return Act
+
+
+def MakePolicy(name, config, hidden, greedy):
+    """(callable, label) of a --policy value: seek, random or the path of a .pt (loaded with the sizes of the environment of config)."""
+    if name == "seek":
+        return Seek, "seek"
+    if name == "random":
+        return Random, "random"
+    if not os.path.isfile(name):
+        raise ValueError(f"--policy {name}: not seek, random or an existing file")
+    nvec = ActionNvec(config.profile)
+    return Learned(LoadPolicy(name, ACTION_AT + sum(nvec), nvec, hidden), greedy), name
+
+
+def AssignPolicies(teams, first, second):
+    """{handle: name} from {handle: team}: the lowest team plays first and the others second (first for everybody when second is None)."""
+    low = min(teams.values()) if teams else None
+    return {h: (first if second is None or t == low else second) for h, t in teams.items()}
+
+
+def RoundWinner(finals, teams):
+    """Team that won the round from the last observation of each agent (own / enemy score left in 20 and 21, the same for both teams of a tick):
+    the team of an agent that needs less than its enemy. None for a draw, or a variant without a score."""
+    for h, obs in finals.items():
+        if obs[20] < obs[21] - 1e-9:
+            return teams[h]
+        if obs[21] < obs[20] - 1e-9:
+            return next((t for k, t in teams.items() if t != teams[h]), None)
+    return None
+
+
+def Summarize(rows):
+    """Numbers of the final summary from the rows of the rounds. A row: ending, game_seconds, wall_seconds, captures {handle: n},
+    winner (a team or None), teams {handle: team}, policies {handle: name}."""
+    game = [r["game_seconds"] for r in rows]
+    wall = [r["wall_seconds"] for r in rows]
+    captures, policies, by_team, by_policy = {}, {}, {}, {}
+    for r in rows:
+        for h, n in r["captures"].items():
+            captures[h] = captures.get(h, 0) + n
+        policies.update(r["policies"])
+        if r["winner"] is not None:
+            by_team[r["winner"]] = by_team.get(r["winner"], 0) + 1
+            for h, t in r["teams"].items():
+                if t == r["winner"]:
+                    by_policy[r["policies"][h]] = by_policy.get(r["policies"][h], 0) + 1
+                    break
+    return {"rounds": len(rows), "terminated": sum(r["ending"] == "terminated" for r in rows),
+            "truncated": sum(r["ending"] == "truncated" for r in rows),
+            "game_mean": float(np.mean(game)) if game else float("nan"), "game_p50": Percentile(game, 50),
+            "wall_mean": float(np.mean(wall)) if wall else float("nan"), "wall_p50": Percentile(wall, 50),
+            "captures": captures, "wins_by_team": by_team, "wins_by_policy": by_policy,
+            "draws": sum(r["winner"] is None for r in rows), "policies": policies}
+
+
+def SummaryLines(summary):
+    s = summary
+    lines = [f"summary: {s['rounds']} rounds ({s['terminated']} terminated, {s['truncated']} cut, {s['draws']} without a winner)",
+             f"  seconds of play per round: mean {s['game_mean']:.1f}, p50 {s['game_p50']:.1f}; wall seconds: mean {s['wall_mean']:.1f}, p50 {s['wall_p50']:.1f}",
+             f"  rounds won per team: {dict(sorted(s['wins_by_team'].items()))}; per policy: {s['wins_by_policy']}"]
+    for h in sorted(s["policies"]):
+        lines.append(f"  agent {h:#010x}: policy {s['policies'][h]}, captures {s['captures'].get(h, 0)}")
+    return lines
+
+
 def Percentile(values, p):
     return float(np.percentile(values, p)) if len(values) else float("nan")
 
@@ -101,8 +207,11 @@ def TimingReport(env, policy_ns, before, after, config):
 
 def Main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--policy", choices=["seek", "random"], default="seek")
-    parser.add_argument("--episodes", type=int, default=3)
+    parser.add_argument("--policy", default="seek", help="seek, random or the path of a Policy state_dict (.pt)")
+    parser.add_argument("--policy2", help="policy of the second team (same values); without it everybody plays --policy")
+    parser.add_argument("--greedy", action="store_true", help="argmax of each branch instead of sampling (.pt only)")
+    parser.add_argument("--hidden", type=int, help="width of the network of a .pt (default PpoConfig.hidden, 256)")
+    parser.add_argument("--episodes", type=int, default=3, help="rounds to play; 0 = until Ctrl+C")
     parser.add_argument("--max-seconds", type=float, default=90.0)
     parser.add_argument("--scale", type=float, default=0.0)
     parser.add_argument("--turn-limit", type=float, default=0.1)
@@ -122,10 +231,22 @@ def Main():
     config = CtfConfig(scale=args.scale, max_seconds=args.max_seconds, turn_limit=args.turn_limit, sparse=args.sparse,
                        profile=args.profile, timing=args.timing,
                        period=args.period, latency=args.latency)
-    policy = Seek if args.policy == "seek" else Random
+    try:
+        hidden = args.hidden
+        if hidden is None:
+            from artemis.train.ppo import PpoConfig
+            hidden = PpoConfig().hidden
+        policy_set = {}
+        for name in (args.policy, args.policy2):
+            if name is not None:
+                policy_set[name] = MakePolicy(name, config, hidden, args.greedy)
+    except (ValueError, OSError, ImportError) as error:
+        print(f"FAIL {error}")
+        return 1
     rng = np.random.default_rng(0)
     failures = []
     policy_ns = []
+    rows = []
     with Bridge(int(regions[0]["pid"])) as bridge:
         env = CtfEnv(bridge, config)
         try:
@@ -138,9 +259,13 @@ def Main():
             return 1
         before = bridge.counters()
         try:
-            for episode in range(args.episodes):
+            for episode in (itertools.count() if args.episodes == 0 else range(args.episodes)):
                 started = time.time()
                 observations, _ = env.reset(setup=setups.next_setup() if setups else None)
+                teams = {int(p["Handle"]): int(p["Team"]) for p in env.published.players if int(p["Handle"]) in env.agents}
+                names = AssignPolicies(teams, args.policy, args.policy2)
+                clock_start = clock_last = int(env.published.match["RoundClockTicks"])
+                captures = {h: 0 for h in env.agents}
                 returns = {h: 0.0 for h in env.agents}
                 events = {h: [] for h in env.agents}
                 steps, ending = 0, None
@@ -150,7 +275,7 @@ def Main():
                 grabbing = {h: 0 for h in env.agents}
                 while ending is None:
                     decided = time.perf_counter_ns()
-                    actions = {h: policy(o, config, rng) for h, o in observations.items()}
+                    actions = {h: policy_set[names[h]][0](o, config, rng) for h, o in observations.items()}
                     if args.timing:
                         policy_ns.append(time.perf_counter_ns() - decided)
                     observations, rewards, terminated, truncated, infos = env.step(actions)
@@ -161,8 +286,10 @@ def Main():
                         if observations[h][4] > 0.5 and observations[h][6] < 0.5:
                             closest[h] = min(closest[h], float(observations[h][10]) * 50)
                         events[h] += infos[h]["events"]
+                        captures[h] += infos[h]["events"].count("FlagCaptured")
                         if not np.all(np.isfinite(observations[h])):
                             failures.append(f"episode {episode}: observation not finite")
+                    clock_last = max(clock_last, int(env.published.match["RoundClockTicks"]))
                     if any(terminated.values()):
                         ending = "terminated"
                     elif any(truncated.values()):
@@ -172,8 +299,14 @@ def Main():
                           f"events {events[h]}, flag at {first[h]:.0f} m, closest {closest[h]:.0f} m, GrabObjective in {grabbing[h]} decisions, "
                           f"{time.time() - started:.1f} s")
                     start, end = clock[h], observations[h][19:22]
+                    print(f"  policy {names[h]}, team {teams[h]}")
                     print(f"  time left {start[0]:.3f} -> {end[0]:.3f}, score left own/enemy {start[1]:.2f}/{start[2]:.2f} -> "
                           f"{end[1]:.2f}/{end[2]:.2f}")
+                rows.append({"ending": ending, "game_seconds": (clock_last - clock_start) / 60.0, "wall_seconds": time.time() - started,
+                             "captures": captures, "winner": RoundWinner(observations, teams), "teams": teams,
+                             "policies": {h: policy_set[names[h]][1] for h in names}})
+        except KeyboardInterrupt:
+            print("interrupted: summary and release")
         except (RuntimeError, TimeoutError) as error:
             # The match ended (a team left empty ends it) or the environment gave up waiting: say so and fail, never wait on.
             print(f"FAIL {error}")
@@ -182,6 +315,8 @@ def Main():
             env.release()
         after = bridge.counters()
     print(f"lost events {bridge.event_gaps}")
+    if rows:
+        print("\n".join(SummaryLines(Summarize(rows))))
     if args.timing:
         print("\n".join(TimingReport(env, policy_ns, before, after, config)))
     for line in failures[:5]:
