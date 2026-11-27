@@ -320,9 +320,11 @@ namespace DevTools::Viewer::Map::System
         std::vector<Geometry>().swap(m_Geometries);
         std::vector<std::uint32_t>().swap(m_Active);
         std::vector<std::uint32_t>().swap(m_ActiveTranslucent);
+        std::vector<std::uint32_t>().swap(m_ActiveDepth);
         std::vector<float>().swap(m_PendingVertices);
         std::vector<MeshInstance>().swap(m_InstanceScratch);
         std::vector<DrawRange>().swap(m_Draws);
         std::vector<DrawRange>().swap(m_TranslucentDraws);
+        std::vector<DrawRange>().swap(m_DepthDraws);
     }
 }
