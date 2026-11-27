@@ -9,6 +9,8 @@ import Common.Math.Type;
 import Engine.Render.Type;
 import Engine.Render.System;
 import Views.Raycast.Type;
+import Views.View.Type;
+import Views.View.System;
 import DevTools.Viewer.Style.Type;
 import std;
 
@@ -17,12 +19,15 @@ namespace
     using Engine::Render::Type::Vertex;
     using Common::Math::Type::Vec3;
     using Views::Raycast::Type::RaycastHit;
+    using Views::Raycast::Type::Raycasts;
+    using Views::View::Type::View;
+    using Views::View::System::RaycastsOf;
     using Views::Raycast::Type::HitKind;
     using DevTools::Viewer::Style::Type::Color;
 
     using Engine::Render::Type::VertexLayout;
 
-    using DevTools::Viewer::Map::Type::OffsetKeyOf;
+    using DevTools::Viewer::Map::Type::ShownRowsKeyOf;
     using DevTools::Viewer::Style::Type::k_RayAimNoHit;
     using DevTools::Viewer::Style::Type::k_RayPerceptionNoHit;
     using DevTools::Viewer::Style::Type::k_RayAimHitDynamic;
@@ -69,26 +74,34 @@ namespace
 namespace DevTools::Viewer::Map::System
 {
     auto RaycastPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const Raycasts* raycasts, std::uint64_t generation, const Vec3& originOffset) -> void
+        const ViewTable* views, const std::vector<std::size_t>& rows, std::uint64_t generation, const FramePoses& poses) -> void
     {
         if (!device || !context) return;
 
-        const std::uint32_t key{ OffsetKeyOf(originOffset) };
+        const std::uint32_t key{ ShownRowsKeyOf(rows, poses.Revision) };
         if (m_Gate.IsCurrent(generation, key)) return;
 
         m_Gate.Mark(generation, key);
         m_VertexCount = 0;
 
-        if (!raycasts) return;
+        if (!views) return;
 
         std::vector<Vertex> vertices{};
-        vertices.reserve(2 + raycasts->PerceptionHits.size() * 2);
 
-        AppendRay(vertices, raycasts->AimHit, true, originOffset);
-
-        for (const auto& ray : raycasts->PerceptionHits)
+        for (const std::size_t row : rows)
         {
-            AppendRay(vertices, ray, false, originOffset);
+            if (row >= views->size() || !(*views)[row].Head.IsComputed) continue;
+
+            const View& view{ (*views)[row] };
+            const Raycasts raycasts{ RaycastsOf(view) };
+            const Vec3 originOffset{ poses.OffsetOf(view.Head.BipedHandle) };
+
+            AppendRay(vertices, raycasts.AimHit, true, originOffset);
+
+            for (const auto& ray : raycasts.PerceptionHits)
+            {
+                AppendRay(vertices, ray, false, originOffset);
+            }
         }
 
         if (vertices.empty()) return;

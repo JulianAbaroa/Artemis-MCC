@@ -10,6 +10,7 @@ import Perception.Details.Type;
 import Perception.Entities.Type;
 import Perception.Players.Type;
 import Views.View.Type;
+import Views.View.System;
 import Tests.Support.Bench;
 import Tests.Support.FilmPass;
 import Tests.Support.Pipeline;
@@ -481,4 +482,18 @@ TEST(DISABLED_ViewsBench, Update16Agents)
     for (const std::string& line : report) std::println("{}", line);
     EXPECT_FALSE(Tests::Support::Bench::WriteReport("views_update.txt", report).empty());
     EXPECT_GT(cost.N, 0u);
+}
+
+// D385: who gets a View without and with a Python client that owns the instance.
+TEST(AgentSetOfTests, TheMaskComesFromTheOwnerAndTheWishOfTheViewer)
+{
+    using Views::View::System::AgentSetOf;
+
+    // A client that owns the instance chooses, whatever the Viewer wants.
+    EXPECT_EQ(AgentSetOf(true, 0b101u, true).Mask, 0b101u);
+    EXPECT_EQ(AgentSetOf(true, 0b101u, false).Mask, 0b101u);
+
+    // Without a client: every player when the Viewer wants all the Views, else none (the caller adds the local and the observed player).
+    EXPECT_EQ(AgentSetOf(false, 0b101u, true).Mask, 0xFFFFFFFFu);
+    EXPECT_EQ(AgentSetOf(false, 0b101u, false).Mask, 0u);
 }

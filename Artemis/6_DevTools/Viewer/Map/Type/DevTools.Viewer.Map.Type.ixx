@@ -49,16 +49,15 @@ export namespace DevTools::Viewer::Map::Type
         return key;
     }
 
-    // Folds an offset into a value for the upload gates of the passes: a frame with another offset is uploaded again (VW.5e). Zero for no offset.
-    inline auto OffsetKeyOf(const Vec3& offset) -> std::uint32_t
+    // Folds the rows a pass draws and a revision of the poses (or of the level) into a value for its upload gate (VW.17a). Another list of rows, or other
+    // poses, upload again.
+    inline auto ShownRowsKeyOf(const std::vector<std::size_t>& rows, std::uint32_t revision) -> std::uint32_t
     {
-        constexpr std::uint32_t k_OffsetHash{ 0x9E3779B1u };
+        constexpr std::uint32_t k_RowHash{ 0x9E3779B1u };
 
-        const bool isZero{ offset.X == 0.0f && offset.Y == 0.0f && offset.Z == 0.0f };
-        if (isZero) return 0u;
-
-        return (std::bit_cast<std::uint32_t>(offset.X) * k_OffsetHash) ^ (std::bit_cast<std::uint32_t>(offset.Y) * (k_OffsetHash + 2u))
-            ^ std::bit_cast<std::uint32_t>(offset.Z);
+        std::uint32_t key{ revision };
+        for (const std::size_t row : rows) key = (key ^ static_cast<std::uint32_t>(row + 1)) * k_RowHash;
+        return key ^ static_cast<std::uint32_t>(rows.size());
     }
 
     // Which fixture arrows the fixture pass draws, and how long the direction arrows are in world units.

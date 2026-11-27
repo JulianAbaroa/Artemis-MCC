@@ -25,6 +25,7 @@ namespace
     using DevTools::Viewer::Director::Type::DirectorInput;
     using DevTools::Viewer::Director::Type::Shot;
     using DevTools::Viewer::Director::Type::ShotKind;
+    using DevTools::Viewer::Options::Type::DecideAllViewsWanted;
     using DevTools::Viewer::Options::Type::DecideScenePasses;
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Layer;
@@ -44,8 +45,10 @@ namespace
     using DevTools::Viewer::Director::System::DefaultShotName;
     using DevTools::Viewer::Director::System::MakeFixedShot;
     using DevTools::Viewer::Director::System::OrbitFromPose;
+    using DevTools::Viewer::Roster::System::AgentRowsOf;
     using DevTools::Viewer::Roster::System::IndexOfPlayer;
     using DevTools::Viewer::Roster::System::KeepAgents;
+    using DevTools::Viewer::Roster::System::ShownRowsOf;
     using DevTools::Viewer::Roster::System::SortRoster;
     using DevTools::Viewer::Roster::System::StepFrom;
     using DevTools::Viewer::Roster::Type::RosterEntry;
@@ -86,6 +89,46 @@ namespace DevTools::Viewer::Scene::System
     auto SceneService::GetObservedView(const Tick& tick) const -> const View*
     {
         return tick.Views ? FindObservedView(*tick.Views, m_ObservedStore.Get()) : nullptr;
+    }
+
+    auto SceneService::GetShownRows() const -> const std::vector<std::size_t>&
+    {
+        return m_ShownRows;
+    }
+
+    auto SceneService::GetObsRows() const -> const std::vector<std::size_t>&
+    {
+        return m_ObsRows;
+    }
+
+    auto SceneService::ResolveShownRows(const std::shared_ptr<const Tick>& tick, std::uint32_t focusHandle) -> void
+    {
+        m_ShownRows.clear();
+        m_ObsRows.clear();
+        if (!tick || !tick->Players) return;
+
+        const std::vector<std::size_t> agentRows{ AgentRowsOf(m_Roster, *tick->Players) };
+
+        // The row of a Player is the row of its View.
+        std::optional<std::size_t> focusRow{};
+        if (focusHandle != k_NoHandle)
+        {
+            const auto& rows{ tick->Players->Rows };
+            const auto found{ std::ranges::find(rows, focusHandle, &Player::Handle) };
+            if (found != rows.end()) focusRow = static_cast<std::size_t>(found - rows.begin());
+        }
+
+        // The local player of a match without bots: the View that no handle asks for.
+        std::optional<std::size_t> fallbackRow{};
+        if (tick->Views)
+        {
+            const View* local{ FindObservedView(*tick->Views, k_NoHandle) };
+            if (local) fallbackRow = static_cast<std::size_t>(local - tick->Views->data());
+        }
+
+        m_ShownRows = ShownRowsOf(agentRows, focusRow, fallbackRow);
+
+        std::ranges::copy_if(m_ShownRows, std::back_inserter(m_ObsRows), [&agentRows](std::size_t row) { return std::ranges::contains(agentRows, row); });
     }
 
     auto SceneService::GetHiddenHandles() const -> const std::unordered_set<std::uint32_t>&
@@ -200,8 +243,11 @@ namespace DevTools::Viewer::Scene::System
     {
         m_Scene.reset();
         m_Roster.clear();
+        m_ShownRows.clear();
+        m_ObsRows.clear();
         m_FramePoses = FramePoses{};
         m_ObservedStore.Set(k_NoHandle);
+        m_ObservedStore.SetAllViewsWanted(false);
         m_PovRequestStore.Clear();
         m_PossessRequestStore.Clear();
         m_DirectorService.Stop();
@@ -239,7 +285,13 @@ namespace DevTools::Viewer::Scene::System
         }
 
         // note: The watched player is the one the selection follows, else the local player.
-        m_ObservedStore.Set(this->FollowSelectedPlayer(tick));
+        const std::uint32_t focus{ this->FollowSelectedPlayer(tick) };
+        m_ObservedStore.Set(focus);
+        this->ResolveShownRows(tick, focus);
+
+        // note: With no focus the layers draw every agent (D385), so the AI thread computes the Views of all the players while the Viewer is active (it only
+        // does so without a Python client, which keeps the instance).
+        m_ObservedStore.SetAllViewsWanted(DecideAllViewsWanted(true, focus != k_NoHandle, m_OptionsStore.GetLevel(Layer::View), m_OptionsStore.GetLevel(Layer::Obs)));
 
         m_Hidden = tick ? this->HiddenHandlesOf(*tick) : std::unordered_set<std::uint32_t>{};
 

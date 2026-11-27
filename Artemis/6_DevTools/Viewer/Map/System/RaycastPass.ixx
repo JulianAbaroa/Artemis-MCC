@@ -6,16 +6,16 @@ module;
 export module DevTools.Viewer.Map.System:RaycastPass;
 
 import Common.Log.System;
-import Common.Math.Type;
 import Engine.Render.System;
-import Views.Raycast.Type;
+import Views.View.Type;
 import Bridge.Codec.Tick.Type;
+import DevTools.Viewer.Interpolation.Type;
 import DevTools.Viewer.Map.Type;
 import std;
 
 export namespace DevTools::Viewer::Map::System
 {
-    // Draws the raycasts of the aim and the perception as lines. Colors depend on what each ray hit.
+    // Draws the raycasts of the aim and the perception of each shown View as lines. Colors depend on what each ray hit.
     class RaycastPass
     {
     private:
@@ -26,8 +26,8 @@ export namespace DevTools::Viewer::Map::System
 
         using GpuPipeline = Engine::Render::System::GpuPipeline;
 
-        using Vec3 = Common::Math::Type::Vec3;
-        using Raycasts = Views::Raycast::Type::Raycasts;
+        using ViewTable = Views::View::Type::ViewTable;
+        using FramePoses = DevTools::Viewer::Interpolation::Type::FramePoses;
 
     public:
         explicit RaycastPass(Log& log) : m_Log(log) {}
@@ -36,12 +36,13 @@ export namespace DevTools::Viewer::Map::System
         RaycastPass(const RaycastPass&) = delete;
         auto operator=(const RaycastPass&) -> RaycastPass& = delete;
 
-        // Rebuilds the vertices when the generation changes.
-        // param raycasts: The rays of the watched player. Null for none.
-        // param originOffset: How far the overlay draws the biped of the watched player from where the scene shows it (VW.5e). Every ray starts
-        // from its origin moved by it and ends where the scene hit, and a frame with another offset is uploaded again.
+        // Rebuilds the vertices when the generation, the rows or the poses change.
+        // param views: The Views of the tick. Null draws nothing.
+        // param rows: The rows of the Views drawn (VW.17a). A row whose View is not computed draws nothing.
+        // param poses: The poses of the frame (VW.5e). The rays of each View start from its origin moved by the offset of its biped and end where the
+        // scene hit.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-            const Raycasts* raycasts, std::uint64_t generation, const Vec3& originOffset) -> void;
+            const ViewTable* views, const std::vector<std::size_t>& rows, std::uint64_t generation, const FramePoses& poses) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

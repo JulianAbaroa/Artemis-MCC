@@ -12,6 +12,7 @@ namespace
     using Common::Team::Type::Team;
     using DevTools::Viewer::Roster::System::IndexOfPlayer;
     using DevTools::Viewer::Roster::System::KeepAgents;
+    using DevTools::Viewer::Roster::System::ShownRowsOf;
     using DevTools::Viewer::Roster::System::SortRoster;
     using DevTools::Viewer::Roster::System::StepFrom;
     using DevTools::Viewer::Roster::System::StripOf;
@@ -130,4 +131,23 @@ TEST(RosterOrderTests, KeepAgentsDropsHumansAndKeepsTheOrder)
     // A selected human is not in the roster: right gives the first agent and left the last.
     EXPECT_EQ(StepFrom(roster.size(), IndexOfPlayer(roster, 1), 1), std::optional<std::size_t>{ 0 });
     EXPECT_EQ(StepFrom(roster.size(), IndexOfPlayer(roster, 1), -1), std::optional<std::size_t>{ 1 });
+}
+
+TEST(RosterOrderTests, ShownRowsFollowTheFocusRule)
+{
+    const std::vector<std::size_t> agents{ 1, 3 };
+
+    // A focus on an agent shows only it. A focus on a non-agent (the local player selected) shows its row too.
+    EXPECT_EQ(ShownRowsOf(agents, 3, 0), (std::vector<std::size_t>{ 3 }));
+    EXPECT_EQ(ShownRowsOf(agents, 0, 0), (std::vector<std::size_t>{ 0 }));
+
+    // No focus: every agent, and the fallback is not added.
+    EXPECT_EQ(ShownRowsOf(agents, std::nullopt, 0), agents);
+
+    // No focus and no agents: the fallback (the local player of a match without bots), else nothing.
+    EXPECT_EQ(ShownRowsOf({}, std::nullopt, 2), (std::vector<std::size_t>{ 2 }));
+    EXPECT_TRUE(ShownRowsOf({}, std::nullopt, std::nullopt).empty());
+
+    // The focus wins even without agents.
+    EXPECT_EQ(ShownRowsOf({}, 4, 2), (std::vector<std::size_t>{ 4 }));
 }

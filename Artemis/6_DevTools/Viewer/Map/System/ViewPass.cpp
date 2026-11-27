@@ -42,7 +42,7 @@ namespace
     using DevTools::Viewer::Geometry::System::AppendCone;
     using DevTools::Viewer::Geometry::System::AppendCross;
     using DevTools::Viewer::Geometry::System::AppendLine;
-    using DevTools::Viewer::Map::Type::OffsetKeyOf;
+    using DevTools::Viewer::Map::Type::ShownRowsKeyOf;
     using DevTools::Viewer::Style::Type::Color;
 
     using Common::Engine::Type::k_MaxPlayers;
@@ -195,46 +195,62 @@ namespace
     }
 }
 
+namespace
+{
+    // Appends everything the pass draws for one View. The eye offset moves what starts from the eye of its biped.
+    auto AppendView(std::vector<Vertex>& vertices, const View& view, const Tick* tick, const Vec3& eyeOffset) -> void
+    {
+        const Vec3 plainEye{ ViewPositionOf(view) };
+        const Vec3 eye{ plainEye.X + eyeOffset.X, plainEye.Y + eyeOffset.Y, plainEye.Z + eyeOffset.Z };
+
+        // note: The Full mode has no cone: it sees every living player without one.
+        if (view.Head.HasBody && view.Head.Mode == ViewMode::HumanLike)
+        {
+            const float halfAngle{ static_cast<float>(k_SightHalfAngle * std::numbers::pi / 180.0) };
+            AppendCone(vertices, eye, AimDirectionOf(view), halfAngle, k_SightRange, k_ConeLines, k_ViewCone);
+        }
+
+        for (const ViewOther& other : view.Others)
+        {
+            AppendOther(vertices, view, other, eye);
+        }
+
+        if (tick) AppendHidden(vertices, view, *tick);
+
+        // note: Flags[0] is the flag of the team of the watched player, Flags[1] the rival one.
+        AppendFlag(vertices, view.Flags[0], k_ViewAlly);
+        AppendFlag(vertices, view.Flags[1], k_ViewEnemy);
+
+        for (std::size_t index{ 0 }; index < view.SoundCount && index < view.Sounds.size(); ++index)
+        {
+            AppendSound(vertices, eye, view.Sounds[index].Direction, view.Sounds[index].Intensity);
+        }
+    }
+}
+
 namespace DevTools::Viewer::Map::System
 {
     auto ViewPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context,
-        const View* view, const Tick* tick, std::uint64_t generation, const Vec3& eyeOffset) -> void
+        const ViewTable* views, const std::vector<std::size_t>& rows, const Tick* tick, std::uint64_t generation, const FramePoses& poses) -> void
     {
         if (!device || !context) return;
 
-        const std::uint32_t key{ (view ? view->Head.PlayerHandle : k_NoHandle) ^ OffsetKeyOf(eyeOffset) };
+        const std::uint32_t key{ ShownRowsKeyOf(rows, poses.Revision) };
         if (m_Gate.IsCurrent(generation, key)) return;
 
         m_Gate.Mark(generation, key);
         m_VertexCount = 0;
 
-        if (!view) return;
+        if (!views) return;
 
         std::vector<Vertex> vertices{};
-        const Vec3 plainEye{ ViewPositionOf(*view) };
-        const Vec3 eye{ plainEye.X + eyeOffset.X, plainEye.Y + eyeOffset.Y, plainEye.Z + eyeOffset.Z };
 
-        // note: The Full mode has no cone: it sees every living player without one.
-        if (view->Head.HasBody && view->Head.Mode == ViewMode::HumanLike)
+        for (const std::size_t row : rows)
         {
-            const float halfAngle{ static_cast<float>(k_SightHalfAngle * std::numbers::pi / 180.0) };
-            AppendCone(vertices, eye, AimDirectionOf(*view), halfAngle, k_SightRange, k_ConeLines, k_ViewCone);
-        }
+            if (row >= views->size() || !(*views)[row].Head.IsComputed) continue;
 
-        for (const ViewOther& other : view->Others)
-        {
-            AppendOther(vertices, *view, other, eye);
-        }
-
-        if (tick) AppendHidden(vertices, *view, *tick);
-
-        // note: Flags[0] is the flag of the team of the watched player, Flags[1] the rival one.
-        AppendFlag(vertices, view->Flags[0], k_ViewAlly);
-        AppendFlag(vertices, view->Flags[1], k_ViewEnemy);
-
-        for (std::size_t index{ 0 }; index < view->SoundCount && index < view->Sounds.size(); ++index)
-        {
-            AppendSound(vertices, eye, view->Sounds[index].Direction, view->Sounds[index].Intensity);
+            const View& view{ (*views)[row] };
+            AppendView(vertices, view, tick, poses.OffsetOf(view.Head.BipedHandle));
         }
 
         if (vertices.empty()) return;

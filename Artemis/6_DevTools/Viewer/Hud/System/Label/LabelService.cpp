@@ -19,7 +19,6 @@ namespace
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Layer;
     using DevTools::Viewer::Options::Type::Level;
-    using DevTools::Viewer::Roster::System::AgentRowsOf;
     using Views::View::System::RaycastsOf;
     using Views::View::System::ViewPositionOf;
 }
@@ -78,10 +77,7 @@ namespace DevTools::Viewer::Hud::System
 
         // note: The distances of the observation arrows (VW.17) are only drawn at the Full level, under the master switch of the labels but not the one of the
         // debug overlay (a Presentation layer).
-        if (isObsOn && tick->Players)
-        {
-            ObsLabels::Collect(m_Canvas, context, AgentRowsOf(m_SceneService.GetRoster(), *tick->Players));
-        }
+        if (isObsOn) ObsLabels::Collect(m_Canvas, context, m_SceneService.GetObsRows());
 
         m_Canvas.Flush(*ImGui::GetBackgroundDrawList());
     }

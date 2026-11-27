@@ -9,6 +9,7 @@ import Contract.Bridge.Type;
 import Control.Lockstep.Type;
 import Engine.Base.Lifecycle.Type;
 import Blam.Runtime.Player.Type;
+import Views.View.System;
 import Bridge.Codec.Flat.Type;
 import std;
 
@@ -21,6 +22,7 @@ namespace
     using Control::Lockstep::Type::BridgeControlState;
     using Bridge::Codec::Flat::Type::FlatRequest;
     using Common::Engine::Type::k_PrimaryLocalUser;
+    using Views::View::System::AgentSetOf;
     using Services::Telemetry::System::OtherStageNs;
     using Services::Telemetry::Type::k_MaxStages;
     using Common::Engine::Type::k_NoHandle;
@@ -234,10 +236,12 @@ namespace Mod::Thread::System
 
     auto AIThread::BuildAgentSet() const -> AgentSet
     {
-        AgentSet agents{};
-
+        // note: Without a Python client that owns the instance, the Viewer may ask for the Views of every player (D385): its layers draw every agent when
+        // nothing is selected. The bridge does not see rows the client did not ask for, and with a client the flag is ignored. The cost is the one of the
+        // Views of 16 players, about 0.3 to 1.9 ms per tick (F4.4).
         const BridgeControlState control{ m_Transport.m_BridgeStore.GetControl() };
-        if (control.IsClientConnected && control.Owner == BridgeOwner::Python) agents.Mask = control.AgentMask;
+        const bool isClientOwner{ control.IsClientConnected && control.Owner == BridgeOwner::Python };
+        AgentSet agents{ AgentSetOf(isClientOwner, control.AgentMask, m_Service.m_ObservedPlayerStore.IsAllViewsWanted()) };
 
         const std::uint32_t observed{ m_Service.m_ObservedPlayerStore.Get() };
         if (observed != k_NoHandle) agents.Add(observed);

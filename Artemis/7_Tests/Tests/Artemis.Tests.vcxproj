@@ -197,6 +197,7 @@
     <ClCompile Include="Perception\ReplayTests.cpp" />
     <ClCompile Include="Perception\ReplaySparseTests.cpp" />
     <ClCompile Include="Perception\TickDumpWriterTests.cpp" />
+    <ClCompile Include="Services\ObservedPlayerStoreTests.cpp" />
     <ClCompile Include="Services\SettingsStoreTests.cpp" />
     <ClCompile Include="Services\TelemetryTests.cpp" />
     <ClCompile Include="Views\RaycastBenchTests.cpp" />

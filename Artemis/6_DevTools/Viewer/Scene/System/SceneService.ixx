@@ -109,6 +109,15 @@ export namespace DevTools::Viewer::Scene::System
         // note: Valid as long as the tick is.
         auto GetObservedView(const Tick& tick) const -> const View*;
 
+        // return: The rows of Players (and of the ViewTable) that the View layer draws in this frame (VW.17a, D385): the player in focus, else every agent, else the
+        // local player. The focus is the selected player, which is also the one the POV watches (Watch POV and the POV shots follow the selection).
+        // note: Computed once per update. Empty without a tick.
+        auto GetShownRows() const -> const std::vector<std::size_t>&;
+
+        // return: The rows that the observation layer draws in this frame: the shown rows that are agents. The observation is the one of the policy of an agent,
+        // so a selected human (it has a side) draws no arrows.
+        auto GetObsRows() const -> const std::vector<std::size_t>&;
+
         // return: The handles of the unit the game hid in first person and of the objects hanging from it (weapons in hand), when the camera is in its eyes.
         // Empty with the free camera, without the unit hook, or when the game hid nothing.
         // note: Computed once per frame by Update. In Game mode it is the object the first person test of the game answered true for user 0 in the last
@@ -188,6 +197,8 @@ export namespace DevTools::Viewer::Scene::System
         bool m_IsFrameUpdated{ false };
         std::vector<RosterEntry> m_Roster{};
         std::vector<Bot> m_Bots{};
+        std::vector<std::size_t> m_ShownRows{};
+        std::vector<std::size_t> m_ObsRows{};
 
         // The player the selection follows because a POV shot of the director put it there, k_NoHandle when the director did not.
         std::uint32_t m_DirectedPlayer{ 0xFFFFFFFF };
@@ -201,6 +212,9 @@ export namespace DevTools::Viewer::Scene::System
         // Resolves the selection to a player (VW.9a B6) and rewrites the selected object as the current biped of that player.
         // return: The player the selection follows, or 0xFFFFFFFF: the selection is not a player, or the tick has no players (the follow is kept).
         auto FollowSelectedPlayer(const std::shared_ptr<const Tick>& tick) -> std::uint32_t;
+
+        // Resolves the focus (the observed player) to its row and builds the rows of GetShownRows and GetObsRows for the tick.
+        auto ResolveShownRows(const std::shared_ptr<const Tick>& tick, std::uint32_t focusHandle) -> void;
 
         // Builds the hidden set of GetHiddenHandles.
         auto HiddenHandlesOf(const Tick& tick) const -> std::unordered_set<std::uint32_t>;

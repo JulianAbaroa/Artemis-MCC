@@ -645,6 +645,14 @@ namespace Views::View::System
         return local;
     }
 
+    auto AgentSetOf(bool isClientOwner, std::uint32_t clientMask, bool isAllViewsWanted) -> Views::View::Type::AgentSet
+    {
+        if (isClientOwner) return Views::View::Type::AgentSet{ .Mask = clientMask };
+        if (isAllViewsWanted) return Views::View::Type::AgentSet::All();
+
+        return Views::View::Type::AgentSet{};
+    }
+
     auto ObservedPlayerOf(const Perception::Players::Type::Players& players, std::uint32_t selected) -> std::uint32_t
     {
         if (selected == k_NoHandle) return k_NoHandle;

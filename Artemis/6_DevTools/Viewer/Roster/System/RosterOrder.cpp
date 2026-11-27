@@ -75,6 +75,15 @@ namespace DevTools::Viewer::Roster::System
         return rows;
     }
 
+    auto ShownRowsOf(const std::vector<std::size_t>& agentRows, std::optional<std::size_t> focusRow, std::optional<std::size_t> fallbackRow) -> std::vector<std::size_t>
+    {
+        if (focusRow) return { *focusRow };
+        if (!agentRows.empty()) return agentRows;
+        if (fallbackRow) return { *fallbackRow };
+
+        return {};
+    }
+
     auto StripOf(std::size_t count, std::size_t current) -> RosterStrip
     {
         RosterStrip strip{ .Current = current };

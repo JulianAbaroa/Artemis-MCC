@@ -11,8 +11,6 @@ import Common.State.Type;
 import Engine.Base.Memory.Type;
 import Engine.Render.Type;
 import Perception.Players.Type;
-import Views.Raycast.Type;
-import Views.View.System;
 import Bridge.Codec.Tick.Type;
 import DevTools.Viewer.Camera.Type;
 import DevTools.Viewer.Collidable.Type;
@@ -28,7 +26,6 @@ import std;
 namespace
 {
     using Common::Math::Type::PoseSource;
-    using Common::Math::Type::Vec3;
     using Common::State::Type::PickKind;
     using Engine::Base::Memory::Type::FrameClock::ClockSource;
     using Engine::Base::Memory::Type::FrameClock::FrameClock;
@@ -45,7 +42,6 @@ namespace
     using DevTools::Viewer::Options::Type::ScenePasses;
     using DevTools::Viewer::Options::Type::Level;
     using DevTools::Viewer::Options::Type::Scalar;
-    using DevTools::Viewer::Roster::System::AgentRowsOf;
     using DevTools::Viewer::Profiler::Type::Cpu;
     using DevTools::Viewer::Profiler::Type::Gpu;
     using DevTools::Viewer::Profiler::Type::Counter;
@@ -55,8 +51,6 @@ namespace
     using DevTools::Viewer::Map::Type::FrameScenePick;
     using DevTools::Viewer::Map::Type::LimitsPassOptions;
     using Common::Semantic::Type::Function;
-    using Views::Raycast::Type::Raycasts;
-    using Views::View::System::RaycastsOf;
 
     using DevTools::Viewer::Map::Type::k_FrameSceneWaitLimit;
 
@@ -186,16 +180,15 @@ namespace DevTools::Viewer::Map::System
 
                 {
                     CpuTimer timer{ m_Profiler, Cpu::Raycast };
-                    const auto* view{ m_SceneService.GetObservedView(*tick) };
-                    const Raycasts raycasts{ view ? RaycastsOf(*view) : Raycasts{} };
 
-                    // note: The eye of the watched player moves with its biped, so the View and its rays start from where the overlay draws that biped.
-                    const Vec3 eyeOffset{ view ? m_FramePoses.OffsetOf(view->Head.BipedHandle) : Vec3{} };
-                    m_RaycastPass.Upload(frame.Device, frame.Context, view ? &raycasts : nullptr, tick->Generation, eyeOffset);
+                    // note: Every shown View is drawn (VW.17a, D385): the player in focus, else every agent. The eye of each one moves with its biped, so its
+                    // View and its rays start from where the overlay draws that biped (the poses of the frame).
+                    const auto& shownRows{ m_SceneService.GetShownRows() };
+                    m_RaycastPass.Upload(frame.Device, frame.Context, tick->Views.get(), shownRows, tick->Generation, m_FramePoses);
 
-                    // note: With the option off the pass gets no View and draws nothing.
+                    // note: With the option off the pass gets no rows and draws nothing.
                     const bool showView{ m_OptionsStore.IsEnabled(Flag::PlayerView) };
-                    m_ViewPass.Upload(frame.Device, frame.Context, showView ? view : nullptr, tick.get(), tick->Generation, eyeOffset);
+                    m_ViewPass.Upload(frame.Device, frame.Context, tick->Views.get(), showView ? shownRows : std::vector<std::size_t>{}, tick.get(), tick->Generation, m_FramePoses);
                 }
 
                 {
@@ -237,11 +230,10 @@ namespace DevTools::Viewer::Map::System
 
             if (passes.DrawObs)
             {
-                // note: The arrows of the observation (VW.17) are those of every agent of the roster, not of the watched player, so the pass gets the rows of the
-                // agents and the poses of the frame. Its level is part of the gate of the upload.
+                // note: The arrows of the observation (VW.17) are those of the agents the focus rule shows (every agent, or the one in focus), not of the watched
+                // player, so the pass gets their rows and the poses of the frame. Its level is part of the gate of the upload.
                 const Level obsLevel{ m_OptionsStore.GetLevel(Layer::Obs) };
-                const std::vector<std::size_t> agentRows{ tick->Players ? AgentRowsOf(m_SceneService.GetRoster(), *tick->Players) : std::vector<std::size_t>{} };
-                m_ObsPass.Upload(frame.Device, frame.Context, tick.get(), agentRows, obsLevel, m_FramePoses);
+                m_ObsPass.Upload(frame.Device, frame.Context, tick.get(), m_SceneService.GetObsRows(), obsLevel, m_FramePoses);
             }
             else
             {

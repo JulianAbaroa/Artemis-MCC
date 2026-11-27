@@ -31,6 +31,14 @@ export namespace DevTools::Viewer::Roster::System
     // the ViewTable of the tick. The human has no observation, so it is never in the list even when its View is computed (VW.17).
     auto AgentRowsOf(const std::vector<Roster::Type::RosterEntry>& roster, const Perception::Players::Type::Players& players) -> std::vector<std::size_t>;
 
+    // return: The rows of Players (and of the ViewTable) the per player layers draw, by the focus rule (VW.17a, D385). With a focus, only its row, even
+    // when it is not an agent (the selected local player shows its View). Without one, every agent row. Without agents either, the fallback row (the
+    // local player of a match with no bots), else none.
+    // param agentRows: The rows of the Artemis agents (AgentRowsOf).
+    // param focusRow: The row of the player in focus (the selected one), nothing when there is no focus.
+    // param fallbackRow: The row drawn when there is no focus and no agents, nothing when there is none.
+    auto ShownRowsOf(const std::vector<std::size_t>& agentRows, std::optional<std::size_t> focusRow, std::optional<std::size_t> fallbackRow) -> std::vector<std::size_t>;
+
     // return: The previous, current and next positions of the strip. One player has no neighbours. With two, the other one is shown only as the next.
     auto StripOf(std::size_t count, std::size_t current) -> Roster::Type::RosterStrip;
 }

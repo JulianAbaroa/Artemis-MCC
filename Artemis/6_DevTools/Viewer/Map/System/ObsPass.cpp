@@ -34,6 +34,7 @@ namespace
     using DevTools::Viewer::Options::Type::Level;
     using DevTools::Viewer::Style::Type::ColorOfTeam;
 
+    using DevTools::Viewer::Map::Type::ShownRowsKeyOf;
     using DevTools::Viewer::Map::Type::k_InitialCapacity;
     using DevTools::Viewer::Map::Type::k_MarkerLift;
 
@@ -45,14 +46,14 @@ namespace
 
 namespace DevTools::Viewer::Map::System
 {
-    auto ObsPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context, const Tick* tick, const std::vector<std::size_t>& agentRows,
+    auto ObsPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context, const Tick* tick, const std::vector<std::size_t>& rows,
         Level level, const FramePoses& poses) -> void
     {
         if (!device || !context) return;
 
         // note: The vertices are the same at Minimal and Full (the distances of Full are labels), but the level is in the key all the same: a layer that
         // is switched off and on again is uploaded again.
-        const std::uint32_t key{ poses.Revision * 4u + static_cast<std::uint32_t>(level) };
+        const std::uint32_t key{ ShownRowsKeyOf(rows, poses.Revision * 4u + static_cast<std::uint32_t>(level)) };
         const std::uint64_t generation{ tick ? tick->Generation : 0 };
         if (m_Gate.IsCurrent(generation, key)) return;
 
@@ -63,7 +64,7 @@ namespace DevTools::Viewer::Map::System
 
         std::vector<Vertex> vertices{};
 
-        for (const std::size_t row : agentRows)
+        for (const std::size_t row : rows)
         {
             if (row >= tick->Views->size()) continue;
 

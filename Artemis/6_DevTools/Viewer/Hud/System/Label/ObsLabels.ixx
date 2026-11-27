@@ -18,8 +18,8 @@ export namespace DevTools::Viewer::Hud::System
         ~ObsLabels() = default;
 
         // Adds, near the tip of each arrow that ObsPass draws, its length in world units in the color of the arrow.
-        // param agentRows: The rows of Players (and of the ViewTable) that are agents.
+        // param rows: The rows of Players (and of the ViewTable) drawn, only agents (VW.17a).
         // note: The length is the one the View sees (from the feet to the flag or the stand), with no interpolation offset.
-        static auto Collect(LabelCanvas& canvas, const LabelContext& context, const std::vector<std::size_t>& agentRows) -> void;
+        static auto Collect(LabelCanvas& canvas, const LabelContext& context, const std::vector<std::size_t>& rows) -> void;
     };
 }

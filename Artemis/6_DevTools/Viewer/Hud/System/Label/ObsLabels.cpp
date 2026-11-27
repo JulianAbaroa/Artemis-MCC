@@ -45,12 +45,12 @@ namespace
 
 namespace DevTools::Viewer::Hud::System
 {
-    auto ObsLabels::Collect(LabelCanvas& canvas, const LabelContext& context, const std::vector<std::size_t>& agentRows) -> void
+    auto ObsLabels::Collect(LabelCanvas& canvas, const LabelContext& context, const std::vector<std::size_t>& rows) -> void
     {
         const auto& tick = context.Frame;
         if (!tick.Views) return;
 
-        for (const std::size_t row : agentRows)
+        for (const std::size_t row : rows)
         {
             if (row >= tick.Views->size()) continue;
 

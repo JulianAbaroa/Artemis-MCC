@@ -42,9 +42,9 @@ export namespace DevTools::Viewer::Map::System
 
         // Rebuilds the vertices when the generation, the level of the layer or the poses of the frame change.
         // param tick: The tick drawn, with the Views. Null draws nothing.
-        // param agentRows: The rows of Players (and of the ViewTable) that are agents.
+        // param rows: The rows of Players (and of the ViewTable) drawn, only agents (VW.17a). A row whose View is not computed draws nothing.
         // param level: The level of the layer. Off draws nothing.
-        auto Upload(ID3D11Device* device, ID3D11DeviceContext* context, const Tick* tick, const std::vector<std::size_t>& agentRows,
+        auto Upload(ID3D11Device* device, ID3D11DeviceContext* context, const Tick* tick, const std::vector<std::size_t>& rows,
             Level level, const FramePoses& poses) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;

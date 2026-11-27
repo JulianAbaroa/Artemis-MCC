@@ -530,6 +530,13 @@ export namespace DevTools::Viewer::Options::Type
         return ScenePasses{ .DrawDebug = isMasterOn, .DrawObs = isObsOn, .NeedMapDepth = isObsOn && !isMasterOn, .NeedMask = isMasterOn || isObsOn };
     }
 
+    // return: Whether the Viewer asks the AI thread for the Views of every player (VW.17a, D385): it is active, nothing is in focus (no selected player) and
+    // the View layer or the observation layer is not Off, so each of them draws every agent.
+    constexpr auto DecideAllViewsWanted(bool isViewerActive, bool hasFocus, Level viewLevel, Level obsLevel) -> bool
+    {
+        return isViewerActive && !hasFocus && (viewLevel != Level::Off || obsLevel != Level::Off);
+    }
+
     // return: True if, with every layer at its default level (Minimal, Off for Obs), each flag of a layer gives the value it had before the layers.
     consteval auto DoLayersKeepTheOldDefaults() -> bool
     {

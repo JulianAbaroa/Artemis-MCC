@@ -30,6 +30,10 @@ export namespace Views::View::System
     // not a player biped or there is none. It is the observed player of the Viewer: selecting the biped of a bot shows its View without moving the camera.
     auto ObservedPlayerOf(const Perception::Players::Type::Players& players, std::uint32_t selected) -> std::uint32_t;
 
+    // return: The players that get a View in a tick, from who owns the instance (D307, D385). A Python client that owns it chooses with its mask. Without one,
+    // every player when the Viewer wants all the Views (it has no focus and its layers draw each agent), else none. The caller adds the players it always needs.
+    auto AgentSetOf(bool isClientOwner, std::uint32_t clientMask, bool isAllViewsWanted) -> Views::View::Type::AgentSet;
+
     // return: The unit direction the agent aims along, from the heading and pitch of its aim.
     auto AimDirectionOf(const Views::View::Type::View& view) -> Common::Math::Type::Vec3;
 

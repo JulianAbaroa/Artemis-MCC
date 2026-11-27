@@ -28,6 +28,7 @@ namespace
     using Views::View::System::ObsTargetsOf;
     using Views::View::System::RivalTeamOf;
     using DevTools::Viewer::Options::State::OptionsStore;
+    using DevTools::Viewer::Options::Type::DecideAllViewsWanted;
     using DevTools::Viewer::Options::Type::DecideScenePasses;
     using DevTools::Viewer::Options::Type::IsPresentationLayer;
     using DevTools::Viewer::Options::Type::Layer;
@@ -267,4 +268,17 @@ TEST(ObsTargetsTests, TheMasterSwitchAndTheObservationLayerDecideTheScenePasses)
     EXPECT_FALSE(none.DrawObs);
     EXPECT_FALSE(none.NeedMapDepth);
     EXPECT_FALSE(none.NeedMask);
+}
+
+TEST(ObsTargetsTests, TheViewerWantsAllViewsOnlyActiveWithoutFocusAndWithALayerOn)
+{
+    // Active, no focus, either layer on: yes.
+    EXPECT_TRUE(DecideAllViewsWanted(true, false, Level::Minimal, Level::Off));
+    EXPECT_TRUE(DecideAllViewsWanted(true, false, Level::Off, Level::Full));
+    EXPECT_TRUE(DecideAllViewsWanted(true, false, Level::Full, Level::Minimal));
+
+    // Both layers off, a focus, or an inactive Viewer: no.
+    EXPECT_FALSE(DecideAllViewsWanted(true, false, Level::Off, Level::Off));
+    EXPECT_FALSE(DecideAllViewsWanted(true, true, Level::Full, Level::Full));
+    EXPECT_FALSE(DecideAllViewsWanted(false, false, Level::Full, Level::Full));
 }
