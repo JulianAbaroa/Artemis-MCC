@@ -109,7 +109,8 @@ namespace DevTools::Viewer::Scene::System
 
         const std::vector<std::size_t> agentRows{ AgentRowsOf(m_Roster, *tick->Players) };
 
-        // The row of a Player is the row of its View.
+        // The row of a Player is the row of its View. The focus is the selected player, and that is also the player the POV watches on purpose (D385, D387):
+        // Watch POV and the POV shots of the director follow the selection, so the one seen in POV is the focus and only its layers are drawn.
         std::optional<std::size_t> focusRow{};
         if (focusHandle != k_NoHandle)
         {
@@ -363,7 +364,7 @@ namespace DevTools::Viewer::Scene::System
 
     auto SceneService::GetScenePasses() const -> ScenePasses
     {
-        return DecideScenePasses(m_OptionsStore.IsEnabled(Flag::DrawOverlay), m_OptionsStore.GetLevel(Layer::Obs));
+        return DecideScenePasses(m_OptionsStore.IsEnabled(Flag::DrawOverlay));
     }
 
     auto SceneService::AddDirectorShots() -> void

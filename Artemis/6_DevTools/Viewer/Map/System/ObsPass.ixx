@@ -44,8 +44,9 @@ export namespace DevTools::Viewer::Map::System
         // param tick: The tick drawn, with the Views. Null draws nothing.
         // param rows: The rows of Players (and of the ViewTable) drawn, only agents (VW.17a). A row whose View is not computed draws nothing.
         // param level: The level of the layer. Off draws nothing.
+        // param arrowLength: Length of each arrow in world units, 0 for an arrow that reaches its target (ObsArrowEnd). It is part of the gate of the upload.
         auto Upload(ID3D11Device* device, ID3D11DeviceContext* context, const Tick* tick, const std::vector<std::size_t>& rows,
-            Level level, const FramePoses& poses) -> void;
+            Level level, float arrowLength, const FramePoses& poses) -> void;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 

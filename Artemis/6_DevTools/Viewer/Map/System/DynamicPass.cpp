@@ -24,6 +24,8 @@ namespace
 
     using DevTools::Viewer::Interpolation::Type::ObjectDelta;
     using DevTools::Viewer::Map::Type::HandleSetKeyOf;
+    using DevTools::Viewer::Options::Type::CollidableDraw;
+    using DevTools::Viewer::Options::Type::DecideCollidableDraw;
     using DevTools::Viewer::Style::Type::k_Selected;
     using Common::Engine::Type::k_NoHandle;
 
@@ -38,7 +40,8 @@ namespace DevTools::Viewer::Map::System
         const std::shared_ptr<const Collidables>& collidables,
         const PaletteService& palette, std::uint32_t selectedHandle,
         const std::unordered_set<std::uint32_t>& translucentHandles,
-        const std::unordered_set<std::uint32_t>& hiddenHandles, const FramePoses& poses) -> void
+        const std::unordered_set<std::uint32_t>& hiddenHandles, const FramePoses& poses,
+        const std::unordered_set<std::uint32_t>& playerBodyHandles, bool showObjects, bool showBodies, bool isLineLayerOn) -> void
     {
         if (!device || !context) return;
 
@@ -46,7 +49,8 @@ namespace DevTools::Viewer::Map::System
         const std::uint32_t hiddenKey{ HandleSetKeyOf(hiddenHandles) };
 
         // note: The revision of the poses changes with the tick fraction, so while the game interpolates the instances are rebuilt every frame.
-        const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au) ^ hiddenKey ^ poses.Revision;
+        const std::uint32_t gateKey = selectedHandle ^ (translucentHandles.empty() ? 0u : 0x5A5A5A5Au) ^ hiddenKey ^ poses.Revision ^
+            (HandleSetKeyOf(playerBodyHandles) * 3u) ^ (showObjects ? 0x1000193u : 0u) ^ (showBodies ? 0x2000327u : 0u) ^ (isLineLayerOn ? 0x4000F1Bu : 0u);
 
         if (m_IsUploaded && collidables == m_UploadedScene && gateKey == m_UploadedKey) return;
 
@@ -56,10 +60,13 @@ namespace DevTools::Viewer::Map::System
 
         for (const std::uint32_t index : m_Active) m_Geometries[index].Bucket.clear();
         for (const std::uint32_t index : m_ActiveTranslucent) m_Geometries[index].TranslucentBucket.clear();
+        for (const std::uint32_t index : m_ActiveDepth) m_Geometries[index].DepthBucket.clear();
         m_Active.clear();
         m_ActiveTranslucent.clear();
+        m_ActiveDepth.clear();
         m_Draws.clear();
         m_TranslucentDraws.clear();
+        m_DepthDraws.clear();
         m_InstanceScratch.clear();
         m_InstanceCount = 0;
 
@@ -110,6 +117,9 @@ namespace DevTools::Viewer::Map::System
                 collidable.Handle == selectedHandle;
 
             const bool isTranslucent = translucentHandles.contains(collidable.Handle);
+            const CollidableDraw mode{ DecideCollidableDraw(isTranslucent, playerBodyHandles.contains(collidable.Handle), showObjects, showBodies, isLineLayerOn) };
+            if (mode == CollidableDraw::None) continue;
+            const bool isDepthOnly{ mode == CollidableDraw::DepthOnly };
 
             const Color color = isSelected ? k_Selected : palette.ColorOf(collidable.Handle);
 
@@ -129,24 +139,24 @@ namespace DevTools::Viewer::Map::System
                 instance.B = color.B;
 
                 Geometry& geometry = m_Geometries[index];
-                auto& bucket = isTranslucent ? geometry.TranslucentBucket : geometry.Bucket;
+                auto& bucket = isDepthOnly ? geometry.DepthBucket : isTranslucent ? geometry.TranslucentBucket : geometry.Bucket;
 
-                if (bucket.empty()) (isTranslucent ? m_ActiveTranslucent : m_Active).push_back(index);
+                if (bucket.empty()) (isDepthOnly ? m_ActiveDepth : isTranslucent ? m_ActiveTranslucent : m_Active).push_back(index);
                 bucket.push_back(instance);
             }
         }
 
-        if (m_Active.empty() && m_ActiveTranslucent.empty()) return;
+        if (m_Active.empty() && m_ActiveTranslucent.empty() && m_ActiveDepth.empty()) return;
 
         if (!this->FlushGeometry(device, context)) return;
 
-        auto emit = [&](const std::vector<std::uint32_t>& active, bool translucent,
+        auto emit = [&](const std::vector<std::uint32_t>& active, int kind,
             std::vector<DrawRange>& draws)
         {
             for (const std::uint32_t index : active)
             {
                 const Geometry& geometry = m_Geometries[index];
-                const auto& bucket = translucent ? geometry.TranslucentBucket : geometry.Bucket;
+                const auto& bucket = kind == 2 ? geometry.DepthBucket : kind == 1 ? geometry.TranslucentBucket : geometry.Bucket;
 
                 DrawRange range{};
                 range.FirstVertex = geometry.FirstVertex;
@@ -159,8 +169,9 @@ namespace DevTools::Viewer::Map::System
             }
         };
 
-        emit(m_Active, false, m_Draws);
-        emit(m_ActiveTranslucent, true, m_TranslucentDraws);
+        emit(m_Active, 0, m_Draws);
+        emit(m_ActiveTranslucent, 1, m_TranslucentDraws);
+        emit(m_ActiveDepth, 2, m_DepthDraws);
 
         this->UploadInstances(device, context);
 
@@ -168,6 +179,7 @@ namespace DevTools::Viewer::Map::System
         {
             m_Draws.clear();
             m_TranslucentDraws.clear();
+            m_DepthDraws.clear();
         }
     }
 
@@ -254,6 +266,15 @@ namespace DevTools::Viewer::Map::System
         pipeline.Bind(context, VertexLayout::MeshInstanced);
 
         this->DrawRanges(context, m_Draws);
+    }
+
+    auto DynamicPass::DrawDepthOnly(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void
+    {
+        if (!context || !m_GeometryBuffer || !m_InstanceBuffer.Get() || m_DepthDraws.empty()) return;
+
+        pipeline.Bind(context, VertexLayout::MeshInstanced, SurfaceMode::DepthOnly);
+
+        this->DrawRanges(context, m_DepthDraws);
     }
 
     auto DynamicPass::DrawRanges(ID3D11DeviceContext* context, const std::vector<DrawRange>& ranges) const -> void

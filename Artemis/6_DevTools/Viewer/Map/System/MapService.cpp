@@ -5,6 +5,7 @@ module;
 module DevTools.Viewer.Map.System;
 import :MapService;
 
+import Common.Engine.Type;
 import Common.Semantic.Type;
 import Common.Math.Type;
 import Common.State.Type;
@@ -38,6 +39,7 @@ namespace
     using DevTools::Viewer::Interpolation::System::InterpolationService;
     using DevTools::Viewer::Latency::Type::LatencyInput;
     using DevTools::Viewer::Options::Type::Flag;
+    using DevTools::Viewer::Options::Type::IsAnyLineLayerOn;
     using DevTools::Viewer::Options::Type::Layer;
     using DevTools::Viewer::Options::Type::ScenePasses;
     using DevTools::Viewer::Options::Type::Level;
@@ -52,6 +54,7 @@ namespace
     using DevTools::Viewer::Map::Type::LimitsPassOptions;
     using Common::Semantic::Type::Function;
 
+    using Common::Engine::Type::k_NoHandle;
     using DevTools::Viewer::Map::Type::k_FrameSceneWaitLimit;
 
     // Ends the GPU timing of the frame when it goes out of scope.
@@ -143,13 +146,12 @@ namespace DevTools::Viewer::Map::System
             // note: Without a pose to draw (Game mode with no valid camera of the game) nothing is drawn, and the labels of the frame are not drawn either.
             if (!m_SceneService.HasFrameUpdate()) return false;
 
-            // note: The master switch (VW.14f) skips every debug upload and the debug draw. With it off and no Presentation 3D layer on, nothing is drawn and the GPU
+            // note: The master switch (VW.14f, D387) skips every upload and the draw, the observation layer included. With it off nothing is drawn and the GPU
             // state is not touched at all: no depth clear, no mask update. The scene update above ran, so the camera, the director, the override and the selection go on.
-            // With it off and the observation layer on, only that layer and the depth of the map (which hides its arrows behind walls) are drawn.
+            // With it on every pass runs by the level of its layer, and the depth of the map is always drawn (it hides the arrows behind walls).
             const ScenePasses passes{ m_SceneService.GetScenePasses() };
-            if (!passes.DrawDebug && !passes.DrawObs) return false;
+            if (!passes.DrawScene) return false;
 
-            if (passes.DrawDebug)
             {
                 const auto& palette = m_SceneService.GetPalette();
                 const std::uint32_t selected = m_SceneService.GetSelected();
@@ -169,13 +171,26 @@ namespace DevTools::Viewer::Map::System
                     }
 
                     // note: The debug collidables are not part of the Tick. They come with it in the scene.
+                    // note: The bodies of the players are the layer Players, every other object the layer Objects (D387). The shields are Fixtures.
+                    std::unordered_set<std::uint32_t> bodyHandles{};
+                    if (tick->Players)
+                    {
+                        for (const auto& player : tick->Players->Rows)
+                        {
+                            if (player.BipedHandle != k_NoHandle) bodyHandles.insert(player.BipedHandle);
+                        }
+                    }
+
                     m_DynamicPass.Upload(frame.Device, frame.Context, ShareObjects(scene),
-                        palette, selected, translucentHandles, hidden, m_FramePoses);
+                        palette, selected, translucentHandles, hidden, m_FramePoses,
+                        bodyHandles, m_OptionsStore.IsEnabled(Flag::ObjectModels), m_OptionsStore.IsEnabled(Flag::PlayerBodies),
+                        IsAnyLineLayerOn(m_OptionsStore.GetLevel(Layer::View), m_OptionsStore.GetLevel(Layer::Obs), m_OptionsStore.GetLevel(Layer::Fixtures),
+                            m_OptionsStore.GetLevel(Layer::World), m_OptionsStore.GetLevel(Layer::Players)));
                 }
 
                 {
                     CpuTimer timer{ m_Profiler, Cpu::Zone };
-                    m_ZonePass.Upload(frame.Device, frame.Context, tick, palette);
+                    m_ZonePass.Upload(frame.Device, frame.Context, m_OptionsStore.IsEnabled(Flag::FixtureZones) ? tick : nullptr, palette);
                 }
 
                 {
@@ -184,11 +199,12 @@ namespace DevTools::Viewer::Map::System
                     // note: Every shown View is drawn (VW.17a, D385): the player in focus, else every agent. The eye of each one moves with its biped, so its
                     // View and its rays start from where the overlay draws that biped (the poses of the frame).
                     const auto& shownRows{ m_SceneService.GetShownRows() };
-                    m_RaycastPass.Upload(frame.Device, frame.Context, tick->Views.get(), shownRows, tick->Generation, m_FramePoses);
+                    const std::vector<std::size_t> noRows{};
+                    m_RaycastPass.Upload(frame.Device, frame.Context, tick->Views.get(), m_OptionsStore.IsEnabled(Flag::ViewRays) ? shownRows : noRows, tick->Generation, m_FramePoses);
 
                     // note: With the option off the pass gets no rows and draws nothing.
                     const bool showView{ m_OptionsStore.IsEnabled(Flag::PlayerView) };
-                    m_ViewPass.Upload(frame.Device, frame.Context, tick->Views.get(), showView ? shownRows : std::vector<std::size_t>{}, tick.get(), tick->Generation, m_FramePoses);
+                    m_ViewPass.Upload(frame.Device, frame.Context, tick->Views.get(), showView ? shownRows : noRows, tick.get(), tick->Generation, m_FramePoses);
                 }
 
                 {
@@ -228,21 +244,17 @@ namespace DevTools::Viewer::Map::System
                     m_AimPass.GetInstanceCount());
             }
 
-            if (passes.DrawObs)
             {
                 // note: The arrows of the observation (VW.17) are those of the agents the focus rule shows (every agent, or the one in focus), not of the watched
                 // player, so the pass gets their rows and the poses of the frame. Its level is part of the gate of the upload.
                 const Level obsLevel{ m_OptionsStore.GetLevel(Layer::Obs) };
-                m_ObsPass.Upload(frame.Device, frame.Context, tick.get(), m_SceneService.GetObsRows(), obsLevel, m_FramePoses);
-            }
-            else
-            {
-                m_ObsPass.Upload(frame.Device, frame.Context, nullptr, {}, Level::Off, m_FramePoses);
+                m_ObsPass.Upload(frame.Device, frame.Context, tick.get(), m_SceneService.GetObsRows(), obsLevel,
+                    m_OptionsStore.GetScalar(Scalar::ObsArrowLength), m_FramePoses);
             }
 
             {
                 CpuTimer timer{ m_Profiler, Cpu::Draw };
-                this->Draw(frame, passes);
+                this->Draw(frame);
             }
         }
 
@@ -331,7 +343,7 @@ namespace DevTools::Viewer::Map::System
         m_LatencyService.Record(input);
     }
 
-    auto MapService::Draw(const FrameContext& frame, const ScenePasses& passes) -> void
+    auto MapService::Draw(const FrameContext& frame) -> void
     {
         ID3D11DeviceContext* context = frame.Context;
 
@@ -363,20 +375,11 @@ namespace DevTools::Viewer::Map::System
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 
-        // note: Without the debug overlay only the depth of the map is drawn (never the wireframe) and then the arrows of the observation.
-        if (!passes.DrawDebug)
-        {
-            m_MapPass.Draw(context, m_GpuPipeline, false);
-            m_ObsPass.Draw(context, m_GpuPipeline);
-
-            m_GpuPipeline.ClearMask(context);
-            return;
-        }
-
         m_MapPass.Draw(context, m_GpuPipeline, m_OptionsStore.IsEnabled(Flag::OverlayWireframe));
         m_Profiler.MarkGpu(context, Gpu::Map);
 
         m_DynamicPass.Draw(context, m_GpuPipeline);
+        m_DynamicPass.DrawDepthOnly(context, m_GpuPipeline);
         m_Profiler.MarkGpu(context, Gpu::Dynamic);
 
         m_ZonePass.Draw(context, m_GpuPipeline);

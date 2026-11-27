@@ -76,7 +76,6 @@ export namespace DevTools::Viewer::Map::System
         using FrameProfiler = DevTools::Viewer::Profiler::System::FrameProfiler;
         using SceneService = DevTools::Viewer::Scene::System::SceneService;
         using LatencyService = DevTools::Viewer::Latency::System::LatencyService;
-        using ScenePasses = DevTools::Viewer::Options::Type::ScenePasses;
         using OptionsStore = DevTools::Viewer::Options::State::OptionsStore;
 
     public:
@@ -162,9 +161,8 @@ export namespace DevTools::Viewer::Map::System
         auto RecordLatency(const CollidableScene& scene, const FrameClock& clock, const FrameScenePick& pick) -> void;
 
         // Draws the passes of the frame over the game frame, under one GPU state guard that puts back what the game had bound.
-        // param passes: The debug overlay (every pass) or, with it off, the presentation path: the depth of the map (invisible, so the walls hide the arrows)
-        // and the observation arrows. The depth is cleared and the mask updated in both.
-        auto Draw(const FrameContext& frame, const ScenePasses& passes) -> void;
+        // note: Runs only with the master switch on (D387). The map always draws its depth (invisible without the wireframe), so the walls hide the arrows.
+        auto Draw(const FrameContext& frame) -> void;
 
         // Releases what depends on the map and resets the scene.
         auto ReleaseMap() -> void;

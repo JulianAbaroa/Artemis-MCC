@@ -31,7 +31,7 @@ namespace DevTools::Viewer::Hud::System
         const auto& tick = context.Frame;
         const auto& options = canvas.GetOptions();
 
-        if (!options.IsEnabled(Flag::VehicleSeatMarkers) || !tick.Affordances) return;
+        if (!options.IsEnabled(Flag::ObjectLabels) || !options.IsEnabled(Flag::VehicleSeatMarkers) || !tick.Affordances) return;
 
         const bool showHijackers = options.IsEnabled(Flag::VehicleHijackerSlots);
 

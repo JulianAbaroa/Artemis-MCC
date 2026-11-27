@@ -665,6 +665,18 @@ namespace Views::View::System
         return k_NoHandle;
     }
 
+    auto ObsArrowEnd(const Vec3& from, const Vec3& target, float length) -> Vec3
+    {
+        const float dx{ target.X - from.X };
+        const float dy{ target.Y - from.Y };
+        const float dz{ target.Z - from.Z };
+        const float distance{ std::sqrt(dx * dx + dy * dy + dz * dz) };
+        if (length <= 0.0f || distance <= length) return target;
+
+        const float scale{ length / distance };
+        return Vec3{ from.X + dx * scale, from.Y + dy * scale, from.Z + dz * scale };
+    }
+
     auto AimDirectionOf(const ::View& view) -> Vec3
     {
         const float aimCos{ std::cos(view.Self.AimPitch) };

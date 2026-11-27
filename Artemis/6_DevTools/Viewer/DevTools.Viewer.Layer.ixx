@@ -126,7 +126,6 @@ export namespace DevTools::Viewer
                 // note: The overlay needs the depth copies of the first person mask, and the scene point draws only for an active Viewer. Without
                 // the Viewer neither is done.
                 const bool isActive{ m_SceneService.IsActive() };
-                // note: A Presentation 3D layer (the observation arrows) draws without the debug overlay and needs the same copies.
                 const auto scenePasses{ m_SceneService.GetScenePasses() };
                 engine.m_RenderStore.SetFirstPersonMaskRequested(isActive && scenePasses.NeedMask);
                 engine.m_RenderStore.SetSceneDrawRequested(isActive);

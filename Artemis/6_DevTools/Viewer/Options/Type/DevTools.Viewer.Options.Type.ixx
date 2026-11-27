@@ -116,6 +116,12 @@ export namespace DevTools::Viewer::Options::Type
         RosterAgentsOnly,
         DrawOverlay,
 
+        PlayerBodies,
+        ObjectModels,
+        ObjectLabels,
+        ViewRays,
+        FixtureZones,
+
         Count
     };
 
@@ -143,16 +149,9 @@ export namespace DevTools::Viewer::Options::Type
         SceneColorScale,
         DirectorDegreesPerSecond,
         LineWidth,
+        ObsArrowLength,
 
         Count
-    };
-
-    // What a layer is for. A Debug layer is part of the debug overlay and follows its master switch (Flag::DrawOverlay). A Presentation layer is made to be
-    // shown (in a video, to the audience) and ignores that switch: it only follows its own level.
-    enum class LayerKind : std::uint8_t
-    {
-        Debug,
-        Presentation
     };
 
     // Key is the name saved in the preferences file (with the Viewer_ prefix), so it must not change.
@@ -163,7 +162,6 @@ export namespace DevTools::Viewer::Options::Type
         const char* Label{};
         const char* Tooltip{};
         Level Default{ Level::Minimal };
-        LayerKind Kind{ LayerKind::Debug };
     };
 
     // Key is the name saved in the preferences file, so it must not change.
@@ -220,9 +218,9 @@ export namespace DevTools::Viewer::Options::Type
         { Layer::Health, "LayerHealth", "Health",
             "Health bars over the damage sections." },
         { Layer::Card, "LayerCard", "Agent card",
-            "Card of the selected player at the bottom left of the frame, with no flags of its own.\nMinimal: name, health and shield bars, weapon in the hands.\nFull adds: other weapon, grenades, armor ability and energy, powerup, flag, zoom.", Level::Minimal, LayerKind::Presentation },
+            "Card of the selected player at the bottom left of the frame, with no flags of its own.\nMinimal: name, health and shield bars, weapon in the hands.\nFull adds: other weapon, grenades, armor ability and energy, powerup, flag, zoom." },
         { Layer::Obs, "LayerObs", "Agent observation",
-            "The two arrows that the policy of each Artemis agent receives in its observation, over the game, with no flags of its own.\nMinimal: from its feet to the enemy flag (in the color of the rival team) and to its own stand (in the color of its team).\nFull adds: the distance of each arrow in world units, near its tip.", Level::Off, LayerKind::Presentation },
+            "The two arrows that the policy of each Artemis agent receives in its observation, over the game, with no flags of its own.\nMinimal: from its feet to the enemy flag (in the color of the rival team) and to its own stand (in the color of its team).\nFull adds: the distance of each arrow in world units, near its tip.", Level::Off },
     } };
 
     inline constexpr std::array<FlagInfo, k_FlagCount> k_Flags
@@ -422,8 +420,23 @@ export namespace DevTools::Viewer::Options::Type
         { Flag::RosterAgentsOnly, Group::Camera, Layer::Count, Level::Full, "RosterAgentsOnly", "Roster: agents only",
             "The roster that the strip, the up and down arrows and the director's POV pick walk keeps only the Artemis bots. A selected human is then not in the roster.", false },
 
-        { Flag::DrawOverlay, Group::Camera, Layer::Count, Level::Full, "DrawOverlay", "Draw debug overlay",
-            "Master switch of the debug overlay: off, no debug 3D pass is drawn (map, objects, aim spheres, View, fixtures, limits) and no debug 3D labels. The Presentation layers (Agent observation) are not affected: they follow their own level. The camera, the director and the selection keep working. The card, the strip and the F3 HUD have their own switches.", true },
+        { Flag::DrawOverlay, Group::Camera, Layer::Count, Level::Full, "DrawOverlay", "Draw overlay",
+            "Master switch of everything the Viewer draws over the game: off, no 3D pass and no 3D label is drawn, no layer (the agent observation included) and no GPU state is touched. On: each layer draws at its own level. The camera, the director and the selection keep working. The card, the strip and the F3 HUD have their own switches.", true },
+
+        { Flag::PlayerBodies, Group::Layers, Layer::Players, Level::Minimal, "PlayerBodies", "Player bodies",
+            "Collision meshes of the bodies of the players (the selected one in the selection color).", true },
+
+        { Flag::ObjectModels, Group::Layers, Layer::Objects, Level::Minimal, "ObjectModels", "Object models",
+            "Collision meshes of the live objects of the object table (vehicles, weapons, equipment, projectiles and the rest, not the bodies of the players).", true },
+
+        { Flag::ObjectLabels, Group::Layers, Layer::Objects, Level::Minimal, "ObjectLabels", "Object labels",
+            "Labels of the live objects, with the seat markers of the vehicles. Show labels is still the master of every label.", true },
+
+        { Flag::ViewRays, Group::Layers, Layer::View, Level::Minimal, "ViewRays", "View rays",
+            "The aim ray and the perception rays of the Views that are shown.", true },
+
+        { Flag::FixtureZones, Group::Layers, Layer::Fixtures, Level::Minimal, "FixtureZones", "Zones",
+            "Translucent solids of the zones of the teleporters and of the objective spawns.", true },
     } };
 
     inline constexpr std::array<ScalarInfo, k_ScalarCount> k_Scalars
@@ -472,6 +485,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Scalar::LineWidth, Group::Layers, Layer::Count, "LineWidth", "Line width",
             "Width in pixels of every line the Viewer draws (arrows, rays, View, fixtures, limits, aim spheres), at 1080 of height. It scales with the height of the frame, so a video at another resolution looks the same.", 3.0f, 1.0f, 10.0f, "%.0f" },
+
+        { Scalar::ObsArrowLength, Group::Layers, Layer::Obs, "ObsArrowLength", "Obs arrow length",
+            "Length in world units of the observation arrows. 0 draws each arrow to its target. Over 0 it is that long along the direction of the target (shorter if the target is nearer). The Full label shows the real distance at the tip of the drawn arrow.", 0.0f, 0.0f, 20.0f, "%.1f" },
     } };
 
     // return: Whether the flag is on when its layer is at the given level. A flag without a layer is not derived from a level: false.
@@ -503,35 +519,48 @@ export namespace DevTools::Viewer::Options::Type
         return true;
     }
 
-    // return: Whether the layer is a Presentation one, which the master switch of the debug overlay does not turn off.
-    constexpr auto IsPresentationLayer(Layer layer) -> bool
-    {
-        return k_Layers[static_cast<std::size_t>(layer)].Kind == LayerKind::Presentation;
-    }
-
     // Which 3D passes of the scene point run in a frame, and what they need.
     struct ScenePasses
     {
-        // The debug overlay: every pass but the observation one, and its labels.
-        bool DrawDebug{};
-
-        // The arrows of the observation layer (a Presentation 3D layer).
-        bool DrawObs{};
-
-        // The map collision is drawn in depth only (invisible) so the walls hide the arrows. The debug overlay draws the map itself.
-        bool NeedMapDepth{};
+        // The master switch is on: the passes and the labels run, each one by the level of its layer. Off, nothing is drawn and no GPU state is touched.
+        bool DrawScene{};
 
         // The game must keep the depth copies of the first person mask, so the arms and the weapon stay over what is drawn.
         bool NeedMask{};
     };
 
-    // return: The passes of a frame from the master switch of the debug overlay and the level of the observation layer. With the master off and the
-    // observation layer off nothing runs (no pass, no GPU state touched, no mask).
-    constexpr auto DecideScenePasses(bool isMasterOn, Level obsLevel) -> ScenePasses
+    // return: The passes of a frame from the master switch (D387). Off, nothing runs: no pass, no label, no GPU state touched, no mask. On, everything runs
+    // by its layer. The depth of the map is always drawn then (invisible without the wireframe), so the walls hide the arrows even with the World layer Off.
+    constexpr auto DecideScenePasses(bool isMasterOn) -> ScenePasses
     {
-        const bool isObsOn{ obsLevel != Level::Off };
+        return ScenePasses{ .DrawScene = isMasterOn, .NeedMask = isMasterOn };
+    }
 
-        return ScenePasses{ .DrawDebug = isMasterOn, .DrawObs = isObsOn, .NeedMapDepth = isObsOn && !isMasterOn, .NeedMask = isMasterOn || isObsOn };
+    // How DynamicPass treats the collision mesh of an object (D387).
+    enum class CollidableDraw : std::uint8_t
+    {
+        None,
+        DepthOnly,
+        Visible
+    };
+
+    // return: How DynamicPass draws the collision mesh of an object. A shield of the Fixtures layer (translucent) is Visible whatever the other flags say. Else
+    // the body of a player follows the Players layer (Player bodies) and every other object the Objects layer (Object models): Visible when its flag is on.
+    // One that is not shown still hides the lines behind it, like the invisible depth of the map, when some layer draws lines (isLineLayerOn): DepthOnly. Else None.
+    // note: An object the game hides (the unit seen in first person) never gets here: the pass drops it before, so it does not hide anything either.
+    constexpr auto DecideCollidableDraw(bool isShield, bool isPlayerBody, bool showObjects, bool showBodies, bool isLineLayerOn) -> CollidableDraw
+    {
+        if (isShield) return CollidableDraw::Visible;
+        if (isPlayerBody ? showBodies : showObjects) return CollidableDraw::Visible;
+
+        return isLineLayerOn ? CollidableDraw::DepthOnly : CollidableDraw::None;
+    }
+
+    // return: Whether some layer that draws lines or 3D overlay is not Off: the View (rays, cone), the observation arrows, the fixtures, the world limits and
+    // the players (aim spheres). They are the ones the depth of the live objects must occlude.
+    constexpr auto IsAnyLineLayerOn(Level view, Level obs, Level fixtures, Level world, Level players) -> bool
+    {
+        return view != Level::Off || obs != Level::Off || fixtures != Level::Off || world != Level::Off || players != Level::Off;
     }
 
     // return: Whether the Viewer asks the AI thread for the Views of every player (VW.17a, D385): it is active, nothing is in focus (no selected player) and
@@ -551,10 +580,10 @@ export namespace DevTools::Viewer::Options::Type
             if (IsFlagOn(info, k_Layers[static_cast<std::size_t>(info.Owner)].Default) != info.Default) return false;
         }
 
-        // note: Only a Presentation layer may start off (VW.17, the observation layer): it changes the look of the frame for whoever has not asked for it.
+        // note: Only the observation layer may start off (VW.17): it changes the look of the frame for whoever has not asked for it.
         for (const LayerInfo& info : k_Layers)
         {
-            if (info.Default != Level::Minimal && !(IsPresentationLayer(info.Id) && info.Default == Level::Off)) return false;
+            if (info.Default != Level::Minimal && !(info.Id == Layer::Obs && info.Default == Level::Off)) return false;
         }
 
         return true;

@@ -25,16 +25,22 @@ namespace
     using Perception::Players::Type::Players;
     using Views::View::Type::ObsTargets;
     using Views::View::Type::View;
+    using Views::View::System::ObsArrowEnd;
     using Views::View::System::ObsTargetsOf;
     using Views::View::System::RivalTeamOf;
     using DevTools::Viewer::Options::State::OptionsStore;
     using DevTools::Viewer::Options::Type::DecideAllViewsWanted;
     using DevTools::Viewer::Options::Type::DecideScenePasses;
-    using DevTools::Viewer::Options::Type::IsPresentationLayer;
+    using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Layer;
     using DevTools::Viewer::Options::Type::Level;
+    using DevTools::Viewer::Options::Type::Scalar;
     using DevTools::Viewer::Options::Type::ScenePasses;
     using DevTools::Viewer::Options::Type::k_Layers;
+    using DevTools::Viewer::Options::Type::k_Scalars;
+    using DevTools::Viewer::Options::Type::CollidableDraw;
+    using DevTools::Viewer::Options::Type::DecideCollidableDraw;
+    using DevTools::Viewer::Options::Type::IsAnyLineLayerOn;
     using DevTools::Viewer::Roster::System::AgentRowsOf;
     using DevTools::Viewer::Roster::Type::RosterEntry;
 
@@ -227,47 +233,21 @@ TEST(ObsTargetsTests, TheObservationLayerStartsOffAndIsSavedByItsKey)
     EXPECT_EQ(restored.GetLevel(Layer::Obs), Level::Off);
 }
 
-TEST(ObsTargetsTests, OnlyTheObservationAndTheCardLayersArePresentationOnes)
+TEST(ObsTargetsTests, OnlyTheObservationLayerStartsOff)
 {
-    for (const auto& info : k_Layers)
-    {
-        const bool isPresentation{ info.Id == Layer::Obs || info.Id == Layer::Card };
-        EXPECT_EQ(IsPresentationLayer(info.Id), isPresentation) << info.Key;
-    }
+    for (const auto& info : k_Layers) EXPECT_EQ(info.Default, info.Id == Layer::Obs ? Level::Off : Level::Minimal) << info.Key;
 }
 
-TEST(ObsTargetsTests, TheMasterSwitchAndTheObservationLayerDecideTheScenePasses)
+TEST(ObsTargetsTests, TheMasterSwitchAloneDecidesTheScenePasses)
 {
-    // Master on, observation off: today's debug overlay and its mask.
-    const ScenePasses debugOnly{ DecideScenePasses(true, Level::Off) };
-    EXPECT_TRUE(debugOnly.DrawDebug);
-    EXPECT_FALSE(debugOnly.DrawObs);
-    EXPECT_FALSE(debugOnly.NeedMapDepth);
-    EXPECT_TRUE(debugOnly.NeedMask);
+    // D387: on, every pass and label runs by its layer and the game keeps the mask copies. Off, nothing runs, the observation layer included.
+    const ScenePasses on{ DecideScenePasses(true) };
+    EXPECT_TRUE(on.DrawScene);
+    EXPECT_TRUE(on.NeedMask);
 
-    // Master on and observation on: the debug overlay draws the map itself, so no extra depth pass.
-    const ScenePasses both{ DecideScenePasses(true, Level::Minimal) };
-    EXPECT_TRUE(both.DrawDebug);
-    EXPECT_TRUE(both.DrawObs);
-    EXPECT_FALSE(both.NeedMapDepth);
-    EXPECT_TRUE(both.NeedMask);
-
-    // Master off and observation on: the presentation path, with the depth of the map and the mask.
-    for (const Level level : { Level::Minimal, Level::Full })
-    {
-        const ScenePasses presentation{ DecideScenePasses(false, level) };
-        EXPECT_FALSE(presentation.DrawDebug);
-        EXPECT_TRUE(presentation.DrawObs);
-        EXPECT_TRUE(presentation.NeedMapDepth);
-        EXPECT_TRUE(presentation.NeedMask);
-    }
-
-    // Master off and observation off: nothing runs.
-    const ScenePasses none{ DecideScenePasses(false, Level::Off) };
-    EXPECT_FALSE(none.DrawDebug);
-    EXPECT_FALSE(none.DrawObs);
-    EXPECT_FALSE(none.NeedMapDepth);
-    EXPECT_FALSE(none.NeedMask);
+    const ScenePasses off{ DecideScenePasses(false) };
+    EXPECT_FALSE(off.DrawScene);
+    EXPECT_FALSE(off.NeedMask);
 }
 
 TEST(ObsTargetsTests, TheViewerWantsAllViewsOnlyActiveWithoutFocusAndWithALayerOn)
@@ -281,4 +261,92 @@ TEST(ObsTargetsTests, TheViewerWantsAllViewsOnlyActiveWithoutFocusAndWithALayerO
     EXPECT_FALSE(DecideAllViewsWanted(true, false, Level::Off, Level::Off));
     EXPECT_FALSE(DecideAllViewsWanted(true, true, Level::Full, Level::Full));
     EXPECT_FALSE(DecideAllViewsWanted(false, false, Level::Full, Level::Full));
+}
+
+TEST(ObsTargetsTests, AnArrowReachesItsTargetOrIsCutAtTheChosenLength)
+{
+    const Vec3 from{ 1.0f, 2.0f, 3.0f };
+    const Vec3 target{ 1.0f, 2.0f, 13.0f };
+
+    // Length 0 (today): the target. A target nearer than the length, or exactly at it: the target.
+    EXPECT_FLOAT_EQ(ObsArrowEnd(from, target, 0.0f).Z, 13.0f);
+    EXPECT_FLOAT_EQ(ObsArrowEnd(from, target, 10.0f).Z, 13.0f);
+    EXPECT_FLOAT_EQ(ObsArrowEnd(from, target, 25.0f).Z, 13.0f);
+
+    // A shorter length: that far along the direction of the target.
+    const Vec3 cut{ ObsArrowEnd(from, target, 4.0f) };
+    EXPECT_FLOAT_EQ(cut.X, 1.0f);
+    EXPECT_FLOAT_EQ(cut.Y, 2.0f);
+    EXPECT_FLOAT_EQ(cut.Z, 7.0f);
+
+    // A target on top of the start gives itself (no direction to cut along).
+    EXPECT_FLOAT_EQ(ObsArrowEnd(from, from, 3.0f).Z, 3.0f);
+}
+
+TEST(ObsTargetsTests, TheObservationArrowLengthHasItsDefaultKeyAndRange)
+{
+    OptionsStore store{};
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::ObsArrowLength), 0.0f);
+
+    const auto& info{ k_Scalars[static_cast<std::size_t>(Scalar::ObsArrowLength)] };
+    EXPECT_STREQ(info.Key, "ObsArrowLength");
+    EXPECT_STREQ(info.Label, "Obs arrow length");
+    EXPECT_EQ(info.Owner, Layer::Obs);
+    EXPECT_FLOAT_EQ(info.Min, 0.0f);
+    EXPECT_FLOAT_EQ(info.Max, 20.0f);
+
+    store.Load("ObsArrowLength", "5");
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::ObsArrowLength), 5.0f);
+    store.SetScalar(Scalar::ObsArrowLength, 99.0f);
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::ObsArrowLength), 20.0f);
+}
+
+TEST(ObsTargetsTests, TheModelsOfTheObjectsAndTheBodiesOfThePlayersHaveTheirOwnLayer)
+{
+    // Shields are Fixtures: visible whatever the other two say. Bodies follow Players, every other object follows Objects.
+    EXPECT_EQ(DecideCollidableDraw(true, false, false, false, false), CollidableDraw::Visible);
+    EXPECT_EQ(DecideCollidableDraw(false, true, false, true, false), CollidableDraw::Visible);
+    EXPECT_EQ(DecideCollidableDraw(false, false, true, false, false), CollidableDraw::Visible);
+
+    // Not shown: nothing without a layer of lines, depth only with one (so a Forge block still hides the arrows behind it).
+    EXPECT_EQ(DecideCollidableDraw(false, true, true, false, false), CollidableDraw::None);
+    EXPECT_EQ(DecideCollidableDraw(false, true, true, false, true), CollidableDraw::DepthOnly);
+    EXPECT_EQ(DecideCollidableDraw(false, false, false, true, true), CollidableDraw::DepthOnly);
+    EXPECT_EQ(DecideCollidableDraw(false, false, false, true, false), CollidableDraw::None);
+}
+
+TEST(ObsTargetsTests, AnyLayerOfLinesAsksForTheDepthOfTheObjects)
+{
+    EXPECT_FALSE(IsAnyLineLayerOn(Level::Off, Level::Off, Level::Off, Level::Off, Level::Off));
+    EXPECT_TRUE(IsAnyLineLayerOn(Level::Off, Level::Minimal, Level::Off, Level::Off, Level::Off));
+    EXPECT_TRUE(IsAnyLineLayerOn(Level::Off, Level::Off, Level::Off, Level::Off, Level::Full));
+}
+
+TEST(ObsTargetsTests, TheNewFlagsBelongToTheirLayersAndAreOnByDefault)
+{
+    OptionsStore store{};
+
+    // Every layer at Minimal reproduces today's look: all of them on.
+    EXPECT_TRUE(store.IsEnabled(Flag::PlayerBodies));
+    EXPECT_TRUE(store.IsEnabled(Flag::ObjectModels));
+    EXPECT_TRUE(store.IsEnabled(Flag::ObjectLabels));
+    EXPECT_TRUE(store.IsEnabled(Flag::ViewRays));
+    EXPECT_TRUE(store.IsEnabled(Flag::FixtureZones));
+
+    // A layer Off turns its flags off: Objects Off is no models and no labels of objects, Players Off no bodies.
+    store.SetLevel(Layer::Objects, Level::Off);
+    EXPECT_FALSE(store.IsEnabled(Flag::ObjectModels));
+    EXPECT_FALSE(store.IsEnabled(Flag::ObjectLabels));
+    EXPECT_TRUE(store.IsEnabled(Flag::PlayerBodies));
+    store.SetLevel(Layer::Players, Level::Off);
+    EXPECT_FALSE(store.IsEnabled(Flag::PlayerBodies));
+    store.SetLevel(Layer::View, Level::Off);
+    EXPECT_FALSE(store.IsEnabled(Flag::ViewRays));
+    store.SetLevel(Layer::Fixtures, Level::Off);
+    EXPECT_FALSE(store.IsEnabled(Flag::FixtureZones));
+
+    // Their keys are not saved (a flag of a layer is derived from its level).
+    std::ostringstream saved{};
+    store.Save(saved);
+    EXPECT_EQ(saved.str().find("Viewer_ObjectModels"), std::string::npos);
 }

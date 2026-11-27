@@ -47,6 +47,9 @@ export namespace DevTools::Viewer::Map::System
         // Rebuilds the instances when a new scene is published or the selection or the translucent set change.
         // param translucentHandles: Objects drawn by DrawTranslucent instead of Draw.
         // param hiddenHandles: Objects not drawn at all, translucent pass included.
+        // param playerBodyHandles: The bipeds of the players. A body is drawn if showBodies (layer Players), any other object if showObjects (layer Objects),
+        // and the translucent ones (shields, layer Fixtures) always (D387). Both are part of the gate.
+        // param isLineLayerOn: An object that is not drawn is uploaded for DrawDepthOnly, so it still hides the lines behind it (DecideCollidableDraw).
         // note: The scene is published after the Tick (D223), so it is compared by snapshot and not by the Tick generation. A gate on
         // the generation drew the previous scene for a whole tick whenever the frame saw the Tick first (D294).
         // param poses: The poses the objects are drawn with in this frame (VW.5e). Each part of a listed object is moved by the delta of its object,
@@ -55,7 +58,8 @@ export namespace DevTools::Viewer::Map::System
             const std::shared_ptr<const Collidables>& collidables,
             const PaletteService& palette, std::uint32_t selectedHandle,
             const std::unordered_set<std::uint32_t>& translucentHandles,
-            const std::unordered_set<std::uint32_t>& hiddenHandles, const FramePoses& poses) -> void;
+            const std::unordered_set<std::uint32_t>& hiddenHandles, const FramePoses& poses,
+            const std::unordered_set<std::uint32_t>& playerBodyHandles, bool showObjects, bool showBodies, bool isLineLayerOn) -> void;
 
         // return: Instances uploaded in the last rebuild, translucent ones included.
         auto GetInstanceCount() const -> UINT;
@@ -64,6 +68,9 @@ export namespace DevTools::Viewer::Map::System
         auto GetDrawCount() const -> UINT;
 
         auto Draw(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
+
+        // Draws the objects that are not shown in depth only: no color, so they occlude the lines of the overlay and nothing else.
+        auto DrawDepthOnly(ID3D11DeviceContext* context, GpuPipeline& pipeline) -> void;
 
         // param alpha: Opacity of the translucent objects.
         auto DrawTranslucent(ID3D11DeviceContext* context, GpuPipeline& pipeline, float alpha) -> void;
@@ -83,6 +90,7 @@ export namespace DevTools::Viewer::Map::System
         std::vector<Geometry> m_Geometries{};
         std::vector<std::uint32_t> m_Active{};
         std::vector<std::uint32_t> m_ActiveTranslucent{};
+        std::vector<std::uint32_t> m_ActiveDepth{};
 
         Engine::Render::System::InstanceBuffer m_InstanceBuffer{};
         UINT m_InstanceCount{ 0 };
@@ -90,6 +98,7 @@ export namespace DevTools::Viewer::Map::System
         std::vector<MeshInstance> m_InstanceScratch{};
         std::vector<DrawRange> m_Draws{};
         std::vector<DrawRange> m_TranslucentDraws{};
+        std::vector<DrawRange> m_DepthDraws{};
 
         // Binds the geometry and instance buffers and draws the ranges.
         auto DrawRanges(ID3D11DeviceContext* context, const std::vector<DrawRange>& ranges) const -> void;

@@ -145,7 +145,7 @@ namespace DevTools::Viewer::Hud::System
         const auto& tick = context.Frame;
         const auto& options = canvas.GetOptions();
 
-        if (!tick.ObjectTable) return;
+        if (!tick.ObjectTable || !options.IsEnabled(Flag::ObjectLabels)) return;
 
         const bool selectedOnly = options.IsEnabled(Flag::ObjectSelectedOnly);
         const bool showTag = options.IsEnabled(Flag::ObjectTagName);

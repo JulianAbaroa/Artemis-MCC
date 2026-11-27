@@ -19,6 +19,7 @@ namespace
     using DevTools::Viewer::Options::Type::Flag;
     using DevTools::Viewer::Options::Type::Layer;
     using DevTools::Viewer::Options::Type::Level;
+    using DevTools::Viewer::Options::Type::Scalar;
     using Views::View::System::RaycastsOf;
     using Views::View::System::ViewPositionOf;
 }
@@ -30,8 +31,7 @@ namespace DevTools::Viewer::Hud::System
         if (!m_SceneService.IsActive()) return;
         if (!m_OptionsStore.IsEnabled(Flag::Labels)) return;
 
-        const bool isObsOn{ m_OptionsStore.GetLevel(Layer::Obs) == Level::Full };
-        if (!passes.DrawDebug && !isObsOn) return;
+        if (!passes.DrawScene) return;
 
         const auto scene = m_SceneService.GetFrameScene(m_CollidableStore);
         if (!scene || !scene->Tick) return;
@@ -65,7 +65,6 @@ namespace DevTools::Viewer::Hud::System
 
         m_Canvas.Reset();
 
-        if (passes.DrawDebug)
         {
             PlayerLabels::Collect(m_Canvas, context);
             ObjectLabels::Collect(m_Canvas, context);
@@ -75,9 +74,11 @@ namespace DevTools::Viewer::Hud::System
             FixtureLabels::Collect(m_Canvas, context);
         }
 
-        // note: The distances of the observation arrows (VW.17) are only drawn at the Full level, under the master switch of the labels but not the one of the
-        // debug overlay (a Presentation layer).
-        if (isObsOn) ObsLabels::Collect(m_Canvas, context, m_SceneService.GetObsRows());
+        // note: The distances of the observation arrows (VW.17) are only drawn at the Full level of their layer.
+        if (m_OptionsStore.GetLevel(Layer::Obs) == Level::Full)
+        {
+            ObsLabels::Collect(m_Canvas, context, m_SceneService.GetObsRows(), m_OptionsStore.GetScalar(Scalar::ObsArrowLength));
+        }
 
         m_Canvas.Flush(*ImGui::GetBackgroundDrawList());
     }

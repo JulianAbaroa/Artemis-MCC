@@ -46,6 +46,10 @@ export namespace Views::View::System
     // note: Mirror of ObserveBatch in Agent/artemis/env/ctf.py (entries 7-10 and 14-17): change both together.
     auto ObsTargetsOf(const Views::View::Type::View& view) -> Views::View::Type::ObsTargets;
 
+    // return: The end of an observation arrow as the Viewer draws it (VW.17, D387). With a length of zero or less, or a target that is not farther than the
+    // length, the target. Else the point at that length from the start along the direction of the target.
+    auto ObsArrowEnd(const Common::Math::Type::Vec3& from, const Common::Math::Type::Vec3& target, float length) -> Common::Math::Type::Vec3;
+
     // return: The team that owns the rival stand of the team, the one the agent's enemy flag belongs to (the lowest stand handle if several, as
     // Flags[1] is chosen). Neutral for a team without a side or a game without a rival stand.
     auto RivalTeamOf(const Perception::Details::Type::ObjectiveDetails& objectives, Common::Team::Type::Team team) -> Common::Team::Type::Team;

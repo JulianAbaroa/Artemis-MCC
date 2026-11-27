@@ -96,6 +96,7 @@ export namespace DevTools::Viewer::Map::Type
 
         std::vector<MeshInstance> Bucket{};
         std::vector<MeshInstance> TranslucentBucket{};
+        std::vector<MeshInstance> DepthBucket{};
     };
 
     // One instanced draw call.

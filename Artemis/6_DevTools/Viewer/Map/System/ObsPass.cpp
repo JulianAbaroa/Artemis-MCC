@@ -28,6 +28,7 @@ namespace
     using Common::Team::Type::Team;
     using Views::View::Type::ObsTargets;
     using Views::View::Type::View;
+    using Views::View::System::ObsArrowEnd;
     using Views::View::System::ObsTargetsOf;
     using Views::View::System::RivalTeamOf;
     using DevTools::Viewer::Geometry::System::AppendArrow;
@@ -47,13 +48,13 @@ namespace
 namespace DevTools::Viewer::Map::System
 {
     auto ObsPass::Upload(ID3D11Device* device, ID3D11DeviceContext* context, const Tick* tick, const std::vector<std::size_t>& rows,
-        Level level, const FramePoses& poses) -> void
+        Level level, float arrowLength, const FramePoses& poses) -> void
     {
         if (!device || !context) return;
 
         // note: The vertices are the same at Minimal and Full (the distances of Full are labels), but the level is in the key all the same: a layer that
         // is switched off and on again is uploaded again.
-        const std::uint32_t key{ ShownRowsKeyOf(rows, poses.Revision * 4u + static_cast<std::uint32_t>(level)) };
+        const std::uint32_t key{ ShownRowsKeyOf(rows, (poses.Revision * 4u + static_cast<std::uint32_t>(level)) ^ std::bit_cast<std::uint32_t>(arrowLength)) };
         const std::uint64_t generation{ tick ? tick->Generation : 0 };
         if (m_Gate.IsCurrent(generation, key)) return;
 
@@ -78,10 +79,10 @@ namespace DevTools::Viewer::Map::System
             if (targets.HasFlag)
             {
                 const Team rival{ tick->ObjectiveDetails ? RivalTeamOf(*tick->ObjectiveDetails, view.Head.Team) : Team::Neutral };
-                AppendArrow(vertices, from, Raised(targets.Flag), ColorOfTeam(rival), false);
+                AppendArrow(vertices, from, ObsArrowEnd(from, Raised(targets.Flag), arrowLength), ColorOfTeam(rival), false);
             }
 
-            if (targets.HasStand) AppendArrow(vertices, from, Raised(targets.Stand), ColorOfTeam(view.Head.Team), false);
+            if (targets.HasStand) AppendArrow(vertices, from, ObsArrowEnd(from, Raised(targets.Stand), arrowLength), ColorOfTeam(view.Head.Team), false);
         }
 
         if (vertices.empty()) return;
