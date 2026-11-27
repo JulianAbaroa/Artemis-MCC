@@ -175,6 +175,22 @@ export namespace Engine::Render::Type
     inline constexpr UINT k_MaskSlotCount{ static_cast<UINT>(k_MaskPairCount) * 2 };
     inline constexpr UINT k_MaskBufferSlot{ 1 };
 
+    // Slot of the constant buffer of the line geometry shader (VW.18, D385): the size of the target and the half width of the line in pixels.
+    inline constexpr UINT k_LineBufferSlot{ 2 };
+
+    // The height of the target the width of a line is chosen for: the width scales with the real height, so a video at another resolution looks the same.
+    inline constexpr float k_LineReferenceHeight{ 1080.0f };
+
+    // return: The width in pixels of a line of the given width at the reference height, in a target of the given height. Never under one pixel, and one
+    // pixel for a target without height.
+    constexpr auto ScaledLineWidth(float widthAtReference, std::uint32_t targetHeight) -> float
+    {
+        if (targetHeight == 0) return 1.0f;
+
+        const float scaled{ widthAtReference * static_cast<float>(targetHeight) / k_LineReferenceHeight };
+        return scaled < 1.0f ? 1.0f : scaled;
+    }
+
     // return: The shader resource slot of the copy before (PreSlot) or after (PostSlot) the call of the pair.
     constexpr auto MaskPreSlot(MaskPairKind kind) -> UINT
     {

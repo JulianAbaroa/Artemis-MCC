@@ -359,6 +359,7 @@ namespace DevTools::Viewer::Map::System
         m_GpuPipeline.UpdateCamera(context, m_SceneService.GetViewProjection());
 
         m_GpuPipeline.UpdateMask(context, frame.Mask, frame.Width, frame.Height, frame.ColorScale);
+        m_GpuPipeline.SetLineWidth(m_OptionsStore.GetScalar(Scalar::LineWidth));
 
         m_Profiler.MarkGpu(context, Gpu::Clear);
 

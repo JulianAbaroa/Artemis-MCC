@@ -597,3 +597,18 @@ TEST(EngineLayerTests, PlayerActionWithoutSourceDoesNotInstall)
     EXPECT_EQ(error->Tag, "[PlayerActionDetour]");
     EXPECT_EQ(error->Message, "no action source, hook not installed.");
 }
+
+
+TEST(EngineLayerTests, ALineWidthScalesWithTheHeightOfTheTargetAndNeverGoesUnderOnePixel)
+{
+    using Engine::Render::Type::ScaledLineWidth;
+
+    // The width is chosen at 1080 of height: the same at that height, double at 2160, half at 540.
+    EXPECT_FLOAT_EQ(ScaledLineWidth(3.0f, 1080), 3.0f);
+    EXPECT_FLOAT_EQ(ScaledLineWidth(3.0f, 2160), 6.0f);
+    EXPECT_FLOAT_EQ(ScaledLineWidth(6.0f, 540), 3.0f);
+
+    // A line is never thinner than one pixel, and a target without height gives one pixel.
+    EXPECT_FLOAT_EQ(ScaledLineWidth(1.0f, 360), 1.0f);
+    EXPECT_FLOAT_EQ(ScaledLineWidth(3.0f, 0), 1.0f);
+}

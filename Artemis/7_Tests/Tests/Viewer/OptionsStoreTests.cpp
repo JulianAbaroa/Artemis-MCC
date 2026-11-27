@@ -19,6 +19,7 @@ namespace
     using DevTools::Viewer::Options::Type::k_LayerCount;
     using DevTools::Viewer::Options::Type::k_Layers;
     using DevTools::Viewer::Options::Type::k_ScalarCount;
+    using DevTools::Viewer::Options::Type::k_Scalars;
 
     // Keys of options removed by VW.P: a file saved before still has them.
     constexpr std::array<std::string_view, 10> k_RemovedKeys{ "FirstPersonOverOverlay", "FirstPersonMaskShown", "SceneColorByGameHdr",
@@ -332,4 +333,27 @@ TEST(OptionsStoreTests, TheOverlayMasterSwitchIsOnByDefaultAndSavedByItsKey)
 
     store.ResetToDefaults();
     EXPECT_TRUE(store.IsEnabled(Flag::DrawOverlay));
+}
+
+TEST(OptionsStoreTests, TheLineWidthHasItsDefaultKeyAndRange)
+{
+    OptionsStore store{};
+
+    // 3 pixels at 1080 of height, from 1 to 10, saved as Viewer_LineWidth (VW.18).
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::LineWidth), 3.0f);
+
+    const auto& info{ k_Scalars[static_cast<std::size_t>(Scalar::LineWidth)] };
+    EXPECT_STREQ(info.Key, "LineWidth");
+    EXPECT_STREQ(info.Label, "Line width");
+    EXPECT_FLOAT_EQ(info.Min, 1.0f);
+    EXPECT_FLOAT_EQ(info.Max, 10.0f);
+
+    store.Load("LineWidth", "6");
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::LineWidth), 6.0f);
+    EXPECT_NE(Snapshot(store).find("Viewer_LineWidth=6"), std::string::npos);
+
+    store.SetScalar(Scalar::LineWidth, 50.0f);
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::LineWidth), 10.0f);
+    store.SetScalar(Scalar::LineWidth, 0.0f);
+    EXPECT_FLOAT_EQ(store.GetScalar(Scalar::LineWidth), 1.0f);
 }

@@ -413,7 +413,7 @@ namespace DevTools::Viewer::Map::System
 
         if (m_Edges.Buffer && m_Edges.VertexCount != 0)
         {
-            pipeline.Bind(context, VertexLayout::Colored);
+            pipeline.BindLines(context, VertexLayout::Colored);
 
             Engine::Render::System::DrawVertexBuffer(context, m_Edges.Buffer.Get(),
                 m_Edges.VertexCount, D3D11_PRIMITIVE_TOPOLOGY_LINELIST);

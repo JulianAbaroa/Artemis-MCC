@@ -20,7 +20,9 @@ namespace
     using Engine::Render::Type::MakeMaskConstants;
     using Engine::Render::Type::MaskPairKind;
 
+    using Engine::Render::Type::k_LineBufferSlot;
     using Engine::Render::Type::k_MaskBufferSlot;
+    using Engine::Render::Type::ScaledLineWidth;
     using Engine::Render::Type::k_MaskSlotCount;
     using Engine::Render::Type::MaskPostSlot;
     using Engine::Render::Type::MaskPreSlot;
@@ -144,6 +146,62 @@ VSOut VSInstancedMesh(VSMeshIn input)
     return o;
 }
 
+cbuffer Lines : register(b2)
+{
+    float2 LineTarget;
+    float  LineHalfWidth;
+    float  LinePad;
+};
+
+// Smallest w the segment keeps. A point behind the eye has a negative w and its divide flips the line.
+static const float k_MinW = 0.001f;
+
+VSOut LerpOut(VSOut a, VSOut b, float t)
+{
+    VSOut o;
+    o.pos = lerp(a.pos, b.pos, t);
+    o.worldPos = lerp(a.worldPos, b.worldPos, t);
+    o.color = lerp(a.color, b.color, t);
+    return o;
+}
+
+// Expands a segment to a rectangle of LineHalfWidth * 2 pixels, perpendicular to the segment on the screen.
+[maxvertexcount(4)]
+void GSLine(line VSOut input[2], inout TriangleStream<VSOut> stream)
+{
+    VSOut a = input[0];
+    VSOut b = input[1];
+
+    // Clip to the near side in clip space, before the divide by w.
+    if (a.pos.w < k_MinW && b.pos.w < k_MinW) return;
+    if (a.pos.w < k_MinW) a = LerpOut(a, b, (k_MinW - a.pos.w) / (b.pos.w - a.pos.w));
+    else if (b.pos.w < k_MinW) b = LerpOut(a, b, (a.pos.w - k_MinW) / (a.pos.w - b.pos.w));
+
+    float2 ndcA = a.pos.xy / a.pos.w;
+    float2 ndcB = b.pos.xy / b.pos.w;
+    float2 along = (ndcB - ndcA) * LineTarget * 0.5f;
+    float len = length(along);
+    if (len < 0.0001f) return;
+
+    float2 side = float2(-along.y, along.x) / len;
+    float2 offset = side * LineHalfWidth * 2.0f / LineTarget;
+
+    VSOut o = a;
+    o.pos.xy = a.pos.xy + offset * a.pos.w; stream.Append(o);
+    o.pos.xy = a.pos.xy - offset * a.pos.w; stream.Append(o);
+    o = b;
+    o.pos.xy = b.pos.xy + offset * b.pos.w; stream.Append(o);
+    o.pos.xy = b.pos.xy - offset * b.pos.w; stream.Append(o);
+}
+
+// The color of the line as it is, with the same first person mask as PSMain. A rectangle has no useful normal to light.
+float4 PSLine(VSOut input) : SV_TARGET
+{
+    if (IsFirstPersonPixel(input.pos)) discard;
+
+    return float4(input.color * ColorScale, 1.0f);
+}
+
 float4 PSMain(VSOut input) : SV_TARGET
 {
     // The derivatives come first, so the early return below is not between a gradient and the rest of the shader.
@@ -218,6 +276,9 @@ namespace Engine::Render::System
             this->Release();
             return false;
         }
+
+        // note: The lines are optional. Without their shaders BindLines draws them one pixel wide.
+        m_IsLineReady = this->CompileLineShaders(device);
 
         m_IsReady = true;
         m_Log.Message("[GpuPipeline] INFO: Ready.");
@@ -321,6 +382,44 @@ namespace Engine::Render::System
         }
 
         return true;
+    }
+
+    auto GpuPipeline::CompileLineShaders(ID3D11Device* device) -> bool
+    {
+        ComPtr<ID3DBlob> geometryBlob{};
+        ComPtr<ID3DBlob> pixelBlob{};
+
+        bool isReady{ CompileShader("GSLine", "gs_5_0", m_Log, geometryBlob) && CompileShader("PSLine", "ps_5_0", m_Log, pixelBlob) };
+
+        if (isReady && (FAILED(device->CreateGeometryShader(geometryBlob->GetBufferPointer(), geometryBlob->GetBufferSize(), nullptr,
+            m_LineGeometryShader.GetAddressOf())) || FAILED(device->CreatePixelShader(pixelBlob->GetBufferPointer(), pixelBlob->GetBufferSize(), nullptr,
+            m_LinePixelShader.GetAddressOf()))))
+        {
+            m_Log.Message("[GpuPipeline] ERROR: Failed to create the line shaders.");
+            isReady = false;
+        }
+
+        D3D11_BUFFER_DESC desc{};
+        desc.ByteWidth = 16;
+        desc.Usage = D3D11_USAGE_DYNAMIC;
+        desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+        if (isReady && FAILED(device->CreateBuffer(&desc, nullptr, m_LineBuffer.GetAddressOf())))
+        {
+            m_Log.Message("[GpuPipeline] ERROR: Failed to create the line constant buffer.");
+            isReady = false;
+        }
+
+        if (!isReady)
+        {
+            m_LineGeometryShader.Reset();
+            m_LinePixelShader.Reset();
+            m_LineBuffer.Reset();
+            m_Log.Message("[GpuPipeline] ERROR: The lines are drawn one pixel wide.");
+        }
+
+        return isReady;
     }
 
     auto GpuPipeline::CreateBuffers(ID3D11Device* device) -> bool
@@ -465,6 +564,9 @@ namespace Engine::Render::System
     {
         if (!context || !m_MaskBuffer) return;
 
+        m_TargetWidth = targetWidth;
+        m_TargetHeight = targetHeight;
+
         const MaskConstants constants{ MakeMaskConstants(mask, targetWidth, targetHeight, colorScale) };
 
         D3D11_MAPPED_SUBRESOURCE mapped{};
@@ -553,8 +655,38 @@ namespace Engine::Render::System
         context->GSSetShader(nullptr, nullptr, 0);
     }
 
+    auto GpuPipeline::SetLineWidth(float widthAtReference) -> void
+    {
+        m_LineWidth = widthAtReference;
+    }
+
+    auto GpuPipeline::BindLines(ID3D11DeviceContext* context, VertexLayout layout, SurfaceMode surface, float alpha) -> void
+    {
+        this->Bind(context, layout, surface, alpha);
+        if (!context || !m_IsReady || !m_IsLineReady || m_TargetWidth == 0 || m_TargetHeight == 0) return;
+
+        const float constants[4]{ static_cast<float>(m_TargetWidth), static_cast<float>(m_TargetHeight),
+            ScaledLineWidth(m_LineWidth, m_TargetHeight) * 0.5f, 0.0f };
+
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        if (FAILED(context->Map(m_LineBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped))) return;
+
+        std::memcpy(mapped.pData, constants, sizeof(constants));
+        context->Unmap(m_LineBuffer.Get(), 0);
+
+        ID3D11Buffer* buffer{ m_LineBuffer.Get() };
+        context->GSSetConstantBuffers(k_LineBufferSlot, 1, &buffer);
+        context->GSSetShader(m_LineGeometryShader.Get(), nullptr, 0);
+        context->PSSetShader(m_LinePixelShader.Get(), nullptr, 0);
+    }
+
     auto GpuPipeline::Release() -> void
     {
+        m_LineGeometryShader.Reset();
+        m_LinePixelShader.Reset();
+        m_LineBuffer.Reset();
+        m_IsLineReady = false;
+
         m_MeshInputLayout.Reset();
         m_MeshVertexShader.Reset();
         m_CameraBuffer.Reset();

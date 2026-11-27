@@ -142,6 +142,7 @@ export namespace DevTools::Viewer::Options::Type
 
         SceneColorScale,
         DirectorDegreesPerSecond,
+        LineWidth,
 
         Count
     };
@@ -468,6 +469,9 @@ export namespace DevTools::Viewer::Options::Type
 
         { Scalar::DirectorDegreesPerSecond, Group::Director, Layer::Count, "DirectorDegreesPerSecond", "Orbit speed (deg/s)",
             "Turn speed of the orbit shots added from now on. 6 is one turn per minute, negative turns the other way.", 6.0f, -60.0f, 60.0f, "%.1f" },
+
+        { Scalar::LineWidth, Group::Layers, Layer::Count, "LineWidth", "Line width",
+            "Width in pixels of every line the Viewer draws (arrows, rays, View, fixtures, limits, aim spheres), at 1080 of height. It scales with the height of the frame, so a video at another resolution looks the same.", 3.0f, 1.0f, 10.0f, "%.0f" },
     } };
 
     // return: Whether the flag is on when its layer is at the given level. A flag without a layer is not derived from a level: false.

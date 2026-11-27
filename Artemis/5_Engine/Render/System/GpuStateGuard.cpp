@@ -10,6 +10,7 @@ import std;
 
 namespace
 {
+    using Engine::Render::Type::k_LineBufferSlot;
     using Engine::Render::Type::k_MaskBufferSlot;
 }
 
@@ -35,6 +36,7 @@ namespace Engine::Render::System
         m_Context->HSGetShader(m_HullShader.GetAddressOf(), nullptr, nullptr);
         m_Context->DSGetShader(m_DomainShader.GetAddressOf(), nullptr, nullptr);
         m_Context->GSGetShader(m_GeometryShader.GetAddressOf(), nullptr, nullptr);
+        m_Context->GSGetConstantBuffers(k_LineBufferSlot, 1, m_GeometryConstantBuffer.GetAddressOf());
         m_Context->PSGetShader(m_PixelShader.GetAddressOf(), nullptr, nullptr);
         m_Context->PSGetConstantBuffers(k_MaskBufferSlot, 1, m_PixelConstantBuffer.GetAddressOf());
 
@@ -81,7 +83,9 @@ namespace Engine::Render::System
         m_Context->VSSetConstantBuffers(0, 1, &vertexConstantBuffer);
         m_Context->HSSetShader(m_HullShader.Get(), nullptr, 0);
         m_Context->DSSetShader(m_DomainShader.Get(), nullptr, 0);
+        ID3D11Buffer* geometryConstantBuffer = m_GeometryConstantBuffer.Get();
         m_Context->GSSetShader(m_GeometryShader.Get(), nullptr, 0);
+        m_Context->GSSetConstantBuffers(k_LineBufferSlot, 1, &geometryConstantBuffer);
         m_Context->PSSetShader(m_PixelShader.Get(), nullptr, 0);
 
         ID3D11Buffer* pixelConstantBuffer = m_PixelConstantBuffer.Get();

@@ -303,7 +303,7 @@ namespace DevTools::Viewer::Map::System
         }
 
         {
-            pipeline.Bind(context, VertexLayout::SphereInstanced, SurfaceMode::Overlay);
+            pipeline.BindLines(context, VertexLayout::SphereInstanced, SurfaceMode::Overlay);
 
             ID3D11Buffer* buffers[2] = { m_UnitWireBuffer.Get(), m_InstanceBuffer.Get() };
             context->IASetVertexBuffers(0, 2, buffers, strides, offsets);

@@ -70,15 +70,30 @@ export namespace Engine::Render::System
         auto Bind(ID3D11DeviceContext* context, VertexLayout layout,
             SurfaceMode surface = SurfaceMode::Opaque, float alpha = 1.0f) -> void;
 
+        // Sets the width of the lines BindLines draws, in pixels at 1080 of height. It is scaled by the height of the target given to UpdateMask.
+        auto SetLineWidth(float widthAtReference) -> void;
+
+        // Like Bind, for the passes that draw a LINELIST: the geometry shader expands each segment to a rectangle of the line width in screen pixels
+        // (VW.18, D385). The segment is clipped to the near plane before the divide, and each end keeps its own depth, so the depth test is the one of Bind.
+        // The next Bind unbinds the geometry shader.
+        // note: If the line shaders did not compile or were not created (logged once at Initialize), it is a plain Bind and the lines are one pixel wide.
+        auto BindLines(ID3D11DeviceContext* context, VertexLayout layout, SurfaceMode surface = SurfaceMode::Opaque, float alpha = 1.0f) -> void;
+
         auto Release() -> void;
 
     private:
         Log& m_Log;
 
         bool m_IsReady{ false };
+        bool m_IsLineReady{ false };
+        float m_LineWidth{ 1.0f };
+        std::uint32_t m_TargetHeight{ 0 };
+        std::uint32_t m_TargetWidth{ 0 };
 
         ComPtr<ID3D11VertexShader> m_VertexShader{};
         ComPtr<ID3D11PixelShader> m_PixelShader{};
+        ComPtr<ID3D11GeometryShader> m_LineGeometryShader{};
+        ComPtr<ID3D11PixelShader> m_LinePixelShader{};
         ComPtr<ID3D11InputLayout> m_InputLayout{};
 
         ComPtr<ID3D11VertexShader> m_InstancedVertexShader{};
@@ -89,6 +104,7 @@ export namespace Engine::Render::System
 
         ComPtr<ID3D11Buffer> m_CameraBuffer{};
         ComPtr<ID3D11Buffer> m_MaskBuffer{};
+        ComPtr<ID3D11Buffer> m_LineBuffer{};
 
         ComPtr<ID3D11RasterizerState> m_Rasterizer{};
         ComPtr<ID3D11RasterizerState> m_DepthOnlyRasterizer{};
@@ -100,6 +116,7 @@ export namespace Engine::Render::System
         ComPtr<ID3D11BlendState> m_NoColorBlendState{};
 
         auto CompileShaders(ID3D11Device* device) -> bool;
+        auto CompileLineShaders(ID3D11Device* device) -> bool;
         auto CreateBuffers(ID3D11Device* device) -> bool;
         auto CreateStates(ID3D11Device* device) -> bool;
     };

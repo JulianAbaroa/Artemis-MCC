@@ -55,6 +55,7 @@ export namespace Engine::Render::System
         ComPtr<ID3D11HullShader> m_HullShader{};
         ComPtr<ID3D11DomainShader> m_DomainShader{};
         ComPtr<ID3D11GeometryShader> m_GeometryShader{};
+        ComPtr<ID3D11Buffer> m_GeometryConstantBuffer{};
         ComPtr<ID3D11PixelShader> m_PixelShader{};
         ComPtr<ID3D11Buffer> m_PixelConstantBuffer{};
         std::array<ComPtr<ID3D11ShaderResourceView>, k_PixelResourceSlots> m_PixelResources{};
