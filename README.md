@@ -89,4 +89,4 @@ See the [LICENSE](LICENSE) file for details, and [NOTICE](NOTICE) for third-part
 
 *Note: Artemis-MCC is in early development and may cause unexpected game crashes.*
 
-**Legal:** Halo: The Master Chief Collection © Microsoft Corporation. Artemis-MCC was created under Microsoft's [Game Content Usage Rules](https://www.xbox.com/en-US/developers/rules) using game content and file formats from Halo: Reach, and is not endorsed by or affiliated with Microsoft.
+**Legal:** Artemis-MCC is an independent project and is not affiliated with, endorsed by, or sponsored by Microsoft, Halo Studios or 343 Industries. Halo, Halo: Reach and Halo: The Master Chief Collection are trademarks of Microsoft Corporation. No game files or assets are distributed with this software; it reads the user's own installed copy of the game at runtime (the only game-format files in the repository are two Forge map variants made by the author, used as test fixtures). Use it only in offline custom games with Easy Anti-Cheat disabled, never online or in matchmaking. Using it may conflict with the game's terms of service, and you are responsible for how you use it.
